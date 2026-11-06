@@ -78,8 +78,7 @@ struct bubble : nodes::Stack {
                                           bubble_pad_y, bubble_pad_x}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
     fBody.apply({.autoSize = scene::axes::kBoth});
-    fTime.apply(
-        {.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
+    fTime.apply({.alignSelf = scene::align::kEnd});
   }
 
   void blank() {
@@ -104,8 +103,7 @@ struct bubble : nodes::Stack {
     fBody.setText(std::string(said));
     fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
-    fBody.apply({.autoSize = scene::axes::kBoth,
-                 .maxWidth = widest - 2.0f * bubble_pad_x});
+    fBody.apply({.maxWidth = widest - 2.0f * bubble_pad_x});
     fTime.setText(std::string(when));
     fTime.setColour(look.on_sent & 0xb0ffffffu);
   }
@@ -142,8 +140,7 @@ struct foot_chip : scene::Node {
                  .x = 7.0f});
     fLabel.apply({.anchor = scene::anchor::kCentreLeft,
                   .origin = scene::anchor::kCentreLeft,
-                  .x = 24.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .x = 24.0f});
   }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
@@ -275,14 +272,14 @@ struct history_fold : nodes::Stack {
                      (before.tool_calls == 1 ? " tool call" : " tool calls"));
     fSummary.setColour(look.dim);
     fSummary.apply(
-        {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+        { .maxWidth = widest - 24.0f});
     // What it wrote to itself, greentext: shown while it is pressed open.
     fThought.setText(before.said);
     fThought.setColour(look.thought);
     fThought.setMonospace(true);
     fThought.setVisible(fOpen && !before.said.empty());
     fThought.apply(
-        {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+        { .maxWidth = widest - 24.0f});
   }
 
   void forEachChild(auto &&f) {

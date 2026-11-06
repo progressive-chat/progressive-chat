@@ -12,7 +12,6 @@ export module pchat.ui:window;
 import std;
 import skiff.scene;
 import skiff.nodes;
-import skiff.paint;
 import pchat.core;
 import pchat.config;
 import pchat.app.requests;
@@ -46,45 +45,9 @@ struct app_window : scene::Node {
   doc_screen fDesign{};
   prompt_screen fPrompt{};
 
-  // Diagnostic overlay: what the layout was made for, said on the screen,
-  // with two probes whose measured boxes are said beside it.
-  nodes::Box<> fDebugPlate{0xcc000000u};
-  nodes::Text fDebugSize{"", 16.0f, 0xffffffffu, true};
-  nodes::Text fDebugProbes{"", 16.0f, 0xffffffffu, true};
-  nodes::Text fDebugMore{"", 16.0f, 0xffffffffu, true};
-  nodes::Text fDebugFaces{"", 16.0f, 0xffffffffu, true};
-  nodes::Text fDebugPlain{"", 16.0f, 0xffffffffu, true};
-  // Two probes with no auto-size said to them: whether a childless node
-  // that sizes itself is measured at all.
-  nodes::Text fProbeFree{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
-  nodes::Text fProbe160{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
-  nodes::Text fProbeNatural{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
-  nodes::Text fProbeCapped{"A sieve of Eratosthenes", 15.0f, 0xff00ff00u, true};
-  // Two more probes: one with a width said to it once, one said nothing
-  // after it was made -- whether the measuring is lost by being said again.
-  nodes::Text fProbeOnce{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
-  nodes::Text fProbeFixed{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
-
   app_window() {
     this->apply({.fill = true});
     fPaper.apply({.fill = true});
-    // The capped probe is a title's own shape: 15 points, bold, in 160.
-    fProbeCapped.apply({.autoSize = scene::axes::kBoth, .maxWidth = 160.0f});
-    fProbeNatural.apply({.autoSize = scene::axes::kBoth});
-    fProbeFree.apply({.anchor = scene::anchor::kTopLeft, .x = 8.0f, .y = 184.0f});
-    fProbe160.apply({.anchor = scene::anchor::kTopLeft,
-                     .x = 8.0f,
-                     .y = 208.0f,
-                     .maxWidth = 160.0f});
-    fProbeOnce.apply({.anchor = scene::anchor::kTopLeft,
-                      .x = 200.0f,
-                      .y = 8.0f,
-                      .autoSize = scene::axes::kBoth});
-    fProbeFixed.apply({.anchor = scene::anchor::kTopLeft,
-                       .x = 200.0f,
-                       .y = 32.0f,
-                       .relativeSize = scene::axes::kNone,
-                       .width = 200.0f});
     fMessages.apply({.background = 0u});
     // A conversation is read at its foot: the messages are shown from their
     // last one, and stay there as they grow -- until the reader scrolls away,
@@ -240,82 +203,6 @@ struct app_window : scene::Node {
       fPrompt.again(asked, look, open_chat, width, height);
     else
       fPrompt.hide();
-    // The diagnostic overlay, over everything: what size the layout was
-    // made for, and what the two probes measured the frame before.
-    fDebugSize.setText(std::format(
-        "w={:.0f} h={:.0f} wide={} col={:.0f} scale={:.2f}", width, height,
-        wide ? 1 : 0, column, scene::pixelScale()));
-    fDebugProbes.setText(
-        std::format("10M={:.0f} | title@160 {:.0f}x{:.0f}",
-                    fProbeNatural.bounds().width(),
-                    fProbeCapped.bounds().width(),
-                    fProbeCapped.bounds().height()));
-    fDebugMore.setText(
-        std::format("each={:.0f} once={:.0f} fixed={:.0f} chats={:.0f}",
-                    fProbeNatural.bounds().width(),
-                    fProbeOnce.bounds().width(),
-                    fProbeFixed.bounds().width(),
-                    fDrawer.fHeading.bounds().width()));
-    // What the text is measured with: whether that font has a face at all,
-    // what it measures directly, how many faces stand behind it, and whether
-    // the directory the system's are read from is a directory there.
-    auto *face = skiff::paint::defaultFont();
-    const bool has = face != nullptr && face->getTypeface() != nullptr;
-    if (face != nullptr && !face->getTypeface()) {
-      const auto &primary = skiff::paint::fonts().primary();
-      if (primary) {
-        face->setTypeface(primary);
-      }
-    }
-    float api = 0.0f;
-    if (face != nullptr) {
-      face->setSize(15.0f);
-      api = skiff::paint::fonts().measure(*face, "MMMMMMMMMM");
-    }
-    std::error_code error;
-    fDebugFaces.setText(
-        std::format("face={} api={:.0f} fb={} dir={}", has, api,
-                    skiff::paint::fonts().fallbackCount(),
-                    std::filesystem::is_directory("/system/fonts", error)));
-    fDebugPlain.setText(
-        std::format("free={:.0f}x{:.0f} | m160={:.0f}x{:.0f}",
-                    fProbeFree.bounds().width(), fProbeFree.bounds().height(),
-                    fProbe160.bounds().width(), fProbe160.bounds().height()));
-    fDebugPlate.apply({.anchor = scene::anchor::kTopLeft,
-                       .x = 0.0f,
-                       .y = 0.0f,
-                       .relativeSize = scene::axes::kNone,
-                       .width = 340.0f,
-                       .height = 240.0f});
-    fDebugSize.apply({.anchor = scene::anchor::kTopLeft,
-                      .x = 8.0f,
-                      .y = 8.0f,
-                      .autoSize = scene::axes::kBoth});
-    fDebugProbes.apply({.anchor = scene::anchor::kTopLeft,
-                        .x = 8.0f,
-                        .y = 32.0f,
-                        .autoSize = scene::axes::kBoth});
-    fDebugMore.apply({.anchor = scene::anchor::kTopLeft,
-                      .x = 8.0f,
-                      .y = 56.0f,
-                      .autoSize = scene::axes::kBoth});
-    fDebugFaces.apply({.anchor = scene::anchor::kTopLeft,
-                       .x = 8.0f,
-                       .y = 80.0f,
-                       .autoSize = scene::axes::kBoth});
-    fDebugPlain.apply({.anchor = scene::anchor::kTopLeft,
-                       .x = 8.0f,
-                       .y = 104.0f,
-                       .autoSize = scene::axes::kBoth});
-    fProbeNatural.apply({.anchor = scene::anchor::kTopLeft,
-                         .x = 8.0f,
-                         .y = 112.0f,
-                         .autoSize = scene::axes::kBoth});
-    fProbeCapped.apply({.anchor = scene::anchor::kTopLeft,
-                        .x = 8.0f,
-                        .y = 136.0f,
-                        .autoSize = scene::axes::kBoth,
-                        .maxWidth = 160.0f});
   }
 
   void forEachChild(auto &&f) {
@@ -329,18 +216,6 @@ struct app_window : scene::Node {
     f(fSettings);
     f(fDesign);
     f(fPrompt);
-    f(fDebugPlate);
-    f(fDebugSize);
-    f(fDebugProbes);
-    f(fProbeNatural);
-    f(fProbeCapped);
-    f(fProbeOnce);
-    f(fProbeFixed);
-    f(fDebugMore);
-    f(fDebugFaces);
-    f(fDebugPlain);
-    f(fProbeFree);
-    f(fProbe160);
   }
 };
 
