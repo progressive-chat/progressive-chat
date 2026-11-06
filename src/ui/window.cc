@@ -45,9 +45,20 @@ struct app_window : scene::Node {
   doc_screen fDesign{};
   prompt_screen fPrompt{};
 
+  // Diagnostic overlay: what the layout was made for, said on the screen,
+  // with two probes whose measured boxes are said beside it.
+  nodes::Box<> fDebugPlate{0xcc000000u};
+  nodes::Text fDebugSize{"", 16.0f, 0xffffffffu, true};
+  nodes::Text fDebugProbes{"", 16.0f, 0xffffffffu, true};
+  nodes::Text fProbeNatural{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
+  nodes::Text fProbeCapped{"A sieve of Eratosthenes", 15.0f, 0xff00ff00u, true};
+
   app_window() {
     this->apply({.fill = true});
     fPaper.apply({.fill = true});
+    // The capped probe is a title's own shape: 15 points, bold, in 160.
+    fProbeCapped.apply({.autoSize = scene::axes::kBoth, .maxWidth = 160.0f});
+    fProbeNatural.apply({.autoSize = scene::axes::kBoth});
     fMessages.apply({.background = 0u});
     // A conversation is read at its foot: the messages are shown from their
     // last one, and stay there as they grow -- until the reader scrolls away,
@@ -203,6 +214,39 @@ struct app_window : scene::Node {
       fPrompt.again(asked, look, open_chat, width, height);
     else
       fPrompt.hide();
+    // The diagnostic overlay, over everything: what size the layout was
+    // made for, and what the two probes measured the frame before.
+    fDebugSize.setText(std::format(
+        "w={:.0f} h={:.0f} wide={} col={:.0f} scale={:.2f}", width, height,
+        wide ? 1 : 0, column, scene::pixelScale()));
+    fDebugProbes.setText(
+        std::format("10M={:.0f} | title@160 {:.0f}x{:.0f}",
+                    fProbeNatural.bounds().width(),
+                    fProbeCapped.bounds().width(),
+                    fProbeCapped.bounds().height()));
+    fDebugPlate.apply({.anchor = scene::anchor::kTopLeft,
+                       .x = 0.0f,
+                       .y = 0.0f,
+                       .relativeSize = scene::axes::kNone,
+                       .width = 340.0f,
+                       .height = 120.0f});
+    fDebugSize.apply({.anchor = scene::anchor::kTopLeft,
+                      .x = 8.0f,
+                      .y = 8.0f,
+                      .autoSize = scene::axes::kBoth});
+    fDebugProbes.apply({.anchor = scene::anchor::kTopLeft,
+                        .x = 8.0f,
+                        .y = 32.0f,
+                        .autoSize = scene::axes::kBoth});
+    fProbeNatural.apply({.anchor = scene::anchor::kTopLeft,
+                         .x = 8.0f,
+                         .y = 60.0f,
+                         .autoSize = scene::axes::kBoth});
+    fProbeCapped.apply({.anchor = scene::anchor::kTopLeft,
+                        .x = 8.0f,
+                        .y = 84.0f,
+                        .autoSize = scene::axes::kBoth,
+                        .maxWidth = 160.0f});
   }
 
   void forEachChild(auto &&f) {
@@ -216,6 +260,11 @@ struct app_window : scene::Node {
     f(fSettings);
     f(fDesign);
     f(fPrompt);
+    f(fDebugPlate);
+    f(fDebugSize);
+    f(fDebugProbes);
+    f(fProbeNatural);
+    f(fProbeCapped);
   }
 };
 
