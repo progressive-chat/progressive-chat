@@ -65,6 +65,11 @@ struct conversation_row : scene::Node {
 
   conversation_row() {
     this->apply({.fillX = true, .height = row_height, .cornerRadius = 16.0f});
+    // One line each, cut where the row ends: a name that wraps stood its
+    // second line over what was said last, and what was said last over the
+    // row after it.
+    fTitle.setElided(true);
+    fSaid.setElided(true);
     fPlate.apply({.fill = true});
     fAvatar.apply({.width = avatar,
                    .height = avatar,
