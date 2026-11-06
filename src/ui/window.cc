@@ -12,6 +12,7 @@ export module pchat.ui:window;
 import std;
 import skiff.scene;
 import skiff.nodes;
+import skiff.paint;
 import pchat.core;
 import pchat.config;
 import pchat.app.requests;
@@ -51,6 +52,7 @@ struct app_window : scene::Node {
   nodes::Text fDebugSize{"", 16.0f, 0xffffffffu, true};
   nodes::Text fDebugProbes{"", 16.0f, 0xffffffffu, true};
   nodes::Text fDebugMore{"", 16.0f, 0xffffffffu, true};
+  nodes::Text fDebugFaces{"", 16.0f, 0xffffffffu, true};
   nodes::Text fProbeNatural{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
   nodes::Text fProbeCapped{"A sieve of Eratosthenes", 15.0f, 0xff00ff00u, true};
   // Two more probes: one with a width said to it once, one said nothing
@@ -244,12 +246,33 @@ struct app_window : scene::Node {
                     fProbeOnce.bounds().width(),
                     fProbeFixed.bounds().width(),
                     fDrawer.fHeading.bounds().width()));
+    // What the text is measured with: whether that font has a face at all,
+    // what it measures directly, how many faces stand behind it, and whether
+    // the directory the system's are read from is a directory there.
+    auto *face = skiff::paint::defaultFont();
+    const bool has = face != nullptr && face->getTypeface() != nullptr;
+    if (face != nullptr && !face->getTypeface()) {
+      const auto &primary = skiff::paint::fonts().primary();
+      if (primary) {
+        face->setTypeface(primary);
+      }
+    }
+    float api = 0.0f;
+    if (face != nullptr) {
+      face->setSize(15.0f);
+      api = skiff::paint::fonts().measure(*face, "MMMMMMMMMM");
+    }
+    std::error_code error;
+    fDebugFaces.setText(
+        std::format("face={} api={:.0f} fb={} dir={}", has, api,
+                    skiff::paint::fonts().fallbackCount(),
+                    std::filesystem::is_directory("/system/fonts", error)));
     fDebugPlate.apply({.anchor = scene::anchor::kTopLeft,
                        .x = 0.0f,
                        .y = 0.0f,
                        .relativeSize = scene::axes::kNone,
                        .width = 340.0f,
-                       .height = 150.0f});
+                       .height = 180.0f});
     fDebugSize.apply({.anchor = scene::anchor::kTopLeft,
                       .x = 8.0f,
                       .y = 8.0f,
@@ -262,13 +285,17 @@ struct app_window : scene::Node {
                       .x = 8.0f,
                       .y = 56.0f,
                       .autoSize = scene::axes::kBoth});
+    fDebugFaces.apply({.anchor = scene::anchor::kTopLeft,
+                       .x = 8.0f,
+                       .y = 80.0f,
+                       .autoSize = scene::axes::kBoth});
     fProbeNatural.apply({.anchor = scene::anchor::kTopLeft,
                          .x = 8.0f,
-                         .y = 88.0f,
+                         .y = 112.0f,
                          .autoSize = scene::axes::kBoth});
     fProbeCapped.apply({.anchor = scene::anchor::kTopLeft,
                         .x = 8.0f,
-                        .y = 112.0f,
+                        .y = 136.0f,
                         .autoSize = scene::axes::kBoth,
                         .maxWidth = 160.0f});
   }
@@ -292,6 +319,7 @@ struct app_window : scene::Node {
     f(fProbeOnce);
     f(fProbeFixed);
     f(fDebugMore);
+    f(fDebugFaces);
   }
 };
 
