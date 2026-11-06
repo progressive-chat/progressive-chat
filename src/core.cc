@@ -76,6 +76,14 @@ struct conversation {
   // conversation's own words, and, where it has none, what every answer is
   // given wherever nothing else has been said.
   std::string told;
+  // Whether what is thought before every answer but the last is kept back
+  // from what a wire is given: asked once by the three dots' own row, and
+  // said of this conversation and no other (pchat.logic.compacted).
+  bool given_short = false;
+  // Whether what answers here may look something up as it answers: asked of
+  // the wire when the asking is written, and the looking up itself not this
+  // program's own to do.
+  bool search_the_web = false;
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
   float context_used = 0.0f;

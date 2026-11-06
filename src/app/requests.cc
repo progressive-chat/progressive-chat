@@ -73,6 +73,20 @@ struct share_conversation {
 // and one to put it away again.
 // What every answerer in a conversation is told: opened to be read, written
 // into the conversation as it is typed, and put away again.
+// A long conversation asked to be given short: what every answer but the
+// last thought is kept back out of what a wire is given from now on
+// (pchat.logic.compacted). One way only -- asking twice keeps nothing more
+// back than asking once did.
+// Switched for one conversation: what answers in it may look something up
+// as it answers. The looking up is the wire's own, and nothing here searches
+// anything -- only what the asking says about searching.
+struct set_web_search {
+  conversation_id chat;
+  bool now = false;
+};
+struct compact_context {
+  conversation_id chat;
+};
 struct open_system_prompt {
   conversation_id chat;
 };
@@ -111,6 +125,19 @@ struct set_generation {
   asking_what field = asking_what::temperature;
   double value = 0.0;
 };
+// The three dots beside the answerer's circle, opened or closed: the menu of
+// what the next answer is asked with (design-doc.md, "The foot"). It is this
+// card's own, and stands over nothing else in the window.
+struct toggle_thinking {};
+// Thinking before an answer, and how hard it is to think: the first two of
+// the things a three-dot menu says (design-doc.md, "The editor's row"), read
+// into what every wire is asked for from then on.
+struct set_thinking {
+  bool on = false;
+};
+struct set_effort {
+  effort how = effort::some;
+};
 // One of the tools this program owns, switched: on, and a model is told it
 // may ask for it; off, and no answer this program writes mentions it.
 struct set_tool {
@@ -135,7 +162,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
-                              set_generation, set_tool,
+                              set_generation, set_thinking, set_effort, set_tool,
+                             toggle_thinking,
                               set_answerer, copy_text>;
 
 class requests {
