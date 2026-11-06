@@ -50,8 +50,13 @@ struct app_window : scene::Node {
   nodes::Box<> fDebugPlate{0xcc000000u};
   nodes::Text fDebugSize{"", 16.0f, 0xffffffffu, true};
   nodes::Text fDebugProbes{"", 16.0f, 0xffffffffu, true};
+  nodes::Text fDebugMore{"", 16.0f, 0xffffffffu, true};
   nodes::Text fProbeNatural{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
   nodes::Text fProbeCapped{"A sieve of Eratosthenes", 15.0f, 0xff00ff00u, true};
+  // Two more probes: one with a width said to it once, one said nothing
+  // after it was made -- whether the measuring is lost by being said again.
+  nodes::Text fProbeOnce{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
+  nodes::Text fProbeFixed{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
 
   app_window() {
     this->apply({.fill = true});
@@ -59,6 +64,15 @@ struct app_window : scene::Node {
     // The capped probe is a title's own shape: 15 points, bold, in 160.
     fProbeCapped.apply({.autoSize = scene::axes::kBoth, .maxWidth = 160.0f});
     fProbeNatural.apply({.autoSize = scene::axes::kBoth});
+    fProbeOnce.apply({.anchor = scene::anchor::kTopLeft,
+                      .x = 200.0f,
+                      .y = 8.0f,
+                      .autoSize = scene::axes::kBoth});
+    fProbeFixed.apply({.anchor = scene::anchor::kTopLeft,
+                       .x = 200.0f,
+                       .y = 32.0f,
+                       .relativeSize = scene::axes::kNone,
+                       .width = 200.0f});
     fMessages.apply({.background = 0u});
     // A conversation is read at its foot: the messages are shown from their
     // last one, and stay there as they grow -- until the reader scrolls away,
@@ -224,12 +238,18 @@ struct app_window : scene::Node {
                     fProbeNatural.bounds().width(),
                     fProbeCapped.bounds().width(),
                     fProbeCapped.bounds().height()));
+    fDebugMore.setText(
+        std::format("each={:.0f} once={:.0f} fixed={:.0f} chats={:.0f}",
+                    fProbeNatural.bounds().width(),
+                    fProbeOnce.bounds().width(),
+                    fProbeFixed.bounds().width(),
+                    fDrawer.fHeading.bounds().width()));
     fDebugPlate.apply({.anchor = scene::anchor::kTopLeft,
                        .x = 0.0f,
                        .y = 0.0f,
                        .relativeSize = scene::axes::kNone,
                        .width = 340.0f,
-                       .height = 120.0f});
+                       .height = 150.0f});
     fDebugSize.apply({.anchor = scene::anchor::kTopLeft,
                       .x = 8.0f,
                       .y = 8.0f,
@@ -238,13 +258,17 @@ struct app_window : scene::Node {
                         .x = 8.0f,
                         .y = 32.0f,
                         .autoSize = scene::axes::kBoth});
+    fDebugMore.apply({.anchor = scene::anchor::kTopLeft,
+                      .x = 8.0f,
+                      .y = 56.0f,
+                      .autoSize = scene::axes::kBoth});
     fProbeNatural.apply({.anchor = scene::anchor::kTopLeft,
                          .x = 8.0f,
-                         .y = 60.0f,
+                         .y = 88.0f,
                          .autoSize = scene::axes::kBoth});
     fProbeCapped.apply({.anchor = scene::anchor::kTopLeft,
                         .x = 8.0f,
-                        .y = 84.0f,
+                        .y = 112.0f,
                         .autoSize = scene::axes::kBoth,
                         .maxWidth = 160.0f});
   }
@@ -265,6 +289,9 @@ struct app_window : scene::Node {
     f(fDebugProbes);
     f(fProbeNatural);
     f(fProbeCapped);
+    f(fProbeOnce);
+    f(fProbeFixed);
+    f(fDebugMore);
   }
 };
 
