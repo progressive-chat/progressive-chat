@@ -94,8 +94,7 @@ struct conversation_row : scene::Node {
     fCount.apply({.anchor = scene::anchor::kTopRight,
                   .origin = scene::anchor::kCentre,
                   .x = -edge - 10.0f,
-                  .y = 48.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .y = 48.0f});
   }
 
   // A row is pressed to open what it names: said as a request, and answered
@@ -171,7 +170,7 @@ struct drawer_screen : scene::Node {
 
   // The row for this place down the drawer, made there where there is none:
   // every row says where it stands, told the place it was asked for.
-  [[nodiscard]] conversation_row &row_at(std::size_t place) {
+  [[nodiscard]] conversation_row &row_at(std::size_t place, float text) {
     while (fRows.size() <= place)
       fRows.push_back(std::make_unique<conversation_row>());
     conversation_row &row = *fRows[place];
@@ -179,6 +178,12 @@ struct drawer_screen : scene::Node {
                .x = edge,
                .y = edge + 86.0f +
                     static_cast<float>(place) * (row_height + 4.0f)});
+    // How far the name and what was said reach: the room the row was given,
+    // less the circle's and less what the time and the badge keep at its end
+    // -- a width of their own was one written for one width of drawer, and
+    // left them ended half way over a wider one.
+    row.fTitle.apply({.maxWidth = text});
+    row.fSaid.apply({.maxWidth = text});
     return row;
   }
 
@@ -226,6 +231,9 @@ struct drawer_screen : scene::Node {
     fSettingsPlate.again(asked, app::open_settings{}, look.raised);
     fSettingsMark.setColour(look.text);
     fSink->asked = asked;
+    const float row_room = this->bounds().width() - 2.0f * edge;
+    const float text =
+        std::max(60.0f, row_room - avatar - gap - edge - 64.0f);
     const auto rows = logic::matching(root, query);
     fNone.setVisible(rows.empty());
     for (std::size_t at = 0; at < rows.size(); ++at) {
@@ -246,9 +254,9 @@ struct drawer_screen : scene::Node {
         said = places.front().found->text;
       // How long ago, as the clock reads it: the moment the last thing was
       // said in it, which is what the order of these rows comes from too.
-      this->row_at(at).again(asked, look, chat, said,
-                             clock_of(chat.last_activity),
-                             chat.id.value == opened);
+      this->row_at(at, text).again(asked, look, chat, said,
+                                   clock_of(chat.last_activity),
+                                   chat.id.value == opened);
     }
     // What is left of the list where fewer conversations were kept than were
     // kept here before: said by nobody.
