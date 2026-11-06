@@ -1,0 +1,9 @@
+{
+  "entries": [
+    {
+      "name": "dialogs/日本語.json",
+      "content": "{\"title\":\"unicode 🙂\"}",
+      "method": "deflate"
+    }
+  ]
+}

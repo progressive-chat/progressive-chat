@@ -1,0 +1,16 @@
+{
+  "object": {
+    "conversationSettings": {
+      "conversation-🙂": {
+        "shellEnabled": true
+      }
+    }
+  },
+  "replace": false,
+  "allowSecrets": false,
+  "allowedConversationIds": [
+    "conversation-🙂"
+  ],
+  "modelAliases": {},
+  "customModels": []
+}

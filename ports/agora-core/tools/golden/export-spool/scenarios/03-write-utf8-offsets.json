@@ -1,0 +1,26 @@
+{
+  "writes": [
+    {
+      "op": "conversation",
+      "id": "conversation-🙂",
+      "dataChangedAt": 1700000000001,
+      "json": "{\"title\":\"unicode 🙂 text\"}"
+    },
+    {
+      "op": "message",
+      "json": "{\"text\":\"日本語のメッセージ\"}"
+    }
+  ],
+  "reads": [
+    {
+      "kind": "records",
+      "slice": "conv:0"
+    },
+    {
+      "kind": "iterator",
+      "slices": [
+        "conv:0"
+      ]
+    }
+  ]
+}
