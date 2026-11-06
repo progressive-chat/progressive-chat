@@ -53,6 +53,11 @@ struct app_window : scene::Node {
   nodes::Text fDebugProbes{"", 16.0f, 0xffffffffu, true};
   nodes::Text fDebugMore{"", 16.0f, 0xffffffffu, true};
   nodes::Text fDebugFaces{"", 16.0f, 0xffffffffu, true};
+  nodes::Text fDebugPlain{"", 16.0f, 0xffffffffu, true};
+  // Two probes with no auto-size said to them: whether a childless node
+  // that sizes itself is measured at all.
+  nodes::Text fProbeFree{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
+  nodes::Text fProbe160{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
   nodes::Text fProbeNatural{"MMMMMMMMMM", 15.0f, 0xff00ff00u, true};
   nodes::Text fProbeCapped{"A sieve of Eratosthenes", 15.0f, 0xff00ff00u, true};
   // Two more probes: one with a width said to it once, one said nothing
@@ -66,6 +71,11 @@ struct app_window : scene::Node {
     // The capped probe is a title's own shape: 15 points, bold, in 160.
     fProbeCapped.apply({.autoSize = scene::axes::kBoth, .maxWidth = 160.0f});
     fProbeNatural.apply({.autoSize = scene::axes::kBoth});
+    fProbeFree.apply({.anchor = scene::anchor::kTopLeft, .x = 8.0f, .y = 184.0f});
+    fProbe160.apply({.anchor = scene::anchor::kTopLeft,
+                     .x = 8.0f,
+                     .y = 208.0f,
+                     .maxWidth = 160.0f});
     fProbeOnce.apply({.anchor = scene::anchor::kTopLeft,
                       .x = 200.0f,
                       .y = 8.0f,
@@ -267,12 +277,16 @@ struct app_window : scene::Node {
         std::format("face={} api={:.0f} fb={} dir={}", has, api,
                     skiff::paint::fonts().fallbackCount(),
                     std::filesystem::is_directory("/system/fonts", error)));
+    fDebugPlain.setText(
+        std::format("free={:.0f}x{:.0f} | m160={:.0f}x{:.0f}",
+                    fProbeFree.bounds().width(), fProbeFree.bounds().height(),
+                    fProbe160.bounds().width(), fProbe160.bounds().height()));
     fDebugPlate.apply({.anchor = scene::anchor::kTopLeft,
                        .x = 0.0f,
                        .y = 0.0f,
                        .relativeSize = scene::axes::kNone,
                        .width = 340.0f,
-                       .height = 180.0f});
+                       .height = 240.0f});
     fDebugSize.apply({.anchor = scene::anchor::kTopLeft,
                       .x = 8.0f,
                       .y = 8.0f,
@@ -288,6 +302,10 @@ struct app_window : scene::Node {
     fDebugFaces.apply({.anchor = scene::anchor::kTopLeft,
                        .x = 8.0f,
                        .y = 80.0f,
+                       .autoSize = scene::axes::kBoth});
+    fDebugPlain.apply({.anchor = scene::anchor::kTopLeft,
+                       .x = 8.0f,
+                       .y = 104.0f,
                        .autoSize = scene::axes::kBoth});
     fProbeNatural.apply({.anchor = scene::anchor::kTopLeft,
                          .x = 8.0f,
@@ -320,6 +338,9 @@ struct app_window : scene::Node {
     f(fProbeFixed);
     f(fDebugMore);
     f(fDebugFaces);
+    f(fDebugPlain);
+    f(fProbeFree);
+    f(fProbe160);
   }
 };
 
