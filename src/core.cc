@@ -79,6 +79,12 @@ struct conversation {
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
   float context_used = 0.0f;
+  // Asked once by the three dots' own row, and said of this conversation and
+  // no other: whether what is thought before every answer but the last is
+  // kept back from what a wire is given (pchat.logic.compacted). Standing
+  // last, so what says this struct whole -- field after field, in
+  // src/app/sample.cc -- keeps saying what it said before it existed.
+  bool given_short = false;
   // Which model writes here when nothing else has been said: the first of
   // them, and nothing where there is none.
   [[nodiscard]] std::string leading_model() const {
