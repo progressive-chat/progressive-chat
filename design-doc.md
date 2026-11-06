@@ -22,15 +22,21 @@ begins a new chat, and beside it **how many tokens this chat is** (for example
 put together. Nothing else is in the top. No search of its own: the drawer
 searches.
 
-### What the top holds that is not drawn yet
+### What the top holds
 
-Everything below this line is said because it is wanted, and none of it stands
-in the program today.
+Everything below this line is said because it is wanted, and all of it stands
+in the program today (`src/ui/top_bar.cc`), in that order across the edge: the
+pill that opens the drawer at the left, the conversation's name in the middle,
+and at the right what answers in it, what the whole conversation has been
+worth, and the presses that say something else can be begun in it.
 
 * **The models that answer this conversation** stand on the top edge of the
   main panel, one bubble each: the name in a bubble is **what the model is
-  called**, and pressing the bubble is how you say which model this is and read
-  which it has been. What it has used of its window is **not** said again in
+  called**. Which models answer in this conversation is said under
+  **Services → Models** in the settings, and nowhere else: bubbles are read
+  out of that, and say nothing back into it. Four of them are said at most,
+  and the count beside them belongs to the conversation and not to any one of
+  them. What it has used of its window is **not** said again in
   every bubble — one conversation's share of one window is said once, beside
   the editor below (**The editor's row**), where every model that answers in it
   would otherwise say the same count three times over.
@@ -41,10 +47,12 @@ in the program today.
 * **Fork conversation** and **share** stand in the top as well: the one takes
   this conversation as a new one written from here on apart, the other gives it
   out.
-* **Where the screen is narrow**, four of these go behind **three dots** beside
-  the plus and come out of it: **search**, **system prompt**, **fork
-  conversation**, **share**. Wide, they stand as themselves; narrow, they are
-  one press deep.
+* **Where the screen is narrow**, three of them go behind **three dots**
+  beside the plus and come out of it: **system prompt**, **fork conversation**,
+  **share**. Wide, they stand as themselves; narrow, they are one press deep.
+  Search is not among them, for it is what the drawer keeps: what is typed
+  there is looked for in every conversation, and the drawer stands beside the
+  messages wherever there is room for both.
 
 The foot is the editor. It always says **which model it will send to**, even
 before anything has been written, and beside that a **circle that shows how full
@@ -100,7 +108,16 @@ in the panel is a plus:
   and nowhere else.
 * **A plus at the editor's left, before the model's name**, attaches something
   to what you are writing. Pressed, it says four things: **photo or media from
-  the camera**, **photos from the gallery**, **videos**, **files**.
+  the camera**, **photos from the gallery**, **videos**, **files**. What is
+  chosen is kept with the next message and named under it in the room, named
+  once more above the card until it is sent -- one pill for each, and pressed
+  to take it back out, for what was wrongly chosen is not sent for want of
+  somewhere to put it back -- and sent with it: a file that is words is given
+  to the wire within the turn, after the words written beside it; a picture
+  and a moving picture are kept and given to nothing yet, for giving one is
+  its own asking and no wire here answers it. Of the four, what this machine
+  cannot answer stands grey and asks for nothing: no desk takes a photo now
+  (`src/platform/chosen.cc`, `can`).
 * **The model's name** stands next, as **the model itself is called** and,
   after it in brackets, **which provider it is asked through**:
   `DeepSeek V4.1 Flash (ds)`. The id a wire is given — `deepseek-v4-1-flash` —
@@ -110,10 +127,16 @@ in the panel is a plus:
   beside it says the same count in words again: what one conversation has used
   of one window is said once on the screen and not once for every model that
   answers in it.
-* **Three dots after the circle** open one menu, and in it: **thinking**,
-  switched on and off, with **how hard it is asked to think** said beside it
-  (`max`); **web search**, switched on and off; **compact context**, which is a
-  grey press and nothing else while the chat is empty; and **Advanced**.
+* **Three dots after the circle** open one menu above the card, and in it:
+  **thinking**, switched on and off, with what it stands at said beside it;
+  **how hard it thinks**, one press round the four it keeps to and back again
+  at the least of them; **web search**, switched on and off for this one
+  conversation and nothing else, which asks nothing of this program itself --
+  whether one may search is said to the wire with the asking, and the looking
+  up is the wire's own --; **compact context**, which from now on gives the
+  wire a shorter telling of this conversation than it gave a moment ago
+  (pchat.logic.compacted); and **Advanced**, which is the large settings. All
+  four are drawn, and every one of them asks something that answers it.
 * **Advanced** opens the **large settings**: the **context window size**, the
   **temperature**, the **maximum output tokens**, the **top p**, the
   **frequency penalty** and the **presence penalty** — the same five the

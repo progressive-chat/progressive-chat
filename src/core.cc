@@ -79,6 +79,17 @@ struct conversation {
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
   float context_used = 0.0f;
+  // Two things asked of a whole conversation and said of no other, both of
+  // them standing last so that what says this struct whole -- said in order,
+  // in src/app/sample.cc -- keeps saying what it said before either existed.
+  // Whether what is thought before every answer but the last is kept back
+  // from what a wire is given: asked once by the three dots' own row
+  // (pchat.logic.compacted).
+  bool given_short = false;
+  // Whether what answers here may look something up as it answers: asked of
+  // the wire when the asking is written, and the looking up itself not this
+  // program's own to do.
+  bool search_the_web = false;
   // Which model writes here when nothing else has been said: the first of
   // them, and nothing where there is none.
   [[nodiscard]] std::string leading_model() const {
@@ -103,6 +114,25 @@ struct thought {
   friend bool operator==(const thought &, const thought &) = default;
 };
 
+// What was chosen on the machine and said with a message: its name as the
+// machine called it, what kind of thing the machine says it is, and its bytes
+// whole. Kept with the message they were said in and read nowhere else: what
+// a wire is given of them is given when this program asks with them, and not
+// before.
+struct attachment {
+  std::string name;
+  std::string kind;
+  std::vector<std::byte> bytes;
+  friend bool operator==(const attachment &, const attachment &) = default;
+};
+
+// The four things a reader chooses between at the paperclip: what a camera
+// takes now, what the machine keeps of pictures already taken, what it keeps
+// of moving ones, and the rest of its files (design-doc.md, "The editor's
+// row"). Said here and not in pchat.platform.chosen, because what the four
+// of them are is not a platform's to decide.
+enum class chooses { camera, pictures, moving, files };
+
 // A message: one thing said in one conversation, by somebody or by its
 // reader. Which of the two decides where it is drawn.
 struct message {
@@ -120,6 +150,11 @@ struct message {
   // What this one is worth, in tokens: read out of a protocol where it says,
   // counted out of its words where it does not.
   std::uint32_t tokens = 0;
+  // What was chosen to be said with it, kept with it. Standing last, as the
+  // other things added after this struct was first said do: what says a
+  // message whole field after field -- in src/app/sample.cc -- keeps saying
+  // what it said before any of them existed.
+  std::vector<attachment> kept;
   friend bool operator==(const message &, const message &) = default;
 };
 

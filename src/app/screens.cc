@@ -19,11 +19,13 @@ import pchat.ui;
 import pchat.provider;
 import pchat.provider.run;
 import pchat.platform.carry;
+import pchat.platform.chosen;
 import pchat.provider.loop;
 import pchat.tools;
 import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
+import pchat.logic.compacted;
 import pchat.logic.lists;
 
 namespace scene = skiff::scene;
@@ -60,9 +62,17 @@ public:
                 drawer_ = false;
             },
             [&](const send_message &asking) {
+              // What the next answer is asked with is asked before the
+              // message is sent, and so the three dots are put away with
+              // it rather than left open over what is coming.
+              thinking_menu_ = false;
+              // What was chosen since, said with the message it was chosen
+              // for and with nothing else: a picture of what is in front of
+              // the camera goes with the words written beside it or without
+              // any, and never into the chat after it.
               const logic::sent_message said = logic::send(
-                  logic::sending_request{
-                      asking.chat, asking.text, {}, std::nullopt},
+                  logic::sending_request{asking.chat, asking.text,
+                                         held_of(asking.chat), std::nullopt},
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
               recount(asking.chat);
@@ -127,7 +137,23 @@ public:
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
-            [&](const open_settings &) { settings_ = true; },
+            // Switched for this conversation and no other: every asking
+            // written for it from now on says whether it may search.
+            [&](const set_web_search &asking) {
+              for (conversation &one : root_.conversations)
+                if (one.id == asking.chat) one.search_the_web = asking.now;
+            },
+            // Given short from now on: what is said in it is no shorter for
+            // it, only what a wire is given of it.
+            [&](const compact_context &asking) {
+              for (conversation &one : root_.conversations)
+                if (one.id == asking.chat) one.given_short = true;
+              thinking_menu_ = false;
+            },
+            [&](const open_settings &) {
+              settings_ = true;
+              thinking_menu_ = false;
+            },
             [&](const close_settings &) { settings_ = false; },
             [&](const fork_conversation &asking) {
               conversation *said = nullptr;
@@ -225,6 +251,27 @@ public:
             // pressed for, kept inside the lines it is said to have
             // (pchat.config, `asking`).
             [&](const set_generation &asking) { how(asking.field, asking.value); },
+            // Thinking switched, and how hard it is to think: carried into the
+            // asking every answer made from now on is written with, and so
+            // into every body sent for one.
+            [&](const toggle_thinking &) { thinking_menu_ = !thinking_menu_; },
+            // The paperclip opened or shut, and one of the four asked for:
+            // where this machine chooses nothing, no paperclip is drawn to
+            // press, so nothing here is asked by a row that answers nothing.
+            [&](const open_attach &) { attach_menu_ = !attach_menu_; },
+            [&](const pick_files &asking) {
+              attach_menu_ = false;
+              chosen_.ask(asking.what);
+            },
+            // Taken back out before it is said: what the pill above the card
+            // that named it was pressed for.
+            [&](const drop_file &asking) {
+              if (asking.which < held_.size())
+                held_.erase(held_.begin() + static_cast<std::ptrdiff_t>(
+                                                asking.which));
+            },
+            [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
+            [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
             // A tool switched: one of the three this program owns, and what
             // it is switched to.
             [&](const set_tool &asking) {
@@ -257,9 +304,30 @@ public:
     for (const request &one : asked_.drain())
       take(one);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
-                        design_, system_, more_, drawer_, width_, height_,
-                        &asked_);
+    // What was chosen since the last frame, kept for the conversation it was
+    // chosen in and for no other: said with the next message said in it.
+    for (attachment &one : chosen_.take()) {
+      if (!root_.opened)
+        continue;
+      if (held_for_ != *root_.opened) {
+        held_.clear();
+        held_for_ = *root_.opened;
+      }
+      held_.push_back(std::move(one));
+    }
+    // Whether what a wire is given of this conversation can be given shorter:
+    // what every answer but the last thought, and nothing where it has been
+    // asked to be given short of it already.
+    const bool to_compact =
+        root_.opened &&
+        std::ranges::none_of(root_.conversations, [&](const conversation &one) {
+          return one.id == *root_.opened && one.given_short;
+        }) &&
+        logic::anything_to_compact_of(root_.messages, *root_.opened);
+    scene_.root().again(look_, root_, shown_, how_, query_, to_compact,
+                        chosen_.any(), held_, dark_, settings_, design_,
+                        system_, more_, drawer_, thinking_menu_, attach_menu_,
+                        width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -310,6 +378,14 @@ private:
   };
   std::optional<answer_coming> answering_;
 
+  // What was chosen for this conversation and not said yet: given away whole
+  // to the one message that asks for it, and to nothing said after it.
+  [[nodiscard]] std::vector<attachment> held_of(const conversation_id &chat) {
+    if (held_for_ != chat)
+      return {};
+    return std::exchange(held_, {});
+  }
+
   // Asked of a model, where anything here can carry the asking. Today nothing
   // can anywhere but a page -- that is what `carrying::any` says -- and where
   // nothing can, nothing is asked and no answer comes, as it was before.
@@ -322,13 +398,30 @@ private:
     const provider::endpoint at{.base = opened_.base,
                                 .model = ending_of(chat),
                                 .told = told_of(chat)};
-    // Not const: a view over messages asked of more than once is read more
-    // than once, and reading it again is not a thing a const view of it says
-    // yes to.
-    auto turns = root_.messages |
-                       std::views::filter([&chat](const message &one) {
-                         return one.chat == chat;
-                       });
+    // Whether this conversation has been asked to be given short: said of it
+    // once by the three dots' own row, and of no other.
+    // Whether what answers here may look something up: said of the
+    // conversation, and carried into the asking written below.
+    const bool may_search = [&] {
+      const auto asked = std::ranges::find(root_.conversations, chat,
+                                          [](const conversation &one) {
+                                            return one.id;
+                                          });
+      return asked != std::end(root_.conversations) && asked->search_the_web;
+    }();
+    const bool kept_back = [&] {
+      const auto asked = std::ranges::find(root_.conversations, chat,
+                                          [](const conversation &one) {
+                                            return one.id;
+                                          });
+      return asked != std::end(root_.conversations) && asked->given_short;
+    }();
+    // This conversation's own messages, as a wire is to be given them: whole,
+    // or with what every answer but the last thought kept back where it has
+    // been asked to be given short.
+    std::vector<message> turns =
+        kept_back ? logic::compacted_of(root_.messages, chat).said
+                    : logic::said_in(root_.messages, chat);
     // What is ours to answer goes in the asking, so a model knows it may stop
     // and ask; and it is kept here, because answering those calls later is
     // this program's and nobody else's.
@@ -345,6 +438,7 @@ private:
                                               turns,
                                               4,
                                               provider::wanted{
+                                                  .search = may_search,
                                                   .tools = mine.offered()}},
                       .carried = std::move(carried),
                       .mine = std::move(mine),
@@ -564,6 +658,16 @@ private:
   // Whether what stands behind the three dots is out: put away again by one
   // press of anything it holds, or of the dots themselves.
   bool more_ = false;
+  // Whether the three dots beside the circle are open: said to the window
+  // and to nothing else, because it is the composer's own menu and not a
+  // page.
+  bool thinking_menu_ = false;
+  bool attach_menu_ = false;
+  // What this machine chooses files with, and what it has chosen for the
+  // conversation it is being written in since the last message was sent.
+  platform::choosing chosen_;
+  std::vector<attachment> held_;
+  conversation_id held_for_;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
 

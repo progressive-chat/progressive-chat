@@ -132,6 +132,36 @@ SAID(provider, what_the_model_keeps_is_turns_on_a_wire) {
   EXPECT_EQ(turns[1].thought, std::string("> looked\n"));
 }
 
+SAID(provider, a_file_that_is_words_is_given_to_the_wire_with_the_message) {
+  message said{.id = message_id{"1"}, .text = "What does this say", .outgoing = true};
+  said.kept.push_back(attachment{
+      .name = "notes.txt", .kind = "text/plain",
+      .bytes = {std::byte{'a'}, std::byte{'b'}, std::byte{'c'}}});
+  const provider::turn turn = provider::turns_of(
+      std::vector<message>{said}).front();
+  EXPECT_EQ(turn.text,
+            std::string("What does this say\n\nWhat notes.txt says:\nabc"));
+}
+
+SAID(provider, a_file_that_is_not_words_is_kept_and_given_to_nothing) {
+  message said{.id = message_id{"1"}, .text = "Look here", .outgoing = true};
+  said.kept.push_back(attachment{.name = "photo.png",
+                                 .kind = "image/png",
+                                 .bytes = {std::byte{0x89}, std::byte{'P'}}});
+  const provider::turn turn = provider::turns_of(
+      std::vector<message>{said}).front();
+  EXPECT_EQ(turn.text, std::string("Look here"));
+}
+
+SAID(provider, a_file_says_its_kind_where_its_kind_says_nothing) {
+  message said{.id = message_id{"1"}, .text = "Read it", .outgoing = true};
+  said.kept.push_back(attachment{
+      .name = "main.cc", .bytes = {std::byte{'/'}, std::byte{'/'}}});
+  const provider::turn turn = provider::turns_of(
+      std::vector<message>{said}).front();
+  EXPECT_EQ(turn.text, std::string("Read it"));
+}
+
 SAID(provider, a_stream_is_read_whole) {
   provider::stream one;
   one.feed(one_stream);
@@ -280,6 +310,26 @@ SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
   const provider::wanted none{.thinking = false};
   const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
+}
+
+// Looking something up as it answers, which is the wire's own to do: written
+// in the asking where it was asked for, and nowhere where it was not.
+SAID(provider, a_search_is_asked_for_where_it_is_asked_for) {
+  const std::vector<provider::turn> no_turns;
+  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
+  const provider::wanted yes{.search = true};
+  const provider::wanted no{};
+  EXPECT_TRUE(provider::body_of(openai, no_turns, yes).find(
+                  "\"web_search_options\":{\"search_context_size\":\"medium\"}") !=
+              std::string::npos);
+  EXPECT_TRUE(provider::body_of(openai, no_turns, no).find("search") ==
+              std::string::npos);
+  // Asked for a model that has no search of its own all the same: how much
+  // of what it reads is kept beside the answer is what is being said here,
+  // and not which wire is being spoken to.
+  const provider::endpoint relay{.base = "https://openrouter.ai/api/v1", .model = "o4-mini"};
+  EXPECT_TRUE(provider::body_of(relay, no_turns, yes).find("web_search_options") !=
+              std::string::npos);
 }
 
 int main() { return pchat::tests::run(); }
