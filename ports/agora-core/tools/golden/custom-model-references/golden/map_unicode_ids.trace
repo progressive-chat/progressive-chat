@@ -1,0 +1,4 @@
+name|map_unicode_ids
+op|map
+args|model|new|alias|model=>1|b=>2
+out|map|b=>2|new=>alias

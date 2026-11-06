@@ -1,0 +1,1 @@
+{"bytes":"C\t{\"title\":\"unicode 🙂\"}\nM\t{\"text\":\"日本語\"}\n","reads":[{"records":[{"type":"C","json":"{\"title\":\"unicode 🙂\"}"},{"type":"M","json":"{\"text\":\"日本語\"}"}]},{"payloads":["{\"title\":\"unicode 🙂\"}","{\"text\":\"日本語\"}"]},{"payloads":["{\"title\":\"unicode 🙂\"}","{\"text\":\"日本語\"}"]},{"error":{"type":"IOException","message":"Invalid export spool record"}}]}
