@@ -430,6 +430,11 @@ struct message_row : nodes::Stack {
 // The messages of one conversation, in a column of their own: the rows' own
 // flow, so each begins under the height the one before it came to.
 struct message_screen : nodes::Stack {
+  // Said on the screen while the widths are being looked into: what room the
+  // column has, what widest the bubbles were given of it, and what the first
+  // row, its bubble and the text in it came to.
+  nodes::Text fSaidDebug{"", 11.0f, 0xff00ff00u, true};
+
   // One row for every message there is, made as they are asked for and kept
   // once made: a column of thirty-two of them was a third of a thousand
   // nodes, and as a member of this node -- where it was made, and again
@@ -439,6 +444,7 @@ struct message_screen : nodes::Stack {
   std::vector<std::unique_ptr<message_row>> fRows;
 
   message_screen() {
+    fSaidDebug.apply({.maxWidth = 0.0f});
     // What is said begins below the band the bar fades out in: the band is
     // over the top of the column, so the first thing said would otherwise
     // stand under it, dimmed by the paper's own colour over it.
@@ -477,6 +483,19 @@ struct message_screen : nodes::Stack {
       this->at(place).again(sink, look, one, head, room, model);
       last_outgoing = one.outgoing;
     }
+    if (!fRows.empty()) {
+      const message_row &first = *fRows.front();
+      const skia::SkRect row = first.bounds();
+      const skia::SkRect bub = first.fReader.fBubble.bounds();
+      const skia::SkRect body = first.fReader.fBubble.fBody.bounds();
+      const skia::SkRect answer = first.fAnswer.fBody.bounds();
+      fSaidDebug.setText(std::format(
+          "room={:.0f} widest={:.0f} row={:.0f}x{:.0f} bub={:.0f}x{:.0f} "
+          "body={:.0f}x{:.0f} ans={:.0f}x{:.0f}",
+          room, std::min(bubble_max, widest_share * std::max(0.0f, room)),
+          row.width(), row.height(), bub.width(), bub.height(), body.width(),
+          body.height(), answer.width(), answer.height()));
+    }
     // What is left of the column where fewer messages were said than were
     // said here before: said by nobody.
     for (std::size_t place = said.size(); place < fRows.size(); ++place)
@@ -484,6 +503,7 @@ struct message_screen : nodes::Stack {
   }
 
   void forEachChild(auto &&f) {
+    f(fSaidDebug);
     for (auto &row : fRows)
       f(*row);
   }
