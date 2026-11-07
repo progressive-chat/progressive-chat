@@ -18,6 +18,10 @@ namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 
 // How many seeds are offered.
+
+// What a seed's row keeps clear at its right, for the tick that marks the
+// seed in use.
+inline constexpr float tick_room = 91.0f;
 inline constexpr std::size_t max_seeds = 8;
 
 // One seed, as a row: its colour, its name, and whether it is in use. A row
@@ -33,13 +37,16 @@ struct seed_row : scene::Node {
 
   seed_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
-    fPlate.apply({.fill = true});
+    // The plate fills by its own corner radius, not by the row's: told the
+    // same one, it is what makes the row's ground rounded.
+    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
     fDot.apply({.width = 26.0f,
                 .height = 26.0f,
                 .cornerRadius = 13.0f,
                 .anchor = scene::anchor::kCentreLeft,
                 .origin = scene::anchor::kCentreLeft,
                 .x = 16.0f});
+    fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 56.0f});
@@ -72,6 +79,8 @@ struct seed_row : scene::Node {
     fDot.setColour(seed);
     fName.setText(std::string(name));
     fName.setColour(look.text);
+    if (spec.width)
+      fName.apply({.maxWidth = std::max(0.0f, *spec.width - tick_room)});
     fTick.setVisible(chosen);
     fTick.setColour(look.primary);
   }

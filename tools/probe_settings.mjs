@@ -1,6 +1,6 @@
 // pchat.probe.settings -- What the settings page says, and whether what is
 // said further down in it can be reached: the page opened, the names of the
-// eight groups read back out of the text mirror, the column scrolled to its
+// nine groups read back out of the text mirror, the column scrolled to its
 // foot, and the row that offers the design pressed there.
 import { chromium } from 'playwright';
 
@@ -26,6 +26,7 @@ console.log(`settings: ${said.length} chars`);
 for (const name of ['Services', 'Providers', 'Models', 'Responses',
   'Context', 'Multimodal', 'Image transcription', 'Tools', 'Web search',
   'Automation', 'Network', 'Proxy', 'Memory & Data', 'Skills',
+  'Notifications', 'Send a test notification',
   'Appearance & Language', 'Language', 'About'])
   console.log(`said ${name}: ${said.includes(name)}`);
 // The card stands in the middle of the room and what it holds scrolls: to

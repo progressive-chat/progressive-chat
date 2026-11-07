@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// pchat.ui:drawer -- The list of conversations down the side: a field to
-// search with, then one row per conversation -- its name, what was said
-// last, how long ago, and a badge for what is unread.
+// pchat.ui:drawer -- The list of conversations down the side: what the panel
+// is called, the field it searches with, Tasks and beside it Remote, a new
+// chat, then one row per conversation -- its name, what was said last, how
+// long ago where that is asked for, and a badge for what is unread -- and the
+// settings at the foot of the list.
 //
 // A row is a node of its own, made with the drawer and filled in again
 // whenever the model moves: the tree's shape is fixed, what it says is not.
@@ -16,6 +18,7 @@ import skiff.scene;
 import skiff.nodes;
 import skiff.widgets.textarea;
 import pchat.core;
+import pchat.config;
 import pchat.logic.lists;
 import pchat.logic.search;
 import pchat.app.requests;
@@ -49,13 +52,70 @@ struct search_given {
   }
 };
 
-// One conversation, as a row: the name's circle, the name, the time, what was
-// said last, and the badge. Pressed, it opens what it names. Filled in again
-// whenever what it says changes.
+// One row of the panel's own: what it is called, with its mark before the
+// name, on a ground of its own and rounded as it is told to be. Pressed, it
+// asks for the one thing it stands there for.
+struct ask_row : scene::Node {
+  nodes::Icon fMark{shape::menu(), 0u};
+  nodes::Text fName{"", drawer_row_size, 0u, true};
+  app::requests *asked = nullptr;
+  app::request one{app::toggle_drawer{}};
+
+  ask_row(nodes::IconShape mark, std::string name, app::request asking,
+          const scene::Spec &made, bool with_mark = true)
+      : one(std::move(asking)) {
+    fMark.setShape(std::move(mark));
+    fMark.apply({.width = drawer_mark, .height = drawer_mark,
+                 .anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentre,
+                 .x = drawer_margin,
+                 .visible = with_mark});
+    fName.setElided(true);
+    fName.setText(std::move(name));
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = with_mark ? drawer_margin + drawer_mark + gap
+                                : drawer_margin});
+    this->apply(made);
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked)
+      asked->ask(one);
+    return true;
+  }
+
+  void again(app::requests *sink, const paints &look) {
+    asked = sink;
+    // The row's ground, said of the row itself and not of a plate inside it:
+    // a plate fills by its own corner radius alone, and these rows are
+    // rounded each corner its own -- Tasks above and Remote below, the two
+    // reading as one row cut in two. Declared of the node, the corners are
+    // what its ground is painted in and what its children are clipped by.
+    this->apply({.background = look.field});
+    fMark.setColour(look.text);
+    fName.setColour(look.text);
+    // One line, cut where the row ends: a name that wrapped stood its second
+    // line over whatever stood under it.
+    fName.apply({.maxWidth = std::max(
+                     0.0f, this->bounds().width() - 2.0f * drawer_margin -
+                               drawer_mark - gap)});
+  }
+
+  void forEachChild(auto &&f) {
+    f(fMark);
+    f(fName);
+  }
+};
+
+// One conversation, as a row: the name, and under it what was said last; the
+// time where it is asked for, and a badge for what is unread. Pressed, it
+// opens what it names. Filled in again whenever what it says changes.
 struct conversation_row : scene::Node {
   app::requests *asked = nullptr;
   conversation_id said_of;
-  nodes::Box<> fPlate{0u};
   nodes::Box<> fAvatar{0u};
   nodes::Text fTitle{"", 15.0f, 0u, true};
   nodes::Text fWhen{"", 12.0f, 0u};
@@ -65,35 +125,36 @@ struct conversation_row : scene::Node {
 
   conversation_row() {
     this->apply({.fillX = true, .height = row_height, .cornerRadius = 16.0f});
-    fPlate.apply({.fill = true});
+    // One line each, cut where the row ends: a name that wraps stood its
+    // second line over what was said last, and what was said last over the
+    // row after it.
+    fTitle.setElided(true);
+    fSaid.setElided(true);
     fAvatar.apply({.width = avatar,
                    .height = avatar,
                    .cornerRadius = avatar / 2.0f,
                    .anchor = scene::anchor::kTopLeft,
                    .x = edge,
                    .y = (row_height - avatar) / 2.0f});
-    fTitle.apply({.anchor = scene::anchor::kTopLeft,
-                  .x = edge + avatar + gap,
-                  .y = 14.0f,
-                  .maxWidth = 160.0f});
+    fTitle.apply({.anchor = scene::anchor::kTopLeft, .y = 14.0f});
+    // What a row keeps clear at its right is more than what it keeps at its
+    // left: the time and the badge are read at the end of a line and not
+    // against the panel's own edge.
     fWhen.apply({.anchor = scene::anchor::kTopRight,
                  .origin = scene::anchor::kTopRight,
-                 .x = -edge,
+                 .x = -drawer_right_margin * edge,
                  .y = 16.0f});
-    fSaid.apply({.anchor = scene::anchor::kTopLeft,
-                 .x = edge + avatar + gap,
-                 .y = 38.0f,
-                 .maxWidth = 190.0f});
+    fSaid.apply({.anchor = scene::anchor::kTopLeft, .y = 38.0f});
     fBadge.apply({.width = 20.0f,
                   .height = 20.0f,
                   .cornerRadius = 10.0f,
                   .anchor = scene::anchor::kTopRight,
                   .origin = scene::anchor::kTopRight,
-                  .x = -edge,
+                  .x = -drawer_right_margin * edge,
                   .y = 38.0f});
     fCount.apply({.anchor = scene::anchor::kTopRight,
                   .origin = scene::anchor::kCentre,
-                  .x = -edge - 10.0f,
+                  .x = -drawer_right_margin * edge - 10.0f,
                   .y = 48.0f});
   }
 
@@ -117,17 +178,30 @@ struct conversation_row : scene::Node {
     fBadge.setVisible(false);
   }
 
-  void again(app::requests *sink, const paints &look, const conversation &chat,
-             std::string_view said, std::string_view when, bool chosen) {
+  void again(app::requests *sink, const paints &look, const looks &shown,
+             const conversation &chat, std::string_view said,
+             std::string_view when, bool chosen) {
     asked = sink;
     said_of = chat.id;
     this->setVisible(true);
-    fPlate.setColour(chosen ? look.raised : 0u);
+    // Which row is open said by a ground under it, declared of the row and
+    // painted in its own rounded box: nothing else in the panel has one, and
+    // none of the rows that are not open is painted over the panel at all.
+    this->apply({.background = chosen ? look.raised : 0u});
+    // A circle for its name, where one is asked for at all, and everything
+    // named in the row standing over by it where there is one.
+    fAvatar.setVisible(shown.avatars);
     fAvatar.setColour(look.avatar);
+    const float begins = shown.avatars ? edge + avatar + gap : edge;
+    fTitle.apply({.x = begins});
+    fSaid.apply({.x = begins});
     fTitle.setText(chat.title);
     fTitle.setColour(look.text);
     fSaid.setText(std::string(said));
     fSaid.setColour(look.dim);
+    // How long ago, where it is asked for: as the clock reads it, and the
+    // row is read without it where it is not.
+    fWhen.setVisible(shown.row_times);
     fWhen.setText(std::string(when));
     fWhen.setColour(look.faint);
     fBadge.setVisible(chat.unread > 0);
@@ -138,7 +212,6 @@ struct conversation_row : scene::Node {
   }
 
   void forEachChild(auto &&f) {
-    f(fPlate);
     f(fAvatar);
     f(fTitle);
     f(fWhen);
@@ -149,82 +222,163 @@ struct conversation_row : scene::Node {
 };
 
 // The drawer: its own colour behind everything, its heading, the field it
-// searches with, and the rows.
+// searches with, the two rows beside each other, the new chat, the rows, and
+// the settings at the foot of them.
 struct drawer_screen : scene::Node {
+  // Said while the rows are being looked into: the room a row was given, the
+  // reach its texts were given of it, and where the first row's own name and
+  // last words came to stand -- whether one stands over the other.
+  nodes::Text fSaidDebug{"", 11.0f, 0xff00ff00u, true};
+
   nodes::Box<> fPaper{0u};
-  nodes::Text fHeading{"Chats", 21.0f, 0u, true};
+  nodes::Text fHeading{"Conversations", drawer_heading_size, 0u, true};
   // Said where the search kept nothing at all: the drawer standing empty
   // says less than a line saying why.
   nodes::Text fNone{"No conversation is named that, or says it.", 13.0f, 0u};
-  // The page over the room, opened from here: the drawer is the only part
-  // with a way in, because nothing else on the screen has room to spare.
-  ask_box fSettingsPlate{};
-  nodes::Icon fSettingsMark{shape::gear(), 0u};
+  // The magnifier, in the field's own ground and before what it says: the
+  // field is a control of its own kind, and nothing else is drawn in it.
+  nodes::Icon fSearchMark{shape::search(), 0u};
   std::shared_ptr<search_sink> fSink = std::make_shared<search_sink>();
   widgets::TextArea<search_given> fSearch{
       widgets::Theme{}, "Search conversations", search_given{fSink}};
+  // Two rows on one ground, rounded between them: pressed, the one says what
+  // runs here on its own, and the other what another machine is spoken to
+  // through. Neither stands behind anything in the program yet.
+  ask_row fTasks{shape::done(), "Tasks", app::open_tasks{},
+                 {.anchor = scene::anchor::kTopLeft,
+                  .x = edge,
+                  .fillX = true,
+                  .height = drawer_row_height,
+                  .corners = scene::Corners{.topLeft = drawer_row_radius,
+                                            .topRight = drawer_row_radius,
+                                            .bottomRight = drawer_row_corner,
+                                            .bottomLeft = drawer_row_corner}}};
+  ask_row fRemote{shape::system_prompt(), "Remote", app::open_remote{},
+                  {.anchor = scene::anchor::kTopLeft,
+                   .x = edge,
+                   .fillX = true,
+                   .height = drawer_row_height,
+                   .corners = scene::Corners{.topLeft = drawer_row_corner,
+                                             .topRight = drawer_row_corner,
+                                             .bottomRight = drawer_row_radius,
+                                             .bottomLeft = drawer_row_radius}}};
+  // A new chat, and the settings: the one rounded the whole way round, and
+  // the other at the foot of the list, which is the panel's only way into
+  // the page over the room.
+  ask_row fNewChat{shape::done(), "+ New Chat", app::new_chat{},
+                   {.anchor = scene::anchor::kTopLeft,
+                    .x = edge,
+                    .fillX = true,
+                    .height = drawer_row_height,
+                    .cornerRadius = drawer_row_height / 2.0f},
+                   false};
+  ask_row fSettings{shape::gear(), "Settings", app::open_settings{},
+                    {.anchor = scene::anchor::kTopLeft,
+                     .x = edge,
+                     .fillX = true,
+                     .height = drawer_row_height,
+                     .cornerRadius = drawer_row_height / 2.0f}};
   // One row for every conversation the search kept, made as they are asked
   // for and kept once made: nothing here is said two ways for being asked
   // for twice, and no conversation is left out for there being many.
   std::vector<std::unique_ptr<conversation_row>> fRows;
+  // Where the rows begin: under the new chat, said once here because the
+  // rows are put out from it and the settings stand at the foot of them.
+  float rows_top = 0.0f;
 
   // The row for this place down the drawer, made there where there is none:
   // every row says where it stands, told the place it was asked for.
-  [[nodiscard]] conversation_row &row_at(std::size_t place) {
+  [[nodiscard]] conversation_row &row_at(std::size_t place, float text) {
     while (fRows.size() <= place)
       fRows.push_back(std::make_unique<conversation_row>());
     conversation_row &row = *fRows[place];
     row.apply({.anchor = scene::anchor::kTopLeft,
                .x = edge,
-               .y = edge + 86.0f +
-                    static_cast<float>(place) * (row_height + 4.0f)});
+               .y = rows_top + static_cast<float>(place) * (row_height + 4.0f)});
+    // How far the name and what was said reach: the room the row was given,
+    // less the circle's and less what the time and the badge keep at its end
+    // -- a width of their own was one written for one width of drawer, and
+    // left them ended half way over a wider one.
+    row.fTitle.apply({.maxWidth = text});
+    row.fSaid.apply({.maxWidth = text});
     return row;
   }
 
   explicit drawer_screen(float breadth) {
+    fSaidDebug.apply({.maxWidth = 0.0f});
     this->apply({.width = breadth, .fillY = true});
     fPaper.apply({.fill = true});
+    // The field, its magnifier standing in it before what it says: one line,
+    // and its own ground and hint said again whenever the colours are.
+    fSearch.setSingleLine(true);
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
-                    .x = edge,
-                    .y = edge});
+                    .x = drawer_margin,
+                    .y = drawer_margin});
+    // The field, its magnifier standing in it before what it says.
+    const float search_y = drawer_margin + 34.0f;
     fSearch.apply({.anchor = scene::anchor::kTopLeft,
                    .x = edge,
-                   .y = edge + 34.0f,
+                   .y = search_y,
                    .fillX = true,
                    .height = 40.0f,
                    .cornerRadius = 20.0f,
-                   .padding = scene::Margin::horizontal(16.0f)});
-    fSettingsPlate.apply({.width = 36.0f,
-                          .height = 36.0f,
-                          .cornerRadius = 18.0f,
-                          .anchor = scene::anchor::kTopRight,
-                          .origin = scene::anchor::kTopRight,
-                          .x = -edge,
-                          .y = edge});
-    fSettingsMark.apply({.width = 18.0f,
-                         .height = 18.0f,
-                         .anchor = scene::anchor::kTopRight,
-                         .origin = scene::anchor::kCentre,
-                         .x = -(edge + 18.0f),
-                         .y = edge + 18.0f});
+                   .padding = scene::SpecMargin(
+                       0.0f, drawer_margin, 0.0f,
+                       drawer_margin + drawer_mark + gap)});
+    fSearchMark.apply({.anchor = scene::anchor::kTopLeft,
+                       .origin = scene::anchor::kCentre,
+                       .width = drawer_mark,
+                       .height = drawer_mark,
+                       .x = edge + drawer_margin,
+                       .y = search_y + 20.0f});
+    // Tasks and Remote: one ground in two rows, only a few pixels apart, and
+    // the one a new chat begins from under them.
+    const float tasks_y = search_y + 40.0f + gap;
+    const float remote_y = tasks_y + drawer_row_height + drawer_row_gap;
+    const float new_y = remote_y + drawer_row_height + gap;
+    rows_top = new_y + drawer_row_height + gap;
+    fTasks.apply({.anchor = scene::anchor::kTopLeft, .x = edge, .y = tasks_y});
+    fRemote.apply(
+        {.anchor = scene::anchor::kTopLeft, .x = edge, .y = remote_y});
+    fNewChat.apply({.anchor = scene::anchor::kTopLeft, .x = edge, .y = new_y});
     fNone.apply({.anchor = scene::anchor::kTopLeft,
-                 .x = edge,
-                 .y = edge + 86.0f});
+                 .x = drawer_margin,
+                 .y = rows_top});
     fNone.setVisible(false);
   }
 
   // The colours, then what each row says: called by the program whenever the
   // model moved. What the rows are is what the search asked for keeps -- the
   // search is not this drawer's to do; the drawer only shows what was kept.
-  void again(const paints &look, const chats_root &root,
+  void again(const paints &look, const looks &shown, const chats_root &root,
              const std::string &opened, const std::string &query,
              app::requests *asked) {
     fPaper.setColour(look.drawer);
     fHeading.setColour(look.text);
     fNone.setColour(look.faint);
-    fSettingsPlate.again(asked, app::open_settings{}, look.raised);
-    fSettingsMark.setColour(look.text);
+    fSearchMark.setColour(look.faint);
+    // The field made of the same colours every other field is: its ground,
+    // the hint grey before anything has been typed into it.
+    widgets::Theme theme{};
+    theme.fSurface = look.field;
+    theme.fText = look.text;
+    theme.fTextDim = look.dim;
+    theme.fTextFaint = look.faint;
+    theme.fAccent = look.primary;
+    fSearch.setTheme(theme);
+    // A TextArea draws words and a caret and nothing else: no ground of its
+    // own, so the field there is searched with was no field at all -- only a
+    // hint standing on the panel. Its ground is said of the node, rounded
+    // the whole way round as the field is asked to be.
+    fSearch.apply({.background = look.field});
+    for (ask_row *one : {&fTasks, &fRemote, &fNewChat, &fSettings})
+      one->again(asked, look);
     fSink->asked = asked;
+    const float row_room = this->bounds().width() - 2.0f * edge;
+    const float text = std::max(
+        60.0f, row_room - edge - drawer_right_margin * edge -
+                   (shown.avatars ? avatar + gap : 0.0f) -
+                   (shown.row_times ? 64.0f : 24.0f));
     const auto rows = logic::matching(root, query);
     fNone.setVisible(rows.empty());
     for (std::size_t at = 0; at < rows.size(); ++at) {
@@ -234,8 +388,8 @@ struct drawer_screen : scene::Node {
       // what the row was kept for; else the last message in it, if there is
       // one, else what the conversation is.
       std::string said = chat.kind == conversation_kind::direct
-                             ? "Say something"
-                             : "No messages yet";
+                              ? "Say something"
+                              : "No messages yet";
       for (const message &one : root.messages)
         if (one.chat.value == chat.id.value)
           said = one.text;
@@ -245,9 +399,29 @@ struct drawer_screen : scene::Node {
         said = places.front().found->text;
       // How long ago, as the clock reads it: the moment the last thing was
       // said in it, which is what the order of these rows comes from too.
-      this->row_at(at).again(asked, look, chat, said,
-                             clock_of(chat.last_activity),
-                             chat.id.value == opened);
+      this->row_at(at, text).again(asked, look, shown, chat, said,
+                                   clock_of(chat.last_activity),
+                                   chat.id.value == opened);
+    }
+    // At the foot of them, whatever the list came to, the row the settings
+    // are opened from.
+    fSettings.apply({.anchor = scene::anchor::kTopLeft,
+                     .x = edge,
+                     .y = rows_top + static_cast<float>(rows.size()) *
+                                         (row_height + 4.0f)});
+    if (!fRows.empty()) {
+      const conversation_row &first = *fRows.front();
+      const skia::SkRect title = first.fTitle.bounds();
+      const skia::SkRect said = first.fSaid.bounds();
+      fSaidDebug.apply({.anchor = scene::anchor::kTopLeft,
+                        .x = edge,
+                        .y = this->bounds().height() - 60.0f,
+                        .maxWidth = 0.0f});
+      fSaidDebug.setText(std::format(
+          "room={:.0f} text={:.0f} t={:.0f}x{:.0f}@{:.0f},{:.0f} "
+          "s={:.0f}x{:.0f}@{:.0f},{:.0f}",
+          row_room, text, title.width(), title.height(), title.fLeft,
+          title.fTop, said.width(), said.height(), said.fLeft, said.fTop));
     }
     // What is left of the list where fewer conversations were kept than were
     // kept here before: said by nobody.
@@ -257,13 +431,17 @@ struct drawer_screen : scene::Node {
 
   void forEachChild(auto &&f) {
     f(fPaper);
+    f(fSaidDebug);
     f(fHeading);
     f(fNone);
-    f(fSettingsPlate);
-    f(fSettingsMark);
+    f(fSearchMark);
     f(fSearch);
+    f(fTasks);
+    f(fRemote);
+    f(fNewChat);
     for (auto &row : fRows)
       f(*row);
+    f(fSettings);
   }
 };
 
