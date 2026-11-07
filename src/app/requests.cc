@@ -137,6 +137,13 @@ struct set_tool {
   tool_choice which = tool_choice::conversation_search;
   bool on = false;
 };
+// One of the seven a switch is offered for, switched: whether it is
+// offered at all, which a row of the settings page says by which way it
+// stands (pchat.config, `switch_choice`).
+struct set_switch {
+  switch_choice which = switch_choice::picture_to_words;
+  bool on = false;
+};
 // One of the answerers offered (pchat.config), in a conversation or out of
 // it: which of them answers where nothing else has been said.
 struct set_answerer {
@@ -156,9 +163,9 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
-                             set_avatars, set_row_times,
-                             send_test_notification,
-                              set_generation, set_tool,
+                                set_avatars, set_row_times,
+                                send_test_notification,
+                                set_generation, set_tool, set_switch,
                               set_answerer, copy_text>;
 
 class requests {
