@@ -37,6 +37,16 @@ struct app_window : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Box<> fMessages{0u};
   ask_box fShade{};
+  // What puts away what the card's own three dots opened: nothing painted
+  // and everything pressed, taking the whole room while the card is out and
+  // nothing of it at all when it is not. It stands here, between the bar and
+  // the card, because a press is taken by what was painted last over the
+  // place: everything drawn before this plate -- the messages, the list, the
+  // bar itself -- hands its presses to it, and the card's three dots and the
+  // rows they opened, drawn after it, keep theirs. Which is what a card
+  // opened over the room asks for: a press anywhere else in the room puts it
+  // away, and one on the card itself puts it away or does what the card says.
+  ask_box fAway{};
   drawer_screen fDrawer{360.0f};
   top_bar fTop{};
   nodes::ScrollContainer<message_screen> fList{message_screen{}};
@@ -146,28 +156,18 @@ struct app_window : scene::Node {
     fTop.again(asked, look, !wide, !wide, more_open, title_of(root, opened),
                open_chat);
     // Over what the messages were, where the drawer has come over them:
-    // pressed, it puts the drawer away again. The same plate, said with no
-    // colour at all and taking the whole room, stands behind what three dots
-    // opened while it is out -- in the bar's or in the card's -- so that a
-    // press anywhere else puts it away, which is what every card opened over
-    // the room is put away by. Nothing else in the room answers such a press:
-    // what was painted after this plate does, and all of it stays pressable.
-    const bool dots_open = more_open || editor_menu_open;
+    // pressed, it puts the drawer away again. What a card of three dots is
+    // put away by, in the bar's own case or in the card's, each of those two
+    // parts keeps to itself: see `pchat.ui:composer`, what stands behind its
+    // three dots.
     fShade.apply({.anchor = scene::anchor::kTopLeft,
                   .x = 0.0f,
                   .y = 0.0f,
                   .relativeSize = scene::axes::kNone,
                   .width = width,
                   .height = height,
-                  .visible = dots_open || (!wide && drawer_open)});
-    if (dots_open)
-      fShade.again(asked,
-                   editor_menu_open
-                       ? app::request{app::toggle_editor_menu{}}
-                       : app::request{app::toggle_more{}},
-                   look.away);
-    else
-      fShade.again(asked, app::toggle_drawer{}, look.scrim);
+                  .visible = !wide && drawer_open});
+    fShade.again(asked, app::toggle_drawer{}, look.scrim);
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
     // What answered in this chat, said where About asks about it: the room
@@ -204,6 +204,17 @@ struct app_window : scene::Node {
                      .visible = true});
     if (open_chat)
       fComposer.again(look, *open_chat, how, asked, editor_menu_open);
+    if (editor_menu_open) {
+      fAway.apply({.anchor = scene::anchor::kTopLeft,
+                   .x = 0.0f,
+                   .y = 0.0f,
+                   .relativeSize = scene::axes::kNone,
+                   .width = width,
+                   .height = height,
+                   .visible = true});
+      fAway.again(asked, app::toggle_editor_menu{}, look.away);
+    } else
+      fAway.hide();
     // The settings page, over everything, when it is opened.
     if (settings_open)
       fSettings.again(asked, look, shown, how, answering, dark, width,
@@ -231,6 +242,7 @@ struct app_window : scene::Node {
     f(fDrawer);
     f(fList);
     f(fTop);
+    f(fAway);
     f(fComposer);
     f(fSettings);
     f(fDesign);
