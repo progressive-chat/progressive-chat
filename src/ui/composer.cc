@@ -13,6 +13,7 @@ import skiff.widgets.textarea;
 import pchat.core;
 import pchat.config;
 import pchat.logic.drafts;
+import pchat.logic.composer;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -42,7 +43,12 @@ struct message_sink {
 struct message_given {
   std::shared_ptr<message_sink> sink;
   void operator()(std::string_view text) const {
-    if (sink && sink->asked && !text.empty()) {
+    // Whether there is anything to send is asked of
+    // `pchat.logic.composer` and not said here a second time: a field of
+    // nothing but spaces and newlines has been written in and says
+    // nothing, which is one rule said in one place.
+    if (sink && sink->asked &&
+        logic::can_send(logic::composer_state{.text = std::string(text)})) {
       sink->asked->ask(app::send_message{sink->chat, std::string(text)});
       sink->sent = true;
     }
@@ -472,7 +478,11 @@ struct composer : scene::Node {
     fDots.mark_colour(look.text);
     // Lit only when there is something written to send: what it is given to
     // say is nothing at all otherwise, and a press on it asks for nothing.
-    const bool written = !fField.plainText().empty();
+    // Asked of `logic::can_send`, which is the same rule the field's own
+    // Enter is asked of, so that the two ways out of it never disagree
+    // about whether they have anything to give.
+    const bool written =
+        logic::can_send(logic::composer_state{.text = fField.plainText()});
     fSend.again({.width = send_size,
                  .height = send_size,
                  .anchor = scene::anchor::kTopRight,
