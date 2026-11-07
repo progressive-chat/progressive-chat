@@ -26,7 +26,7 @@ namespace nodes = skiff::nodes;
 inline constexpr double large_type = 1.25;
 
 // How many groups the page has, and how many items any one of them may say.
-inline constexpr std::size_t max_settings_groups = 8u;
+inline constexpr std::size_t max_settings_groups = 9u;
 inline constexpr std::size_t max_settings_items = 7u;
 
 // The seeds offered, and the name each is known by.
@@ -45,12 +45,13 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
     {scheme_preset::ocean, "Ocean"},
 }};
 
-// The eight groups the page is made of, and what each holds, said once in
-// the order they are said in (design-doc.md, "The settings"). Of these, four
+// The nine groups the page is made of, and what each holds, said once in
+// the order they are said in (design-doc.md, "The settings"). Of these, five
 // have what they are named for drawn under one of their items: Appearance,
 // under Appearance & Language; what answers in a chat, under Services;
-// Generation, under Responses; and the three tools this program owns, under
-// Tools. The rest stand named and empty, waiting for the thing each of them
+// Generation, under Responses; the three tools this program owns, under
+// Tools; and a press that asks for one notification, under Notifications.
+// The rest stand named and empty, waiting for the thing each of them
 // is named for.
 //
 // Not one row here says what a group would do when it is pressed: none of
@@ -58,9 +59,17 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
 // shown.
 
 // What one of them draws under the item it stands under, where it draws
-// anything: one of these five, and never two of them, because no two of
+// anything: one of these six, and never two of them, because no two of
 // them are what one place in the page is made of.
-enum class group_rows { none, appearance, generation, tools, answerers, about };
+enum class group_rows {
+  none,
+  appearance,
+  generation,
+  tools,
+  answerers,
+  notified,
+  about
+};
 
 struct settings_group {
   std::string_view name;
@@ -94,6 +103,7 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
      group_rows::none},
     {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u,
      max_settings_items, group_rows::none},
+    {"Notifications", {{"Test"}}, 1u, 0u, group_rows::notified},
     {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u,
      group_rows::appearance},
     {"About", {{"About"}}, 1u, 0u, group_rows::about},
@@ -357,6 +367,50 @@ struct about_row : scene::Node {
   std::string given;
 };
 
+// One row of the Notifications page: pressed, it asks the machine this
+// program runs on to show one notification of the program's own -- a test,
+// whether it is let show any at all, and nothing that stands for a message.
+struct test_row : scene::Node {
+  ask_box fPlate{};
+  nodes::Text fName{"", 15.0f, 0u};
+  app::requests *asked = nullptr;
+
+  test_row() {
+    this->apply({.anchor = scene::anchor::kTopLeft,
+                 .height = settings_row_height,
+                 .cornerRadius = 14.0f});
+    fName.setElided(true);
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked) asked->ask(app::send_test_notification{});
+    return true;
+  }
+
+  void blank() { this->setVisible(false); }
+
+  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+             std::string_view name, float room) {
+    asked = sink;
+    fPlate.again(sink, app::send_test_notification{}, look.raised);
+    this->apply(spec);
+    this->setVisible(true);
+    fName.setText(std::string(name));
+    fName.setColour(look.text);
+    fName.apply({.maxWidth = std::max(0.0f, room - 32.0f)});
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fName);
+  }
+};
+
 struct settings_rows : scene::Node {
   // Said while the page is being looked into: the first two things said in
   // it that stand on one another, by the name each is known by in the code
@@ -398,6 +452,8 @@ struct settings_rows : scene::Node {
   // The answerers, drawn: a switch to each of them, whether it answers in
   // the conversation the window has open or not.
   std::array<switch_row, answerers_offered.size()> fAnswerers;
+  // Notifications, drawn: one press that asks for a test notification.
+  test_row fTest;
   // About, drawn: what this build is, what it is under, and where its
   // source is kept.
   std::array<about_row, max_about_rows> fAbout;
@@ -439,6 +495,7 @@ struct settings_rows : scene::Node {
       one.setVisible(false);
     for (about_row &one : fAbout)
       one.blank();
+    fTest.blank();
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
@@ -521,10 +578,31 @@ struct settings_rows : scene::Node {
       return say_tools(asked, look, how, row_width, base);
     case group_rows::answerers:
       return say_answerers(asked, look, answerers, row_width, base);
+    case group_rows::notified:
+      return say_notified(asked, look, row_width, base);
     case group_rows::about:
       return say_about(asked, look, row_width, base);
     }
     return base;
+  }
+
+  // Notifications, drawn: one row under the group's own item, pressed to ask
+  // the machine this program runs on for a test notification. Nothing here is
+  // told whether one was shown -- asking is all a row does, and whether this
+  // program is let show any is the system's own to answer.
+  [[nodiscard]] float say_notified(app::requests *asked, const paints &look,
+                                   float row_width, float base) {
+    fTest.again(asked,
+                {.anchor = scene::anchor::kTopLeft,
+                 .x = 16.0f,
+                 .y = base,
+                 .relativeSize = scene::axes::kNone,
+                 .width = row_width,
+                 .height = settings_row_height,
+                 .cornerRadius = 14.0f,
+                 .visible = true},
+                look, "Send a test notification", row_width);
+    return base + settings_row_stride;
   }
 
   // The three tools, drawn: a switch to each, standing under the name of the

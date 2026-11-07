@@ -245,6 +245,15 @@ this program has to be able to say yes or no to, and to what degree.
 * **Skills** — instruction files the model can be given.
 * **Data control** — everything of yours given out as a file, or taken back in.
 
+**Notifications**
+
+* **Test** — one notification of this program's own, shown by the machine it
+  runs on: a press asks for it, and what is asked for is a test, not a
+  message. Where the machine lets an app show notifications only once it has
+  been let (Android 13 and later), the first press asks for that and shows
+  nothing, and the press after it shows one. Nothing behind this row keeps
+  anything: there are no notifications to speak of yet.
+
 **Appearance & Language**
 
 * **Appearance** — the theme, its scheme of colours, whether the colours
@@ -265,8 +274,9 @@ Of all this, what is drawn today is **Appearance** — the theme, its scheme,
 its type and its dark; the five things an answer is asked with, under
 **Generation**; which answerers answer in the chat that is open, under
 **Models**; the three tools this program owns, under **Tools**; and what this
-build is, under **About**. The other three groups stand empty, each with its
-name, waiting for the thing behind it.
+build is, under **About**. A press under **Test** asks the machine it runs on
+for one notification of the program's own. The other three groups stand empty,
+each with its name, waiting for the thing behind it.
 
 ## What this design does not do
 
