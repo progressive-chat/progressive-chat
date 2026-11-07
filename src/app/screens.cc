@@ -250,6 +250,11 @@ public:
             [&](const set_tool &asking) {
               how_ = set_of(how_, asking.which, asking.on);
             },
+            // One of the seven switched: what a row of the settings page
+            // said, and nothing of the others.
+            [&](const set_switch &asking) {
+              how_ = set_of(how_, asking.which, asking.on);
+            },
             // An answerer put into the conversation open, or taken out of
             // it: what the window then writes to is the first one left, and
             // how much room it has to answer into is that one's own.

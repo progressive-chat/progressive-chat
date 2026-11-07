@@ -126,8 +126,7 @@ struct doc_body : nodes::Stack {
 struct doc_screen : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Box<> fCard{0u};
-  ask_box fClosePlate{};
-  nodes::Icon fCloseMark{shape::close(), 0u};
+  press_box fClose{};
   nodes::ScrollContainer<doc_body> fBody{doc_body{}};
 
   doc_screen() {
@@ -138,19 +137,6 @@ struct doc_screen : scene::Node {
                  .y = 12.0f,
                  .fillY = true,
                  .cornerRadius = 24.0f});
-    fClosePlate.apply({.width = 36.0f,
-                       .height = 36.0f,
-                       .cornerRadius = 18.0f,
-                       .anchor = scene::anchor::kTopRight,
-                       .origin = scene::anchor::kTopRight,
-                       .x = -20.0f,
-                       .y = 20.0f});
-    fCloseMark.apply({.width = 18.0f,
-                      .height = 18.0f,
-                      .anchor = scene::anchor::kTopRight,
-                      .origin = scene::anchor::kCentre,
-                      .x = -(20.0f + 18.0f),
-                      .y = 38.0f});
     this->setVisible(false);
   }
 
@@ -159,8 +145,17 @@ struct doc_screen : scene::Node {
   void again(app::requests *asked, const paints &look, float breadth,
              float height) {
     this->setVisible(true);
-    fClosePlate.again(asked, app::close_design{}, look.raised);
-    fCloseMark.setColour(look.text);
+    fClose.again(asked,
+                 {.anchor = scene::anchor::kTopRight,
+                  .origin = scene::anchor::kTopRight,
+                  .relativeSize = scene::axes::kNone,
+                  .width = 36.0f,
+                  .height = 36.0f,
+                  .x = -20.0f,
+                  .y = 20.0f,
+                  .visible = true},
+                 app::close_design{}, look.raised);
+    fClose.mark_colour(look.text);
     fPaper.setColour(look.paper);
     fCard.setColour(look.drawer);
     fCard.apply({.anchor = scene::anchor::kTopCentre,
@@ -186,8 +181,7 @@ struct doc_screen : scene::Node {
     f(fPaper);
     f(fCard);
     f(fBody);
-    f(fClosePlate);
-    f(fCloseMark);
+    f(fClose);
   }
 };
 
