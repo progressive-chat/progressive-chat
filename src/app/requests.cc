@@ -60,6 +60,12 @@ struct copy_text {
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
+// The two rows the drawer keeps beside its search: what the program has been
+// told to do on its own, and what another machine is spoken to through.
+// Neither stands behind either row in the program yet; asking for one is
+// answered by nothing until what it names is.
+struct open_tasks {};
+struct open_remote {};
 // What the top edge asks for: another answerer in this same conversation,
 // this conversation taken whole into one of its own, this conversation given
 // out, and what every answerer in it is told before anything is said to it.
@@ -87,6 +93,16 @@ struct toggle_more {};
 struct open_design {};
 struct close_design {};
 struct set_amoled {
+  bool enabled;
+};
+// What a row in the drawer is asked for, from the Appearance page: whether a
+// circle stands for the conversation it names, and whether it says how long
+// ago the last thing in it was said. Neither is drawn until it is asked for
+// here -- a panel read by what its conversations are called.
+struct set_avatars {
+  bool enabled;
+};
+struct set_row_times {
   bool enabled;
 };
 // What the Appearance page asks for: which seed the colours grow out of,
@@ -130,11 +146,13 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
                              share_answer, delete_answer, set_query,
                              toggle_drawer, open_settings, close_settings,
+                             open_tasks, open_remote,
                              fork_conversation,
                              share_conversation, open_system_prompt,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
+                             set_avatars, set_row_times,
                               set_generation, set_tool,
                               set_answerer, copy_text>;
 
