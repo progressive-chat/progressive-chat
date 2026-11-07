@@ -392,7 +392,6 @@ struct top_bar : scene::Node {
                               (answerer_bubble_width + bar_gap)),
                    .y = top_bar_height / 2.0f,
                    .relativeSize = scene::axes::kNone,
-                   .autoSize = scene::axes::kBoth,
                    .visible = true});
   }
 
