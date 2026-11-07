@@ -46,6 +46,8 @@ struct what_is_open {
   bool more = false;
   // What the card's own three dots hold.
   bool editor_menu = false;
+  // The card of faces, opened by the face beside the clip.
+  bool faces = false;
   // The drawer, come over the messages where the room is too narrow for it
   // to stand beside them.
   bool drawer = false;
@@ -223,11 +225,12 @@ struct app_window : scene::Node {
                      .height = composer_height + 2.0f * edge,
                      .visible = true});
     if (open_chat)
-      fComposer.again(look, *open_chat, how, asked, open.editor_menu);
-    // Either card of three dots, put away by a press on anything below it:
-    // the one in the bar first if both happen to be out at once, and then the
-    // one written into, on a second press of the same kind.
-    const bool card_out = open.more || open.editor_menu;
+      fComposer.again(look, *open_chat, how, asked, open.editor_menu,
+                      open.faces);
+    // Any of the three cards, put away by a press on anything below them:
+    // the bar's three dots first where two of them are out at once, and then
+    // the one written into, on a second press of the same kind.
+    const bool card_out = open.more || open.editor_menu || open.faces;
     fAway.apply({.anchor = scene::anchor::kTopLeft,
                  .x = 0.0f,
                  .y = 0.0f,
@@ -238,7 +241,9 @@ struct app_window : scene::Node {
     if (card_out)
       fAway.again(asked,
                   open.more ? app::request{app::toggle_more{}}
-                            : app::request{app::toggle_editor_menu{}},
+                  : open.editor_menu
+                      ? app::request{app::toggle_editor_menu{}}
+                      : app::request{app::toggle_faces{}},
                   look.away);
     // The settings page, over everything, when it is opened.
     if (open.settings)

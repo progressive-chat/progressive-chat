@@ -55,6 +55,9 @@ public:
         spl::overloaded{
             [&](const open_conversation &asking) {
               root_.opened = asking.chat;
+              // The card of faces belongs to the conversation it was opened
+              // in: nothing written into it follows its reader elsewhere.
+              faces_ = false;
               // A drawer that came over the messages has been used:
               // put away, leaving the conversation it opened.
               if (width_ < ui::side_by_side_from)
@@ -68,6 +71,10 @@ public:
               root_.messages.push_back(said.said);
               recount(asking.chat);
               ask_a_model(asking.chat);
+              // What was written has left the field, and the card that
+              // writes into it goes with it: nothing left open would write
+              // into a field that has already been given away.
+              faces_ = false;
             },
 
             [&](const new_chat &) {
@@ -205,6 +212,11 @@ public:
             // (pchat.config, `asking`), which is what the settings' own rows
             // would have said of them.
             [&](const toggle_editor_menu &) { editor_menu_ = !editor_menu_; },
+            // The card of faces above the face beside the clip: opened by a
+            // press on it, and put away by another press anywhere else in
+            // the room, which is what nothing measured asks for
+            // (src/ui/window.cc).
+            [&](const toggle_faces &) { faces_ = !faces_; },
             [&](const set_thinking &asking) { how_.thinking = asking.on; },
             [&](const set_effort &asking) { how_.how_hard = asking.how_hard; },
             // What every model is told before anything is said to it: read
@@ -310,6 +322,7 @@ public:
                                          .prompt = system_,
                                          .more = more_,
                                          .editor_menu = editor_menu_,
+                                         .faces = faces_,
                                          .drawer = drawer_},
                         width_, height_, &asked_);
   }
@@ -635,6 +648,8 @@ private:
   // hard it is asked to think, and the way into the large settings (the
   // design says them under *The editor's row*).
   bool editor_menu_ = false;
+  // Whether the card of faces above the face beside the clip is out.
+  bool faces_ = false;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
 
