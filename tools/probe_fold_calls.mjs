@@ -36,7 +36,10 @@ const foldAt = () => page.evaluate(() => {
 });
 // Each call's own words: every leaf that names one of the two tools the
 // sample's answers reached for, said whole, for one such leaf holds all of
-// the calls of one answer.
+// the calls of one answer. Only what is *said* counts, and what the fold
+// keeps folded away the page keeps too, painted nowhere and measured at
+// nothing by nothing -- a hidden leaf is `display: none` here and has no
+// whole of its own, so a leaf with no breadth has nothing to say.
 const calls = () => page.evaluate(() => {
   const said = [];
   const glass = document.getElementById('skiff');
@@ -46,12 +49,17 @@ const calls = () => page.evaluate(() => {
     const words = (one.textContent || '').trim();
     if (!words.includes('conversation_search'))
       continue;
+    if (one.getBoundingClientRect().width < 1.0)
+      continue;
     said.push(words);
   }
   return said;
 });
 
-const each = ['butter', 'lemon', 'eggs', 'curd'];
+// What each of the sample's first two answers was said to have reached for;
+// the three of a fold's own answer are said together, and the one of the
+// next answer only while that fold is open, which here it is not.
+const each = ['butter', 'lemon', 'eggs'];
 const kept = (words) => each.filter((one) => words.some((said) =>
     said.includes(one))).length;
 
@@ -70,9 +78,7 @@ if (await standing('shut') !== 0) {
 }
 await page.mouse.click(fold[0], fold[1]);
 await page.waitForTimeout(1200);
-// Our own answer's three calls are on this page; curd's belongs to the next
-// answer and may not yet have been painted at this size.
-if (await standing('open') < 3) {
+if (await standing('open') !== each.length) {
   console.log('an opened fold says each call it counted: WRONG');
   wrong += 1;
 }
