@@ -50,6 +50,14 @@ constexpr color_scheme colors_of(const looks& shown, bool system_dark = true) {
 enum class tool_choice { conversation_search, how_much, when_it_is };
 inline constexpr std::size_t tools_owned = 3u;
 
+// Seven things a switch is offered for, said by which is which because a
+// row in the settings and what the program keeps have to name the same one:
+// two that a picture is asked about, two that are how this program reaches
+// other programs, and three that it keeps afterwards.
+enum class switch_choice { picture_to_words, words_to_picture, proxy,
+                           own_page, remember, skills, data_held };
+inline constexpr std::size_t switches_owned = 7u;
+
 // How an answer is asked for: what a model is told to do with its own choices
 // while it writes one, whichever wire it is asked through. Five of them, and
 // none of them anything this program answers itself -- every one is said as
@@ -96,6 +104,11 @@ struct asking {
   // each of the three, and every one of them offered until a row says
   // otherwise.
   std::array<bool, tools_owned> tools{true, true, true};
+  // Whether each of the seven is offered at all: every one of them on but
+  // the two that put this program where other programs can reach it, which
+  // are asked for before they are given.
+  std::array<bool, switches_owned> switches{true, true, false, false, true,
+                                            true, true};
   friend bool operator==(const asking&, const asking&) = default;
 };
 
@@ -158,6 +171,16 @@ struct asking_range {
 // switched: what a row of the Tools group asks for.
 [[nodiscard]] constexpr bool offered_of(const asking &one, tool_choice which) {
   return one.tools[static_cast<std::size_t>(which)];
+}
+[[nodiscard]] constexpr bool offered_of(const asking &one,
+                                       switch_choice which) {
+  return one.switches[static_cast<std::size_t>(which)];
+}
+[[nodiscard]] constexpr asking set_of(const asking &one, switch_choice which,
+                                      bool on) {
+  asking out = one;
+  out.switches[static_cast<std::size_t>(which)] = on;
+  return out;
 }
 [[nodiscard]] constexpr asking set_of(const asking &one, tool_choice which,
                                       bool on) {
