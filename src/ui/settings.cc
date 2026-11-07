@@ -386,6 +386,10 @@ struct settings_rows : scene::Node {
   switch_row fBlack;
   switch_row fLarge;
   switch_row fLight;
+  // What a row in the drawer is asked for, and asked for here: a circle for
+  // the conversation it names, and how long ago what it says was said.
+  switch_row fAvatars;
+  switch_row fTimes;
   // Generation, drawn: one row for each of the five an answer is asked with.
   std::array<knob_row, asking_offered.size()> fKnobs;
   // The tools, drawn: a switch to each of the three, whether it is offered
@@ -438,6 +442,8 @@ struct settings_rows : scene::Node {
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
+    fAvatars.fName.setText("Circles by the names");
+    fTimes.fName.setText("How long ago in a row");
   }
 
   // The answerers offered (pchat.config), as a row each: which of them
@@ -644,14 +650,39 @@ struct settings_rows : scene::Node {
                  app::pick_theme{.mode = shown.mode == theme_mode::light
                                              ? theme_mode::dark
                                              : theme_mode::light});
+    // The drawer's own rows, asked for under the colours: neither stands in
+    // the panel until it is asked for here.
+    fAvatars.again(asked,
+                   {.anchor = row.anchor,
+                    .x = row.x,
+                    .y = top + 3.0f * settings_row_stride,
+                    .relativeSize = scene::axes::kNone,
+                    .width = row.width,
+                    .height = row.height,
+                    .cornerRadius = row.cornerRadius},
+                   look, "Circles by the names", shown.avatars,
+                   app::set_avatars{.enabled = !shown.avatars});
+    fTimes.again(asked,
+                 {.anchor = row.anchor,
+                  .x = row.x,
+                  .y = top + 4.0f * settings_row_stride,
+                  .relativeSize = scene::axes::kNone,
+                  .width = row.width,
+                  .height = row.height,
+                  .cornerRadius = row.cornerRadius},
+                 look, "How long ago in a row", shown.row_times,
+                 app::set_row_times{.enabled = !shown.row_times});
     // The design, offered under the switches: a plate the whole breadth of
     // the rows, and what it is called written in it.
     const float row_height = row.height.value_or(48.0f);
+    // Where it stands: under every switch above it, which is as far as the
+    // last of them reaches and no counting by hand.
+    const float read_at = 5.0f * settings_row_stride;
     fReadPlate.again(asked, app::open_design{}, look.raised);
     fReadPlate.apply({.anchor = row.anchor,
                       .origin = scene::anchor::kTopLeft,
                       .x = row.x,
-                      .y = top + 156.0f,
+                      .y = top + read_at,
                       .width = row.width,
                       .height = row_height,
                       .relativeSize = scene::axes::kNone,
@@ -659,10 +690,10 @@ struct settings_rows : scene::Node {
     fRead.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 32.0f,
-                 .y = top + 156.0f + row_height / 2.0f});
+                 .y = top + read_at + row_height / 2.0f});
     // Where the rest of the page begins: under the row that offers the
     // design, and the room left between it and the next group.
-    return top + 156.0f + settings_row_height + settings_group_gap;
+    return top + read_at + settings_row_height + settings_group_gap;
   }
   void again(app::requests *asked, const paints &look, const looks &shown,
              const asking &how, std::span<const std::string> answerers,
@@ -742,6 +773,8 @@ struct settings_rows : scene::Node {
     note("blk", fBlack.fName);
     note("large", fLarge.fName);
     note("light", fLight.fName);
+    note("av", fAvatars.fName);
+    note("whe", fTimes.fName);
     for (std::size_t at = 0; at < fKnobs.size(); ++at) {
       note(std::format("k{}", at), fKnobs[at].fName);
       note(std::format("k{}v", at), fKnobs[at].fValue);
@@ -788,6 +821,8 @@ struct settings_rows : scene::Node {
     f(fBlack);
     f(fLarge);
     f(fLight);
+    f(fAvatars);
+    f(fTimes);
     for (knob_row &one : fKnobs)
       f(one);
     for (switch_row &one : fTools)
