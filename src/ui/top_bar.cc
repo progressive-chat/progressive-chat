@@ -131,10 +131,12 @@ struct bar_press : scene::Node {
   }
 
   void again(app::requests *sink, const paints &look, nodes::IconShape mark,
-             float inset, app::request asking) {
-    this->apply({.anchor = scene::anchor::kTopRight,
-                 .origin = scene::anchor::kTopRight,
-                 .x = -inset,
+             float inset, app::request asking, bool left = false) {
+    this->apply({.anchor = left ? scene::anchor::kTopLeft
+                                : scene::anchor::kTopRight,
+                 .origin = left ? scene::anchor::kTopLeft
+                                : scene::anchor::kTopRight,
+                 .x = left ? inset : -inset,
                  .y = (top_bar_height - bar_press_width) / 2.0f,
                  .relativeSize = scene::axes::kNone,
                  .width = bar_press_width,
@@ -256,10 +258,8 @@ struct more_menu : scene::Node {
 // nothing else: no search of its own, because the drawer is what searches.
 struct top_bar : scene::Node {
   nodes::Box<> fScrim{0u};
-  ask_box fMenuPlate{};
-  nodes::Icon fMenuMark{shape::menu(), 0u};
-  ask_box fNewPlate{};
-  nodes::Icon fNewMark{shape::plus(), 0u};
+  bar_press fMenu{};
+  bar_press fNew{};
   std::array<answerer_bubble, max_answerers> fAnswerers;
   bar_press fSystem{};
   bar_press fFork{};
@@ -273,33 +273,8 @@ struct top_bar : scene::Node {
     this->apply({.fillX = true, .height = top_scrim});
     fScrim.apply(
         {.fill = true, .gradient = scene::Gradient{0xff0c160cu, 0x000c160cu}});
-    fMenuPlate.apply({.width = 36.0f,
-                      .height = 36.0f,
-                      .cornerRadius = 18.0f,
-                      .anchor = scene::anchor::kTopLeft,
-                      .x = edge,
-                      .y = (top_bar_height - 36.0f) / 2.0f});
-    fMenuMark.apply({.width = 18.0f,
-                     .height = 18.0f,
-                     .anchor = scene::anchor::kTopLeft,
-                     .origin = scene::anchor::kCentre,
-                     .x = edge + 18.0f,
-                     .y = top_bar_height / 2.0f});
     // A chat made new, and what this one has been worth: the one pressed at
     // the right, the other read beside it.
-    fNewPlate.apply({.width = bar_press_width,
-                     .height = bar_press_width,
-                     .cornerRadius = bar_press_width / 2.0f,
-                     .anchor = scene::anchor::kTopRight,
-                     .origin = scene::anchor::kTopRight,
-                     .x = -edge,
-                     .y = (top_bar_height - bar_press_width) / 2.0f});
-    fNewMark.apply({.width = 18.0f,
-                    .height = 18.0f,
-                    .anchor = scene::anchor::kTopRight,
-                    .origin = scene::anchor::kCentre,
-                    .x = -(edge + bar_press_width / 2.0f),
-                    .y = top_bar_height / 2.0f});
     fTokens.apply({.anchor = scene::anchor::kTopRight,
                    .origin = scene::anchor::kCentreRight,
                    .x = -(edge + bar_press_width + bar_gap),
@@ -314,20 +289,13 @@ struct top_bar : scene::Node {
     fScrim.setColour(look.paper);
     fScrim.apply({.fill = true,
                   .gradient = scene::Gradient{look.paper, look.scrim_top}});
-    fMenuPlate.apply({.width = 36.0f,
-                      .height = 36.0f,
-                      .cornerRadius = 18.0f,
-                      .anchor = scene::anchor::kTopLeft,
-                      .x = edge,
-                      .y = (top_bar_height - 36.0f) / 2.0f,
-                      .visible = menu});
-    fMenuPlate.again(sink, app::toggle_drawer{}, look.search_bar);
-    fMenuMark.setVisible(menu);
-    fMenuMark.setColour(look.text);
+    if (menu)
+      fMenu.again(sink, look, shape::menu(), edge, app::toggle_drawer{}, true);
+    else
+      fMenu.hide();
+    fNew.again(sink, look, shape::plus(), edge, app::new_chat{});
     fTitle.setText(std::string(title));
     fTitle.setColour(look.text);
-    fNewMark.setColour(look.text);
-    fNewPlate.again(sink, app::new_chat{}, look.search_bar);
     // Every press stands where the last one left room, walking in from the
     // right: what the answerers are told, this conversation taken into one of
     // its own, given away, and behind three dots where the room is too narrow
@@ -403,8 +371,7 @@ struct top_bar : scene::Node {
 
   void forEachChild(auto &&f) {
     f(fScrim);
-    f(fMenuPlate);
-    f(fMenuMark);
+    f(fMenu);
     f(fTitle);
     for (answerer_bubble &one : fAnswerers)
       f(one);
@@ -413,8 +380,7 @@ struct top_bar : scene::Node {
     f(fShare);
     f(fMore);
     f(fMoreMenu);
-    f(fNewPlate);
-    f(fNewMark);
+    f(fNew);
     f(fTokens);
   }
 };
