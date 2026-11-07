@@ -99,14 +99,16 @@ build and the next.
       size came of nothing: six chips and the fold above an answer were the
       two found, both now said their size, and nothing else pressable has
       been probed the way they were.
-- [ ] **The editor's row is drawn as far as its name and its circle, and no
-      further**: the design asks for a plus on its left that attaches (camera,
-      gallery, videos, files) and three dots on its right that open thinking
-      with its effort, web search, compact context, and Advanced into the
-      large settings. Neither is drawn: a press that asks nothing is a stub,
-      and what is to answer them -- where a file is read and where a context
-      is compacted -- is not written yet (`src/ui/composer.cc`; the design
-      says which under *The editor's row*).
+- [ ] **The editor's row is drawn as far as its three dots, and no further**:
+      they are drawn after the ring now, and open thinking with its effort
+      and Advanced into the large settings; what the design asks of them
+      besides -- web search, and a context compacted -- is not drawn, for a
+      press that asks nothing is a stub, and neither what a page on the web
+      would be searched nor where a context would be written short is
+      written yet (`src/ui/composer.cc`; the design says which under *The
+      editor's row*). The plus on their left that attaches (camera, gallery,
+      videos, files) is not drawn either, and for the same reason: nothing
+      reads a file given it in this program today.
 
       Read off the page on 2026-11-07 by `tools/probe_presses.mjs`, which
       pressed every square of a control's size in the settled room: the
