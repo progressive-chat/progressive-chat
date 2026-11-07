@@ -16,7 +16,11 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
 // Every square of a control's size, whole inside the room, said once each:
-// its middle, and how big it is.
+// its middle, how big it is, and whether a press at its middle lands on it
+// or on something painted over it. What is painted last in a place takes a
+// press there, so a middle that something else covers is a press on that
+// other thing: said without asking, it has proved a press that never
+// happened to what it was read off.
 const squares = () => page.evaluate(() => {
   const found = [];
   for (const one of document.getElementById('skiff').querySelectorAll('*')) {
@@ -26,8 +30,13 @@ const squares = () => page.evaluate(() => {
       continue;
     if (box.y < 0 || box.y + box.height > window.innerHeight)
       continue;
+    const middle =
+        document.elementFromPoint(Math.round(box.x + box.width / 2.0),
+                                  Math.round(box.y + box.height / 2.0));
+    const covered = !(middle && (one === middle || one.contains(middle)));
     found.push([Math.round(box.x + box.width / 2.0),
-                Math.round(box.y + box.height / 2.0), width, height]);
+                Math.round(box.y + box.height / 2.0), width, height,
+                covered ? 'covered' : 'its own']);
   }
   const seen = new Set(), out = [];
   for (const one of found.sort((a, b) => (a[1] - b[1]) || (a[0] - b[0]))) {
@@ -75,7 +84,7 @@ for (const [at, one] of every.entries()) {
   const answered = said.includes('answered');
   if (!answered)
     dead += 1;
-  console.log(`${at + 1}/${every.length} ${one[0]},${one[1]} (${one[2]}x${one[3]}): ${answered ? 'answers' : 'nothing'} | ${said}`);
+  console.log(`${at + 1}/${every.length} ${one[0]},${one[1]} (${one[2]}x${one[3]}), ${one[4]}: ${answered ? 'answers' : 'nothing'} | ${said}`);
 }
 await browser.close();
 console.log(dead === 0 ? 'every square answers'
