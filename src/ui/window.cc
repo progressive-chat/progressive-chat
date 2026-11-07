@@ -30,6 +30,28 @@ export namespace pchat::ui {
 namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 
+// What of the program is open, said as one thing rather than as six rights
+// and wrongs in a row: asked for in this order, they said nothing at all in
+// it about which was which, and a call read like
+// `again(look, root, shown, how, query, true, false, false, true, false)`.
+// Which of them is open is the program's own reading of its own state, and
+// what the window does with it is said here, once, in words.
+struct what_is_open {
+  bool settings = false;
+  bool design = false;
+  // What every answerer in the conversation open is told before anything is
+  // said to it, read and written whole.
+  bool prompt = false;
+  // What the bar's three dots hold.
+  bool more = false;
+  // What the card's own three dots hold.
+  bool editor_menu = false;
+  // The drawer, come over the messages where the room is too narrow for it
+  // to stand beside them.
+  bool drawer = false;
+  friend bool operator==(const what_is_open &, const what_is_open &) = default;
+};
+
 // Everything the program shows, as one node a Scene can hold. Made with the
 // requests it hands its controls -- a control asks, and the program answers
 // between frames.
@@ -78,10 +100,7 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
              const asking &how, const std::string &query, bool dark,
-             bool settings_open,
-             bool design_open, bool prompt_open, bool more_open,
-             bool editor_menu_open, bool drawer_open, float width,
-             float height,
+             const what_is_open &open, float width, float height,
              app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
@@ -89,9 +108,9 @@ struct app_window : scene::Node {
     const bool wide = width >= side_by_side_from;
     const float breadth =
         std::min(drawer_width, std::max(width * 0.32f, 280.0f));
-    const bool in_chat = wide || !drawer_open;
+    const bool in_chat = wide || !open.drawer;
     const float column = in_chat ? width - (wide ? breadth : 0.0f) : width;
-    const bool aside = wide || drawer_open;
+    const bool aside = wide || open.drawer;
     // The messages are drawn under the drawer where the drawer has come over
     // them as well: what is left of them beside it is read there, and pressed
     // it is what puts it away again.
@@ -154,7 +173,7 @@ struct app_window : scene::Node {
       answering = open_chat->models;
     // The bar says what the chat has been worth; the card under it names the
     // model that answers in it and how full its window this chat has made it.
-    fTop.again(asked, look, !wide, !wide, more_open, title_of(root, opened),
+    fTop.again(asked, look, !wide, !wide, open.more, title_of(root, opened),
                open_chat);
     // Over what the messages were, where the drawer has come over them:
     // pressed, it puts the drawer away again. What a card of three dots is
@@ -167,7 +186,7 @@ struct app_window : scene::Node {
                   .relativeSize = scene::axes::kNone,
                   .width = width,
                   .height = height,
-                  .visible = !wide && drawer_open});
+                  .visible = !wide && open.drawer});
     fShade.again(asked, app::toggle_drawer{}, look.scrim);
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
@@ -204,11 +223,11 @@ struct app_window : scene::Node {
                      .height = composer_height + 2.0f * edge,
                      .visible = true});
     if (open_chat)
-      fComposer.again(look, *open_chat, how, asked, editor_menu_open);
+      fComposer.again(look, *open_chat, how, asked, open.editor_menu);
     // Either card of three dots, put away by a press on anything below it:
     // the one in the bar first if both happen to be out at once, and then the
     // one written into, on a second press of the same kind.
-    const bool card_out = more_open || editor_menu_open;
+    const bool card_out = open.more || open.editor_menu;
     fAway.apply({.anchor = scene::anchor::kTopLeft,
                  .x = 0.0f,
                  .y = 0.0f,
@@ -218,24 +237,24 @@ struct app_window : scene::Node {
                  .visible = card_out});
     if (card_out)
       fAway.again(asked,
-                  more_open ? app::request{app::toggle_more{}}
+                  open.more ? app::request{app::toggle_more{}}
                             : app::request{app::toggle_editor_menu{}},
                   look.away);
     // The settings page, over everything, when it is opened.
-    if (settings_open)
+    if (open.settings)
       fSettings.again(asked, look, shown, how, answering, dark, width,
                       height);
     else
       fSettings.hide();
     // The design said in the room, when it is opened: over everything, as a
     // page of words it is, and put away again whole.
-    if (design_open)
+    if (open.design)
       fDesign.again(asked, look, std::min(width, 760.0f), height);
     else
       fDesign.hide();
     // What every model is told here, when it is opened: over everything, and
     // put away again with what was written in it kept.
-    if (prompt_open)
+    if (open.prompt)
       fPrompt.again(asked, look, open_chat, width, height);
     else
       fPrompt.hide();
