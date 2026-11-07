@@ -208,20 +208,19 @@ struct app_window : scene::Node {
     // Either card of three dots, put away by a press on anything below it:
     // the one in the bar first if both happen to be out at once, and then the
     // one written into, on a second press of the same kind.
-    if (more_open || editor_menu_open) {
-      fAway.apply({.anchor = scene::anchor::kTopLeft,
-                   .x = 0.0f,
-                   .y = 0.0f,
-                   .relativeSize = scene::axes::kNone,
-                   .width = width,
-                   .height = height,
-                   .visible = true});
+    const bool card_out = more_open || editor_menu_open;
+    fAway.apply({.anchor = scene::anchor::kTopLeft,
+                 .x = 0.0f,
+                 .y = 0.0f,
+                 .width = width,
+                 .height = height,
+                 .relativeSize = scene::axes::kNone,
+                 .visible = card_out});
+    if (card_out)
       fAway.again(asked,
                   more_open ? app::request{app::toggle_more{}}
                             : app::request{app::toggle_editor_menu{}},
                   look.away);
-    } else
-      fAway.hide();
     // The settings page, over everything, when it is opened.
     if (settings_open)
       fSettings.again(asked, look, shown, how, answering, dark, width,
