@@ -214,7 +214,10 @@ takes the room's presses for the card while the card is out.
 Said for the bar's three dots the same way, by the same plate:
 `tools/probe_more.mjs` opens them in a room too narrow for their four
 presses and presses the messages below them, reading what is left of the
-rows afterwards.
+rows afterwards. And for the face beside the clip: `tools/probe_faces.mjs`
+opens the card of faces above it, presses two of the twenty-eight and reads
+the field they were written into, then presses the messages below them and
+says whether any of it is still out.
 
 ## Press what you mean to press
 
