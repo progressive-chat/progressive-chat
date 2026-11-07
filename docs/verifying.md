@@ -199,7 +199,15 @@ window is, the clip, the face, and the round button beside the field, which
 sent nothing though a message was written in the field beside it. That last
 one sends now, and empties the field as Enter does; the ring is said and not
 pressed, which is what it is for, and the clip and the face ask for what
-nothing answers yet, and are said so in `TODO.md`.
+nothing answers yet, and are said so in `TODO.md`. Run again on 2026-11-07
+after the three dots beside the ring were drawn it found thirty-two squares
+and three answering nothing: those same two, and the ring, which is said
+and not pressed. `tools/probe_editor_menu.mjs` asks what the dots opened,
+row by row and by the words each stands at rather than by where they were
+found: that thinking says itself off and the effort it stood at again, that
+four presses of the effort are the four of them once and the first again,
+that Advanced opens the settings and puts the card away with it, and that a
+second press of the dots themselves leaves none of it behind.
 
 ## Press what you mean to press
 
