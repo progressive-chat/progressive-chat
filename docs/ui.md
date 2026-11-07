@@ -26,7 +26,7 @@ browser).
 | the conversation list       | `src/ui/drawer.cc`   | the search, the conversations, Tasks and Remote, the settings row  |
 | the bar over the messages   | `src/ui/top_bar.cc`  | the name, the four plates, what the chat has been worth           |
 | the messages                | `src/ui/message_list.cc` | bubbles, the footer under each answer, a fold above each one  |
-| the card at the foot        | `src/ui/composer.cc` | the field, the plus, the name of what answers, the ring, three dots, and what was being written to each conversation |
+| the card at the foot        | `src/ui/composer.cc` | the field, the plus, the face that opens the faces, the name of what answers, the ring, three dots, and what was being written to each conversation |
 | the settings                | `src/ui/settings.cc` | eight groups, in the order the design names them                  |
 | the design, read in the room | `src/ui/doc.cc`     | `design-doc.md`, in lines that wrap to the breadth of the room    |
 | what every model is told    | `src/ui/prompt.cc`   | one field, and nothing else                                       |
@@ -78,9 +78,13 @@ written anywhere else in the drawing half but these:
 
 Two more belong to the card's three dots alone, and stand with the menu they
 open in `src/ui/composer.cc`: `editor_menu_width` (208), and
-`editor_row_height` (40) for one row of it. The drawer's rows and the menu's
-rows are said there as well, for what each is a row *of* is said where that
-part is drawn and not in the measures of everything.
+`editor_row_height` (40) for one row of it. Three more belong to the card of
+faces, opened beside the clip: `face_cell` (36), which is what one of them
+is given and what four rows of seven of them are laid out by; `face_size`
+(22), the type each is set in; and `face_radius` (10), how far one of them is
+rounded. The drawer's rows and the menu's rows are said there as well, for
+what each is a row *of* is said where that part is drawn and not in the
+measures of everything.
 
 ## The colours
 
@@ -124,8 +128,9 @@ plate with no colour still takes).
 Two plates in `app_window` take presses for the room rather than for
 themselves. The `fShade` dims everything beside the drawer while it is over
 the messages and puts it away when pressed. `fAway` is painted nothing at all
-and stands while the card's three dots are out: everything the room has below
-the card hands its presses to it, and the card puts itself away. Both are
+and stands while a card opened in the composer is out -- either card of three
+dots, or the faces -- and everything the room has below the card hands its
+presses to it, and the card puts itself away. Both are
 taken by what was painted over them, which is why each stands where it does
 in the child order, and `docs/skiff-notes.md` (*What the page says was
 pressed is what it painted last*) says what that order is and what it costs
@@ -161,6 +166,7 @@ between frames and nothing about it can go stale.
 | `set_system_prompt`      | typing in that card          | kept by the conversation as it is typed                            |
 | `toggle_more`            | the bar's three dots         | what they hold, out or away                                        |
 | `toggle_editor_menu`     | the card's three dots        | what they hold, out or away                                        |
+| `toggle_faces`           | the face beside the clip     | the card of faces, out or away                                     |
 | `set_thinking`           | its Thinking row             | whether an answer is thought about before it is written            |
 | `set_effort`             | its Effort row               | how hard: the next of the four, whichever stands now               |
 | `open_design`, `close_design` | the drawer's row        | the design read in the room, and put away whole                    |
@@ -239,3 +245,20 @@ window.
 Asked of the page by `tools/probe_drafts.mjs`: written in one conversation,
 gone in the next, back again in the first, and gone for good once it has
 been sent.
+
+## What the card writes into the field
+
+A face, opened by the face beside the clip, is written into the field rather
+than asked for anywhere: nothing of what a request carries reaches where the
+pen stands, and whose field it is belongs to that card alone (above). So the
+card keeps one string, a pressed face writes itself into it, and the card
+reads it empty again before the next frame, putting what was in it at the
+end of what has been written. Twenty-eight stand in four rows of seven, over
+the messages and above the face they came out of; sending what was written
+puts them away, and so does opening another conversation, for a face belongs
+to the field it was opened over. Which ones are pressed most is kept in
+`recent_emoji` (`pchat.config`), for rows nobody draws yet.
+
+Asked of the page by `tools/probe_faces.mjs`: the face opens twenty-eight,
+a press on two of them writes two into the field, and a press in the middle
+of the messages puts the card away again.

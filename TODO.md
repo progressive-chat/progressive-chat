@@ -115,9 +115,14 @@ build and the next.
       clip, the face and the round button beside the field each took a press
       and answered nothing at all. The round button sends now, and empties
       the field as Enter in it does (`tools/probe_send.mjs` says both), and
-      nothing was emptied either way before it. The clip and the face still
-      ask for what nothing answers, and are the two left of this item
-      pressed for.
+      nothing was emptied either way before it. The face answers too, since
+      2026-11-08: pressed, it opens twenty-eight faces over the messages,
+      and a face pressed writes itself into the field, which nothing asked
+      for could have done -- no request reaches where the pen stands, and
+      so the card keeps one string of its own and reads it empty again
+      before the next frame (`tools/probe_faces.mjs` says the three of it:
+      opened, written, and put away by the room). The clip alone of the
+      card still asks for what nothing answers.
 - [x] The thinking a fold opens did not say the tool calls the line above it
       counted -- done 2026-11-07: each call an answer made is kept as it was
       asked and answered (`call_made` in `src/core.cc`, recorded by every
