@@ -75,19 +75,33 @@ await page.waitForTimeout(1200);
 const foldShut = !(await mirror()).includes('no recipe of its own known');
 console.log('fold answers: ' + foldOpen + ', and shuts again: ' + foldShut);
 
-// The Info chip: its own word says which it is. Under it, the line saying
-// what the answer came to -- digits, comma, digits and the word tokens,
-// which stands nowhere else the same way.
-const chip = all.find((p) => p.own === 'Info') || all.find((p) => p.all === 'Info');
-if (chip) {
-  await clickBox(chip);
-  const on = /\d{1,3}(,\d{3})+ tokens/.test(await mirror());
-  await clickBox(chip);
-  const off = !/\d{1,3}(,\d{3})+ tokens/.test(await mirror());
-  console.log('info chip answers: ' + on + ', and takes it back: ' + off);
-} else {
-  console.log('info chip: no pressable says Info');
+// The Info chip: candidates are the pressables that say exactly Info -- the
+// label, the chip around it -- and a candidate is believed only when the
+// line saying what the answer came to stands up under the press: digits,
+// comma, digits and the word tokens, which stands nowhere else the same way.
+const afterFold = await mirror();
+const chipCands = (await pressables()).filter((p) => p.own === 'Info' || p.all === 'Info');
+const lineUp = (s) => /\d{1,3}(,\d{3})+ tokens/.test(s);
+let chipOn = false;
+let chipIdx = -1;
+for (let i = 0; i < chipCands.length; ++i) {
+  await clickBox(chipCands[i]);
+  if (lineUp(await mirror())) {
+    chipOn = true;
+    chipIdx = i;
+    break;
+  }
 }
+let chipOff = false;
+if (chipOn) {
+  await clickBox(chipCands[chipIdx]);
+  chipOff = !lineUp(await mirror());
+}
+console.log('info chip answers: ' + chipOn + ', and takes it back: ' + chipOff +
+            (chipIdx >= 0 ? ' by ' + JSON.stringify({own: chipCands[chipIdx].own,
+                                                     all: chipCands[chipIdx].all.slice(0, 30)}) : '') +
+            ' of ' + chipCands.length + ' candidates' +
+            (chipOn ? '' : '; mirror unchanged after all: ' + ((await mirror()) === afterFold)));
 await page.screenshot({ path: 'press-chip.png' }).catch(() => {});
 
 // A room's row: candidates are the pressables that say a room's title other
