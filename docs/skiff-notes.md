@@ -153,11 +153,12 @@ drawer already keeps, painted before the list, the messages and the bar, and
 so *under* every one of them. The rule says what is painted last takes the
 press; what it does not say is what order a window paints its own children
 in, and that order is read where it is written (`app_window::forEachChild`,
-`src/ui/window.cc`): paper, messages, the drawer's shade, drawer, list, bar,
-the card's own away, card, settings, design, prompt. A plate meant to take
+`src/ui/window.cc`): paper, messages, the drawer's shade, drawer, list, what
+puts a card away, bar, card, settings, design, prompt. A plate meant to take
 presses from everything below it goes as low in that list as it can while
-staying above all of it -- in the card's case, between the bar and the card,
-where the card and its rows are the only things still painted after it.
+staying above all of it -- above the messages, the list and the drawer, for
+what three dots opened, and below the bar and the card, whose own three dots
+and the rows behind them go on being pressed for what they say.
 
 ## Nothing else that has surprised this program yet
 
