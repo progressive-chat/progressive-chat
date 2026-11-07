@@ -206,8 +206,15 @@ and not pressed. `tools/probe_editor_menu.mjs` asks what the dots opened,
 row by row and by the words each stands at rather than by where they were
 found: that thinking says itself off and the effort it stood at again, that
 four presses of the effort are the four of them once and the first again,
-that Advanced opens the settings and puts the card away with it, and that a
-second press of the dots themselves leaves none of it behind.
+that Advanced opens the settings and puts the card away with it, that a
+second press of the dots themselves leaves none of it behind, and that a
+press in the middle of the messages does the same, through the plate that
+takes the room's presses for the card while the card is out.
+
+Said for the bar's three dots the same way, by the same plate:
+`tools/probe_more.mjs` opens them in a room too narrow for their four
+presses and presses the messages below them, reading what is left of the
+rows afterwards.
 
 ## Press what you mean to press
 
