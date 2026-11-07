@@ -304,8 +304,13 @@ public:
     for (const request &one : asked_.drain())
       take(one);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
-                        design_, system_, more_, editor_menu_, drawer_,
+    scene_.root().again(look_, root_, shown_, how_, query_, dark_,
+                        ui::what_is_open{.settings = settings_,
+                                         .design = design_,
+                                         .prompt = system_,
+                                         .more = more_,
+                                         .editor_menu = editor_menu_,
+                                         .drawer = drawer_},
                         width_, height_, &asked_);
   }
 
