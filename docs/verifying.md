@@ -198,6 +198,21 @@ one sends now, and empties the field as Enter does; the ring is said and not
 pressed, which is what it is for, and the clip and the face ask for what
 nothing answers yet, and are said so in `TODO.md`.
 
+## Press what you mean to press
+
+What takes a press in a place is what was painted last there, and not what
+was read there. The six chips under an answer are a row of small plates
+with their marks and words painted over them: the words of one are read at
+a point where the *mark* of another is what a press lands on, and a probe
+that pressed the middle of every chip's words pressed something else each
+time and came back saying a chip that works answers nothing. So: before
+pressing a point read off an element, ask `document.elementFromPoint` what
+stands there, and press only when it is that element or something in it --
+`tools/probe_presses.mjs` says `covered` for the rest. A mark is no
+exception: the middle of a chip is its icon, and that is the chip's own to
+climb to, so a press there is right and a press four pixels off it may be
+the plate beside it.
+
 A last one before anyone writes another probe: what says a press was
 answered is `skiff_web_event` with a node's handle and `click`. The pointer
 being said to something means nothing -- it is said even of a press made in
