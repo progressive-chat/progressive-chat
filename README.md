@@ -70,10 +70,8 @@ model, an agent or a script on its own.
 ### 2026-11-07
 
 The last 24h gave only a thousand of new code lines. But I fixed many things
-in the UI -- what was drawn but answered nothing has been gone over square
-by square, and given something to answer with or taken out of the drawing --
-and I am currently working on bringing better Material Design 3 in C++ to
-this project.
+in the UI, and I am currently working on bringing better Material Design 3
+in C++ to this project.
 
 ### 2026-11-06
 
