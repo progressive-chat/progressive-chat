@@ -70,16 +70,19 @@ build and the next.
       shuts it again. Nothing opened it before because nothing there measured
       the words: what that costs, and what is said instead, is written under
       *What nothing measures reads as nothing wide* in `docs/skiff-notes.md`.
-- [ ] **Nothing in the bar over the messages answers a press, outside of the
+- [x] **Nothing in the bar over the messages answers a press, outside of the
       three dots**: what every model is told, this conversation taken into
       one of its own, and given away, are each said and each wired, and a
-      press all the way across the bar asks nothing of any of them -- read
+      press all the way across the bar asked nothing of any of them -- read
       off the page on 2026-11-07, by a probe that pressed every ten points
       of the bar and watched what the press was said to and whether any
       click was made at all. Why is written in `docs/skiff-notes.md` under
       *What the page says was pressed is what it painted last*: each of the
       four held the whole breadth of the bar, so the last of them was over
-      the other three, and what they press was never asked.
+      the other three, and what they press was never asked. Done the same
+      day, and read again off the page: four plates in the bar, and every
+      one of them answered (`tools/probe_top_bar.mjs`, which presses them
+      in the settled layout and says what each did afterwards).
 - [ ] Where nothing measures a line there are surely more than one node whose
       size came of nothing: six chips and the fold above an answer were the
       two found, both now said their size, and nothing else pressable has

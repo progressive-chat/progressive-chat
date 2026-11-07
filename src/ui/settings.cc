@@ -733,8 +733,7 @@ struct settings_screen : scene::Node {
   nodes::Box<> fCard{0u};
   // Put away again: the one control the page has that is not a row of its
   // own kind, and so drawn outside what scrolls, over the card's own corner.
-  ask_box fClosePlate{};
-  nodes::Icon fCloseMark{shape::close(), 0u};
+  press_box fClose{};
   nodes::ScrollContainer<settings_rows> fRows{settings_rows{}};
   // Whether the page was open: what is read in it is read from its first
   // line each time it is opened again.
@@ -743,10 +742,6 @@ struct settings_screen : scene::Node {
   settings_screen() {
     this->apply({.fill = true});
     fPaper.apply({.fill = true});
-    fClosePlate.apply({.width = 36.0f,
-                       .height = 36.0f,
-                       .cornerRadius = 18.0f});
-    fCloseMark.apply({.width = 18.0f, .height = 18.0f});
     this->setVisible(false);
   }
 
@@ -768,8 +763,6 @@ struct settings_screen : scene::Node {
       fRows.scrollToStart();
     }
     const float breadth = std::min(width, settings_card_widest);
-    fClosePlate.again(asked, app::close_settings{}, look.raised);
-    fCloseMark.setColour(look.text);
     fPaper.setColour(look.paper);
     fCard.setColour(look.drawer);
     // One card, standing in the middle of the room and reaching almost its
@@ -784,21 +777,17 @@ struct settings_screen : scene::Node {
                  .height = height - 2.0f * settings_card_room,
                  .cornerRadius = 24.0f});
     // The one control: inside the card's own corner, wherever the card is.
-    fClosePlate.apply({.anchor = scene::anchor::kTopCentre,
-                       .origin = scene::anchor::kTopRight,
-                       .x = breadth / 2.0f - 20.0f,
-                       .y = settings_card_room + 20.0f,
-                       .relativeSize = scene::axes::kNone,
-                       .width = 36.0f,
-                       .height = 36.0f,
-                       .cornerRadius = 18.0f});
-    fCloseMark.apply({.anchor = scene::anchor::kTopCentre,
-                      .origin = scene::anchor::kCentre,
-                      .x = breadth / 2.0f - 20.0f - 18.0f,
-                      .y = settings_card_room + 38.0f,
-                      .relativeSize = scene::axes::kNone,
-                      .width = 18.0f,
-                      .height = 18.0f});
+    fClose.again(asked,
+                 {.anchor = scene::anchor::kTopCentre,
+                  .origin = scene::anchor::kTopRight,
+                  .relativeSize = scene::axes::kNone,
+                  .width = 36.0f,
+                  .height = 36.0f,
+                  .x = breadth / 2.0f - 20.0f,
+                  .y = settings_card_room + 20.0f,
+                  .visible = true},
+                 app::close_settings{}, look.raised);
+    fClose.mark_colour(look.text);
     std::get<0>(fRows.fChildren)
         .again(asked, look, shown, how, answerers, dark,
                breadth - 2.0f * edge);
@@ -818,8 +807,7 @@ struct settings_screen : scene::Node {
     f(fPaper);
     f(fCard);
     f(fRows);
-    f(fClosePlate);
-    f(fCloseMark);
+    f(fClose);
   }
 };
 
