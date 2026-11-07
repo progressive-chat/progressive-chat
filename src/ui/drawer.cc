@@ -228,7 +228,6 @@ struct drawer_screen : scene::Node {
   // Said while the rows are being looked into: the room a row was given, the
   // reach its texts were given of it, and where the first row's own name and
   // last words came to stand -- whether one stands over the other.
-  nodes::Text fSaidDebug{"", 11.0f, 0xff00ff00u, true};
 
   nodes::Box<> fPaper{0u};
   nodes::Text fHeading{"Conversations", drawer_heading_size, 0u, true};
@@ -305,7 +304,6 @@ struct drawer_screen : scene::Node {
   }
 
   explicit drawer_screen(float breadth) {
-    fSaidDebug.apply({.maxWidth = 0.0f});
     this->apply({.width = breadth, .fillY = true});
     fPaper.apply({.fill = true});
     // The field, its magnifier standing in it before what it says: one line,
@@ -409,20 +407,6 @@ struct drawer_screen : scene::Node {
                      .x = edge,
                      .y = rows_top + static_cast<float>(rows.size()) *
                                          (row_height + 4.0f)});
-    if (!fRows.empty()) {
-      const conversation_row &first = *fRows.front();
-      const skia::SkRect title = first.fTitle.bounds();
-      const skia::SkRect said = first.fSaid.bounds();
-      fSaidDebug.apply({.anchor = scene::anchor::kTopLeft,
-                        .x = edge,
-                        .y = this->bounds().height() - 60.0f,
-                        .maxWidth = 0.0f});
-      fSaidDebug.setText(std::format(
-          "room={:.0f} text={:.0f} t={:.0f}x{:.0f}@{:.0f},{:.0f} "
-          "s={:.0f}x{:.0f}@{:.0f},{:.0f}",
-          row_room, text, title.width(), title.height(), title.fLeft,
-          title.fTop, said.width(), said.height(), said.fLeft, said.fTop));
-    }
     // What is left of the list where fewer conversations were kept than were
     // kept here before: said by nobody.
     for (std::size_t at = rows.size(); at < fRows.size(); ++at)
@@ -431,7 +415,6 @@ struct drawer_screen : scene::Node {
 
   void forEachChild(auto &&f) {
     f(fPaper);
-    f(fSaidDebug);
     f(fHeading);
     f(fNone);
     f(fSearchMark);
