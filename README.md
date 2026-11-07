@@ -69,12 +69,11 @@ model, an agent or a script on its own.
 
 ### 2026-11-07
 
-The last twenty-four hours gave a thousand new lines of code and not much
-more than that -- what those lines did was fix rather than add. Most of the
-UI that was drawn but answered nothing has been pressed square by square and
-either given something to answer with or taken out of the drawing; what is
-being worked on now is bringing Material Design 3 of a better kind to this
-project, in C++ and in this program's own words for it.
+The last 24h gave only a thousand of new code lines. But I fixed many things
+in the UI -- what was drawn but answered nothing has been gone over square
+by square, and given something to answer with or taken out of the drawing --
+and I am currently working on bringing better Material Design 3 in C++ to
+this project.
 
 ### 2026-11-06
 
