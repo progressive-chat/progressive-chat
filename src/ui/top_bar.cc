@@ -117,44 +117,42 @@ struct bar_press : scene::Node {
   nodes::Icon fMark{shape::close(), 0u};
 
   bar_press() {
-    // As wide and as tall as what holds it, and so what everything in it is
-    // said against: a node of no size of its own is a place its own children
-    // are put from the corner of, wherever they are told to stand.
-    this->apply({.fill = true});
+    // As wide and as tall as what it presses, and no wider. Held to the bar's
+    // breadth instead, one of these is painted after every press to its left
+    // and over them -- and what the page says was pressed is what it painted
+    // last, so the three of them to the left answered a press nowhere in the
+    // bar at all. What is said instead is a box of its own, standing where
+    // its plate stood and no further, the way a row behind the three dots
+    // already says its own size.
     fMark.apply({.width = 18.0f,
                  .height = 18.0f,
-                 .anchor = scene::anchor::kTopRight,
+                 .anchor = scene::anchor::kCentre,
                  .origin = scene::anchor::kCentre});
   }
 
   void again(app::requests *sink, const paints &look, nodes::IconShape mark,
              float inset, app::request asking) {
+    this->apply({.anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kTopRight,
+                 .x = -inset,
+                 .y = (top_bar_height - bar_press_width) / 2.0f,
+                 .relativeSize = scene::axes::kNone,
+                 .width = bar_press_width,
+                 .height = bar_press_width,
+                 .visible = true});
     fPlate.again(sink, std::move(asking), look.search_bar);
-    fPlate.apply({.anchor = scene::anchor::kTopRight,
-                  .origin = scene::anchor::kTopRight,
-                  .x = -inset,
-                  .y = (top_bar_height - bar_press_width) / 2.0f,
-                  .relativeSize = scene::axes::kNone,
-                  .width = bar_press_width,
-                  .height = bar_press_width,
-                  .cornerRadius = bar_press_width / 2.0f,
-                  .visible = true});
+    fPlate.apply({.fill = true, .cornerRadius = bar_press_width / 2.0f});
     fMark.setShape(std::move(mark));
     fMark.setColour(look.text);
-    fMark.apply({.anchor = scene::anchor::kTopRight,
+    fMark.apply({.anchor = scene::anchor::kCentre,
                  .origin = scene::anchor::kCentre,
-                 .x = -(inset + bar_press_width / 2.0f),
-                 .y = top_bar_height / 2.0f,
                  .relativeSize = scene::axes::kNone,
                  .width = 18.0f,
                  .height = 18.0f,
                  .visible = true});
   }
 
-  void hide() {
-    fPlate.apply({.visible = false});
-    fMark.apply({.visible = false});
-  }
+  void hide() { this->setVisible(false); }
 
   void forEachChild(auto &&f) {
     f(fPlate);
