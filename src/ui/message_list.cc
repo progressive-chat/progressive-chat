@@ -489,12 +489,15 @@ struct message_screen : nodes::Stack {
       const skia::SkRect bub = first.fReader.fBubble.bounds();
       const skia::SkRect body = first.fReader.fBubble.fBody.bounds();
       const skia::SkRect answer = first.fAnswer.fBody.bounds();
+      const float size = first.fReader.fBubble.fBody.fontSize();
       fSaidDebug.setText(std::format(
           "room={:.0f} widest={:.0f} row={:.0f}x{:.0f} bub={:.0f}x{:.0f} "
-          "body={:.0f}x{:.0f} ans={:.0f}x{:.0f}",
+          "body={:.0f}x{:.0f} sz={:.0f} lines={:.0f} ans={:.0f}x{:.0f}",
           room, std::min(bubble_max, widest_share * std::max(0.0f, room)),
           row.width(), row.height(), bub.width(), bub.height(), body.width(),
-          body.height(), answer.width(), answer.height()));
+          body.height(), size,
+          size > 0.0f ? body.height() / (size * 1.25f) : 0.0f,
+          answer.width(), answer.height()));
     }
     // What is left of the column where fewer messages were said than were
     // said here before: said by nobody.
