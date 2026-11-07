@@ -267,12 +267,52 @@ struct foot_row : nodes::Stack {
 
 // ---- what was thought before an answer -----------------------------------
 
+// Every call a thought stopped to ask for, said the same way it was made:
+// which tool, what it asked it for, and what that tool answered it, one line
+// under the other. Nothing at all where there were none.
+[[nodiscard]] inline std::string
+calls_said(const std::vector<call_made> &calls) {
+  std::string out;
+  for (const call_made &one : calls) {
+    if (!out.empty())
+      out += "\n";
+    out += "> " + one.tool + ": " + one.asked + "\n    " + one.answered;
+  }
+  return out;
+}
+
+// How wide its widest line comes to, and how many lines it comes to in a room
+// this wide: one for each line it was written with, and as many more as that
+// one is wrapped into. Said here rather than measured there, for the want
+// every other size in this file is said here for -- see `words_wide`.
+[[nodiscard]] inline std::pair<float, float> how_it_stands(std::string_view said,
+                                                           float room,
+                                                           float size) {
+  float widest = 0.0f;
+  float lines = 0.0f;
+  for (std::size_t at = 0u;;) {
+    const std::size_t next = said.find('\n', at);
+    const std::string_view one = said.substr(
+        at, next == std::string_view::npos ? std::string_view::npos
+                                           : next - at);
+    const float wide = words_wide(std::string(one), size);
+    widest = widest < wide ? wide : widest;
+    lines += std::max(1.0f, std::ceil(wide / room));
+    if (next == std::string_view::npos)
+      break;
+    at = next + 1u;
+  }
+  return {widest, std::max(1.0f, lines)};
+}
+
 // Folded above an answer: how long it was thinking, how many tool calls it
 // made, and -- once it is pressed open -- what it wrote to itself while it
-// was, in green, the way a thread writes it.
+// was, and each thing it stopped to ask for on the way, in green, the way a
+// thread writes it.
 struct history_fold : nodes::Stack {
   nodes::Text fSummary{"", 12.0f, 0u};
   nodes::Text fThought{"", 12.0f, 0u};
+  nodes::Text fCalls{"", 12.0f, 0u};
   bool fOpen = false;
 
   history_fold() {
@@ -281,6 +321,7 @@ struct history_fold : nodes::Stack {
                  .padding = scene::Margin{8.0f, 12.0f, 8.0f, 12.0f}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 6.0f};
     fThought.setVisible(false);
+    fCalls.setVisible(false);
   }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
@@ -295,8 +336,10 @@ struct history_fold : nodes::Stack {
     this->setVisible(false);
     fSummary.setText("");
     fThought.setText("");
+    fCalls.setText("");
     fOpen = false;
     fThought.setVisible(false);
+    fCalls.setVisible(false);
   }
 
   void again(const paints &look, const thought &before, float widest) {
@@ -333,11 +376,25 @@ struct history_fold : nodes::Stack {
                                               : room,
                     .height = lines * line_tall(12.0f),
                     .maxWidth = room});
+    // Each thing it stopped to ask for, under what it wrote to itself and
+    // opened with it: which tool, what it asked, what came back.
+    const std::string calls = calls_said(before.calls);
+    fCalls.setText(calls);
+    fCalls.setColour(look.thought);
+    fCalls.setMonospace(true);
+    fCalls.setVisible(fOpen && !calls.empty());
+    const auto [calls_wide, calls_lines] = how_it_stands(calls, room, 12.0f);
+    fCalls.apply({.autoSize = scene::axes::kNone,
+                  .width = calls_wide > 1.0f ? std::min(calls_wide + 2.0f, room)
+                                             : room,
+                  .height = calls_lines * line_tall(12.0f),
+                  .maxWidth = room});
   }
 
   void forEachChild(auto &&f) {
     f(fSummary);
     f(fThought);
+    f(fCalls);
   }
 };
 

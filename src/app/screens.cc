@@ -320,6 +320,11 @@ private:
     platform::carrying carried;
     tools::owned mine;
     moment began;
+    // Every call this answer has stopped to ask for so far, and what each of
+    // them was answered: kept here, over every round of the asking, because
+    // what asked for them and what answered them are two ends of a wire and
+    // neither of them is the loop between.
+    std::vector<call_made> calls{};
   };
   std::optional<answer_coming> answering_;
 
@@ -412,12 +417,17 @@ private:
       return;   // and it is not over yet
     }
     const moment ended = now_ms();
-    if (message *there = found(one.said))
+    if (message *there = found(one.said)) {
       *there = one.going.answer_of(provider::put_in{.id = one.said,
                                                     .chat = one.chat,
                                                     .author = ending_of(one.chat),
                                                     .sent = ended,
                                                     .took_ms = ended - one.began});
+      // Those calls are the thought's to keep, once there is a thought: what
+      // it wrote to itself is read beside them.
+      if (there->before)
+        there->before->calls = one.calls;
+    }
     recount(one.chat);
     answering_.reset();
   }
@@ -428,11 +438,16 @@ private:
   // where it belongs.
   [[nodiscard]] bool asked_again(answer_coming &one) {
     std::vector<provider::call_answered> answered;
-    for (const provider::tool_call &call : one.going.asked_for())
-      answered.push_back(
-          provider::call_answered{.own = call.id,
-                                  .said = one.mine.answered(call.name, call.arguments)
-                                              .value_or("nothing here answers that call")});
+    for (const provider::tool_call &call : one.going.asked_for()) {
+      const std::string said =
+          one.mine.answered(call.name, call.arguments)
+              .value_or("nothing here answers that call");
+      answered.push_back(provider::call_answered{.own = call.id, .said = said});
+      // Said for the fold above the answer too, and not only for the wire
+      // that asked again: what it stopped to ask for, and what came of it.
+      one.calls.push_back(
+          call_made{.tool = call.name, .asked = call.arguments, .answered = said});
+    }
     return one.going.again(std::move(answered));
   }
 
