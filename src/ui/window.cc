@@ -81,7 +81,10 @@ struct app_window : scene::Node {
     const bool in_chat = wide || !drawer_open;
     const float column = in_chat ? width - (wide ? breadth : 0.0f) : width;
     const bool aside = wide || drawer_open;
-    const float left = aside ? breadth : 0.0f;
+    // The messages are drawn under the drawer where the drawer has come over
+    // them as well: what is left of them beside it is read there, and pressed
+    // it is what puts it away again.
+    const float left = wide ? breadth : 0.0f;
     fPaper.setColour(look.paper);
     // The messages' own ground, beside the drawer.
     // A size in pixels, not a share: what these were made to fill once is
@@ -93,10 +96,13 @@ struct app_window : scene::Node {
                      .width = column,
                      .height = height,
                      .background = look.paper,
-                     .visible = in_chat});
-    // The drawer: beside the messages when the window is wide, out of the way
-    // when it is not.
-    const float drawer_breadth = wide ? breadth : width;
+                     .visible = true});
+    // The drawer: beside the messages when the window is wide, over them when
+    // it is not -- and over them it leaves a strip of them in sight, which is
+    // what the reader presses to put it away again.
+    const float drawer_breadth =
+        wide ? breadth
+             : std::min(width, std::max(breadth, width - drawer_open_room));
     fDrawer.apply({.anchor = scene::anchor::kTopLeft,
                    .x = 0.0f,
                    .y = 0.0f,
@@ -114,7 +120,7 @@ struct app_window : scene::Node {
                      .height = height,
                      .visible = true,
                      .background = look.drawer});
-      fDrawer.again(look, root, opened, query, asked);
+      fDrawer.again(look, shown, root, opened, query, asked);
     }
     // The bar, over the top of the messages.
     fTop.apply({.anchor = scene::anchor::kTopLeft,
@@ -123,7 +129,7 @@ struct app_window : scene::Node {
                 .relativeSize = scene::axes::kNone,
                 .width = column,
                 .height = top_scrim,
-                .visible = in_chat});
+                .visible = true});
     // The pill that opens the drawer is there where a drawer can be opened:
     // a window wide enough to keep it beside the messages has none to open.
     const conversation *open_chat = nullptr;
@@ -173,7 +179,7 @@ struct app_window : scene::Node {
          .width = column,
          .height = std::max(
              height - top_bar_height - composer_height - 2.0f * edge, 40.0f),
-         .visible = in_chat});
+         .visible = true});
     // The card at the foot.
     fComposer.apply({.anchor = scene::anchor::kBottomLeft,
                      .origin = scene::anchor::kBottomLeft,
@@ -182,7 +188,7 @@ struct app_window : scene::Node {
                      .relativeSize = scene::axes::kNone,
                      .width = column,
                      .height = composer_height + 2.0f * edge,
-                     .visible = in_chat});
+                     .visible = true});
     if (open_chat)
       fComposer.again(look, *open_chat, asked);
     // The settings page, over everything, when it is opened.

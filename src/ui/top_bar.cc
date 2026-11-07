@@ -36,7 +36,7 @@ struct bar_pill : scene::Node {
   bar_pill() {
     this->apply(
         {.height = 36.0f, .autoSize = scene::axes::kX, .cornerRadius = 18.0f});
-    fPlate.apply({.fill = true});
+    fPlate.apply({.fill = true, .cornerRadius = 18.0f});
     fMark.apply({.width = 18.0f,
                  .height = 18.0f,
                  .anchor = scene::anchor::kCentreLeft,
@@ -95,6 +95,11 @@ struct answerer_bubble : scene::Node {
   void again(const paints &look, const scene::Spec &where,
              std::string_view name) {
     this->apply(where);
+    // The bubble is rounded as the spec brought here says, and it is its
+    // plate that is seen: given the same radius, and nothing else of where
+    // it stands, which the plate has of its own already.
+    if (where.cornerRadius)
+      fPlate.apply({.cornerRadius = *where.cornerRadius});
     fPlate.setColour(look.search_bar);
     fName.setText(std::string(name));
     fName.setColour(look.text);
