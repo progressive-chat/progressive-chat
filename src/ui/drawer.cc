@@ -363,8 +363,14 @@ struct drawer_screen : scene::Node {
     theme.fSurface = look.field;
     theme.fText = look.text;
     theme.fTextDim = look.dim;
+    theme.fTextFaint = look.faint;
     theme.fAccent = look.primary;
     fSearch.setTheme(theme);
+    // A TextArea draws words and a caret and nothing else: no ground of its
+    // own, so the field there is searched with was no field at all -- only a
+    // hint standing on the panel. Its ground is said of the node, rounded
+    // the whole way round as the field is asked to be.
+    fSearch.apply({.background = look.field});
     for (ask_row *one : {&fTasks, &fRemote, &fNewChat, &fSettings})
       one->again(asked, look);
     fSink->asked = asked;
