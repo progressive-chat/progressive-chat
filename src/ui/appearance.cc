@@ -18,6 +18,10 @@ namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 
 // How many seeds are offered.
+
+// What a seed's row keeps clear at its right, for the tick that marks the
+// seed in use.
+inline constexpr float tick_room = 91.0f;
 inline constexpr std::size_t max_seeds = 8;
 
 // One seed, as a row: its colour, its name, and whether it is in use. A row
@@ -40,6 +44,7 @@ struct seed_row : scene::Node {
                 .anchor = scene::anchor::kCentreLeft,
                 .origin = scene::anchor::kCentreLeft,
                 .x = 16.0f});
+    fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 56.0f});
@@ -72,6 +77,8 @@ struct seed_row : scene::Node {
     fDot.setColour(seed);
     fName.setText(std::string(name));
     fName.setColour(look.text);
+    if (spec.width)
+      fName.apply({.maxWidth = std::max(0.0f, *spec.width - tick_room)});
     fTick.setVisible(chosen);
     fTick.setColour(look.primary);
   }
