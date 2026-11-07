@@ -122,6 +122,30 @@ than left to keep a size nobody put in it. Nothing counts characters, and
 where even that measure says nothing, what a letter of a fixed pitch would
 come to in the size asked is what `liteAdvance` keeps.
 
+## What the page says was pressed is what it painted last
+
+Not the node whose bounds are smallest, and not the one drawn in front: in
+the page a press is asked of one element, the one the browser itself would
+have given it to, and that is the last element in the tree that holds the
+point -- later in the tree is painted later, and later is on top. From that
+element the walk goes *up*, to its parents, and nowhere else: a node beside
+it, however much nearer it is to the point, is never asked.
+
+What it costs: one node kept to hold a press, given `fill` and so the whole
+breadth of its parent, is painted after every press to its left and over
+them -- so the four presses in the bar over the messages each held the whole
+bar, and every press anywhere in the bar went to the last of them (the one
+hidden in a window with room for three). Nothing in the bar answered a press
+anywhere: what every model is told, this conversation taken into one of its
+own, given away. Behind three dots, where the room is too narrow and the
+rows say their own size, the same three things did answer -- which is how
+this was found, and how the difference between them was said.
+
+What is said instead: a node made only to hold a press is given the size of
+what it presses and no more, in its own place, the way the rows behind the
+three dots already were. Nothing here asks a node to be transparent to
+presses, for no such thing was found in this library.
+
 ## Nothing else that has surprised this program yet
 
 Written down when it does, with what it cost and what is said instead.
