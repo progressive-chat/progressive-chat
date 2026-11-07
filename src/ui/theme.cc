@@ -34,6 +34,10 @@ struct paints {
   Colour on_avatar = 0xffffffffu;
   Colour thought = 0xff6ede8au;   // a model's thinking, folded above its answer
   Colour scrim_top = 0x000c160cu; // see-through, the top of the messages
+  // Nothing at all, painted whole: what takes a press away from a card that
+  // came out of three dots, seen nowhere and answered everywhere else in the
+  // room -- the press that puts the card away and asks nothing more of it.
+  Colour away = 0x00000000u;
   Colour search_bar = 0xd9162616u; // the pills over the list
   Colour scrim =
       0x99000000u;    // over the messages, while the drawer is over them
