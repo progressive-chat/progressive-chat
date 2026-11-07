@@ -84,7 +84,8 @@ struct press_box : scene::Node {
   ask_box fPlate{};
   nodes::Icon fMark{shape::close(), 0u};
 
-  press_box() {
+  explicit press_box(nodes::IconShape mark = shape::close())
+      : fMark(std::move(mark), 0u) {
     fMark.apply({.width = 18.0f,
                  .height = 18.0f,
                  .anchor = scene::anchor::kCentre,
