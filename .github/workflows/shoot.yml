@@ -1,0 +1,98 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: shoot
+
+# Asked for by hand: what a window came to is read off it, and no check can
+# say whether a corner came out round -- only a picture can.
+on:
+  workflow_dispatch:
+    inputs:
+      # What the window looks like before it is shot: how wide and how tall
+      # the screen it is given is, so that what is narrow (a drawer coming
+      # over the messages) can be asked for as well as what is wide.
+      screen:
+        description: 'The screen to give it, as width x height'
+        required: false
+        default: '1440x900'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  shot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      # Mesa in software, and an X server in front of it, as the crash is
+      # run in front of: Skia asks GL what it has and gets nothing from a
+      # display that was never started. And what reads a display to make a
+      # picture of it: xwd for the picture itself, and imagemagick to write
+      # it as one a reader can open.
+      - name: A screen to be shot, and what reads it
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+          xvfb x11-apps imagemagick gdb libgl1-mesa-dri libglx-mesa0 libegl-mesa0
+      - uses: actions/cache@v4
+        with:
+          path: build-shoot
+          key: shoot-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/shoot.yml', '.github/actions/desktop-setup/action.yml') }}
+      - name: Configure
+        run: |
+          # No GL asked for: what this machine's GL answers about its own
+          # extensions is nothing, and inside that answer Skia goes before the
+          # program's first frame (GrGLExtensions::init). In software every
+          # box is painted by the same scene, rounded and coloured as a
+          # machine with a GPU paints it.
+          cmake -S . -B build-shoot -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPCHAT_GL=OFF \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DPCHAT_REVISION="$(git rev-parse --short=12 HEAD)"
+      - name: Build the program
+        run: cmake --build build-shoot --target progressive-chat --parallel 4
+      # Started, and shot again and again on the way: a program that goes
+      # before its second frame has still put its first one up, and a shot
+      # taken before it went says more than the crash it went with. Then,
+      # where it went, said with the place: gdb over what is left of it.
+      - name: Run it and shoot what it drew
+        env:
+          SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          Xvfb :99 -screen 0 "${{ inputs.screen }}x24" &
+          sleep 2
+          DISPLAY=:99 ./build-shoot/progressive-chat >said.txt 2>&1 &
+          given=$!
+          for at in 1 2 3 4 5 6 7 8; do
+            sleep 3
+            DISPLAY=:99 xwd -root -silent | convert xwd:- "shot_${at}.png" || true
+          done
+          kill $given 2>/dev/null || true
+          echo "---- what it said ----"
+          cat said.txt || true
+          ls -l shot_*.png
+      # Only asked for where it did not stay up: it goes inside Skia, or in
+      # what SDL3 asked GL for, and neither is this program's own doing --
+      # but which it is has to be read off the run.
+      - name: Where it went, if it went
+        continue-on-error: true
+        env:
+          SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          pgrep -x Xvfb >/dev/null || (Xvfb :99 -screen 0 "${{ inputs.screen }}x24" & sleep 2)
+          ulimit -c 0
+          DISPLAY=:99 timeout 60 gdb -q -batch \
+            -ex 'run' -ex 'bt 30' -ex 'info threads' \
+            --args ./build-shoot/progressive-chat 2>&1 | tail -60
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shot
+          path: shot_*.png
+          if-no-files-found: error
