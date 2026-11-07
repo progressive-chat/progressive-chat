@@ -72,6 +72,22 @@ inline constexpr std::size_t switches_owned = 7u;
 // Said once here and written as each family names it by pchat.provider.
 enum class effort { least, some, most, all };
 
+// The next of the four, whichever of them stands now: what one press behind
+// the card's three dots asks for, and the least of them again after the most.
+[[nodiscard]] constexpr effort next_of(effort one) {
+  switch (one) {
+  case effort::least:
+    return effort::some;
+  case effort::some:
+    return effort::most;
+  case effort::most:
+    return effort::all;
+  case effort::all:
+    break;
+  }
+  return effort::least;
+}
+
 [[nodiscard]] inline std::string_view said_by(effort one) {
   switch (one) {
   case effort::least:
