@@ -16,6 +16,7 @@ import pchat.core;
 import pchat.config;
 import pchat.theme;
 import pchat.ui;
+import pchat.platform.notified;
 import pchat.provider;
 import pchat.provider.run;
 import pchat.platform.carry;
@@ -129,6 +130,12 @@ public:
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },
             [&](const close_settings &) { settings_ = false; },
+            // What the drawer's two rows are there for: nothing stands behind
+            // either of them yet, and so nothing is opened. They are drawn
+            // where the panel has them, and what they ask for is answered
+            // the day there is something to answer it with.
+            [&](const open_tasks &) {},
+            [&](const open_remote &) {},
             [&](const fork_conversation &asking) {
               conversation *said = nullptr;
               for (conversation &one : root_.conversations)
@@ -208,6 +215,19 @@ public:
             [&](const set_amoled &asking) {
               shown_.amoled = asking.enabled;
               recolour();
+            },
+            // What the drawer's rows are then drawn with: no colour grows
+            // out of either of these, and so nothing is grown again.
+            [&](const set_avatars &asking) { shown_.avatars = asking.enabled; },
+            [&](const set_row_times &asking) {
+              shown_.row_times = asking.enabled;
+            },
+            // A test notification: nothing of the program's own knows whether
+            // the machine it runs on will show it, so all this does is ask the
+            // platform and go on.
+            [&](const send_test_notification &) {
+              platform::notified::say("progressive-chat",
+                                      "This is a test notification.");
             },
             // Larger type: every size drawn in the body of a message is asked
             // for again with this multiply in it, so what is set larger is
