@@ -119,6 +119,18 @@ plate with no colour still takes).
 4. **The tree is filled in again.** What every part draws is said to it once
    more, from the model, with the size of the room the last frame left.
 
+### What is painted over the room
+
+Two plates in `app_window` take presses for the room rather than for
+themselves. The `fShade` dims everything beside the drawer while it is over
+the messages and puts it away when pressed. `fAway` is painted nothing at all
+and stands while the card's three dots are out: everything the room has below
+the card hands its presses to it, and the card puts itself away. Both are
+taken by what was painted over them, which is why each stands where it does
+in the child order, and `docs/skiff-notes.md` (*What the page says was
+pressed is what it painted last*) says what that order is and what it costs
+to get it wrong.
+
 `ask_box` is a plate that only asks; `press_box` is the same with a mark
 painted in it. Both are given their request, their colour and the list they
 push into every frame, which is why nothing about a press has to be kept

@@ -146,6 +146,19 @@ what it presses and no more, in its own place, the way the rows behind the
 three dots already were. Nothing here asks a node to be transparent to
 presses, for no such thing was found in this library.
 
+Said once more, because knowing the rule and still getting it wrong are two
+different things: a plate taking the whole room to put away what three dots
+opened took nothing at all where it was first put -- beside the plate the
+drawer already keeps, painted before the list, the messages and the bar, and
+so *under* every one of them. The rule says what is painted last takes the
+press; what it does not say is what order a window paints its own children
+in, and that order is read where it is written (`app_window::forEachChild`,
+`src/ui/window.cc`): paper, messages, the drawer's shade, drawer, list, bar,
+the card's own away, card, settings, design, prompt. A plate meant to take
+presses from everything below it goes as low in that list as it can while
+staying above all of it -- in the card's case, between the bar and the card,
+where the card and its rows are the only things still painted after it.
+
 ## Nothing else that has surprised this program yet
 
 Written down when it does, with what it cost and what is said instead.
