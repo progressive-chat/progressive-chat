@@ -418,7 +418,6 @@ struct settings_rows : scene::Node {
   // it that stand on one another, by the name each is known by in the code
   // and the room each came to stand in. Nothing is read of a page that says
   // "no two stand on another".
-  nodes::Text fSaidDebug{"", 10.0f, 0xff00ff00u, true};
   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
   // One line to a text, kept on the heap and not as a member: sixty of them,
   // each with a size it is said in, is not what a machine's stack was asked
@@ -464,9 +463,6 @@ struct settings_rows : scene::Node {
   ask_box fReadPlate{};
   nodes::Text fRead{"Read the design", 15.0f, 0u};
   settings_rows() {
-    fSaidDebug.apply({.anchor = scene::anchor::kTopLeft,
-                      .x = 20.0f,
-                      .y = 6.0f});
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .y = 24.0f});
@@ -837,58 +833,9 @@ struct settings_rows : scene::Node {
                  .relativeSize = scene::axes::kNone,
                  .width = breadth,
                  .height = at + edge});
-    fSaidDebug.apply({.maxWidth = breadth - 40.0f});
-    std::vector<std::pair<std::string, nodes::Text *>> said;
-    auto note = [&said](std::string name, nodes::Text &text) {
-      if (text.visible()) said.emplace_back(std::move(name), &text);
-    };
-    note("head", fHeading);
-    for (std::size_t group = 0; group < max_settings_groups; ++group)
-      note(std::format("g{}", group), (*fGroups)[group].name);
-    for (std::size_t group = 0; group < max_settings_groups; ++group)
-      for (std::size_t one = 0; one < max_settings_items; ++one)
-        note(std::format("i{}.{}", group, one), (*fItems)[group][one].name);
-    for (std::size_t at = 0; at < max_seeds; ++at)
-      note(std::format("s{}", at), fSeeds[at].fName);
-    note("blk", fBlack.fName);
-    note("large", fLarge.fName);
-    note("light", fLight.fName);
-    note("av", fAvatars.fName);
-    note("whe", fTimes.fName);
-    for (std::size_t at = 0; at < fKnobs.size(); ++at) {
-      note(std::format("k{}", at), fKnobs[at].fName);
-      note(std::format("k{}v", at), fKnobs[at].fValue);
-    }
-    for (std::size_t at = 0; at < fTools.size(); ++at)
-      note(std::format("t{}", at), fTools[at].fName);
-    for (std::size_t at = 0; at < fAnswerers.size(); ++at)
-      note(std::format("a{}", at), fAnswerers[at].fName);
-    note("read", fRead);
-    for (std::size_t at = 0; at < fAbout.size(); ++at) {
-      note(std::format("b{}", at), fAbout[at].fName);
-      note(std::format("b{}s", at), fAbout[at].fSaid);
-    }
-    std::string found;
-    for (std::size_t one = 0; one < said.size() && found.empty(); ++one)
-      for (std::size_t two = one + 1; two < said.size() && found.empty();
-           ++two) {
-        const skia::SkRect a = said[one].second->bounds();
-        const skia::SkRect b = said[two].second->bounds();
-        if (a.width() <= 0.0f || b.width() <= 0.0f) continue;
-        if (a.fLeft >= b.fRight - 1.0f || b.fLeft >= a.fRight - 1.0f ||
-            a.fTop >= b.fBottom - 1.0f || b.fTop >= a.fBottom - 1.0f)
-          continue;
-        found = std::format(
-            "{} over {} A={:.0f}x{:.0f}@{:.0f},{:.0f} B={:.0f}x{:.0f}@{:.0f},{"
-            ":.0f}",
-            said[one].first, said[two].first, a.width(), a.height(), a.fLeft,
-            a.fTop, b.width(), b.height(), b.fLeft, b.fTop);
-      }
-    fSaidDebug.setText(found.empty() ? "no two stand on another" : found);
   }
 
   void forEachChild(auto &&f) {
-    f(fSaidDebug);
     f(fHeading);
     for (group_name &one : *fGroups)
       f(one.name);
