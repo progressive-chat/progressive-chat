@@ -131,7 +131,9 @@ struct foot_chip : scene::Node {
     this->apply({.autoSize = scene::axes::kBoth,
                  .cornerRadius = 9.0f,
                  .padding = scene::Margin{4.0f, 8.0f, 4.0f, 6.0f}});
-    fPlate.apply({.fill = true});
+    // What the chip is rounded by: its own plate, which fills by the radius
+    // it was told itself and not by the chip's.
+    fPlate.apply({.fill = true, .cornerRadius = 9.0f});
     fMark.apply({.width = 14.0f,
                  .height = 14.0f,
                  .anchor = scene::anchor::kCentreLeft,

@@ -143,7 +143,9 @@ struct switch_row : scene::Node {
 
   switch_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
-    fPlate.apply({.fill = true});
+    // The plate is what is seen of the row, and it fills by its own corner
+    // radius alone: told the row's, the ground under it is rounded too.
+    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
     fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
@@ -241,7 +243,7 @@ struct knob_row : scene::Node {
 
   knob_row() {
     this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
-    fPlate.apply({.fill = true});
+    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
     fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
