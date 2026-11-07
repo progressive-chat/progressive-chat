@@ -41,7 +41,11 @@ jobs:
       - name: Configure
         run: |
           cmake -S . -B build-shoot -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DPCHAT_REVISION="$(git rev-parse --short=12 HEAD)"
       - name: Build the program
         run: cmake --build build-shoot --target progressive-chat --parallel 4
       # Started, given its seconds to put its first frames up, and shot: a
