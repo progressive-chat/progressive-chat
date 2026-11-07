@@ -158,8 +158,7 @@ struct drawer_screen : scene::Node {
   nodes::Text fNone{"No conversation is named that, or says it.", 13.0f, 0u};
   // The page over the room, opened from here: the drawer is the only part
   // with a way in, because nothing else on the screen has room to spare.
-  ask_box fSettingsPlate{};
-  nodes::Icon fSettingsMark{shape::gear(), 0u};
+  press_box fSettings{shape::gear()};
   std::shared_ptr<search_sink> fSink = std::make_shared<search_sink>();
   widgets::TextArea<search_given> fSearch{
       widgets::Theme{}, "Search conversations", search_given{fSink}};
@@ -194,19 +193,6 @@ struct drawer_screen : scene::Node {
                    .height = 40.0f,
                    .cornerRadius = 20.0f,
                    .padding = scene::Margin::horizontal(16.0f)});
-    fSettingsPlate.apply({.width = 36.0f,
-                          .height = 36.0f,
-                          .cornerRadius = 18.0f,
-                          .anchor = scene::anchor::kTopRight,
-                          .origin = scene::anchor::kTopRight,
-                          .x = -edge,
-                          .y = edge});
-    fSettingsMark.apply({.width = 18.0f,
-                         .height = 18.0f,
-                         .anchor = scene::anchor::kTopRight,
-                         .origin = scene::anchor::kCentre,
-                         .x = -(edge + 18.0f),
-                         .y = edge + 18.0f});
     fNone.apply({.anchor = scene::anchor::kTopLeft,
                  .x = edge,
                  .y = edge + 86.0f});
@@ -222,8 +208,17 @@ struct drawer_screen : scene::Node {
     fPaper.setColour(look.drawer);
     fHeading.setColour(look.text);
     fNone.setColour(look.faint);
-    fSettingsPlate.again(asked, app::open_settings{}, look.raised);
-    fSettingsMark.setColour(look.text);
+    fSettings.again(asked,
+                    {.anchor = scene::anchor::kTopRight,
+                     .origin = scene::anchor::kTopRight,
+                     .relativeSize = scene::axes::kNone,
+                     .width = 36.0f,
+                     .height = 36.0f,
+                     .x = -edge,
+                     .y = edge,
+                     .visible = true},
+                    app::open_settings{}, look.raised);
+    fSettings.mark_colour(look.text);
     fSink->asked = asked;
     const auto rows = logic::matching(root, query);
     fNone.setVisible(rows.empty());
@@ -259,8 +254,7 @@ struct drawer_screen : scene::Node {
     f(fPaper);
     f(fHeading);
     f(fNone);
-    f(fSettingsPlate);
-    f(fSettingsMark);
+    f(fSettings);
     f(fSearch);
     for (auto &row : fRows)
       f(*row);
