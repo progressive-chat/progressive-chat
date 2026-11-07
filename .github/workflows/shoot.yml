@@ -33,7 +33,7 @@ jobs:
       - name: A screen to be shot, and what reads it
         run: |
           sudo apt-get install -y --no-install-recommends \
-            xvfb x11-apps imagemagick libgl1-mesa-dri libglx-mesa0 libegl-mesa0
+          xvfb x11-apps imagemagick gdb libgl1-mesa-dri libglx-mesa0 libegl-mesa0
       - uses: actions/cache@v4
         with:
           path: build-shoot
@@ -48,8 +48,10 @@ jobs:
             -DPCHAT_REVISION="$(git rev-parse --short=12 HEAD)"
       - name: Build the program
         run: cmake --build build-shoot --target progressive-chat --parallel 4
-      # Started, given its seconds to put its first frames up, and shot: a
-      # picture of everything it drew, whole, which is what is looked at.
+      # Started, and shot again and again on the way: a program that goes
+      # before its second frame has still put its first one up, and a shot
+      # taken before it went says more than the crash it went with. Then,
+      # where it went, said with the place: gdb over what is left of it.
       - name: Run it and shoot what it drew
         env:
           SDL_AUDIODRIVER: dummy
@@ -58,14 +60,33 @@ jobs:
         run: |
           Xvfb :99 -screen 0 "${{ inputs.screen }}x24" &
           sleep 2
-          DISPLAY=:99 ./build-shoot/progressive-chat &
+          DISPLAY=:99 ./build-shoot/progressive-chat >said.txt 2>&1 &
           given=$!
-          sleep 25
-          DISPLAY=:99 xwd -root -silent | convert xwd:- shot.png
-          kill $given || true
-          ls -l shot.png
+          for at in 1 2 3 4 5 6 7 8; do
+            sleep 3
+            DISPLAY=:99 xwd -root -silent | convert xwd:- "shot_${at}.png" || true
+          done
+          kill $given 2>/dev/null || true
+          echo "---- what it said ----"
+          cat said.txt || true
+          ls -l shot_*.png
+      # Only asked for where it did not stay up: it goes inside Skia, or in
+      # what SDL3 asked GL for, and neither is this program's own doing --
+      # but which it is has to be read off the run.
+      - name: Where it went, if it went
+        continue-on-error: true
+        env:
+          SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          pgrep -x Xvfb >/dev/null || (Xvfb :99 -screen 0 "${{ inputs.screen }}x24" & sleep 2)
+          ulimit -c 0
+          DISPLAY=:99 timeout 60 gdb -q -batch \
+            -ex 'run' -ex 'bt 30' -ex 'info threads' \
+            --args ./build-shoot/progressive-chat 2>&1 | tail -60
       - uses: actions/upload-artifact@v4
         with:
           name: shot
-          path: shot.png
+          path: shot_*.png
           if-no-files-found: error
