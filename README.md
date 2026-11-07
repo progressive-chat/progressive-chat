@@ -67,6 +67,15 @@ It (this readme section's workdays summaries) is written by hand. Nothing
 writes here that is not that hand, and no paragraph of it is written by a
 model, an agent or a script on its own.
 
+### 2026-11-07
+
+The last twenty-four hours gave a thousand new lines of code and not much
+more than that -- what those lines did was fix rather than add. Most of the
+UI that was drawn but answered nothing has been pressed square by square and
+either given something to answer with or taken out of the drawing; what is
+being worked on now is bringing Material Design 3 of a better kind to this
+project, in C++ and in this program's own words for it.
+
 ### 2026-11-06
 
 Source code volume grew ~3× versus day one; incremental merge of the client
