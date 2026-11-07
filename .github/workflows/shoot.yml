@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: shoot
+
+# Asked for by hand: what a window came to is read off it, and no check can
+# say whether a corner came out round -- only a picture can.
+on:
+  workflow_dispatch:
+    inputs:
+      # What the window looks like before it is shot: how wide and how tall
+      # the screen it is given is, so that what is narrow (a drawer coming
+      # over the messages) can be asked for as well as what is wide.
+      screen:
+        description: 'The screen to give it, as width x height'
+        required: false
+        default: '1440x900'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  shot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      # Mesa in software, and an X server in front of it, as the crash is
+      # run in front of: Skia asks GL what it has and gets nothing from a
+      # display that was never started. And what reads a display to make a
+      # picture of it: xwd for the picture itself, and imagemagick to write
+      # it as one a reader can open.
+      - name: A screen to be shot, and what reads it
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            xvfb x11-apps imagemagick libgl1-mesa-dri libglx-mesa0 libegl-mesa0
+      - uses: actions/cache@v4
+        with:
+          path: build-shoot
+          key: shoot-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/shoot.yml', '.github/actions/desktop-setup/action.yml') }}
+      - name: Configure
+        run: |
+          cmake -S . -B build-shoot -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug
+      - name: Build the program
+        run: cmake --build build-shoot --target progressive-chat --parallel 4
+      # Started, given its seconds to put its first frames up, and shot: a
+      # picture of everything it drew, whole, which is what is looked at.
+      - name: Run it and shoot what it drew
+        env:
+          SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          Xvfb :99 -screen 0 "${{ inputs.screen }}x24" &
+          sleep 2
+          DISPLAY=:99 ./build-shoot/progressive-chat &
+          given=$!
+          sleep 25
+          DISPLAY=:99 xwd -root -silent | convert xwd:- shot.png
+          kill $given || true
+          ls -l shot.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shot
+          path: shot.png
+          if-no-files-found: error

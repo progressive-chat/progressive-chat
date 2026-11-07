@@ -37,7 +37,9 @@ struct seed_row : scene::Node {
 
   seed_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
-    fPlate.apply({.fill = true});
+    // The plate fills by its own corner radius, not by the row's: told the
+    // same one, it is what makes the row's ground rounded.
+    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
     fDot.apply({.width = 26.0f,
                 .height = 26.0f,
                 .cornerRadius = 13.0f,

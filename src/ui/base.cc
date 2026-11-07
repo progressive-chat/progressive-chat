@@ -71,11 +71,8 @@ inline constexpr float body_size = 15.0f;
 // plate that only asks -- a pill, the shade over the messages a drawer is
 // open over -- has nothing else in it.
 struct ask_box : scene::Node {
-  nodes::Box<> fPlate{0u};
   app::requests *asked = nullptr;
   app::request one{app::toggle_drawer{}};
-
-  ask_box() { fPlate.apply({.fill = true}); }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
@@ -88,10 +85,16 @@ struct ask_box : scene::Node {
   void again(app::requests *sink, app::request asking, scene::Colour colour) {
     asked = sink;
     one = std::move(asking);
-    fPlate.setColour(colour);
+    // Its ground said of itself and not of a plate inside it: a plate fills
+    // by the corner radius it was told itself, and none was told it one, so
+    // every round press in the program was painted square. Declared of the
+    // node, the ground is painted in the node's own rounded box -- however
+    // the corners were given it where it stands, all four alike or each its
+    // own -- and what it holds is clipped by the same.
+    this->apply({.background = colour});
   }
 
-  void forEachChild(auto &&f) { f(fPlate); }
+  void forEachChild(auto &&f) {}
 };
 
 // What the window gives the screens: its size, and what that size asks for.

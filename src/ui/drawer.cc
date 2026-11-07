@@ -56,7 +56,6 @@ struct search_given {
 // name, on a ground of its own and rounded as it is told to be. Pressed, it
 // asks for the one thing it stands there for.
 struct ask_row : scene::Node {
-  nodes::Box<> fPlate{0u};
   nodes::Icon fMark{shape::menu(), 0u};
   nodes::Text fName{"", drawer_row_size, 0u, true};
   app::requests *asked = nullptr;
@@ -78,7 +77,6 @@ struct ask_row : scene::Node {
                  .x = with_mark ? drawer_margin + drawer_mark + gap
                                 : drawer_margin});
     this->apply(made);
-    fPlate.apply({.fill = true});
   }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
@@ -91,7 +89,12 @@ struct ask_row : scene::Node {
 
   void again(app::requests *sink, const paints &look) {
     asked = sink;
-    fPlate.setColour(look.raised);
+    // The row's ground, said of the row itself and not of a plate inside it:
+    // a plate fills by its own corner radius alone, and these rows are
+    // rounded each corner its own -- Tasks above and Remote below, the two
+    // reading as one row cut in two. Declared of the node, the corners are
+    // what its ground is painted in and what its children are clipped by.
+    this->apply({.background = look.field});
     fMark.setColour(look.text);
     fName.setColour(look.text);
     // One line, cut where the row ends: a name that wrapped stood its second
@@ -102,7 +105,6 @@ struct ask_row : scene::Node {
   }
 
   void forEachChild(auto &&f) {
-    f(fPlate);
     f(fMark);
     f(fName);
   }
@@ -114,7 +116,6 @@ struct ask_row : scene::Node {
 struct conversation_row : scene::Node {
   app::requests *asked = nullptr;
   conversation_id said_of;
-  nodes::Box<> fPlate{0u};
   nodes::Box<> fAvatar{0u};
   nodes::Text fTitle{"", 15.0f, 0u, true};
   nodes::Text fWhen{"", 12.0f, 0u};
@@ -129,7 +130,6 @@ struct conversation_row : scene::Node {
     // row after it.
     fTitle.setElided(true);
     fSaid.setElided(true);
-    fPlate.apply({.fill = true});
     fAvatar.apply({.width = avatar,
                    .height = avatar,
                    .cornerRadius = avatar / 2.0f,
@@ -184,7 +184,10 @@ struct conversation_row : scene::Node {
     asked = sink;
     said_of = chat.id;
     this->setVisible(true);
-    fPlate.setColour(chosen ? look.raised : 0u);
+    // Which row is open said by a ground under it, declared of the row and
+    // painted in its own rounded box: nothing else in the panel has one, and
+    // none of the rows that are not open is painted over the panel at all.
+    this->apply({.background = chosen ? look.raised : 0u});
     // A circle for its name, where one is asked for at all, and everything
     // named in the row standing over by it where there is one.
     fAvatar.setVisible(shown.avatars);
@@ -209,7 +212,6 @@ struct conversation_row : scene::Node {
   }
 
   void forEachChild(auto &&f) {
-    f(fPlate);
     f(fAvatar);
     f(fTitle);
     f(fWhen);
