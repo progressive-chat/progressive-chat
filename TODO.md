@@ -60,10 +60,16 @@ build and the next.
       others is Appearance (the theme, its type and its dark), what answers
       in the conversation that is open (Services, Models), Generation
       (Responses), the three tools this program owns (Tools), and what this
-      build is (About). The three left want things this program has no part
-      of yet -- a picture asked about, a proxy asked through, a memory kept
-      between conversations -- and drawing a row for something nothing does
-      is how a stub is made.
+      build is (About). Every one of them has what it is named for now: the
+      three that stood empty -- a picture asked about, a proxy asked
+      through, a memory kept between conversations -- say a switch to each
+      of the seven things a switch is offered for, kept where the three
+      tools are kept and said in a row each under the item each belongs
+      under (`src/config.cc`, `switch_choice`; read off the page on
+      2026-11-07, where every row of the seven is pressed and every pill it
+      moves). A row says that something is offered; what any of the seven
+      does when it is on is still nothing written, and that is what is left
+      of this item.
 - [x] What a model wrote to itself, folded above its answer, is pressed open
       and read: `history_fold` keeps it (`src/ui/message_list.cc`), and a probe
       of the page in a browser says a press anywhere in the line opens it and
