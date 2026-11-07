@@ -105,6 +105,10 @@ struct set_avatars {
 struct set_row_times {
   bool enabled;
 };
+// What the Notifications page asks for: one notification of the program's
+// own, shown by the machine it runs on, so that it can be seen whether it is
+// let show any. A test, and nothing it pretends is a message.
+struct send_test_notification {};
 // What the Appearance page asks for: which seed the colours grow out of,
 // whether the type is set larger, and whose face it is set in. Each row asks
 // for one whole thing, not for the set of looks it would like to see, because
@@ -153,6 +157,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                              set_avatars, set_row_times,
+                             send_test_notification,
                               set_generation, set_tool,
                               set_answerer, copy_text>;
 
