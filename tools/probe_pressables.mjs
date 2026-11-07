@@ -69,7 +69,12 @@ const fold = page.locator('text=Thought for').first();
 const fbox = await fold.boundingBox();
 await page.mouse.click(fbox.x + fbox.width / 2, fbox.y + fbox.height / 2);
 await page.waitForTimeout(1200);
-const foldOpen = (await mirror()).includes('no recipe of its own known');
+const openText = await mirror();
+const foldOpen = openText.includes('no recipe of its own known');
+if (foldOpen) {
+  const at = openText.indexOf('no recipe of its own known');
+  console.log('behind the line: ' + JSON.stringify(openText.slice(at, at + 420)));
+}
 await page.mouse.click(fbox.x + fbox.width / 2, fbox.y + fbox.height / 2);
 await page.waitForTimeout(1200);
 const foldShut = !(await mirror()).includes('no recipe of its own known');
