@@ -69,7 +69,7 @@ struct app_window : scene::Node {
              const asking &how, const std::string &query, bool dark,
              bool settings_open,
              bool design_open, bool prompt_open, bool more_open,
-             bool drawer_open, float width,
+             bool editor_menu_open, bool drawer_open, float width,
              float height,
              app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
@@ -190,7 +190,7 @@ struct app_window : scene::Node {
                      .height = composer_height + 2.0f * edge,
                      .visible = true});
     if (open_chat)
-      fComposer.again(look, *open_chat, asked);
+      fComposer.again(look, *open_chat, how, asked, editor_menu_open);
     // The settings page, over everything, when it is opened.
     if (settings_open)
       fSettings.again(asked, look, shown, how, answering, dark, width,

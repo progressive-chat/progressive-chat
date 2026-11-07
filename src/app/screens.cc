@@ -136,7 +136,13 @@ public:
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
-            [&](const open_settings &) { settings_ = true; },
+            // The settings are opened from the card's own three dots as well
+            // as from the drawer, and what opened them is put away either
+            // way: two cards over each other are one too many.
+            [&](const open_settings &) {
+              settings_ = true;
+              editor_menu_ = false;
+            },
             [&](const close_settings &) { settings_ = false; },
             // What the drawer's two rows are there for: nothing stands behind
             // either of them yet, and so nothing is opened. They are drawn
@@ -193,6 +199,14 @@ public:
                 this->give(whole);
             },
             [&](const toggle_more &) { more_ = !more_; },
+            // What the card's three dots hold: thinking, how hard it is asked
+            // to think, and the large settings. Thinking and how hard are how
+            // every answer in every conversation is asked for from now on
+            // (pchat.config, `asking`), which is what the settings' own rows
+            // would have said of them.
+            [&](const toggle_editor_menu &) { editor_menu_ = !editor_menu_; },
+            [&](const set_thinking &asking) { how_.thinking = asking.on; },
+            [&](const set_effort &asking) { how_.how_hard = asking.how_hard; },
             // What every model is told before anything is said to it: read
             // and written whole, the conversation keeping it as it is typed.
             [&](const set_system_prompt &asking) {
@@ -291,8 +305,8 @@ public:
       take(one);
     read_what_arrived();
     scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
-                        design_, system_, more_, drawer_, width_, height_,
-                        &asked_);
+                        design_, system_, more_, editor_menu_, drawer_,
+                        width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -612,6 +626,10 @@ private:
   // Whether what stands behind the three dots is out: put away again by one
   // press of anything it holds, or of the dots themselves.
   bool more_ = false;
+  // Whether what stands behind the card's three dots is out: thinking, how
+  // hard it is asked to think, and the way into the large settings (the
+  // design says them under *The editor's row*).
+  bool editor_menu_ = false;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
 

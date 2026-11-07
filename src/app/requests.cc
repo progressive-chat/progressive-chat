@@ -88,6 +88,19 @@ struct set_system_prompt {
   std::string text;
 };
 struct toggle_more {};
+// The same three dots again, where they stand at the card's own foot: one
+// press opens what they hold and one puts it away.
+struct toggle_editor_menu {};
+// What a row behind them says (design-doc.md, "The editor's row"): whether
+// what answers here is asked to think at all before it answers, and how hard
+// it is asked to think where it is. Neither is a row of the settings, for
+// both are said of this conversation's own card and not of the program.
+struct set_thinking {
+  bool on = false;
+};
+struct set_effort {
+  effort how_hard = effort::some;
+};
 // The design said in the room itself: what stands written at the top of the
 // tree is read here too, and put away again.
 struct open_design {};
@@ -162,6 +175,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              share_conversation, open_system_prompt,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
+                             toggle_editor_menu, set_thinking, set_effort,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                                 set_avatars, set_row_times,
                                 send_test_notification,
