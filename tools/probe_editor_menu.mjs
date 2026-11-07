@@ -187,11 +187,25 @@ const again_shut = (await menu()).length;
 console.log(`${again_open} words open, ${again_shut} words behind a second `
             + 'press of the same dots');
 
+// And by a press anywhere else in the room at all: what nothing painted
+// takes, standing whole over the room behind the card, takes it and puts
+// the card away with nothing more asked of it.
+await start();
+await page.mouse.click(dots[0], dots[1]);
+await page.waitForTimeout(900);
+const away_before = (await menu()).length;
+await page.mouse.click(640, 400);
+await page.waitForTimeout(900);
+const away_after = (await menu()).length;
+console.log(`${away_before} words open, ${away_after} words behind a press `
+            + 'in the middle of the messages');
+
 const moved = new Set([was, value_of(one_off, 'Thinking'),
                        value_of(two_back, 'Thinking')].filter(Boolean));
 const walked = new Set(steps.filter(Boolean));
 await browser.close();
 if (again_shut === 0 && again_open > 0 && settings && gone.length === 0 &&
+    away_before > 0 && away_after === 0 &&
     moved.size === 2 && walked.size === 4) {
   console.log('what the dots hold answers every row of it: thinking is off '
               + 'and the four again, and the settings are opened from it');
