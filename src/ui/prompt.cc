@@ -153,8 +153,7 @@ struct prompt_screen : scene::Node {
     fSaid.setColour(look.faint);
     fSaid.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
-                 .y = above + 56.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .y = above + 56.0f});
     fClose.again(asked,
                  {.anchor = scene::anchor::kTopRight,
                   .origin = scene::anchor::kTopRight,
