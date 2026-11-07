@@ -116,6 +116,24 @@ inline constexpr std::size_t editor_rows = 3u;
 inline constexpr float dots_size = 22.0f;
 inline constexpr float dots_room = dots_size + 14.0f;
 
+// What the face beside the clip opens: how many of them it shows, how much
+// room one of them has, and which ones they are. The ones pressed most
+// lately are kept elsewhere (pchat.config, `recent_emoji`) for rows nobody
+// draws yet; these are the ones every card of faces has.
+inline constexpr std::size_t face_columns = 7u;
+inline constexpr std::size_t face_rows = 4u;
+inline constexpr float face_cell = 36.0f;
+inline constexpr float face_size = 22.0f;
+inline constexpr float face_radius = 10.0f;
+inline constexpr std::array<std::string_view, face_columns * face_rows>
+    faces_offered{{"🙂", "😀", "😅", "😊",
+                   "😍", "🤔", "👍", "🙏",
+                   "🎉", "🔥", "💡", "✅",
+                   "❌", "⭐", "❤", "🚀",
+                   "🍰", "☕", "🌙", "☀",
+                   "📎", "🧠", "🧩", "🐛",
+                   "📈", "🎯", "🤝", "😴"}};
+
 // One row behind the card's three dots: what it is called, what it stands at
 // now said at its right, and pressed anywhere the row is.
 struct editor_row : scene::Node {
@@ -213,6 +231,92 @@ struct editor_menu : scene::Node {
   }
 };
 
+// One of the faces: the character itself, in its own square, rounded, and
+// nothing more. Pressed, it is written where the card keeps what was said to
+// it and not asked for anywhere else -- what a face is put into is the
+// field, and the field is this card's own to write in, which is why a press
+// here answers itself rather than asking the program.
+struct face_chip : scene::Node {
+  nodes::Box<> fPlate{0u};
+  nodes::Text fFace{"", face_size, 0u};
+  std::shared_ptr<std::string> fTyped{};
+  std::string one{};
+
+  face_chip() {
+    this->apply({.width = face_cell, .height = face_cell});
+    fPlate.apply({.fill = true, .cornerRadius = face_radius});
+    fFace.apply({.anchor = scene::anchor::kCentre,
+                 .origin = scene::anchor::kCentre});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (fTyped)
+      fTyped->append(one);
+    return true;
+  }
+
+  void again(std::shared_ptr<std::string> typed, scene::Colour ink,
+             std::string_view face) {
+    one = std::string(face);
+    fTyped = std::move(typed);
+    fPlate.setColour(0u);
+    fFace.setText(one);
+    fFace.setColour(ink);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fFace);
+  }
+};
+
+// The card of all of them, opened by the face beside the clip and put away
+// by one press of that face again or anywhere else in the room: four rows of
+// seven, each of them one press away from being written into the field.
+struct faces_card : scene::Node {
+  nodes::Box<> fCard{0u};
+  std::array<face_chip, faces_offered.size()> fChips;
+
+  faces_card() {
+    fCard.apply({.fill = true, .cornerRadius = 16.0f});
+    for (face_chip &one : fChips)
+      one.apply({.visible = false});
+    this->setVisible(false);
+  }
+
+  void hide() {
+    this->setVisible(false);
+    for (face_chip &one : fChips)
+      one.apply({.visible = false});
+  }
+
+  void again(std::shared_ptr<std::string> typed, const paints &look,
+             const scene::Spec &where) {
+    this->setVisible(true);
+    this->apply(where);
+    fCard.setColour(look.drawer);
+    for (std::size_t at = 0; at < fChips.size(); ++at) {
+      face_chip &one = fChips[at];
+      one.apply({.anchor = scene::anchor::kTopLeft,
+                 .x = edge + static_cast<float>(at % face_columns) * face_cell,
+                 .y = edge + static_cast<float>(at / face_columns) * face_cell,
+                 .relativeSize = scene::axes::kNone,
+                 .width = face_cell,
+                 .height = face_cell,
+                 .visible = true});
+      one.again(typed, look.text, faces_offered[at]);
+    }
+  }
+
+  void forEachChild(auto &&f) {
+    f(fCard);
+    for (face_chip &one : fChips)
+      f(one);
+  }
+};
+
 struct composer : scene::Node {
   nodes::Box<> fCard{0u};
   // What answers here, and how much of its window this chat has taken: said
@@ -223,7 +327,11 @@ struct composer : scene::Node {
   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
                                           message_given{fSink}};
   nodes::Icon fClip{shape::clip(), 0u};
-  nodes::Icon fFace{shape::smile(), 0u};
+  // The face beside the clip: a plate under a mark and both of them take the
+  // press, for the same reason the three dots' do. Pressed, it opens the
+  // card of faces above it, and pressed again, or anywhere else in the room
+  // but in that card, it puts it away again.
+  press_box fFace{shape::smile()};
   // Three dots after the ring: what they open every answer of this chat is
   // asked with. They are a plate under a mark and both take the press, for
   // the same reason every other mark of theirs does -- what a page says was
@@ -252,6 +360,13 @@ struct composer : scene::Node {
   // not inside it, and nothing is clipped by the card's own edges: what a
   // node draws outside itself is drawn just the same.
   editor_menu fMenu{};
+  // What the face opens: twenty-eight faces in four rows of seven, and what
+  // one of them pressed is written into. The string it is written into is
+  // the card's own and not the program's, for what a face is added to is a
+  // field no request reaches: the card reads it empty again before the next
+  // frame, and puts what is in it where the pen stands.
+  faces_card fFaces{};
+  std::shared_ptr<std::string> fTyped = std::make_shared<std::string>();
 
   composer() {
     // One line, which is what makes Enter send rather than put a line break
@@ -309,7 +424,7 @@ struct composer : scene::Node {
   }
 
   void again(const paints &look, const conversation &chat, const asking &how,
-             app::requests *asked, bool menu_open) {
+             app::requests *asked, bool menu_open, bool faces_open) {
     fSink->asked = asked;
     // What was in the field belonged to the conversation that was open when
     // it was written, and is kept to it before another one is opened; what
@@ -324,9 +439,26 @@ struct composer : scene::Node {
     }
     fShown = chat.id;
     fSink->chat = chat.id;
+    // A face pressed in the card above this one: written at the end of what
+    // has been written here, and nowhere else, for it is what its reader
+    // would have typed, and nothing else here knows where the pen was.
+    if (!fTyped->empty()) {
+      std::string whole{fField.plainText()};
+      whole.append(*fTyped);
+      fTyped->clear();
+      fField.setText(whole);
+    }
     fCard.setColour(look.card);
     fClip.setColour(look.faint);
-    fFace.setColour(look.faint);
+    fFace.again(asked,
+                {.width = dots_size,
+                 .height = dots_size,
+                 .anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kCentre,
+                 .x = -(edge + send_size + 16.0f),
+                 .y = 68.0f},
+                app::toggle_faces{}, faces_open ? look.raised : 0u);
+    fFace.mark_colour(faces_open ? look.primary : look.faint);
     // What every answer in this chat is asked with, behind three dots beside
     // the ring: opened by a press on them and put away by another.
     fDots.again(asked,
@@ -382,6 +514,25 @@ struct composer : scene::Node {
                   how);
     } else
       fMenu.hide();
+    // The faces, over the messages and above the face that opened them: as
+    // far to the right as that face is, and its own height plus theirs above
+    // it, so that no press in one card is ever a press in the other.
+    if (faces_open) {
+      const float high =
+          static_cast<float>(face_rows) * face_cell + 2.0f * edge;
+      fFaces.again(fTyped, look,
+                   {.anchor = scene::anchor::kTopRight,
+                    .origin = scene::anchor::kTopRight,
+                    .x = -(edge + send_size + 16.0f - dots_size / 2.0f),
+                    .y = 68.0f - dots_size / 2.0f - 8.0f - high,
+                    .relativeSize = scene::axes::kNone,
+                    .width = static_cast<float>(face_columns) * face_cell +
+                             2.0f * edge,
+                    .height = high,
+                    .cornerRadius = 16.0f,
+                    .visible = true});
+    } else
+      fFaces.hide();
   }
 
   // Nothing written keeps a message it has given away, and neither does what
@@ -402,6 +553,7 @@ struct composer : scene::Node {
     f(fDots);
     f(fSend);
     f(fMenu);
+    f(fFaces);
   }
 };
 
