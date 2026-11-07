@@ -12,6 +12,7 @@ import skiff.nodes;
 import skiff.widgets.textarea;
 import pchat.core;
 import pchat.config;
+import pchat.logic.drafts;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -237,6 +238,15 @@ struct composer : scene::Node {
   // read at the press and not when it is drawn, because what is written is
   // the field's to keep and not this node's.
   send_circle fSend{};
+  // What was being written to each conversation when its reader left it, and
+  // what is given back to the field when that reader comes back: nothing
+  // written for one conversation is read in another, and nothing written in
+  // one is lost by going to look at another. Kept beside the field itself,
+  // which is where what is written already is.
+  logic::drafts fDrafts{};
+  // Which conversation what is in the field belongs to: said again every
+  // frame, and what the field is read against to know when it changed.
+  conversation_id fShown{};
   // What the three dots open, said over everything else drawn here and put
   // away again by one press of what opened it. It stands above the card and
   // not inside it, and nothing is clipped by the card's own edges: what a
@@ -301,6 +311,18 @@ struct composer : scene::Node {
   void again(const paints &look, const conversation &chat, const asking &how,
              app::requests *asked, bool menu_open) {
     fSink->asked = asked;
+    // What was in the field belonged to the conversation that was open when
+    // it was written, and is kept to it before another one is opened; what
+    // belongs to the one being opened comes back into the field. Nothing is
+    // said of this to the program -- whose field it is and what is written
+    // in it have never been anything but this card's own -- and nothing in
+    // it survives the window's going, which nothing in the field did either.
+    if (fShown.value != chat.id.value) {
+      if (!fShown.value.empty())
+        fDrafts.write(fShown, std::string(fField.plainText()));
+      fField.setText(std::string(fDrafts.text_of(chat.id)));
+    }
+    fShown = chat.id;
     fSink->chat = chat.id;
     fCard.setColour(look.card);
     fClip.setColour(look.faint);
@@ -362,7 +384,13 @@ struct composer : scene::Node {
       fMenu.hide();
   }
 
-  void clear() { fField.setText(""); }
+  // Nothing written keeps a message it has given away, and neither does what
+  // was kept of it (pchat.logic.drafts, `clear`): sent is not left behind
+  // to be given again by coming back to this conversation later.
+  void clear() {
+    fField.setText("");
+    fDrafts.clear(fShown);
+  }
 
   void forEachChild(auto &&f) {
     f(fCard);
