@@ -96,10 +96,24 @@ struct conversation {
 // What came before an answer, where one thought before it spoke: how long
 // it was thinking, how many tool calls it made on the way, and what it
 // wrote to itself while it was (its greentext).
+// One tool a model stopped to ask for on its way to an answer: which one,
+// what it asked it for, and what that tool said back to it. Kept against the
+// thought that asked for it, so that what is folded above an answer can say
+// each of them and not only how many there were.
+struct call_made {
+  std::string tool;
+  std::string asked;
+  std::string answered;
+  friend bool operator==(const call_made &, const call_made &) = default;
+};
+
 struct thought {
   std::int64_t took_ms = 0;
   std::uint32_t tool_calls = 0;
   std::string said;
+  // Those calls, and what came of each of them: whole where they were asked
+  // here and answered here, and empty where they were only counted.
+  std::vector<call_made> calls{};
   friend bool operator==(const thought &, const thought &) = default;
 };
 
