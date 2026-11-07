@@ -171,7 +171,10 @@ words in it rather than by a point written down, presses it in the middle,
 and says whether what the model thought was read and then folded away again.
 Every probe there can be run by the `probe` workflow without a push, or
 here against a page served as above, and each says what it saw in one line
-so that a run's log is its own answer. `tools/probe_top_bar.mjs` is the one
+so that a run's log is its own answer. `tools/probe_fold_calls.mjs` asks one
+thing of such a line pressed open: that it names each call the line counts
+while it is open, and none of them before it was pressed or after it was
+pressed shut. `tools/probe_top_bar.mjs` is the one
 that asks whether every press in the bar answers: it finds each plate by
 its size and place rather than by a point, presses each in a page of its
 own -- pressing one asks for something that changes what the next is
