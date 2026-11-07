@@ -70,10 +70,16 @@ build and the next.
       shuts it again. Nothing opened it before because nothing there measured
       the words: what that costs, and what is said instead, is written under
       *What nothing measures reads as nothing wide* in `docs/skiff-notes.md`.
-- [ ] Where nothing measures a line there are surely more than one node whose
-      size came of nothing: six chips and the fold above an answer were the
-      two found, both now said their size, and nothing else pressable has
-      been probed the way they were.
+- [x] Where nothing measures a line there are surely more than one node whose
+      size came of nothing -- done 2026-11-07: forty-one of them found and
+      said their size, nine files of `src/ui/*.cc` losing every `autoSize` a
+      text carried (`cc59d79`); and the presses beyond the fold and the chips
+      are asked the way they were asked for: `tools/probe_pressables.mjs`
+      presses the Info chip (the line of tokens stands up under it and goes
+      under it again), another room's row and back (the room changes and
+      changes back), and the settings plate at the head of the list (Settings
+      comes, saying Appearance & Language) -- each answered on the deployed
+      page, each read back in the mirror's own words.
 - [ ] **The editor's row is drawn as far as its name and its circle, and no
       further**: the design asks for a plus on its left that attaches (camera,
       gallery, videos, files) and three dots on its right that open thinking
