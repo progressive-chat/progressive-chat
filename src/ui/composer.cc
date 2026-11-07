@@ -29,14 +29,22 @@ namespace widgets = skiff::widgets;
 struct message_sink {
   app::requests *asked = nullptr;
   conversation_id chat;
+  // Said once something written in the field has been sent from it, and
+  // said false again as soon as the field is left empty: nothing keeps a
+  // message it has already given away, and the two ways out of the field --
+  // Enter pressed in it, and the round button beside it -- leave it the
+  // same.
+  bool sent = false;
 };
 // What Enter in the field asks for: the message sent, of the conversation the
 // sink has been given.
 struct message_given {
   std::shared_ptr<message_sink> sink;
   void operator()(std::string_view text) const {
-    if (sink && sink->asked && !text.empty())
+    if (sink && sink->asked && !text.empty()) {
       sink->asked->ask(app::send_message{sink->chat, std::string(text)});
+      sink->sent = true;
+    }
   }
 };
 
@@ -53,6 +61,49 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
   return out;
 }
 
+// One press with a mark painted in the middle of it, standing for the round
+// button beside the field: what the mark is for is not kept here -- it is
+// read out of the field at the press, which is why this is its own node and
+// not the press-box the other marks of its kind share (`src/ui/base.cc`).
+struct send_circle : scene::Node {
+  // A plate that takes no press of its own -- a walk up from anywhere in the
+  // button, mark or not, reaches this node and is answered here.
+  nodes::Box<> fPlate{0u};
+  nodes::Icon fMark{shape::send(), 0u};
+  widgets::TextArea<message_given> *field = nullptr;
+  std::shared_ptr<message_sink> sink;
+
+  send_circle() {
+    fMark.apply({.width = 22.0f,
+                 .height = 22.0f,
+                 .anchor = scene::anchor::kCentre,
+                 .origin = scene::anchor::kCentre});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  // Pressed: what Enter pressed in the field asks for, asked the same way,
+  // which is nothing at all while there is nothing written in it.
+  [[nodiscard]] bool onClick(float, float) {
+    if (field && sink)
+      message_given{sink}(field->plainText());
+    return true;
+  }
+
+  void again(const scene::Spec &where, scene::Colour colour,
+             scene::Colour mark) {
+    this->apply(where);
+    fPlate.apply({.fill = true, .cornerRadius = send_size / 2.0f});
+    fPlate.setColour(colour);
+    fMark.setColour(mark);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fMark);
+  }
+};
+
 struct composer : scene::Node {
   nodes::Box<> fCard{0u};
   // What answers here, and how much of its window this chat has taken: said
@@ -64,14 +115,22 @@ struct composer : scene::Node {
                                           message_given{fSink}};
   nodes::Icon fClip{shape::clip(), 0u};
   nodes::Icon fFace{shape::smile(), 0u};
-  nodes::Box<> fSendPlate{0u};
-  nodes::Icon fSendMark{shape::send(), 0u};
+  // The round button that sends what has been written. It is a plate under
+  // a mark and both of them take the press, for the same reason every other
+  // mark of theirs does: what a page says was pressed in the middle of the
+  // button is the mark painted last there, and a walk up from the mark
+  // reaches this node, which answers for the plate. What it asks for is
+  // read at the press and not when it is drawn, because what is written is
+  // the field's to keep and not this node's.
+  send_circle fSend{};
 
   composer() {
     // One line, which is what makes Enter send rather than put a line break
     // in: what is written here is said once, as a message, and what it keeps
     // of its shape is kept by the room and not by this field.
     fField.setSingleLine(true);
+    fSend.field = &fField;
+    fSend.sink = fSink;
     // Two rows in the card: over what is written, which model answers in this
     // chat and how full its window is; and under them the field itself.
     this->apply({.fillX = true,
@@ -109,19 +168,6 @@ struct composer : scene::Node {
                  .origin = scene::anchor::kCentre,
                  .x = -(edge + send_size + 16.0f),
                  .y = 68.0f});
-    fSendPlate.apply({.width = send_size,
-                      .height = send_size,
-                      .cornerRadius = send_size / 2.0f,
-                      .anchor = scene::anchor::kTopRight,
-                      .origin = scene::anchor::kTopRight,
-                      .x = -edge,
-                      .y = 45.0f});
-    fSendMark.apply({.width = 22.0f,
-                     .height = 22.0f,
-                     .anchor = scene::anchor::kTopRight,
-                     .origin = scene::anchor::kCentre,
-                     .x = -(edge + send_size / 2.0f),
-                     .y = 45.0f + send_size / 2.0f});
   }
 
   void again(const paints &look, const conversation &chat,
@@ -131,8 +177,24 @@ struct composer : scene::Node {
     fCard.setColour(look.card);
     fClip.setColour(look.faint);
     fFace.setColour(look.faint);
-    fSendPlate.setColour(look.primary);
-    fSendMark.setColour(look.on_primary);
+    // Lit only when there is something written to send: what it is given to
+    // say is nothing at all otherwise, and a press on it asks for nothing.
+    const bool written = !fField.plainText().empty();
+    fSend.again({.width = send_size,
+                 .height = send_size,
+                 .anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kTopRight,
+                 .x = -edge,
+                 .y = 45.0f,
+                 .visible = true},
+                written ? look.primary : look.raised,
+                written ? look.on_primary : look.faint);
+    // Nothing of what has been sent is kept in the field: whichever way it
+    // was sent from, it is empty again before this frame is drawn.
+    if (fSink->sent) {
+      fSink->sent = false;
+      this->clear();
+    }
     // Which model, and the circle read by how much of it is drawn: its whole
     // ring said in the outline's colour, and as much of it as this chat has
     // taken said in the primary one, from the top and clockwise.
@@ -153,8 +215,7 @@ struct composer : scene::Node {
     f(fField);
     f(fClip);
     f(fFace);
-    f(fSendPlate);
-    f(fSendMark);
+    f(fSend);
   }
 };
 
