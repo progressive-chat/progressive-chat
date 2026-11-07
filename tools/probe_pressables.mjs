@@ -1,11 +1,14 @@
-// pchat.probe.pressables -- Which presses answer on the page, beside the fold
-// and the chips already spoken for: the rooms of the list and the settings
-// plate with them -- each answer read back out of the mirror's own words,
-// each place found by what the page says about itself (its own cursor, boxes
-// and labels) and never by a coordinate written down here.
-// The drawer stands open on its own at this width; its settings plate is the
-// small empty square at the head of it, pressed last because what it opens
-// stands over everything.
+// pchat.probe.pressables -- Two presses the rest of the fleet does not ask:
+// a room's row (the room changes, and changes back when the first room's row
+// is pressed again) and the Info chip under an answer (the line saying what
+// the answer came to stands up under it and goes under it again). The fold is
+// pressed first as the control every other answer is read against -- the
+// fleet's own probe_fold asks the fold alone.
+// Everything is placed by what the page says about itself: its cursor says
+// what is pressable, its own words say which is which, and a candidate is
+// believed only when the mirror answers the press -- a title met in a message
+// is a title, not a room, until the room changes. The gear at the head of the
+// list is not asked here: probe_settings already presses it.
 // No backticks, no dollar-brace sequences and no double quotes anywhere in
 // this file: the probe workflow hands it to the shell inside double quotes.
 import { chromium } from 'playwright';
@@ -58,24 +61,24 @@ const clickBox = async (b) => {
 };
 
 const all = await pressables();
-console.log('pressables: ' + all.length + '; top of the drawer and bar: ' +
-            JSON.stringify(all.filter((p) => p.y < 56 && p.w <= 44)));
+console.log('pressables: ' + all.length);
 
-// The fold: the control every other answer is read against.
+// The fold: the control, pressed on its words the way the fleet's own probe
+// presses it -- open, and shut again.
 const fold = page.locator('text=Thought for').first();
 const fbox = await fold.boundingBox();
 await page.mouse.click(fbox.x + fbox.width / 2, fbox.y + fbox.height / 2);
 await page.waitForTimeout(1200);
-const opened = (await mirror()).includes('no recipe of its own known');
+const foldOpen = (await mirror()).includes('no recipe of its own known');
 await page.mouse.click(fbox.x + fbox.width / 2, fbox.y + fbox.height / 2);
 await page.waitForTimeout(1200);
-const closed = !(await mirror()).includes('no recipe of its own known');
-console.log('fold answers: ' + opened + ', and shuts again: ' + closed);
+const foldShut = !(await mirror()).includes('no recipe of its own known');
+console.log('fold answers: ' + foldOpen + ', and shuts again: ' + foldShut);
 
-// The Info chip: the line saying what the answer came to stands up under it
-// and goes away under it again -- digits, comma, digits, and the word tokens,
+// The Info chip: its own word says which it is. Under it, the line saying
+// what the answer came to -- digits, comma, digits and the word tokens,
 // which stands nowhere else the same way.
-const chip = all.find((p) => /^Info$/.test(p.own) || /^Info\b/.test(p.all));
+const chip = all.find((p) => p.own === 'Info') || all.find((p) => p.all === 'Info');
 if (chip) {
   await clickBox(chip);
   const on = /\d{1,3}(,\d{3})+ tokens/.test(await mirror());
@@ -83,44 +86,48 @@ if (chip) {
   const off = !/\d{1,3}(,\d{3})+ tokens/.test(await mirror());
   console.log('info chip answers: ' + on + ', and takes it back: ' + off);
 } else {
-  console.log('info chip: not found');
+  console.log('info chip: no pressable says Info');
 }
+await page.screenshot({ path: 'press-chip.png' }).catch(() => {});
 
-// Another room of the list, and back: the mirror says the room changed, and
-// says it changed back when the first room's row is pressed.
-const drawerRows = (list) => list.filter((p) => p.y >= 56 && p.x <= 420 && p.w >= 200);
-const other = drawerRows(all).find((p) => /\bWeekend\b/.test(p.all));
-const before = await mirror();
-if (other) {
-  await clickBox(other);
-  const away = (await mirror()) !== before;
-  const home = drawerRows(await pressables())
-                   .find((p) => /\bWhat is in the kitchen\b/.test(p.all));
-  let back = false;
-  if (home) {
-    await clickBox(home);
-    back = (await mirror()) === before;
+// A room's row: candidates are the pressables that say a room's title other
+// than the one open -- and a candidate is believed only when the mirror says
+// the room changed. The title met inside a message is not a room's row: the
+// press answers nothing, and the next candidate is tried.
+const home = await mirror();
+const candidates = all.filter((p) => /\bNotices\b|\bWeekend\b/.test(p.all));
+let moved = false;
+let pressed = null;
+for (const cand of candidates) {
+  await clickBox(cand);
+  if ((await mirror()) !== home) {
+    moved = true;
+    pressed = cand.all.slice(0, 30);
+    break;
   }
-  console.log('room row answers (room changed): ' + away + ', and back again: ' + back);
-} else {
-  console.log('weekend row: not found');
+}
+console.log('room row answers (room changed): ' + moved +
+            (pressed ? ' by ' + JSON.stringify(pressed) : '') +
+            ' of ' + candidates.length + ' candidates');
+if (moved) {
+  const away = await mirror();
+  const backs = (await pressables()).filter((p) => p.all.includes('What is in the kitchen'));
+  let back = false;
+  let backBy = null;
+  for (const cand of backs) {
+    await clickBox(cand);
+    if ((await mirror()) === home) {
+      back = true;
+      backBy = cand.all.slice(0, 30);
+      break;
+    }
+  }
+  console.log('and back to the first room: ' + back +
+              (backBy ? ' by ' + JSON.stringify(backBy) : '') +
+              ' of ' + backs.length + ' candidates');
+  if (!back) console.log('mirror differs from start: ' + ((await mirror()) !== home));
 }
 await page.screenshot({ path: 'press-rooms.png' }).catch(() => {});
-
-// The settings plate: the small empty square at the head of the drawer,
-// pressed last -- what it opens stands over everything and says
-// Appearance & Language, which stands nowhere else.
-const plate = all.find((p) => p.y < 56 && p.x < 1000 && p.w <= 40 && p.t <= 40 &&
-                        p.all === '');
-if (plate) {
-  await clickBox(plate);
-  const went = (await mirror()).includes('Appearance & Language');
-  console.log('settings plate answers (settings came): ' + went +
-              ' by ' + JSON.stringify({h: plate.h, x: plate.x, y: plate.y}));
-} else {
-  console.log('settings plate: not found');
-}
-await page.screenshot({ path: 'press-settings.png' }).catch(() => {});
 console.log('page said: ' + JSON.stringify(loud.slice(0, 8)));
 await browser.close();
 console.log('done');
