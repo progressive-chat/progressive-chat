@@ -179,6 +179,25 @@ pressed over -- and takes as evidence either that something else was said
 or, for the press that gives a conversation away, that what was held to be
 pasted changed.
 
+## Every square, pressed once
+
+A press nothing answers is either not a control -- a word, a field's own
+hint -- or a stub standing where something should be, and only asking tells
+which. `tools/probe_presses.mjs` asks of all of them: it reads every square
+of a control's size that is whole inside the room, presses each one in a
+page of its own, and says which answered and which took the press and did
+nothing with it. Read against the tree it is a list of what to look at next,
+and read again after a change it says whether the change reached the page.
+
+What it found the first time it was run, on 2026-11-07: thirty squares, and
+five answering nothing -- the word at the head of the drawer, and four in
+the card at the foot of the messages: the ring that says how full a model's
+window is, the clip, the face, and the round button beside the field, which
+sent nothing though a message was written in the field beside it. That last
+one sends now, and empties the field as Enter does; the ring is said and not
+pressed, which is what it is for, and the clip and the face ask for what
+nothing answers yet, and are said so in `TODO.md`.
+
 A last one before anyone writes another probe: what says a press was
 answered is `skiff_web_event` with a node's handle and `click`. The pointer
 being said to something means nothing -- it is said even of a press made in

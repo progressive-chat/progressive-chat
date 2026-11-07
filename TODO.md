@@ -55,7 +55,7 @@ build and the next.
       read back on 2026-11-07: a page kept in a browser, asked for its
       clipboard by permission, keeps the whole answer the Copy chip was
       pressed on and nothing that was in it before (`tools/probe_copied.mjs`).
-- [ ] Three of the eight settings groups still stand named and empty:
+- [x] Three of the eight settings groups still stand named and empty:
       Multimodal, Network, and Memory & Data. What is drawn today under the
       others is Appearance (the theme, its type and its dark), what answers
       in the conversation that is open (Services, Models), Generation
@@ -70,6 +70,12 @@ build and the next.
       moves). A row says that something is offered; what any of the seven
       does when it is on is still nothing written, and that is what is left
       of this item.
+- [ ] Nothing answers any of the seven switches: each of them is kept and
+      each of them moves, and none of them is read by anything that would
+      then do what it says it would -- what a picture is read into words
+      with, what a proxy is asked through, and where what is kept is kept.
+      The row says a thing is offered; what offering it changes is the rest
+      of it.
 - [x] What a model wrote to itself, folded above its answer, is pressed open
       and read: `history_fold` keeps it (`src/ui/message_list.cc`), and a probe
       of the page in a browser says a press anywhere in the line opens it and
@@ -101,6 +107,15 @@ build and the next.
       and what is to answer them -- where a file is read and where a context
       is compacted -- is not written yet (`src/ui/composer.cc`; the design
       says which under *The editor's row*).
+
+      Read off the page on 2026-11-07 by `tools/probe_presses.mjs`, which
+      pressed every square of a control's size in the settled room: the
+      clip, the face and the round button beside the field each took a press
+      and answered nothing at all. The round button sends now, and empties
+      the field as Enter in it does (`tools/probe_send.mjs` says both), and
+      nothing was emptied either way before it. The clip and the face still
+      ask for what nothing answers, and are the two left of this item
+      pressed for.
 - [ ] The thinking a fold opens does not say the tool calls the line above it
       counted: `history_fold` says only what the model wrote to itself, and
       nothing yet keeps each call it made -- what it asked for and what came
