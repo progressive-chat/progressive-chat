@@ -122,15 +122,15 @@ than left to keep a size nobody put in it. Nothing counts characters, and
 where even that measure says nothing, what a letter of a fixed pitch would
 come to in the size asked is what `liteAdvance` keeps.
 
-What is said instead for every other text of the window (`the words size
-themselves`, `cc59d79`): no `autoSize` on a text at all. Forty-one `apply`
-fields across nine `src/ui/*.cc` lost theirs, and each text keeps the width
-and the height `measure()` already wrote into `fWidth` and `fHeight` -- what
-the auto-sized branch was overwriting with a flow over children a text does
-not have. This is how `skiff-widgets` carries its own texts, and it is the
-rule for what is written after this: a leaf that asks for `autoSize`
-measures its words correctly and still stands at no bounds, which on a page
-reads right and presses nowhere.
+What the rest of the window's texts took is the other answer, said the same
+way everywhere: no `autoSize` at all. The size the fold and the chips were
+told by hand in the paragraph above, every other text already has -- it was
+written into `fWidth` and `fHeight` when the text was measured, and layout
+keeps it instead of overwriting it with a flow over children a text does not
+have. This is how `skiff-widgets` carries its own texts, and the rule either
+way for what is written after: a node with no children must never be sized
+by what it holds -- it measures its words right and stands at no bounds
+still, which on a page reads right and presses nowhere.
 
 ## Nothing else that has surprised this program yet
 
