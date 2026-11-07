@@ -93,8 +93,16 @@ public:
             // One line of the settings page: what it says is given whole.
             [&](const copy_text &asking) { this->give(asking.text); },
             // Asked again: this answer taken away, and every one after it, so
-            // that the question above it is open to be answered again.
-            [&](const regenerate_answer &asking) { cut_away(asking.said); },
+            // that the question above it is open to be answered again -- and
+            // asked again it is, then and there, for a question left open is
+            // not what this one was pressed for. Before, it only took the
+            // answer away: pressed again, again, a conversation lost an
+            // answer each time and never had one back, though what asks for
+            // one was already here and only this line kept it out.
+            [&](const regenerate_answer &asking) {
+              cut_away(asking.said);
+              ask_a_model(asking.chat);
+            },
             // Into a chat of its own: everything asked and answered up to this
             // answer, and nothing said after it.
             [&](const fork_answer &asking) {
