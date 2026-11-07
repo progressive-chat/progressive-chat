@@ -26,7 +26,7 @@ browser).
 | the conversation list       | `src/ui/drawer.cc`   | the search, the conversations, Tasks and Remote, the settings row  |
 | the bar over the messages   | `src/ui/top_bar.cc`  | the name, the four plates, what the chat has been worth           |
 | the messages                | `src/ui/message_list.cc` | bubbles, the footer under each answer, a fold above each one  |
-| the card at the foot        | `src/ui/composer.cc` | the field, the plus, the name of what answers, the ring, three dots |
+| the card at the foot        | `src/ui/composer.cc` | the field, the plus, the name of what answers, the ring, three dots, and what was being written to each conversation |
 | the settings                | `src/ui/settings.cc` | eight groups, in the order the design names them                  |
 | the design, read in the room | `src/ui/doc.cc`     | `design-doc.md`, in lines that wrap to the breadth of the room    |
 | what every model is told    | `src/ui/prompt.cc`   | one field, and nothing else                                       |
@@ -222,3 +222,20 @@ narrowing keeps the conversation, the footer under an answer and the card
 written in where they are. Everything else is said out of the breadth it was
 given and nothing out of the machine it runs on: a phone and a wide window
 differ by the numbers above and by nothing else.
+
+## What the card keeps of what was written
+
+What is in the field belongs to the conversation it was written for, and
+nothing written for one is read in another: leaving a conversation keeps
+what was in the field to it (`pchat.logic.drafts`), opening it again gives
+it back, and opening another gives that one whatever belongs to it -- which
+is nothing at all the first time. Sent, nothing of it is kept anywhere, and
+coming back later finds the field the way sending left it. That is kept
+beside the field itself and said nowhere else, because whose field it is and
+what is written in it have never been anything but that card's own: the
+program between the frames never hears of it, and nothing of it outlives the
+window.
+
+Asked of the page by `tools/probe_drafts.mjs`: written in one conversation,
+gone in the next, back again in the first, and gone for good once it has
+been sent.
