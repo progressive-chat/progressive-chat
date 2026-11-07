@@ -26,7 +26,7 @@ namespace nodes = skiff::nodes;
 inline constexpr double large_type = 1.25;
 
 // How many groups the page has, and how many items any one of them may say.
-inline constexpr std::size_t max_settings_groups = 8u;
+inline constexpr std::size_t max_settings_groups = 9u;
 inline constexpr std::size_t max_settings_items = 7u;
 
 // The seeds offered, and the name each is known by.
@@ -45,12 +45,13 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
     {scheme_preset::ocean, "Ocean"},
 }};
 
-// The eight groups the page is made of, and what each holds, said once in
-// the order they are said in (design-doc.md, "The settings"). Of these, four
+// The nine groups the page is made of, and what each holds, said once in
+// the order they are said in (design-doc.md, "The settings"). Of these, five
 // have what they are named for drawn under one of their items: Appearance,
 // under Appearance & Language; what answers in a chat, under Services;
-// Generation, under Responses; and the three tools this program owns, under
-// Tools. The rest stand named and empty, waiting for the thing each of them
+// Generation, under Responses; the three tools this program owns, under
+// Tools; and a press that asks for one notification, under Notifications.
+// The rest stand named and empty, waiting for the thing each of them
 // is named for.
 //
 // Not one row here says what a group would do when it is pressed: none of
@@ -58,9 +59,17 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
 // shown.
 
 // What one of them draws under the item it stands under, where it draws
-// anything: one of these five, and never two of them, because no two of
+// anything: one of these six, and never two of them, because no two of
 // them are what one place in the page is made of.
-enum class group_rows { none, appearance, generation, tools, answerers, about };
+enum class group_rows {
+  none,
+  appearance,
+  generation,
+  tools,
+  answerers,
+  notified,
+  about
+};
 
 struct settings_group {
   std::string_view name;
@@ -94,6 +103,7 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
      group_rows::none},
     {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u,
      max_settings_items, group_rows::none},
+    {"Notifications", {{"Test"}}, 1u, 0u, group_rows::notified},
     {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u,
      group_rows::appearance},
     {"About", {{"About"}}, 1u, 0u, group_rows::about},
@@ -107,6 +117,13 @@ inline constexpr float settings_card_widest = 720.0f;
 // group's name above the items in it, and one group above the next.
 inline constexpr float settings_row_height = 48.0f;
 inline constexpr float settings_row_stride = 52.0f;
+// What a row keeps clear for what stands beside its name: the switch, the
+// knob's two presses with what the knob stands at, and, in a line of About,
+// where what is said of it begins.
+inline constexpr float switch_room = 82.0f;
+inline constexpr float knob_room = 142.0f;
+inline constexpr float about_name_room = 166.0f;
+inline constexpr float about_said_at = 206.0f;
 inline constexpr float settings_group_stride = 30.0f;
 inline constexpr float settings_group_gap = 20.0f;
 
@@ -126,7 +143,10 @@ struct switch_row : scene::Node {
 
   switch_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
-    fPlate.apply({.fill = true});
+    // The plate is what is seen of the row, and it fills by its own corner
+    // radius alone: told the row's, the ground under it is rounded too.
+    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
+    fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 16.0f});
@@ -161,6 +181,8 @@ struct switch_row : scene::Node {
     this->apply(spec);
     fName.setText(std::string(name));
     fName.setColour(look.text);
+    if (spec.width)
+      fName.apply({.maxWidth = std::max(0.0f, *spec.width - switch_room)});
     fTrack.setColour(on ? look.primary : look.outline);
     fKnob.setColour(on ? look.on_primary : look.dim);
   }
@@ -221,7 +243,8 @@ struct knob_row : scene::Node {
 
   knob_row() {
     this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
-    fPlate.apply({.fill = true});
+    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
+    fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 16.0f});
@@ -257,6 +280,8 @@ struct knob_row : scene::Node {
     fPlate.setColour(look.field);
     fName.setText(std::string(name));
     fName.setColour(look.text);
+    if (spec.width)
+      fName.apply({.maxWidth = std::max(0.0f, *spec.width - knob_room)});
     fValue.setText(said_value(field, value));
     fValue.setColour(look.dim);
     fLess.again(sink,
@@ -299,9 +324,11 @@ struct about_row : scene::Node {
     this->apply({.anchor = scene::anchor::kTopLeft,
                  .height = settings_row_height,
                  .cornerRadius = 14.0f});
+    fName.setElided(true);
+    fSaid.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 16.0f});
+                 .x = 16.0f, .maxWidth = about_name_room});
     fSaid.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 190.0f});
@@ -328,6 +355,8 @@ struct about_row : scene::Node {
     fName.setColour(look.text);
     fSaid.setText(std::string(said));
     fSaid.setColour(look.dim);
+    if (spec.width)
+      fSaid.apply({.maxWidth = std::max(0.0f, *spec.width - about_said_at)});
   }
 
   void forEachChild(auto &&f) {
@@ -340,16 +369,67 @@ struct about_row : scene::Node {
   std::string given;
 };
 
+// One row of the Notifications page: pressed, it asks the machine this
+// program runs on to show one notification of the program's own -- a test,
+// whether it is let show any at all, and nothing that stands for a message.
+struct test_row : scene::Node {
+  ask_box fPlate{};
+  nodes::Text fName{"", 15.0f, 0u};
+  app::requests *asked = nullptr;
+
+  test_row() {
+    this->apply({.anchor = scene::anchor::kTopLeft,
+                 .height = settings_row_height,
+                 .cornerRadius = 14.0f});
+    fName.setElided(true);
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked) asked->ask(app::send_test_notification{});
+    return true;
+  }
+
+  void blank() { this->setVisible(false); }
+
+  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+             std::string_view name, float room) {
+    asked = sink;
+    fPlate.again(sink, app::send_test_notification{}, look.raised);
+    this->apply(spec);
+    this->setVisible(true);
+    fName.setText(std::string(name));
+    fName.setColour(look.text);
+    fName.apply({.maxWidth = std::max(0.0f, room - 32.0f)});
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fName);
+  }
+};
+
 struct settings_rows : scene::Node {
+  // Said while the page is being looked into: the first two things said in
+  // it that stand on one another, by the name each is known by in the code
+  // and the room each came to stand in. Nothing is read of a page that says
+  // "no two stand on another".
+  nodes::Text fSaidDebug{"", 10.0f, 0xff00ff00u, true};
   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
   // One line to a text, kept on the heap and not as a member: sixty of them,
   // each with a size it is said in, is not what a machine's stack was asked
   // to hold -- and every one of them is made whether it is said in or not.
   struct group_name {
     nodes::Text name{"", 16.0f, 0u, true};
+    group_name() { name.setElided(true); }
   };
   struct item_name {
     nodes::Text name{"", 15.0f, 0u};
+    item_name() { name.setElided(true); }
   };
   std::unique_ptr<std::array<group_name, max_settings_groups>> fGroups =
       std::make_unique<std::array<group_name, max_settings_groups>>();
@@ -362,6 +442,10 @@ struct settings_rows : scene::Node {
   switch_row fBlack;
   switch_row fLarge;
   switch_row fLight;
+  // What a row in the drawer is asked for, and asked for here: a circle for
+  // the conversation it names, and how long ago what it says was said.
+  switch_row fAvatars;
+  switch_row fTimes;
   // Generation, drawn: one row for each of the five an answer is asked with.
   std::array<knob_row, asking_offered.size()> fKnobs;
   // The tools, drawn: a switch to each of the three, whether it is offered
@@ -370,6 +454,8 @@ struct settings_rows : scene::Node {
   // The answerers, drawn: a switch to each of them, whether it answers in
   // the conversation the window has open or not.
   std::array<switch_row, answerers_offered.size()> fAnswerers;
+  // Notifications, drawn: one press that asks for a test notification.
+  test_row fTest;
   // About, drawn: what this build is, what it is under, and where its
   // source is kept.
   std::array<about_row, max_about_rows> fAbout;
@@ -378,6 +464,9 @@ struct settings_rows : scene::Node {
   ask_box fReadPlate{};
   nodes::Text fRead{"Read the design", 15.0f, 0u};
   settings_rows() {
+    fSaidDebug.apply({.anchor = scene::anchor::kTopLeft,
+                      .x = 20.0f,
+                      .y = 6.0f});
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .y = 24.0f});
@@ -408,9 +497,12 @@ struct settings_rows : scene::Node {
       one.setVisible(false);
     for (about_row &one : fAbout)
       one.blank();
+    fTest.blank();
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
+    fAvatars.fName.setText("Circles by the names");
+    fTimes.fName.setText("How long ago in a row");
   }
 
   // The answerers offered (pchat.config), as a row each: which of them
@@ -488,10 +580,31 @@ struct settings_rows : scene::Node {
       return say_tools(asked, look, how, row_width, base);
     case group_rows::answerers:
       return say_answerers(asked, look, answerers, row_width, base);
+    case group_rows::notified:
+      return say_notified(asked, look, row_width, base);
     case group_rows::about:
       return say_about(asked, look, row_width, base);
     }
     return base;
+  }
+
+  // Notifications, drawn: one row under the group's own item, pressed to ask
+  // the machine this program runs on for a test notification. Nothing here is
+  // told whether one was shown -- asking is all a row does, and whether this
+  // program is let show any is the system's own to answer.
+  [[nodiscard]] float say_notified(app::requests *asked, const paints &look,
+                                   float row_width, float base) {
+    fTest.again(asked,
+                {.anchor = scene::anchor::kTopLeft,
+                 .x = 16.0f,
+                 .y = base,
+                 .relativeSize = scene::axes::kNone,
+                 .width = row_width,
+                 .height = settings_row_height,
+                 .cornerRadius = 14.0f,
+                 .visible = true},
+                look, "Send a test notification", row_width);
+    return base + settings_row_stride;
   }
 
   // The three tools, drawn: a switch to each, standing under the name of the
@@ -617,14 +730,39 @@ struct settings_rows : scene::Node {
                  app::pick_theme{.mode = shown.mode == theme_mode::light
                                              ? theme_mode::dark
                                              : theme_mode::light});
+    // The drawer's own rows, asked for under the colours: neither stands in
+    // the panel until it is asked for here.
+    fAvatars.again(asked,
+                   {.anchor = row.anchor,
+                    .x = row.x,
+                    .y = top + 3.0f * settings_row_stride,
+                    .relativeSize = scene::axes::kNone,
+                    .width = row.width,
+                    .height = row.height,
+                    .cornerRadius = row.cornerRadius},
+                   look, "Circles by the names", shown.avatars,
+                   app::set_avatars{.enabled = !shown.avatars});
+    fTimes.again(asked,
+                 {.anchor = row.anchor,
+                  .x = row.x,
+                  .y = top + 4.0f * settings_row_stride,
+                  .relativeSize = scene::axes::kNone,
+                  .width = row.width,
+                  .height = row.height,
+                  .cornerRadius = row.cornerRadius},
+                 look, "How long ago in a row", shown.row_times,
+                 app::set_row_times{.enabled = !shown.row_times});
     // The design, offered under the switches: a plate the whole breadth of
     // the rows, and what it is called written in it.
     const float row_height = row.height.value_or(48.0f);
+    // Where it stands: under every switch above it, which is as far as the
+    // last of them reaches and no counting by hand.
+    const float read_at = 5.0f * settings_row_stride;
     fReadPlate.again(asked, app::open_design{}, look.raised);
     fReadPlate.apply({.anchor = row.anchor,
                       .origin = scene::anchor::kTopLeft,
                       .x = row.x,
-                      .y = top + 156.0f,
+                      .y = top + read_at,
                       .width = row.width,
                       .height = row_height,
                       .relativeSize = scene::axes::kNone,
@@ -632,10 +770,10 @@ struct settings_rows : scene::Node {
     fRead.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 32.0f,
-                 .y = top + 156.0f + row_height / 2.0f});
+                 .y = top + read_at + row_height / 2.0f});
     // Where the rest of the page begins: under the row that offers the
     // design, and the room left between it and the next group.
-    return top + 156.0f + settings_row_height + settings_group_gap;
+    return top + read_at + settings_row_height + settings_group_gap;
   }
   void again(app::requests *asked, const paints &look, const looks &shown,
              const asking &how, std::span<const std::string> answerers,
@@ -654,9 +792,11 @@ struct settings_rows : scene::Node {
       group_name &head = (*fGroups)[group];
       head.name.setText(std::string(named.name));
       head.name.setColour(look.dim);
+      head.name.apply({.maxWidth = std::max(0.0f, breadth - 40.0f)});
       head.name.apply({.anchor = scene::anchor::kTopLeft,
                        .x = 20.0f,
                        .y = at,
+      
                        .visible = true});
       at += settings_group_stride;
       for (std::size_t one = 0u; one < max_settings_items; ++one) {
@@ -667,6 +807,7 @@ struct settings_rows : scene::Node {
         }
         item.name.setText(std::string(named.items[one]));
         item.name.setColour(look.text);
+        item.name.apply({.maxWidth = std::max(0.0f, breadth - 52.0f)});
         item.name.apply({.anchor = scene::anchor::kCentreLeft,
                          .origin = scene::anchor::kCentreLeft,
                          .x = 32.0f,
@@ -696,9 +837,58 @@ struct settings_rows : scene::Node {
                  .relativeSize = scene::axes::kNone,
                  .width = breadth,
                  .height = at + edge});
+    fSaidDebug.apply({.maxWidth = breadth - 40.0f});
+    std::vector<std::pair<std::string, nodes::Text *>> said;
+    auto note = [&said](std::string name, nodes::Text &text) {
+      if (text.visible()) said.emplace_back(std::move(name), &text);
+    };
+    note("head", fHeading);
+    for (std::size_t group = 0; group < max_settings_groups; ++group)
+      note(std::format("g{}", group), (*fGroups)[group].name);
+    for (std::size_t group = 0; group < max_settings_groups; ++group)
+      for (std::size_t one = 0; one < max_settings_items; ++one)
+        note(std::format("i{}.{}", group, one), (*fItems)[group][one].name);
+    for (std::size_t at = 0; at < max_seeds; ++at)
+      note(std::format("s{}", at), fSeeds[at].fName);
+    note("blk", fBlack.fName);
+    note("large", fLarge.fName);
+    note("light", fLight.fName);
+    note("av", fAvatars.fName);
+    note("whe", fTimes.fName);
+    for (std::size_t at = 0; at < fKnobs.size(); ++at) {
+      note(std::format("k{}", at), fKnobs[at].fName);
+      note(std::format("k{}v", at), fKnobs[at].fValue);
+    }
+    for (std::size_t at = 0; at < fTools.size(); ++at)
+      note(std::format("t{}", at), fTools[at].fName);
+    for (std::size_t at = 0; at < fAnswerers.size(); ++at)
+      note(std::format("a{}", at), fAnswerers[at].fName);
+    note("read", fRead);
+    for (std::size_t at = 0; at < fAbout.size(); ++at) {
+      note(std::format("b{}", at), fAbout[at].fName);
+      note(std::format("b{}s", at), fAbout[at].fSaid);
+    }
+    std::string found;
+    for (std::size_t one = 0; one < said.size() && found.empty(); ++one)
+      for (std::size_t two = one + 1; two < said.size() && found.empty();
+           ++two) {
+        const skia::SkRect a = said[one].second->bounds();
+        const skia::SkRect b = said[two].second->bounds();
+        if (a.width() <= 0.0f || b.width() <= 0.0f) continue;
+        if (a.fLeft >= b.fRight - 1.0f || b.fLeft >= a.fRight - 1.0f ||
+            a.fTop >= b.fBottom - 1.0f || b.fTop >= a.fBottom - 1.0f)
+          continue;
+        found = std::format(
+            "{} over {} A={:.0f}x{:.0f}@{:.0f},{:.0f} B={:.0f}x{:.0f}@{:.0f},{"
+            ":.0f}",
+            said[one].first, said[two].first, a.width(), a.height(), a.fLeft,
+            a.fTop, b.width(), b.height(), b.fLeft, b.fTop);
+      }
+    fSaidDebug.setText(found.empty() ? "no two stand on another" : found);
   }
 
   void forEachChild(auto &&f) {
+    f(fSaidDebug);
     f(fHeading);
     for (group_name &one : *fGroups)
       f(one.name);
@@ -711,6 +901,8 @@ struct settings_rows : scene::Node {
     f(fBlack);
     f(fLarge);
     f(fLight);
+    f(fAvatars);
+    f(fTimes);
     for (knob_row &one : fKnobs)
       f(one);
     for (switch_row &one : fTools)

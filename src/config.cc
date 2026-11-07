@@ -23,6 +23,11 @@ struct looks {
   theme_mode mode = theme_mode::dark;
   bool amoled = false;
   bool reduce_motion = false;
+  // What a row in the drawer is asked for, and is asked for nowhere by
+  // default: a circle with the conversation's first letter in it, in the
+  // row's own colours, and how long ago what was said last was said.
+  bool avatars = false;
+  bool row_times = false;
   double font_scale = 1.0;
   font_choice font = font_choice::app;
   friend bool operator==(const looks&, const looks&) = default;
