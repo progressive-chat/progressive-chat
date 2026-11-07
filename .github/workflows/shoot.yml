@@ -40,13 +40,13 @@ jobs:
           key: shoot-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/shoot.yml', '.github/actions/desktop-setup/action.yml') }}
       - name: Configure
         run: |
+          # No GL asked for: what this machine's GL answers about its own
+          # extensions is nothing, and inside that answer Skia goes before the
+          # program's first frame (GrGLExtensions::init). In software every
+          # box is painted by the same scene, rounded and coloured as a
+          # machine with a GPU paints it.
           cmake -S . -B build-shoot -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            # No GL asked for: what this machine's GL answers about its own
-            # extensions is nothing, and inside that answer Skia goes before
-            # the program's first frame (GrGLExtensions::init). In software
-            # every box is painted by the same scene, rounded and coloured
-            # as a machine with a GPU paints it.
             -DPCHAT_GL=OFF \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
