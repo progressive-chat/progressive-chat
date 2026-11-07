@@ -152,6 +152,14 @@ struct bar_press : scene::Node {
                  .visible = true});
   }
 
+  // The mark is painted over the middle of its own plate, and a press on it
+  // goes no further than what holds it: what the page says was pressed is
+  // the mark, and a walk from it climbs to this node and no higher. So this
+  // node answers for the plate as well, wherever in its own box it was
+  // pressed -- and nowhere else, for it is no wider than the plate is.
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool onClick(float x, float y) { return fPlate.onClick(x, y); }
+
   void hide() { this->setVisible(false); }
 
   void forEachChild(auto &&f) {
