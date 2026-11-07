@@ -37,15 +37,16 @@ struct app_window : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Box<> fMessages{0u};
   ask_box fShade{};
-  // What puts away what the card's own three dots opened: nothing painted
-  // and everything pressed, taking the whole room while the card is out and
-  // nothing of it at all when it is not. It stands here, between the bar and
-  // the card, because a press is taken by what was painted last over the
-  // place: everything drawn before this plate -- the messages, the list, the
-  // bar itself -- hands its presses to it, and the card's three dots and the
-  // rows they opened, drawn after it, keep theirs. Which is what a card
-  // opened over the room asks for: a press anywhere else in the room puts it
-  // away, and one on the card itself puts it away or does what the card says.
+  // What puts away what three dots opened, wherever they stand: nothing
+  // painted and everything pressed, taking the whole room while either card
+  // is out and nothing of it at all when none is. It stands here, above the
+  // messages and below the bar and the card, because a press is taken by
+  // what was painted last over the place: the messages, the list and the
+  // drawer hand their presses to it, while the bar, the card and every row
+  // either of them opened are painted after it and keep theirs. Which is
+  // what a card opened over the room asks for: a press anywhere below it
+  // puts it away, and one on the card itself, on its three dots or on a row
+  // behind them does what that one says.
   ask_box fAway{};
   drawer_screen fDrawer{360.0f};
   top_bar fTop{};
@@ -204,7 +205,10 @@ struct app_window : scene::Node {
                      .visible = true});
     if (open_chat)
       fComposer.again(look, *open_chat, how, asked, editor_menu_open);
-    if (editor_menu_open) {
+    // Either card of three dots, put away by a press on anything below it:
+    // the one in the bar first if both happen to be out at once, and then the
+    // one written into, on a second press of the same kind.
+    if (more_open || editor_menu_open) {
       fAway.apply({.anchor = scene::anchor::kTopLeft,
                    .x = 0.0f,
                    .y = 0.0f,
@@ -212,7 +216,10 @@ struct app_window : scene::Node {
                    .width = width,
                    .height = height,
                    .visible = true});
-      fAway.again(asked, app::toggle_editor_menu{}, look.away);
+      fAway.again(asked,
+                  more_open ? app::request{app::toggle_more{}}
+                            : app::request{app::toggle_editor_menu{}},
+                  look.away);
     } else
       fAway.hide();
     // The settings page, over everything, when it is opened.
@@ -241,8 +248,8 @@ struct app_window : scene::Node {
     f(fShade);
     f(fDrawer);
     f(fList);
-    f(fTop);
     f(fAway);
+    f(fTop);
     f(fComposer);
     f(fSettings);
     f(fDesign);
