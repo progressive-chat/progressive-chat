@@ -153,6 +153,15 @@ Two things are never the same number and nothing has gone wrong:
 - A value printed from inside `again()` is read *before* the layout that
   answers it; the same value read in a `before_frame` hook is the layout of
   the frame before. Nothing prints its own layout before it has one.
+- The page moves once, and not when you think: the column beside the
+  messages does not keep the breadth it began with, so everything in the bar
+  over them slides and grows somewhere in the first few seconds. A point
+  read at four seconds is a point in nothing at six. So nothing here waits a
+  fixed time for a layout it means to press on: `tools/probe_top_bar.mjs`
+  reads where the plates stand every second until two readings say the same
+  thing, and presses after that. A probe that presses a point written down
+  from another run is how a whole afternoon was spent proving a working
+  press was broken.
 
 ## A probe kept in the tree
 
@@ -162,7 +171,39 @@ words in it rather than by a point written down, presses it in the middle,
 and says whether what the model thought was read and then folded away again.
 Every probe there can be run by the `probe` workflow without a push, or
 here against a page served as above, and each says what it saw in one line
-so that a run's log is its own answer.
+so that a run's log is its own answer. `tools/probe_top_bar.mjs` is the one
+that asks whether every press in the bar answers: it finds each plate by
+its size and place rather than by a point, presses each in a page of its
+own -- pressing one asks for something that changes what the next is
+pressed over -- and takes as evidence either that something else was said
+or, for the press that gives a conversation away, that what was held to be
+pasted changed.
+
+## Every square, pressed once
+
+A press nothing answers is either not a control -- a word, a field's own
+hint -- or a stub standing where something should be, and only asking tells
+which. `tools/probe_presses.mjs` asks of all of them: it reads every square
+of a control's size that is whole inside the room, presses each one in a
+page of its own, and says which answered and which took the press and did
+nothing with it. Read against the tree it is a list of what to look at next,
+and read again after a change it says whether the change reached the page.
+
+What it found the first time it was run, on 2026-11-07: thirty squares, and
+five answering nothing -- the word at the head of the drawer, and four in
+the card at the foot of the messages: the ring that says how full a model's
+window is, the clip, the face, and the round button beside the field, which
+sent nothing though a message was written in the field beside it. That last
+one sends now, and empties the field as Enter does; the ring is said and not
+pressed, which is what it is for, and the clip and the face ask for what
+nothing answers yet, and are said so in `TODO.md`.
+
+A last one before anyone writes another probe: what says a press was
+answered is `skiff_web_event` with a node's handle and `click`. The pointer
+being said to something means nothing -- it is said even of a press made in
+empty air -- and a probe that counts those has proved a press that never
+happened (`docs/skiff-notes.md`, *What the page says was pressed is what it
+painted last*).
 
 Nothing here is tested by anything but these. What is not asked of a page
 has not been said at all.

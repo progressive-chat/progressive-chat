@@ -12,6 +12,7 @@ import pchat.core;
 import pchat.config;
 import pchat.app.requests;
 import :theme;
+import :icons;
 
 export namespace pchat::ui {
 
@@ -95,6 +96,45 @@ struct ask_box : scene::Node {
   }
 
   void forEachChild(auto &&f) {}
+};
+
+// One press with a mark painted in the middle of it: what closes a card, put
+// away at the corner of it. The mark is painted after the plate, and what a
+// page says was pressed there is the mark -- a walk from it climbs to this
+// node and no higher, and a node that answers nothing answers nothing for
+// the plate either. So this one answers for the plate too, wherever in its
+// own box the press came, and nowhere else: the box is no wider than the
+// plate is, which is the same thing said twice for every press in the bar
+// over the messages (`docs/skiff-notes.md`).
+struct press_box : scene::Node {
+  ask_box fPlate{};
+  nodes::Icon fMark{shape::close(), 0u};
+
+  explicit press_box(nodes::IconShape mark = shape::close())
+      : fMark(std::move(mark), 0u) {
+    fMark.apply({.width = 18.0f,
+                 .height = 18.0f,
+                 .anchor = scene::anchor::kCentre,
+                 .origin = scene::anchor::kCentre});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool onClick(float x, float y) { return fPlate.onClick(x, y); }
+
+  void again(app::requests *sink, const scene::Spec &where, app::request asking,
+             scene::Colour colour) {
+    this->apply(where);
+    fPlate.again(sink, std::move(asking), colour);
+    fPlate.apply({.fill = true, .cornerRadius = 18.0f});
+  }
+
+  void mark_colour(scene::Colour colour) { fMark.setColour(colour); }
+  void hide() { this->setVisible(false); }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fMark);
+  }
 };
 
 // What the window gives the screens: its size, and what that size asks for.
