@@ -107,6 +107,13 @@ inline constexpr float settings_card_widest = 720.0f;
 // group's name above the items in it, and one group above the next.
 inline constexpr float settings_row_height = 48.0f;
 inline constexpr float settings_row_stride = 52.0f;
+// What a row keeps clear for what stands beside its name: the switch, the
+// knob's two presses with what the knob stands at, and, in a line of About,
+// where what is said of it begins.
+inline constexpr float switch_room = 82.0f;
+inline constexpr float knob_room = 142.0f;
+inline constexpr float about_name_room = 166.0f;
+inline constexpr float about_said_at = 206.0f;
 inline constexpr float settings_group_stride = 30.0f;
 inline constexpr float settings_group_gap = 20.0f;
 
@@ -127,6 +134,7 @@ struct switch_row : scene::Node {
   switch_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
     fPlate.apply({.fill = true});
+    fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 16.0f});
@@ -161,6 +169,8 @@ struct switch_row : scene::Node {
     this->apply(spec);
     fName.setText(std::string(name));
     fName.setColour(look.text);
+    if (spec.width)
+      fName.apply({.maxWidth = std::max(0.0f, *spec.width - switch_room)});
     fTrack.setColour(on ? look.primary : look.outline);
     fKnob.setColour(on ? look.on_primary : look.dim);
   }
@@ -222,6 +232,7 @@ struct knob_row : scene::Node {
   knob_row() {
     this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
     fPlate.apply({.fill = true});
+    fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 16.0f});
@@ -257,6 +268,8 @@ struct knob_row : scene::Node {
     fPlate.setColour(look.field);
     fName.setText(std::string(name));
     fName.setColour(look.text);
+    if (spec.width)
+      fName.apply({.maxWidth = std::max(0.0f, *spec.width - knob_room)});
     fValue.setText(said_value(field, value));
     fValue.setColour(look.dim);
     fLess.again(sink,
@@ -299,9 +312,11 @@ struct about_row : scene::Node {
     this->apply({.anchor = scene::anchor::kTopLeft,
                  .height = settings_row_height,
                  .cornerRadius = 14.0f});
+    fName.setElided(true);
+    fSaid.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 16.0f});
+                 .x = 16.0f, .maxWidth = about_name_room});
     fSaid.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 190.0f});
@@ -328,6 +343,8 @@ struct about_row : scene::Node {
     fName.setColour(look.text);
     fSaid.setText(std::string(said));
     fSaid.setColour(look.dim);
+    if (spec.width)
+      fSaid.apply({.maxWidth = std::max(0.0f, *spec.width - about_said_at)});
   }
 
   void forEachChild(auto &&f) {
@@ -347,9 +364,11 @@ struct settings_rows : scene::Node {
   // to hold -- and every one of them is made whether it is said in or not.
   struct group_name {
     nodes::Text name{"", 16.0f, 0u, true};
+    group_name() { name.setElided(true); }
   };
   struct item_name {
     nodes::Text name{"", 15.0f, 0u};
+    item_name() { name.setElided(true); }
   };
   std::unique_ptr<std::array<group_name, max_settings_groups>> fGroups =
       std::make_unique<std::array<group_name, max_settings_groups>>();
@@ -654,6 +673,7 @@ struct settings_rows : scene::Node {
       group_name &head = (*fGroups)[group];
       head.name.setText(std::string(named.name));
       head.name.setColour(look.dim);
+      head.name.apply({.maxWidth = std::max(0.0f, breadth - 40.0f)});
       head.name.apply({.anchor = scene::anchor::kTopLeft,
                        .x = 20.0f,
                        .y = at,
@@ -668,6 +688,7 @@ struct settings_rows : scene::Node {
         }
         item.name.setText(std::string(named.items[one]));
         item.name.setColour(look.text);
+        item.name.apply({.maxWidth = std::max(0.0f, breadth - 52.0f)});
         item.name.apply({.anchor = scene::anchor::kCentreLeft,
                          .origin = scene::anchor::kCentreLeft,
                          .x = 32.0f,
