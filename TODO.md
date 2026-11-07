@@ -41,6 +41,14 @@ build and the next.
       to the log before it goes, and read with `adb logcat -d -s
       progressive-chat`.
 
+      Said of the page on 2026-11-08, and no longer true of it: a browser
+      with both `webgl` and `webgl2` to be had of it nowhere ("gl to be
+      had: {"webgl":false,"webgl2":false}") still paints the whole room,
+      the same 1785 characters of it a browser with software GL paints
+      (`tools/probe_no_gpu.mjs`). What asks is `pchat.platform.drawn`, and
+      what the window is told where there is nothing is to draw in
+      software (`src/main.cc`). So the phone is the one left to say it of,
+      and off nothing but the phone itself.
 - [x] **The settings page was read at its end** -- done 2026-11-06: what
       scrolls kept the end it had followed while the column was still being
       made, so Settings was said at -2163 and every group before the middle
