@@ -180,7 +180,10 @@ this program has to be able to say yes or no to, and to what degree.
 **Multimodal**
 
 * **Image transcription** — a vision model asked what is in a picture, so that
-  what cannot see can still be told.
+  what cannot see can still be told. What this program answers for stands under
+  this row as a switch to each of the two: **read a picture into words**, and
+  **make a picture out of words**. One switched off is not offered at all, and
+  nothing here says either of them more than the row above it does.
 * **Image generation** — pictures made out of what was written.
 
 **Tools**
@@ -202,13 +205,19 @@ this program has to be able to say yes or no to, and to what degree.
 **Network**
 
 * **Proxy** — everything asked routed through an HTTP or a SOCKS proxy.
+  Whether it is put through one at all stands under this row as a switch:
+  **speak through another program**. It is off until something asks for it,
+  because a proxy nothing is routed through is nothing said.
 * **WebUI** — this program driven from a browser, from another machine.
 
 **Memory & Data**
 
 * **Memory** — what is remembered while it runs, and what is kept in files.
 * **Skills** — instruction files the model can be given.
-* **Data control** — everything of yours given out as a file, or taken back in.
+* **Data control** — everything of yours given out as a file, or taken back
+  in. What is kept at all stands under this row as a switch to each of the
+  three: **keep what has been said here**, **keep what it has been taught**,
+  and **keep what has been given to it**.
 
 **Appearance & Language**
 
@@ -228,8 +237,11 @@ Of all this, what is drawn today is **Appearance** — the theme, its scheme,
 its type and its dark; the five things an answer is asked with, under
 **Generation**; which answerers answer in the chat that is open, under
 **Models**; the three tools this program owns, under **Tools**; and what this
-build is, under **About**. The other three groups stand empty, each with its
-name, waiting for the thing behind it.
+build is, under **About**; and a switch to each of the seven things a switch
+is offered for, which is what the other three groups had stood empty for —
+two under **Multimodal**, one under **Network** and three under **Memory &
+Data**. What any of the seven does when it is switched on is not written yet:
+the row says it is offered, and nothing here says more than that.
 
 ## What this design does not do
 
