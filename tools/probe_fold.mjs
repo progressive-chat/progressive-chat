@@ -16,7 +16,10 @@ await page.goto(
     `https://progressive-chat.github.io/progressive-chat/?asked=${Date.now()}`);
 await page.waitForFunction('window.__pchat_started === true', null,
                            { timeout: 180000 });
-await page.waitForTimeout(2500);
+// Long enough for the room to have said everything it says: read at two and
+// a half seconds, the fold is there but the room is still being made, and the
+// press lands on nothing that answers.
+await page.waitForTimeout(6000);
 
 const read = async () => await page.evaluate(
     () => document.getElementById('skiff').innerText);
@@ -51,6 +54,9 @@ if (!start) {
 // Pressed in the middle of what it says, which is where a reader presses it,
 // and not in its left padding -- the only place a box too narrow for its own
 // words ever answered a press.
+await page.mouse.move(Math.round(start[0] + start[2] / 2),
+                      Math.round(start[1] + start[3] / 2));
+await page.waitForTimeout(250);
 await page.mouse.click(Math.round(start[0] + start[2] / 2),
                        Math.round(start[1] + start[3] / 2));
 await page.waitForTimeout(1200);
@@ -59,6 +65,9 @@ const said = await fold();
 console.log('pressed once: green read: ' + open.includes('no recipe of its own'),
             'and the fold says "' + (said ? said[4] : 'nothing') + '"');
 
+await page.mouse.move(Math.round(start[0] + start[2] / 2),
+                      Math.round(start[1] + start[3] / 2));
+await page.waitForTimeout(250);
 await page.mouse.click(Math.round(start[0] + start[2] / 2),
                        Math.round(start[1] + start[3] / 2));
 await page.waitForTimeout(1200);
