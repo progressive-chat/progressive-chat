@@ -60,6 +60,9 @@ written: `SAID(group, what_is_asked)`. The group and the file are one thing.
 | `what_the_marks_said_and_where_each_run_stands` | the line without its marks, and where each run stands in what is left |
 | `a_link_written_the_way_writing_writes_one` | what is called in square stops and where it goes in round ones read as one place and its target |
 | `a_line_said_in_quotes_and_how_deep_it_stands` | stops of quote at the head of a line taken out, and how deep each line stands said of them |
+| `a_stretch_struck_out_says_what_it_said` | two stops of tilde read as one run struck out, and one tilde alone left as words |
+| `a_stretch_said_underlined_and_one_said_slanted` | two stops of underscore read as a line under it, and one as slanted, whichever of the two is read first |
+| `three_backticks_say_a_block_and_nothing_of_themselves` | three backticks at the head of a line read as a block of code: neither fence said, nor the word on the first, and no mark inside it read |
 | `doc.hashes_counted_and_a_list_told_from_words` | the design's own words read: how many hashes a heading is, and a list read out of what its lines say |
 | `doc.a_last_line_with_no_break_after_it` | the last line of a stretch read even where nothing breaks after it |
 | `doc.a_mark_alone_in_front_is_words` | a mark alone in front of a line is words, and not the head of a run |
