@@ -276,8 +276,10 @@ struct top_bar : scene::Node {
 
   top_bar() {
     this->apply({.fillX = true, .height = top_scrim});
-    fScrim.apply(
-        {.fill = true, .gradient = scene::Gradient{0xff0c160cu, 0x000c160cu}});
+    fScrim.apply({.fill = true});
+    // Its two colours are the scheme's own paper and scrim, handed down and
+    // given to it every frame (below): none are of this part's making, and
+    // so none are written twice.
     // A chat made new, and what this one has been worth: the one pressed at
     // the right, the other read beside it.
     fTokens.apply({.anchor = scene::anchor::kTopRight,
