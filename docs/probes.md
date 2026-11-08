@@ -30,6 +30,11 @@ way by one that asked nothing for a while (`probe_copied.mjs`):
   not. Read too soon, the box a chip was read with is one the chip has
   already left, and what the press lands on is not the chip.
 
+- **It is said in the page's own words.** A field is said with a label
+  (`[aria-label="Search conversations"]`) and not with a tag: the mirror is
+  free to say one with an `input` or with a `textarea`, and a probe that said
+  `textarea` waited thirty seconds for something that was never drawn.
+
 Neither is about this program in particular: what they say is that a press a
 probe makes is a press and nothing else, so a probe that presses sooner, or
 somewhere it never pointed, is asking nothing at all.
