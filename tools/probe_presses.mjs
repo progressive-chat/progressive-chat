@@ -71,6 +71,9 @@ const every = await squares();
 console.log(`${every.length} squares: ${every.map((one) => one[0] + ',' + one[1]).join(' ')}`);
 
 let dead = 0;
+// Which of them asked for nothing, said at the end, so that a plate drawn
+// and asked nothing of can be named rather than only counted.
+const asked_for_nothing = [];
 for (const [at, one] of every.entries()) {
   await page.goto(
       `https://progressive-chat.github.io/progressive-chat/?asked=${Date.now()}`);
@@ -82,11 +85,14 @@ for (const [at, one] of every.entries()) {
   await page.waitForTimeout(900);
   const said = await page.evaluate(() => window.__heard.join(' '));
   const answered = said.includes('answered');
-  if (!answered)
+  if (!answered) {
     dead += 1;
+    asked_for_nothing.push(`${one[0]},${one[1]}`);
+  }
   console.log(`${at + 1}/${every.length} ${one[0]},${one[1]} (${one[2]}x${one[3]}), ${one[4]}: ${answered ? 'answers' : 'nothing'} | ${said}`);
 }
 await browser.close();
 console.log(dead === 0 ? 'every square answers'
-                       : `${dead} of ${every.length} squares answer nothing`);
+                       : `${dead} of ${every.length} squares answer nothing:` +
+                         ` ${asked_for_nothing.join(' ')}`);
 process.exit(0);
