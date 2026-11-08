@@ -93,6 +93,8 @@ const press_row = async (name) => {
   }, name);
   if (!at)
     return false;
+  await page.mouse.move(at[0], at[1]);
+  await page.waitForTimeout(250);
   await page.mouse.click(at[0], at[1]);
   await page.waitForTimeout(900);
   return true;
@@ -127,6 +129,10 @@ const every = await top_row();
 let dots = null;
 for (const one of every) {
   await start();
+  // Pointed at first: a press put down where nothing had been pointed at is
+  // not answered, and every one of these squares is small.
+  await page.mouse.move(one[0], one[1]);
+  await page.waitForTimeout(250);
   await page.mouse.click(one[0], one[1]);
   await page.waitForTimeout(900);
   const opened = await menu();
@@ -178,9 +184,13 @@ console.log(`advanced: settings ${settings ? 'open' : 'shut'}, `
 // And the dots themselves again: what they opened is put away by one press
 // of them.
 await start();
+await page.mouse.move(dots[0], dots[1]);
+await page.waitForTimeout(250);
 await page.mouse.click(dots[0], dots[1]);
 await page.waitForTimeout(900);
 const again_open = (await menu()).length;
+await page.mouse.move(dots[0], dots[1]);
+await page.waitForTimeout(250);
 await page.mouse.click(dots[0], dots[1]);
 await page.waitForTimeout(900);
 const again_shut = (await menu()).length;
@@ -191,6 +201,8 @@ console.log(`${again_open} words open, ${again_shut} words behind a second `
 // takes, standing whole over the room behind the card, takes it and puts
 // the card away with nothing more asked of it.
 await start();
+await page.mouse.move(dots[0], dots[1]);
+await page.waitForTimeout(250);
 await page.mouse.click(dots[0], dots[1]);
 await page.waitForTimeout(900);
 const away_before = (await menu()).length;
