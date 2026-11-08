@@ -165,6 +165,15 @@ build and the next.
       before the next frame (`tools/probe_faces.mjs` says the three of it:
       opened, written, and put away by the room). The clip alone of the
       card still asks for what nothing answers.
+
+      Said again on 2026-11-08, this time read out of the source and not off
+      the page alone: the clip is laid out (`fClip.apply`,
+      `src/ui/composer.cc:452`), coloured (`:493`) and painted (`:599`), and
+      unlike `fFace` (`:495`) and `fDots` (`:505`) beside it it is never
+      given a request to send -- there is no `fClip.again(asked, ...)` in the
+      tree. `tools/probe_presses.mjs`, which now names the squares it finds
+      instead of only counting them, called it `1166,864` against the room as
+      it stands when it is opened.
 - [x] The thinking a fold opens did not say the tool calls the line above it
       counted -- done 2026-11-07: each call an answer made is kept as it was
       asked and answered (`call_made` in `src/core.cc`, recorded by every
