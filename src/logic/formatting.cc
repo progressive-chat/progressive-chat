@@ -196,8 +196,10 @@ quoted_at(std::string_view text, std::size_t at) {
       }
     }
     // What a block is said in no mark opens: a star in it is a star.
-    if (!(open & block) &&
-        (const auto found = formatting_detail::opening_at(text, at, open))) {
+    const auto found = !(open & block)
+        ? formatting_detail::opening_at(text, at, open)
+        : decltype(formatting_detail::opening_at(text, at, open)){};
+    if (found) {
       const auto [taken, style] = *found;
       if (at > from)
         runs.push_back({.text = text.substr(from, at - from),
