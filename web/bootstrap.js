@@ -15,11 +15,24 @@
       throw new Error(isSecureContext
         ? 'progressive-chat needs service workers, and this browser has them turned off here: a private window, or a privacy setting or extension, does that. Open progressive-chat in a normal window, or allow service workers for this site.'
         : 'progressive-chat needs a secure (HTTPS) page: open it over https://.');
-    await navigator.serviceWorker.register('./worker.js', { scope: './', updateViaCache: 'none' });
-    await navigator.serviceWorker.ready;
-    if (!navigator.serviceWorker.controller) {
-      await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
-    }
+    // Taken with a clock beside it, because what a browser that blocks
+    // service workers does is nothing at all: the register below neither
+    // answers nor goes wrong, so a page that would never have isolated
+    // itself said "starting" at it for as long as it was left open, which
+    // says neither what went wrong nor that anything had. Fifteen seconds,
+    // which no real taking of a worker has yet come near.
+    await Promise.race([
+      (async () => {
+        await navigator.serviceWorker.register('./worker.js', { scope: './', updateViaCache: 'none' });
+        await navigator.serviceWorker.ready;
+        if (!navigator.serviceWorker.controller) {
+          await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
+        }
+      })(),
+      new Promise((_, deny) => setTimeout(
+        () => deny(new Error('progressive-chat could not take its service worker, and it is a service worker that isolates this page -- without one there are no threads to draw on, and no client either. Something here is blocking them: a private window, a privacy setting or extension, or a browser asked to block them. Allow service workers for this site and reload.')),
+        15000)),
+    ]);
     // Isolated only once the worker serves the page: reloaded for that, twice
     // at most -- a reload that came before the worker took the page (a slow
     // activation) was counted as a failure at once. Where it still is not,
