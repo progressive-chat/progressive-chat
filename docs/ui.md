@@ -261,10 +261,17 @@ does not move goes where it says. A press that moves is a selection first,
 as it is anywhere in a text here, so no link is opened by a reader reaching
 for the words around it.
 
+A place is said in a line two ways: named on its own, because it begins
+`https://` or `www.`, or written as writing writes one -- what it is called
+in square stops and where it goes in round ones after them. Neither pair of
+stops is drawn, as no mark is; what stands where the link stands is what it
+is called, and a press anywhere in it goes where it says.
+
 Where each stands is read once, in `pchat.logic.formatting`, out of the line
 and nothing else: what no place runs past, what a sentence says after a
-place rather than in it, and how a place begun `www.` is `https://` to the
-machine though neither of them was written. The screen is given the places
+place rather than in it, which of the two ways it was said, and how a place
+begun `www.` is `https://` to the machine though neither of them was
+written. The screen is given the places
 and nothing of how they were found: it draws them where it is told and never
 looks at a colon again -- which is what the tests of that module say of it,
 too, including that a place begun and left without a name is not one. Where
@@ -272,9 +279,11 @@ a press takes one is asked of the machine itself (`pchat.platform.opened`):
 a browser of a desk's or a phone's own, another tab where this runs as a
 page, and nothing asked of anywhere else yet.
 
-Asked of the page by `tools/probe_links_opened.mjs`: a message written with
-a place in it, read back as its own `<a href>` in what the mirror says of
-the glass, then pressed, and the tab it opened seen from outside the page.
+Asked of the page by `tools/probe_links_opened.mjs`: two messages written
+with a place in them -- one named on its own, one written with stops around
+it -- read back as their own `<a href>` in what the mirror says of the glass,
+with no stop of either pair left anywhere in the page, one of them pressed,
+and the tab it opened seen from outside the page.
 
 ## What the card keeps of what was written
 
