@@ -95,6 +95,12 @@ struct toggle_editor_menu {};
 // them pressed writes itself into the field (src/ui/composer.cc), which is
 // why nothing the program keeps is asked for it.
 struct toggle_faces {};
+// One face pressed, said to the program so that it is one of the ones
+// pressed most lately and drawn first in the card: what the press writes
+// into the field is still not asked of it -- whose field it is has never
+// been anything but the card's own -- but which ones were pressed, and in
+// what order, is what the program keeps, for this run and the runs after.
+struct face_written { std::string face; };
 // What a row behind them says (design-doc.md, "The editor's row"): whether
 // what answers here is asked to think at all before it answers, and how hard
 // it is asked to think where it is. Neither is a row of the settings, for
@@ -179,7 +185,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              share_conversation, open_system_prompt,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
-                             toggle_editor_menu, toggle_faces, set_thinking,
+                             toggle_editor_menu, toggle_faces, face_written,
+                             set_thinking,
                              set_effort,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                                 set_avatars, set_row_times,
