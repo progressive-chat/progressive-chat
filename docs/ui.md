@@ -222,13 +222,14 @@ would do.
 ## What the marks in a line come to
 
 A model writes what it answered with marks in it: `**` around what is bold,
-`_` around what is slanted, a backtick either side of code, and `~~` around
-what it struck out. None of them is drawn. The marks are read out of the line once (`pchat.logic.formatting`),
+`_` around what is slanted, `__` around what it said with a line under it, a
+backtick either side of code, and `~~` around what it struck out. None of
+them is drawn. The marks are read out of the line once (`pchat.logic.formatting`),
 which hands back the line without them and a run for every stretch of it that
 is not plain, each said by where it stands in what is left; the text draws
-those in what they meant -- bold, slanted, code in the monospace face on a
-plate of its own, and struck out with a line through it -- and says nothing
-of how they were written. What is said
+those in what they meant -- bold, slanted, a line under what was
+underlined, code in the monospace face on a plate of its own, and struck out
+with a line through it -- and says nothing of how they were written. What is said
 inside code is said as it stands: a star in it is a star and not the
 beginning of slanted, which is why `p * p` still reads `p * p`.
 
@@ -238,8 +239,9 @@ place begins is where the reader sees it begin.
 
 Asked of the page by `tools/probe_marks.mjs`: a stretch written in code read
 back out of the page drawn in the monospace face, one struck out read back
-with a line drawn through it, no backtick or pair of tildes left anywhere in
-what the page says, and the star inside one still there.
+with a line drawn through it, one underlined read back with a line drawn
+under it, no backtick or pair of tildes left anywhere in what the page says,
+and the star inside one still there.
 
 ## What a line stands quoted in
 
