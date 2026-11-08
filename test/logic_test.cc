@@ -69,6 +69,40 @@ SAID(logic, marks_make_runs_of_style) {
   EXPECT_TRUE(bold);
 }
 
+SAID(logic, the_links_in_a_line_and_where_each_goes) {
+  EXPECT_TRUE(logic::links_of("nothing of the sort here").empty());
+  // A place said whole: where it stands in the line is where its own units
+  // are, and nothing either side of it is taken into it.
+  const std::string said = "read https://example.com/a?b=1 now";
+  const std::vector<logic::link> one = logic::links_of(said);
+  EXPECT_EQ(one.size(), 1u);
+  EXPECT_EQ(one[0].first, 5u);
+  EXPECT_EQ(std::string(said.substr(one[0].first, one[0].last - one[0].first)),
+            one[0].target);
+  EXPECT_EQ(one[0].target, std::string("https://example.com/a?b=1"));
+  // The stop a sentence puts after a place is the sentence's, not its.
+  EXPECT_EQ(logic::links_of("see https://example.com.")[0].target,
+            std::string("https://example.com"));
+  // What wraps one in writing is not part of it either.
+  EXPECT_EQ(logic::links_of("(https://example.com)")[0].target,
+            std::string("https://example.com"));
+  // https:// read as itself, and not as http:// with an s left over.
+  EXPECT_EQ(logic::links_of("https://example.com")[0].target,
+            std::string("https://example.com"));
+  // A place begun www. is https:// to the machine, said without either.
+  EXPECT_EQ(logic::links_of("www.example.com works")[0].target,
+            std::string("https://www.example.com"));
+  // Two in one line, each in its own place in it.
+  const std::vector<logic::link> two =
+      logic::links_of("http://a.example and https://b.example/x");
+  EXPECT_EQ(two.size(), 2u);
+  EXPECT_EQ(two[0].target, std::string("http://a.example"));
+  EXPECT_EQ(two[1].target, std::string("https://b.example/x"));
+  // Nothing is said of a place begun and left without a name: "https://"
+  // alone is two marks in a sentence, not somewhere to be taken.
+  EXPECT_TRUE(logic::links_of("see https:// there").empty());
+}
+
 int main() { return pchat::tests::run(); }
 
 

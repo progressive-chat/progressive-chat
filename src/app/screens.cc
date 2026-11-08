@@ -17,6 +17,7 @@ import pchat.config;
 import pchat.theme;
 import pchat.ui;
 import pchat.platform.notified;
+import pchat.platform.opened;
 import pchat.provider;
 import pchat.provider.run;
 import pchat.platform.carry;
@@ -327,6 +328,13 @@ public:
   void before_frame(double) {
     for (const request &one : asked_.drain())
       take(one);
+    // A link pressed in a message since the last frame: skiff says which
+    // ones were pressed, standing in whatever text they were drawn in, and
+    // each is handed to the machine to open -- a browser of its own on a
+    // desk and a phone, another tab where this is a page. Nothing of what
+    // opens then is this program's to know.
+    for (const std::string &place : std::exchange(scene::hostWork().links, {}))
+      platform::opened::open(place);
     read_what_arrived();
     scene_.root().again(look_, root_, shown_, how_, query_, dark_,
                         ui::what_is_open{.settings = settings_,

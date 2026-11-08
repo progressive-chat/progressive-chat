@@ -48,6 +48,22 @@ inline constexpr mark marks[] = {
   return std::nullopt;
 }
 
+// What begins a place said in a line, longest first so that https:// is read
+// as itself and not as http:// with an s left over.
+inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "www."};
+// Marks no place runs past: what wraps one in writing, and what a line is
+// made of.
+[[nodiscard]] inline bool link_stops_at(char unit) {
+  constexpr std::string_view stops = " \t\n\r<>()[]{}\"'`|";
+  return stops.find(unit) != std::string_view::npos;
+}
+// What a sentence says after a place rather than in it: the stop at the end
+// of one, and the commas and colons a list of them is written with.
+[[nodiscard]] inline bool said_after_place(char unit) {
+  constexpr std::string_view after = ".,;:!?";
+  return after.find(unit) != std::string_view::npos;
+}
+
 }  // namespace formatting_detail
 
 // The runs of one message's text. A mark that never closes is text, which is
@@ -78,5 +94,44 @@ inline constexpr mark marks[] = {
 
 // The words of a run, as the lines it is broken into want them.
 [[nodiscard]] inline bool is_break(char unit) { return unit == ' ' || unit == '\n' || unit == '\t'; }
+
+// Where a link stands in a line: the first unit of it, one past its last, and
+// the place it goes to. A link is read as a reader reads one -- begun by
+// http://, https:// or www., and running until something no place goes in --
+// and what a sentence puts after a place is not part of it.
+struct link {
+  std::size_t first = 0;
+  std::size_t last = 0;
+  std::string target;
+  friend bool operator==(const link&, const link&) = default;
+};
+
+[[nodiscard]] inline std::vector<link> links_of(std::string_view text) {
+  std::vector<link> links;
+  for (std::size_t at = 0; at < text.size();) {
+    std::string_view begun;
+    for (const std::string_view one : place_begun_by) {
+      if (text.substr(at).starts_with(one)) {
+        begun = one;
+        break;
+      }
+    }
+    if (begun.empty()) {
+      ++at;
+      continue;
+    }
+    std::size_t to = at + begun.size();
+    while (to < text.size() && !link_stops_at(text[to])) ++to;
+    while (to > at + begun.size() && said_after_place(text[to - 1])) --to;
+    if (to - at > begun.size()) {
+      std::string target{text.substr(at, to - at)};
+      // A place begun www. is https:// to the machine, said without either.
+      if (begun == "www.") target = "https://" + target;
+      links.push_back({.first = at, .last = to, .target = std::move(target)});
+    }
+    at = to;
+  }
+  return links;
+}
 
 }  // namespace pchat::logic

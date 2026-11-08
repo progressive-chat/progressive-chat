@@ -20,6 +20,7 @@ import skiff.scene;
 import skiff.nodes;
 import pchat.core;
 import pchat.logic.lists;
+import pchat.logic.formatting;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -57,6 +58,18 @@ inline constexpr std::size_t foot_count = 6;
   }
   return std::to_string(took_ms) + " ms";
 }
+// What a line says of a place in it: where each link stands in it, and where
+// it goes. Given to the text that says the line, which draws each in the
+// colour links are drawn in, underlines it, and opens the place when a press
+// lands on it and nowhere else -- a press that moves is a selection first,
+// and a link is opened by one that does not.
+[[nodiscard]] std::vector<scene::TextLink> links_in(std::string_view said) {
+  std::vector<scene::TextLink> links;
+  for (const logic::link &one : logic::links_of(said))
+    links.push_back({.first = one.first, .last = one.last, .target = one.target});
+  return links;
+}
+
 // ---- the reader's bubble --------------------------------------------------
 
 // A bubble: its own colour and corners behind two lines -- what was said, and
@@ -83,6 +96,9 @@ struct bubble : nodes::Stack {
   void blank() {
     this->setVisible(false);
     fBody.setText("");
+    // No links either once nothing is said: none of them stands anywhere in
+    // a line that is not there.
+    fBody.setLinks({}, 0u);
     fTime.setText("");
   }
 
@@ -100,6 +116,8 @@ struct bubble : nodes::Stack {
                                            .bottomRight = bubble_corner,
                                            .bottomLeft = bubble_radius}});
     fBody.setText(std::string(said));
+    fBody.setSelectable(true);
+    fBody.setLinks(links_in(said), look.link);
     fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest - 2.0f * bubble_pad_x});
@@ -374,6 +392,7 @@ struct answer_row : nodes::Stack {
     this->setVisible(false);
     fFold.blank();
     fBody.setText("");
+    fBody.setLinks({}, 0u);
     fInfo.setText("");
   }
 
@@ -389,6 +408,8 @@ struct answer_row : nodes::Stack {
     else
       fFold.blank();
     fBody.setText(said.text);
+    fBody.setSelectable(true);
+    fBody.setLinks(links_in(said.text), look.link);
     fBody.setColour(look.text);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest});
