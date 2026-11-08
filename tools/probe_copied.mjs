@@ -17,7 +17,10 @@ await page.goto(
     `https://progressive-chat.github.io/progressive-chat/?asked=${Date.now()}`);
 await page.waitForFunction('window.__pchat_started === true', null,
                            { timeout: 180000 });
-await page.waitForTimeout(2500);
+// Long enough for the room to have said everything it says of itself and put
+// every chip where it stands: read too soon, the box a chip was read with is
+// one it has already left.
+await page.waitForTimeout(6000);
 
 const read = async () => await page.evaluate(
     () => document.getElementById('skiff').innerText);
