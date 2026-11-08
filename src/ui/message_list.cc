@@ -89,6 +89,7 @@ inline constexpr std::size_t foot_count = 6;
                       .code = (one.style & logic::code) != 0,
                       .struck = (one.style & logic::struck) != 0,
                       .underline = (one.style & logic::underline) != 0,
+                      .block = (one.style & logic::block) != 0,
                       .quote = one.quoted > 0,
                       .depth = one.quoted});
   return styles;

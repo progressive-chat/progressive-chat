@@ -18,6 +18,9 @@ inline constexpr run_style code = 1u << 2;
 inline constexpr run_style link = 1u << 3;
 inline constexpr run_style struck = 1u << 4;
 inline constexpr run_style underline = 1u << 5;
+// A block of code: what stands between two fences of three backticks, said
+// in the face code is said in and as it stands, marks and all.
+inline constexpr run_style block = 1u << 6;
 
 struct run {
   std::string_view text;
@@ -140,6 +143,28 @@ quoted_at(std::string_view text, std::size_t at) {
       ++at;
       continue;
     }
+    // A fence of three backticks at the head of a line: what stands between
+    // it and the next fence is one block, said in the face code is said in
+    // and as it stands, marks and all -- no star in it is read as a mark --
+    // and neither fence is said. What stood before it on the line it stands
+    // on is said as it was.
+    if (!(open & code) && (at == 0 || text[at - 1] == '\n') &&
+        text.substr(at).starts_with("```")) {
+      if (at > from)
+        runs.push_back({.text = text.substr(from, at - from),
+                        .style = open,
+                        .quoted = quoted});
+      const std::size_t whole = text.find('\n', at);
+      const std::size_t after =
+          whole == std::string_view::npos ? text.size() : whole + 1;
+      if (open & block)
+        open &= ~(code | block);
+      else
+        open |= code | block;
+      at = after;
+      from = after;
+      continue;
+    }
     // At the head of a line: the stops of quote it stands under, taken out,
     // and how deep they say it stands.
     if (at == 0 || text[at - 1] == '\n') {
@@ -170,7 +195,9 @@ quoted_at(std::string_view text, std::size_t at) {
         continue;
       }
     }
-    if (const auto found = formatting_detail::opening_at(text, at, open)) {
+    // What a block is said in no mark opens: a star in it is a star.
+    if (!(open & block) &&
+        (const auto found = formatting_detail::opening_at(text, at, open))) {
       const auto [taken, style] = *found;
       if (at > from)
         runs.push_back({.text = text.substr(from, at - from),

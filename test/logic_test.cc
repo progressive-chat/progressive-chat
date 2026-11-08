@@ -209,6 +209,25 @@ SAID(logic, a_stretch_said_underlined_and_one_said_slanted) {
   }
 }
 
+SAID(logic, three_backticks_say_a_block_and_nothing_of_themselves) {
+  // What stands between two fences of them is said as it stands, and what a
+  // mark in it said is not read -- a star in code is a star. Neither fence,
+  // nor the language written on the opening one, is said.
+  const logic::drawn said =
+      logic::drawn_of("before\n```cpp\nint a = 1 * 2;\n```\nafter");
+  EXPECT_EQ(said.said, std::string("before\nint a = 1 * 2;\nafter"));
+  const auto block = std::ranges::find_if(said.runs, [](const logic::run_place &one) {
+    return (one.style & logic::block) != 0;
+  });
+  EXPECT_TRUE(block != said.runs.end());
+  if (block != said.runs.end()) {
+    EXPECT_TRUE((block->style & logic::code) != 0);
+    EXPECT_TRUE((block->style & logic::italic) == 0);
+    EXPECT_TRUE((block->style & logic::bold) == 0);
+  }
+  EXPECT_EQ(said.said.find('`'), std::string::npos);
+}
+
 int main() { return pchat::tests::run(); }
 
 
