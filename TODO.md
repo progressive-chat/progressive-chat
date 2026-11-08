@@ -116,10 +116,12 @@ build and the next.
       Asked of the page three ways in `tools/probe_settings.mjs`: pressed at
       the square the probe had always used (640x700), pressed at the middle
       of whatever node says "Read the design", and pressed at the smallest
-      thing that says it. Each time what the page says afterwards is the
-      conversations drawer again, and nothing says "The design of a chat".
-      Neither waiting for the room, nor standing on the square first, changes
-      it. What is drawn is there: `settings_rows` keeps an `ask_box` for it
+      thing that says it. Each time what the page says afterwards is exactly
+      what it said before -- the same 3013 characters, drawer and settings
+      both -- nothing says "The design of a chat", and the shot the probe
+      takes after the press is the same file, byte for byte, as the one it
+      took before it. Neither waiting for the room, nor standing on the
+      square first, changes it. What is drawn is there: `settings_rows` keeps an `ask_box` for it
       (`fReadPlate`, asked with `app::open_design{}`) behind the words
       `nodes::Text fRead{"Read the design"}` -- so either the press does not
       reach the plate, or `open_design` is asked and nothing answers. Read
