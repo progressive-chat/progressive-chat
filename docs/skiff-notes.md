@@ -148,6 +148,16 @@ than left to keep a size nobody put in it. Nothing counts characters, and
 where even that measure says nothing, what a letter of a fixed pitch would
 come to in the size asked is what `liteAdvance` keeps.
 
+What the rest of the window's texts took is the other answer, said the same
+way everywhere: no `autoSize` at all. The size the fold and the chips were
+told by hand in the paragraph above, every other text already has -- it was
+written into `fWidth` and `fHeight` when the text was measured, and layout
+keeps it instead of overwriting it with a flow over children a text does not
+have. This is how `skiff-widgets` carries its own texts, and the rule either
+way for what is written after: a node with no children must never be sized
+by what it holds -- it measures its words right and stands at no bounds
+still, which on a page reads right and presses nowhere.
+
 ## What the page says was pressed is what it painted last
 
 Not the node whose bounds are smallest, and not the one drawn in front: in
