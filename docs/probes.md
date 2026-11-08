@@ -56,7 +56,7 @@ somewhere it never pointed, is asking nothing at all.
 
 A probe keeps asking what it was written to ask even after the page has moved
 from under it -- and what it answers then is either a string of `false` or a
-crash, neither of which is the page saying no. Eight of them were found that way
+crash, neither of which is the page saying no. Ten of them were found that way
 in one night (2026-11-08) and mended; each is here with what went stale, so
 that the next one found in that state is recognised for it.
 
@@ -68,6 +68,7 @@ that the next one found in that state is recognised for it.
 | `probe_design.mjs` | opened settings at (330,30) and pressed the row at (640,720) | opens settings by the word, presses until the design is said |
 | `probe_generation.mjs`, `probe_now.mjs` | opened settings at (330,30) | open it by the word "Settings", read where it stands |
 | `probe_switches.mjs` | hunted a gear drawn in a 36x36 square near the top left, and fell over when there was none | open settings by the word; all seven switches are drawn and move again |
+| `probe_editor_menu.mjs` | pressed each square of the card's top row without pointing at it first, and found no dots at all | point first; the three dots stand at 1245,818 and open five words: thinking, effort, advanced | | `probe_fold.mjs` | pressed the fold at 2.5 s, before the room had finished being made, and without pointing at it | wait 6 s and point first; the green summary comes and goes: false, true, false |
 | `probe_fold_calls.mjs` | pressed the fold without pointing at it first, and read 0 of 3 calls even with the fold open | move onto the fold, press it; it says `3 of 3` with the page at 2359 chars, and `0 of 3` shut |
 
 A seventh was mended the same evening: `probe_more.mjs` asked whether the
