@@ -219,6 +219,26 @@ tried first, is written down in `docs/skiff-notes.md` -- read *What nothing
 measures reads as nothing wide* before putting a number where a measure
 would do.
 
+## What the marks in a line come to
+
+A model writes what it answered with marks in it: `**` around what is bold,
+`_` around what is slanted, a backtick either side of code. None of them is
+drawn. The marks are read out of the line once (`pchat.logic.formatting`),
+which hands back the line without them and a run for every stretch of it that
+is not plain, each said by where it stands in what is left; the text draws
+those in what they meant -- bold, slanted, and code in the monospace face on
+a plate of its own -- and says nothing of how they were written. What is said
+inside code is said as it stands: a star in it is a star and not the
+beginning of slanted, which is why `p * p` still reads `p * p`.
+
+Where a link stands in the line is read the same way, out of the line as it
+is drawn and not out of what was written, so that where the screen is told a
+place begins is where the reader sees it begin.
+
+Asked of the page by `tools/probe_marks.mjs`: a stretch the sample says in
+code read back out of the page drawn in the monospace face, no backtick left
+anywhere in what the page says, and the star inside one still there.
+
 ## What the room reads as
 
 Where the window is narrower than `side_by_side_from` the list stands beside
