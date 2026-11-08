@@ -12,6 +12,8 @@ import splice;
 import std;
 import skiff.scene;
 import skiff.nodes;
+import skiff.platform.dialogs;
+import skiff.platform.storage;
 import pchat.core;
 import pchat.config;
 import pchat.theme;
@@ -23,6 +25,7 @@ import pchat.provider.run;
 import pchat.platform.carry;
 import pchat.provider.loop;
 import pchat.tools;
+import pchat.prgrssv;
 import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
@@ -302,6 +305,14 @@ public:
             [&](const set_switch &asking) {
               how_ = set_of(how_, asking.which, asking.on);
             },
+            // The archive asked for: which files are kept where is the
+            // machine's own to say, and all this says is the name the file
+            // goes under -- the bytes are written when a path comes back
+            // (write_archive, through the program).
+            [&](const save_archive &) {
+              if (dialogs_)
+                dialogs_->choose_save_path("progressive-chat.prgrssv");
+            },
             // An answerer put into the conversation open, or taken out of
             // it: what the window then writes to is the first one left, and
             // how much room it has to answer into is that one's own.
@@ -350,6 +361,23 @@ public:
   [[nodiscard]] chats_root &root() noexcept { return root_; }
   [[nodiscard]] const chats_root &root() const noexcept { return root_; }
   [[nodiscard]] bool dark() const noexcept { return dark_; }
+
+  // Where the machine's own file dialogs are asked for: the program holds
+  // them (they answer on its thread), and this screen is the one that knows a
+  // save is wanted and what the file is called. Nothing here is a dialog --
+  // the chosen path comes back through the program (save_path_chosen).
+  void dialogs_from(skiff::platform::dialogs::dialogs &one) {
+    dialogs_ = &one;
+  }
+
+  // Where the machine said the archive stands: the bytes built whole and given
+  // to the platform once -- a page turns the file written there into a
+  // download under its own name, a desk leaves it where it was asked to stand
+  // (skiff.platform.storage).
+  void write_archive(const std::string &path) {
+    skiff::platform::storage::write_file(
+        path, prgrssv::archive_of(root_, shown_, how_));
+  }
 
 private:
   // Given to the machine's own clipboard: what copy, share and giving a
@@ -646,6 +674,9 @@ private:
   asking how_;
   ui::paints look_;
   requests asked_;
+  // The machine's own file dialogs, where they are asked for: the program's,
+  // put here when it is made (dialogs_from), and null until then.
+  skiff::platform::dialogs::dialogs *dialogs_ = nullptr;
   std::string query_;
   bool dark_ = true;
   bool settings_ = false;

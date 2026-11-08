@@ -19,6 +19,7 @@ import skiff.paint;
 import skiff.bind;
 import skiff.model;
 import skiff.platform.events;
+import skiff.platform.dialogs;
 import pchat.app.screens;
 import pchat.app.faces;
 import pchat.tokens;
@@ -35,10 +36,19 @@ struct no_root {};
 struct no_reactions {};
 
 struct program {
+  // The machine's own file dialogs: put over this window by the window itself
+  // and answered on its thread, asked of where a save is wanted -- the window's
+  // hooks find these by name (skiff.platform.window, window_hooks).
+  skiff::platform::dialogs::dialogs system_dialogs;
   // What a message is worth is counted through the vocabulary this build
   // carries rather than through the heuristic under it -- said once here, when
   // the program is made, and not asked of every count that follows.
-  program() { tokens::vocabulary(tokens::o200k()); }
+  program() {
+    tokens::vocabulary(tokens::o200k());
+    // The dialogs are the screens' to ask for when the settings page offers
+    // the archive; what they answer stays here, where the hooks deliver it.
+    view.dialogs_from(system_dialogs);
+  }
 
   screens view;
   skiff::model::Model<no_root, no_reactions> bound_;
@@ -74,6 +84,11 @@ struct program {
             kept->matchFamilyStyle(nullptr, skia::SkFontStyle()))
       font->setTypeface(std::move(face));
   }
+
+  // Where the machine said the archive is to be written: a path chosen on a
+  // desk, a file a page downloads on a page -- either way the bytes are the
+  // screens' to build, and this is where the path is handed over.
+  void save_path_chosen(std::string path) { view.write_archive(path); }
 
   // Between events: what was asked for, done, and what the window shows drawn
   // again from the model. The size it lays itself out by is the one the last

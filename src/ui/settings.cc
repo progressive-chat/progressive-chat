@@ -486,6 +486,11 @@ struct settings_rows : scene::Node {
   // is said in the room, where it can be read against what is drawn.
   ask_box fReadPlate{};
   nodes::Text fRead{"Read the design", 15.0f, 0u};
+  // The archive, offered under what this build is made of: a plate like the
+  // design's, pressed to write everything this program holds into one .prgrssv
+  // file where the machine keeps files.
+  ask_box fArchive{};
+  nodes::Text fArchiveText{"An archive of everything", 15.0f, 0u};
   settings_rows() {
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
@@ -579,6 +584,23 @@ struct settings_rows : scene::Node {
           look, lines[one].first, std::string_view(lines[one].second));
       at += settings_row_stride;
     }
+    // The archive, offered under the three: a plate the breadth of them with
+    // its own words over it, pressed to ask where the machine keeps files --
+    // and the bytes follow when a path is said back (screens, save_archive).
+    fArchive.again(asked, app::save_archive{}, look.raised);
+    fArchive.apply({.anchor = scene::anchor::kTopLeft,
+                    .origin = scene::anchor::kTopLeft,
+                    .x = 16.0f,
+                    .y = at,
+                    .width = row_width,
+                    .height = settings_row_height,
+                    .relativeSize = scene::axes::kNone,
+                    .cornerRadius = 14.0f});
+    fArchiveText.apply({.anchor = scene::anchor::kCentreLeft,
+                        .origin = scene::anchor::kCentreLeft,
+                        .x = 32.0f,
+                        .y = at + settings_row_height / 2.0f});
+    at += settings_row_stride;
     return at;
   }
 
@@ -837,6 +859,7 @@ struct settings_rows : scene::Node {
     const float row_width = breadth - 32.0f;
     fHeading.setColour(look.text);
     fRead.setColour(look.text);
+    fArchiveText.setColour(look.text);
     fDivider.setColour(look.outline);
     // One group after the last: its name, then what it holds.
     for (std::size_t group = 0u; group < max_settings_groups; ++group) {
@@ -918,6 +941,8 @@ struct settings_rows : scene::Node {
     f(fTest);
     f(fReadPlate);
     f(fRead);
+    f(fArchive);
+    f(fArchiveText);
     for (about_row &one : fAbout)
       f(one);
   }
