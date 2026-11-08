@@ -180,6 +180,21 @@ SAID(logic, a_line_said_in_quotes_and_how_deep_it_stands) {
   }
 }
 
+SAID(logic, a_stretch_struck_out_says_what_it_said) {
+  const logic::drawn said = logic::drawn_of("~~gone~~ said");
+  EXPECT_EQ(said.said, std::string("gone said"));
+  EXPECT_EQ(said.runs.size(), std::size_t{1});
+  if (!said.runs.empty()) {
+    EXPECT_EQ(said.runs[0].first, std::size_t{0});
+    EXPECT_EQ(said.runs[0].last, std::size_t{4});
+    EXPECT_TRUE((said.runs[0].style & logic::struck) != 0);
+  }
+  // One stop of strike alone is said, as one star alone is.
+  const logic::drawn one = logic::drawn_of("a ~ b");
+  EXPECT_EQ(one.said, std::string("a ~ b"));
+  EXPECT_TRUE(one.runs.empty());
+}
+
 int main() { return pchat::tests::run(); }
 
 
