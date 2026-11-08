@@ -64,6 +64,7 @@ them.
 | `probe_editor_menu.mjs` | the three dots beside the card's ring: thinking, how hard, and the way into the settings |
 | `probe_faces.mjs` | the face beside the clip: a card of faces, one written into the field, and the card put away |
 | `probe_faces_lately.mjs` | that the faces pressed most lately stand in a row above the rest, newest first |
+| `probe_links_opened.mjs` | a place said in a message: its own link in what the mirror says of the page, and the tab a press on it opens |
 | `probe_drafts.mjs` | that what is written belongs to one conversation and comes back to it |
 | `probe_copied.mjs` | that what a Copy chip copies reached the machine's own clipboard |
 

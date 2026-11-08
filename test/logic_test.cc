@@ -74,7 +74,7 @@ SAID(logic, the_links_in_a_line_and_where_each_goes) {
   // A place said whole: where it stands in the line is where its own units
   // are, and nothing either side of it is taken into it.
   const std::string said = "read https://example.com/a?b=1 now";
-  const std::vector<logic::link> one = logic::links_of(said);
+  const std::vector<logic::place> one = logic::links_of(said);
   EXPECT_EQ(one.size(), 1u);
   EXPECT_EQ(one[0].first, 5u);
   EXPECT_EQ(std::string(said.substr(one[0].first, one[0].last - one[0].first)),
@@ -93,7 +93,7 @@ SAID(logic, the_links_in_a_line_and_where_each_goes) {
   EXPECT_EQ(logic::links_of("www.example.com works")[0].target,
             std::string("https://www.example.com"));
   // Two in one line, each in its own place in it.
-  const std::vector<logic::link> two =
+  const std::vector<logic::place> two =
       logic::links_of("http://a.example and https://b.example/x");
   EXPECT_EQ(two.size(), 2u);
   EXPECT_EQ(two[0].target, std::string("http://a.example"));

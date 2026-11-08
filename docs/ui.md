@@ -229,6 +229,33 @@ written in where they are. Everything else is said out of the breadth it was
 given and nothing out of the machine it runs on: a phone and a wide window
 differ by the numbers above and by nothing else.
 
+## What a place said in a message is
+
+A line written in the field, or answered by a model, may name somewhere:
+begun `https://`, `http://` or `www.`, and running until what no place runs
+past -- a space, or one of the marks that wraps one in writing. That much of
+the line is not said as words only: the text draws it in the colour
+everything on the screen that answers a press is drawn in (`paints::link`,
+the scheme's primary) and underlines it, and a press that lands on it and
+does not move goes where it says. A press that moves is a selection first,
+as it is anywhere in a text here, so no link is opened by a reader reaching
+for the words around it.
+
+Where each stands is read once, in `pchat.logic.formatting`, out of the line
+and nothing else: what no place runs past, what a sentence says after a
+place rather than in it, and how a place begun `www.` is `https://` to the
+machine though neither of them was written. The screen is given the places
+and nothing of how they were found: it draws them where it is told and never
+looks at a colon again -- which is what the tests of that module say of it,
+too, including that a place begun and left without a name is not one. Where
+a press takes one is asked of the machine itself (`pchat.platform.opened`):
+a browser of a desk's or a phone's own, another tab where this runs as a
+page, and nothing asked of anywhere else yet.
+
+Asked of the page by `tools/probe_links_opened.mjs`: a message written with
+a place in it, read back as its own `<a href>` in what the mirror says of
+the glass, then pressed, and the tab it opened seen from outside the page.
+
 ## What the card keeps of what was written
 
 What is in the field belongs to the conversation it was written for, and
