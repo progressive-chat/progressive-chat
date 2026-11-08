@@ -19,7 +19,7 @@ const read = async () => await page.evaluate(page_mirror);
 const has = (needle, said) => said.includes(needle);
 
 // The drawer's field, pressed where it is and not where it was thought to be.
-const field = page.locator('textarea[aria-label="Search conversations"]').first();
+const field = page.locator('[aria-label="Search conversations"]').first();
 const box = await field.boundingBox();
 console.log('field box:', JSON.stringify(box));
 await field.click();
