@@ -95,19 +95,23 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
 // The words of a run, as the lines it is broken into want them.
 [[nodiscard]] inline bool is_break(char unit) { return unit == ' ' || unit == '\n' || unit == '\t'; }
 
-// Where a link stands in a line: the first unit of it, one past its last, and
-// the place it goes to. A link is read as a reader reads one -- begun by
-// http://, https:// or www., and running until something no place goes in --
-// and what a sentence puts after a place is not part of it.
-struct link {
+// Where a link stands in a line, called a place as the writing here calls
+// it: the first unit of it, one past its last, and where it goes. Read as a
+// reader reads one -- begun by http://, https:// or www., and running until
+// something no place goes in -- with what a sentence says after a place left
+// out of it. (`link` is the bit a run carries, which is why this is not.)
+struct place {
   std::size_t first = 0;
   std::size_t last = 0;
   std::string target;
-  friend bool operator==(const link&, const link&) = default;
+  friend bool operator==(const place&, const place&) = default;
 };
 
-[[nodiscard]] inline std::vector<link> links_of(std::string_view text) {
-  std::vector<link> links;
+[[nodiscard]] inline std::vector<place> links_of(std::string_view text) {
+  using formatting_detail::link_stops_at;
+  using formatting_detail::place_begun_by;
+  using formatting_detail::said_after_place;
+  std::vector<place> links;
   for (std::size_t at = 0; at < text.size();) {
     std::string_view begun;
     for (const std::string_view one : place_begun_by) {
