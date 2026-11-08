@@ -86,7 +86,7 @@ them.
 
 | probe | what it asks |
 | --- | --- |
-| `probe_design.mjs` | Read the design, pressed, and the column of the design read back out |
+| `probe_design.mjs` | the settings opened where it stands, Read the design pressed by pressing until the design is said, and the column read back whole |
 | `probe_settings.mjs` | the names of the nine groups in the settings, and the row that offers the design reached at the foot of them |
 | `probe_generation.mjs` | what the five things an answer is asked with say, and that a press either side of one moves it |
 | `probe_switches.mjs` | each of the seven switches drawn, and moved by a press |
