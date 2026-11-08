@@ -112,30 +112,14 @@ build and the next.
       lines that each know what they are, rather than one run of runs as it
       is today (`src/logic/formatting.cc`, and every place a message's body
       is said in `src/ui/message_list.cc`).
-- [ ] **The settings page answers no press that any probe has made, and its
-      lower half has not been brought into the page.** What was measured, and
-      all of it said from the outside:
-      - The row "Read the design" is drawn at y **5394** with nothing
-        scrolled, and at y **2408** once the column has been wheeled as far
-        as it goes (4000 in one go and 8x600 both stop at the same square).
-        It moves 2986 and no more. Dragging either way, twelve presses of
-        PageDown, and twelve seconds left alone all leave it where it was.
-      - Pressed there, at 2417, nothing happens; the page says the same and
-        the shot afterwards is the same file, byte for byte. Three presses
-        inside the card after scrolling to its end -- at y 820, 700 and 560
-        over the middle of its breadth -- change nothing either: the shot
-        taken after them is the same file again.
-      So either nothing below two thirds of the way down is reachable, or a
-      press inside this page is routed somewhere else than a press in the
-      room is -- the Copy chip in the room answers, and nothing here does.
-      Two things could make both readings lies at once, and neither has been
-      ruled out: the mirror's boxes may not follow the scroll the way what is
-      painted does, in which case every square above is a square of layout
-      and not of the glass; and what a press in this page changes may be
-      colours and switches, which the text of the page does not say. Read
-      `src/ui/settings.cc` next -- the column is given `height = at + edge`,
-      the card and the `ScrollContainer` are both given the room's height --
-      and settle it with pixels rather than with either of those two.
+- [x] ~~The settings page answers no press that any probe has made.~~
+      **It was the probing, not the page.** Asked again by pressing rather
+      than by trusting the mirror's squares, the settings page answers every
+      press it is given, and the row "Read the design" opens the design --
+      *"The design of a chat"* said after one press at x 450, y 480. What
+      misled three probes is kept below, in `docs/probes.md`: the box the
+      mirror gives for something is a square of layout, not of the glass, and
+      for this row it says y 2417 in a page 900 high.
 
 - [ ] **What a model said for later (`||` either side of it) is not said at
       all.** It can be read into a run and drawn covered behind a plate of
