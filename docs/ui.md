@@ -239,6 +239,24 @@ Asked of the page by `tools/probe_marks.mjs`: a stretch the sample says in
 code read back out of the page drawn in the monospace face, no backtick left
 anywhere in what the page says, and the star inside one still there.
 
+## What a line stands quoted in
+
+A model answers quoted as a thread writes quoted: one stop of quote at the
+head of a line for every line it quotes inside the one before, and none of
+them is drawn either. What is read of them is how deep that line stands --
+one for a line answering a line, two for one answering that -- and the whole
+of it is drawn as a quote: slanted rather than in the monospace face, and in
+the colour a quote is drawn in, which is the dim one the marks are read with.
+A run never crosses a line, for how deep a line stands is said of that line
+alone, and a stop of quote said in the middle of a line -- `2 > 1`, which no
+thread means as a quote -- is said as it was written.
+
+Asked of the page by `tools/probe_quoted.mjs`: a message written quoted into
+the field read back out of the page with none of its stops left, what it says
+said whole and as itself, and the bold inside it still bold. How deep each
+line stands is what the mirror says of the runs' colours, and is what the
+probe prints rather than counts.
+
 ## What the room reads as
 
 Where the window is narrower than `side_by_side_from` the list stands beside

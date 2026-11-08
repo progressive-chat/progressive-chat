@@ -347,7 +347,9 @@ struct history_fold : nodes::Stack {
     // Said with its marks taken out of it, as anything a model wrote is.
     const logic::drawn thinking = logic::drawn_of(before.said);
     fThought.setText(thinking.said);
-    fThought.setStyles(styles_in(thinking.runs), look.dim);
+    // A quote in what a model thought is drawn in the colour thinking is
+    // drawn in, and not in the dim one every other quote is.
+    fThought.setStyles(styles_in(thinking.runs), look.thought);
     fThought.setColour(look.thought);
     fThought.setMonospace(true);
     fThought.setVisible(fOpen && !before.said.empty());
