@@ -132,6 +132,24 @@ SAID(logic, what_the_marks_said_and_where_each_run_stands) {
   EXPECT_TRUE(no_marks.runs.empty());
 }
 
+SAID(logic, a_link_written_the_way_writing_writes_one) {
+  const logic::drawn drawn =
+      logic::drawn_of("read [this very thing](https://example.com/one) now");
+  // Neither pair of stops is drawn, as no mark is: what is left is the line
+  // as a reader reads it.
+  EXPECT_EQ(drawn.said, std::string("read this very thing now"));
+  EXPECT_EQ(drawn.places.size(), 1u);
+  EXPECT_EQ(drawn.places[0].target, std::string("https://example.com/one"));
+  // And where it stands is where the words it was written on stand now.
+  EXPECT_EQ(std::string(drawn.said.substr(drawn.places[0].first,
+                                         drawn.places[0].last - drawn.places[0].first)),
+            std::string("this very thing"));
+  // A stop with neither of its halves after it was no link at all.
+  const logic::drawn no_link = logic::drawn_of("read [this very thing, said");
+  EXPECT_TRUE(no_link.places.empty());
+  EXPECT_EQ(no_link.said, std::string("read [this very thing, said"));
+}
+
 int main() { return pchat::tests::run(); }
 
 
