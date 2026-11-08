@@ -55,13 +55,17 @@ const said_whole = await page.evaluate(() => document.getElementById('skiff')
     .innerText.replace(/\s+/g, ' '));
 console.log('its stops left in the page:', said_whole.includes(']('));
 
-// A press that lands on it and does not move: where it goes.
-const where = await page.locator('#skiff a[href]').first().boundingBox();
+// A press that lands on it and does not move: where it goes. The room
+// scrolls on its own to keep what was said last in sight, so where a link
+// stands is read again before it is pressed a second time, rather than asked
+// once of where it stood.
 let pressed = false;
-if (where) {
+for (let tried = 0; tried < 3 && !pressed; ++tried) {
+  const where = await page.locator('#skiff a[href]').first().boundingBox();
+  if (!where) break;
   await page.mouse.click(where.x + where.width / 2, where.y + where.height / 2);
   await page.waitForTimeout(3000);
-  pressed = true;
+  pressed = opened.length > 0;
 }
 console.log('press landed:', pressed ? 'yes' : 'NO LINK TO PRESS');
 console.log('opened by it:', JSON.stringify(opened));
