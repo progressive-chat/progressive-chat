@@ -122,7 +122,7 @@ them.
 | `probe_design.mjs` | the settings opened where it stands, Read the design pressed by pressing until the design is said, and the column read back whole |
 | `probe_settings.mjs` | the names of the nine groups in the settings, and the row that offers the design reached at the foot of them |
 | `probe_generation.mjs` | what the five things an answer is asked with say, and that a press either side of one moves it |
-| `probe_switches.mjs` | each of the seven switches drawn, and moved by a press -- read by its words, wheeled into the room, pressed there |
+| `probe_switches.mjs` | each of the seven switches drawn, and moved by a press -- read by its words, wheeled into the room, pressed there | (see `docs/switches.md` for what none of them does yet)
 | `probe_editor_menu.mjs` | the three dots beside the card's ring: thinking, how hard, and the way into the settings |
 | `probe_faces.mjs` | the face beside the clip: a card of faces, one written into the field, and the card put away |
 | `probe_faces_lately.mjs` | that the faces pressed most lately stand in a row above the rest, newest first |
