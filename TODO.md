@@ -103,6 +103,15 @@ build and the next.
       day, and read again off the page: four plates in the bar, and every
       one of them answered (`tools/probe_top_bar.mjs`, which presses them
       in the settled layout and says what each did afterwards).
+- [ ] **A heading and a list a model writes are said as they were written**:
+      nothing reads `##` at the head of a line as a heading, nor `-` as the
+      beginning of a list: each is drawn as the words they say, hash and
+      dash and all. The marks inside a line are read now -- bold, slanted,
+      struck, code, a place said in it, and how deep it stands quoted -- but
+      what a line is made *of* is not, and it would be a text split into
+      lines that each know what they are, rather than one run of runs as it
+      is today (`src/logic/formatting.cc`, and every place a message's body
+      is said in `src/ui/message_list.cc`).
 - [ ] Where nothing measures a line there are surely more than one node whose
       size came of nothing: six chips and the fold above an answer were the
       two found, both now said their size, and nothing else pressable has
