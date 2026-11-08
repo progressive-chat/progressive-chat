@@ -21,6 +21,7 @@ struct run {
   std::string_view text;
   run_style style = plain;
   std::string_view target;   // where a link goes
+  int quoted = 0;            // how deep in quotes its line stands
   friend bool operator==(const run&, const run&) = default;
 };
 
@@ -31,6 +32,7 @@ struct run_place {
   std::size_t first = 0;
   std::size_t last = 0;
   run_style style = plain;
+  int quoted = 0;            // how deep in quotes the line it stands in is
   friend bool operator==(const run_place&, const run_place&) = default;
 };
 
@@ -95,6 +97,22 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
   return after.find(unit) != std::string_view::npos;
 }
 
+// How deep in quotes a line stands, said by stops of quote at the head of
+// it -- one more of them for every line quoted inside the last -- and how
+// much of the line they took to say it. None of them is drawn, as no mark
+// is; what stands in their place is quoted.
+[[nodiscard]] inline std::pair<std::size_t, int>
+quoted_at(std::string_view text, std::size_t at) {
+  std::size_t taken = 0;
+  int depth = 0;
+  while (at + taken < text.size() && text[at + taken] == '>') {
+    ++depth;
+    ++taken;
+    if (at + taken < text.size() && text[at + taken] == ' ') ++taken;
+  }
+  return depth > 0 ? std::pair{taken, depth} : std::pair{std::size_t{0}, 0};
+}
+
 }  // namespace formatting_detail
 
 // The runs of one message's text. A mark that never closes is text, which is
@@ -103,16 +121,46 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
   using formatting_detail::marks;
   std::vector<run> runs;
   run_style open = plain;
+  int quoted = 0;
   std::size_t from = 0;
   for (std::size_t at = 0; at < text.size();) {
+    // A run never crosses a line, for how deep a line stands in quotes is
+    // said of that line and of no other, and what a run would carry across
+    // two is not one thing to carry.
+    if (text[at] == '\n') {
+      runs.push_back({.text = text.substr(from, at + 1 - from),
+                      .style = open,
+                      .quoted = quoted});
+      quoted = 0;
+      from = at + 1;
+      ++at;
+      continue;
+    }
+    // At the head of a line: the stops of quote it stands under, taken out,
+    // and how deep they say it stands.
+    if (at == 0 || text[at - 1] == '\n') {
+      const auto [taken, depth] = formatting_detail::quoted_at(text, at);
+      if (taken > 0) {
+        quoted = depth;
+        at += taken;
+        from = at;
+        continue;
+      }
+    }
     // A link written as one is written in what a model says: what it is
     // called in square stops, and where it goes in round ones after them.
     // Neither pair is drawn, as no mark is.
     if (!(open & code) && text[at] == '[') {
       if (const auto said_place = formatting_detail::link_written_at(text, at)) {
         const auto [said, target, taken] = *said_place;
-        if (at > from) runs.push_back({.text = text.substr(from, at - from), .style = open});
-        runs.push_back({.text = said, .style = open | link, .target = target});
+        if (at > from)
+          runs.push_back({.text = text.substr(from, at - from),
+                          .style = open,
+                          .quoted = quoted});
+        runs.push_back({.text = said,
+                        .style = open | link,
+                        .target = target,
+                        .quoted = quoted});
         at += taken;
         from = at;
         continue;
@@ -120,7 +168,10 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
     }
     if (const auto found = formatting_detail::opening_at(text, at, open)) {
       const auto [taken, style] = *found;
-      if (at > from) runs.push_back({.text = text.substr(from, at - from), .style = open});
+      if (at > from)
+        runs.push_back({.text = text.substr(from, at - from),
+                        .style = open,
+                        .quoted = quoted});
       if (open & style) {
         open &= ~style;
       } else {
@@ -132,7 +183,9 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
     }
     ++at;
   }
-  if (text.size() > from) runs.push_back({.text = text.substr(from), .style = open});
+  if (text.size() > from)
+    runs.push_back(
+        {.text = text.substr(from), .style = open, .quoted = quoted});
   return runs;
 }
 
@@ -161,10 +214,11 @@ struct drawn {
 [[nodiscard]] inline drawn drawn_of(std::string_view text) {
   drawn out;
   for (const run &one : runs_of(text)) {
-    if (one.style != plain)
+    if (one.style != plain || one.quoted != 0)
       out.runs.push_back({.first = out.said.size(),
                           .last = out.said.size() + one.text.size(),
-                          .style = one.style});
+                          .style = one.style,
+                          .quoted = one.quoted});
     if (one.style & link)
       out.places.push_back({.first = out.said.size(),
                             .last = out.said.size() + one.text.size(),
