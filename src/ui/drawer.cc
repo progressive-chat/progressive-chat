@@ -264,7 +264,7 @@ struct drawer_screen : scene::Node {
   // A new chat, and the settings: the one rounded the whole way round, and
   // the other at the foot of the list, which is the panel's only way into
   // the page over the room.
-  ask_row fNewChat{shape::done(), "+ New Chat", app::new_chat{},
+  ask_row fNewChat{shape::plus(), "+ New Chat", app::new_chat{},
                    {.anchor = scene::anchor::kTopLeft,
                     .x = edge,
                     .fillX = true,
