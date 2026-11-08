@@ -112,20 +112,25 @@ build and the next.
       lines that each know what they are, rather than one run of runs as it
       is today (`src/logic/formatting.cc`, and every place a message's body
       is said in `src/ui/message_list.cc`).
-- [ ] **The row that offers the design answers no press that has been found.**
-      Asked of the page three ways in `tools/probe_settings.mjs`: pressed at
-      the square the probe had always used (640x700), pressed at the middle
-      of whatever node says "Read the design", and pressed at the smallest
-      thing that says it. Each time what the page says afterwards is exactly
-      what it said before -- the same 3013 characters, drawer and settings
-      both -- nothing says "The design of a chat", and the shot the probe
-      takes after the press is the same file, byte for byte, as the one it
-      took before it. Neither waiting for the room, nor standing on the
-      square first, changes it. What is drawn is there: `settings_rows` keeps an `ask_box` for it
-      (`fReadPlate`, asked with `app::open_design{}`) behind the words
-      `nodes::Text fRead{"Read the design"}` -- so either the press does not
-      reach the plate, or `open_design` is asked and nothing answers. Read
-      the host work again before saying which.
+- [ ] **The row that offers the design stands where nothing can press it.**
+      At 1280x900 it is drawn at x 324, y **2408** -- the page is 900 high --
+      and nothing has moved it into the page: a wheel over the room does
+      nothing to it, a wheel inside the settings column does nothing to it,
+      and a drag inside the column moves it *further down* (2408 -> 3394
+      dragging up, -> 5394 dragging down), which says the column is not
+      being scrolled by either. Pressed where it stands, or where a guess
+      said it stood, the page says the same afterwards as before, and the
+      shot taken after the press is the same file byte for byte as the one
+      taken before it.
+      What is drawn and what answers are both there: `settings_rows` keeps an
+      `ask_box` for it (`fReadPlate`, asked with `app::open_design{}`) behind
+      the words `nodes::Text fRead{"Read the design"}`, and
+      `src/app/screens.cc` answers the ask (`settings_ = false; design_ =
+      true`). Whether the settings column is meant to scroll, and with what,
+      is what has to be read next -- the rest of the page below the fold
+      (every group under the first ones, the seeds, this row) is reached by
+      nothing until it is.
+
 - [ ] **What a model said for later (`||` either side of it) is not said at
       all.** It can be read into a run and drawn covered behind a plate of
       dots -- which was done, and asked of the page: the run is drawn with
