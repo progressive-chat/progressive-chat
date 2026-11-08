@@ -51,7 +51,14 @@ inline constexpr mark marks[] = {
 };
 
 [[nodiscard]] inline std::optional<std::pair<std::size_t, run_style>> opening_at(
-    std::string_view text, std::size_t at) {
+    std::string_view text, std::size_t at, run_style open) {
+  // What stands inside code is said as it stands: a star in it is a star and
+  // not the beginning of slanted, so nothing opens there but the backtick
+  // that ends it.
+  if (open & code) {
+    if (text[at] == '`') return std::pair{std::size_t{1}, code};
+    return std::nullopt;
+  }
   for (const mark& one : marks) {
     if (text.substr(at).starts_with(one.open)) return std::pair{one.open.size(), one.style};
   }
@@ -84,7 +91,7 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
   run_style open = plain;
   std::size_t from = 0;
   for (std::size_t at = 0; at < text.size();) {
-    if (const auto found = formatting_detail::opening_at(text, at)) {
+    if (const auto found = formatting_detail::opening_at(text, at, open)) {
       const auto [taken, style] = *found;
       if (at > from) runs.push_back({.text = text.substr(from, at - from), .style = open});
       if (open & style) {

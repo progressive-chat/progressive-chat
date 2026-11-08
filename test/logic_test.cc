@@ -120,6 +120,12 @@ SAID(logic, what_the_marks_said_and_where_each_run_stands) {
                                          drawn.runs[1].last - drawn.runs[1].first)),
             std::string("code"));
   EXPECT_TRUE((drawn.runs[1].style & logic::code) != 0);
+  // Inside code nothing is a mark but the backtick that ends it: what is
+  // said in code is said as it stands, star and all.
+  const logic::drawn in_code = logic::drawn_of("`p * p`");
+  EXPECT_EQ(in_code.said, std::string("p * p"));
+  EXPECT_EQ(in_code.runs.size(), 1u);
+  EXPECT_TRUE((in_code.runs[0].style & logic::code) != 0);
   // A line with nothing said of it is itself, said in no run at all.
   const logic::drawn no_marks = logic::drawn_of("nothing of the sort");
   EXPECT_EQ(no_marks.said, std::string("nothing of the sort"));
