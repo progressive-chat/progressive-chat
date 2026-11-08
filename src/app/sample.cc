@@ -58,7 +58,9 @@ export namespace pchat::app {
        "butter cold. It goes onto "
        "the toast, and the last of the lemon is squeezed over it. Four "
        "minutes, one pan, and nothing "
-       "of it was bought today.",
+       "of it was bought today, and when each of them happens:\n\n"
+       "```text\nbutter in 0:00\neggs in 0:30\nstir slow 0:45\nrest beaten "
+       "3:30\n```",
        1'763'000'200'000, delivery::seen, std::nullopt,
        thought{4'200, 3,
                "no recipe of its own known; three reads of the pantry, then "
