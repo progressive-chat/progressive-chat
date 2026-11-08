@@ -148,8 +148,8 @@ quoted_at(std::string_view text, std::size_t at) {
     // and as it stands, marks and all -- no star in it is read as a mark --
     // and neither fence is said. What stood before it on the line it stands
     // on is said as it was.
-    if (!(open & code) && (at == 0 || text[at - 1] == '\n') &&
-        text.substr(at).starts_with("```")) {
+    if ((!(open & code) || (open & block)) &&
+        (at == 0 || text[at - 1] == '\n') && text.substr(at).starts_with("```")) {
       if (at > from)
         runs.push_back({.text = text.substr(from, at - from),
                         .style = open,
