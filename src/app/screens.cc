@@ -217,6 +217,18 @@ public:
             // the room, which is what nothing measured asks for
             // (src/ui/window.cc).
             [&](const toggle_faces &) { faces_ = !faces_; },
+            // One face pressed: to the front of the ones pressed most
+            // lately, wherever in them it stood before, and no longer a row
+            // than the card draws. Kept as they were pressed and not as
+            // often, so that what comes first is the one that was wanted
+            // last and not the one that was wanted most often.
+            [&](const face_written &asking) {
+              if (asking.face.empty()) return;
+              std::erase(faces_lately_, asking.face);
+              faces_lately_.insert(faces_lately_.begin(), asking.face);
+              if (faces_lately_.size() > ui::faces_lately_kept)
+                faces_lately_.resize(ui::faces_lately_kept);
+            },
             [&](const set_thinking &asking) { how_.thinking = asking.on; },
             [&](const set_effort &asking) { how_.how_hard = asking.how_hard; },
             // What every model is told before anything is said to it: read
@@ -324,7 +336,7 @@ public:
                                          .editor_menu = editor_menu_,
                                          .faces = faces_,
                                          .drawer = drawer_},
-                        width_, height_, &asked_);
+                        faces_lately_, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -650,6 +662,11 @@ private:
   bool editor_menu_ = false;
   // Whether the card of faces above the face beside the clip is out.
   bool faces_ = false;
+  // The faces pressed most lately, newest first, and no more of them than
+  // the card's own row holds: drawn above the rest of them, which is what
+  // they were kept for (and what `pchat.config`'s `recent_emoji` is for,
+  // once there are runs to keep them between).
+  std::vector<std::string> faces_lately_{};
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
 

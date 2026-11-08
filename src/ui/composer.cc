@@ -123,10 +123,13 @@ inline constexpr float dots_size = 22.0f;
 inline constexpr float dots_room = dots_size + 14.0f;
 
 // What the face beside the clip opens: how many of them it shows, how much
-// room one of them has, and which ones they are. The ones pressed most
-// lately are kept elsewhere (pchat.config, `recent_emoji`) for rows nobody
-// draws yet; these are the ones every card of faces has.
+// room one of them has, and which ones they are.
 inline constexpr std::size_t face_columns = 7u;
+// How many of the ones pressed most lately stand in the row above them: a
+// row of the card's own breadth, no more. Kept by the screen and said to it
+// as `face_written`, which is also what `pchat.config`'s `recent_emoji`
+// is to be read out of once there are runs to keep it between.
+inline constexpr std::size_t faces_lately_kept = face_columns;
 inline constexpr std::size_t face_rows = 4u;
 inline constexpr float face_cell = 36.0f;
 inline constexpr float face_size = 22.0f;
@@ -245,6 +248,7 @@ struct editor_menu : scene::Node {
 struct face_chip : scene::Node {
   nodes::Box<> fPlate{0u};
   nodes::Text fFace{"", face_size, 0u};
+  app::requests *asked = nullptr;
   std::shared_ptr<std::string> fTyped{};
   std::string one{};
 
@@ -258,14 +262,19 @@ struct face_chip : scene::Node {
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
   [[nodiscard]] bool onClick(float, float) {
+    // Written into the field, and said to the program, which keeps the ones
+    // pressed most lately and draws them first from now on.
     if (fTyped)
       fTyped->append(one);
+    if (asked)
+      asked->ask(app::face_written{one});
     return true;
   }
 
-  void again(std::shared_ptr<std::string> typed, scene::Colour ink,
-             std::string_view face) {
+  void again(app::requests *sink, std::shared_ptr<std::string> typed,
+             scene::Colour ink, std::string_view face) {
     one = std::string(face);
+    asked = sink;
     fTyped = std::move(typed);
     fPlate.setColour(0u);
     fFace.setText(one);
@@ -283,10 +292,15 @@ struct face_chip : scene::Node {
 // seven, each of them one press away from being written into the field.
 struct faces_card : scene::Node {
   nodes::Box<> fCard{0u};
+  // The row of them that were pressed most lately, newest first: as many as
+  // a row holds, and none where none has been pressed yet.
+  std::array<face_chip, faces_lately_kept> fLately;
   std::array<face_chip, faces_offered.size()> fChips;
 
   faces_card() {
     fCard.apply({.fill = true, .cornerRadius = 16.0f});
+    for (face_chip &one : fLately)
+      one.apply({.visible = false});
     for (face_chip &one : fChips)
       one.apply({.visible = false});
     this->setVisible(false);
@@ -294,30 +308,50 @@ struct faces_card : scene::Node {
 
   void hide() {
     this->setVisible(false);
+    for (face_chip &one : fLately)
+      one.apply({.visible = false});
     for (face_chip &one : fChips)
       one.apply({.visible = false});
   }
 
-  void again(std::shared_ptr<std::string> typed, const paints &look,
-             const scene::Spec &where) {
+  // One square of them, wherever it stands in the card.
+  void place(face_chip &one, std::size_t column, std::size_t row) const {
+    one.apply({.anchor = scene::anchor::kTopLeft,
+               .x = edge + static_cast<float>(column) * face_cell,
+               .y = edge + static_cast<float>(row) * face_cell,
+               .relativeSize = scene::axes::kNone,
+               .width = face_cell,
+               .height = face_cell,
+               .visible = true});
+  }
+
+  void again(app::requests *asked, std::shared_ptr<std::string> typed,
+             const paints &look, const scene::Spec &where,
+             const std::vector<std::string> &lately) {
     this->setVisible(true);
     this->apply(where);
     fCard.setColour(look.drawer);
+    const bool with_lately = !lately.empty();
+    for (std::size_t at = 0; at < fLately.size(); ++at) {
+      face_chip &one = fLately[at];
+      if (at < lately.size()) {
+        this->place(one, at, 0);
+        one.again(asked, typed, look.text, lately[at]);
+      } else
+        one.apply({.visible = false});
+    }
     for (std::size_t at = 0; at < fChips.size(); ++at) {
       face_chip &one = fChips[at];
-      one.apply({.anchor = scene::anchor::kTopLeft,
-                 .x = edge + static_cast<float>(at % face_columns) * face_cell,
-                 .y = edge + static_cast<float>(at / face_columns) * face_cell,
-                 .relativeSize = scene::axes::kNone,
-                 .width = face_cell,
-                 .height = face_cell,
-                 .visible = true});
-      one.again(typed, look.text, faces_offered[at]);
+      this->place(one, at % face_columns,
+                  at / face_columns + (with_lately ? 1u : 0u));
+      one.again(asked, typed, look.text, faces_offered[at]);
     }
   }
 
   void forEachChild(auto &&f) {
     f(fCard);
+    for (face_chip &one : fLately)
+      f(one);
     for (face_chip &one : fChips)
       f(one);
   }
@@ -430,7 +464,8 @@ struct composer : scene::Node {
   }
 
   void again(const paints &look, const conversation &chat, const asking &how,
-             app::requests *asked, bool menu_open, bool faces_open) {
+             app::requests *asked, bool menu_open, bool faces_open,
+             const std::vector<std::string> &faces_lately) {
     fSink->asked = asked;
     // What was in the field belonged to the conversation that was open when
     // it was written, and is kept to it before another one is opened; what
@@ -528,9 +563,11 @@ struct composer : scene::Node {
     // far to the right as that face is, and its own height plus theirs above
     // it, so that no press in one card is ever a press in the other.
     if (faces_open) {
-      const float high =
-          static_cast<float>(face_rows) * face_cell + 2.0f * edge;
-      fFaces.again(fTyped, look,
+      // One row more where there are faces that were pressed lately: they
+      // stand above the rest of them, and the card is a row taller for it.
+      const std::size_t rows = face_rows + (faces_lately.empty() ? 0u : 1u);
+      const float high = static_cast<float>(rows) * face_cell + 2.0f * edge;
+      fFaces.again(asked, fTyped, look,
                    {.anchor = scene::anchor::kTopRight,
                     .origin = scene::anchor::kTopRight,
                     .x = -(edge + send_size + 16.0f - dots_size / 2.0f),
@@ -540,7 +577,8 @@ struct composer : scene::Node {
                              2.0f * edge,
                     .height = high,
                     .cornerRadius = 16.0f,
-                    .visible = true});
+                    .visible = true},
+                   faces_lately);
     } else
       fFaces.hide();
   }
