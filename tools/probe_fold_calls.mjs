@@ -67,8 +67,9 @@ const fold = await foldAt();
 let wrong = 0;
 const standing = async (what) => {
   const said = await calls();
+  const whole = await page.evaluate(() => document.getElementById('skiff').innerText.length);
   console.log(`${what}: ${kept(said)} of ${each.length} calls said` +
-              ` (${said.length} line(s) naming a tool)`);
+              ` (${said.length} line(s) naming a tool, page says ${whole} chars)`);
   return kept(said);
 };
 
@@ -76,15 +77,17 @@ if (await standing('shut') !== 0) {
   console.log('no call is said while the fold is shut: WRONG');
   wrong += 1;
 }
+await page.mouse.move(fold[0], fold[1]);
+await page.waitForTimeout(250);
 await page.mouse.click(fold[0], fold[1]);
-await page.waitForTimeout(1200);
-if (await standing('open') !== each.length) {
+await page.waitForTimeout(1200);if (await standing('open') !== each.length) {
   console.log('an opened fold says each call it counted: WRONG');
   wrong += 1;
 }
+await page.mouse.move(fold[0], fold[1]);
+await page.waitForTimeout(250);
 await page.mouse.click(fold[0], fold[1]);
-await page.waitForTimeout(1200);
-if (await standing('shut again') !== 0) {
+await page.waitForTimeout(1200);if (await standing('shut again') !== 0) {
   console.log('a fold shut again says no call: WRONG');
   wrong += 1;
 }
