@@ -112,6 +112,16 @@ build and the next.
       lines that each know what they are, rather than one run of runs as it
       is today (`src/logic/formatting.cc`, and every place a message's body
       is said in `src/ui/message_list.cc`).
+- [ ] **What a model said for later (`||` either side of it) is not said at
+      all.** It can be read into a run and drawn covered behind a plate of
+      dots -- which was done, and asked of the page: the run is drawn with
+      its words in nothing and a plate behind them -- but nothing can open
+      it. skiff shows a spoiler when the text itself answers a press; what it
+      showed is put back the next frame, because this room says every node's
+      styles again every frame and keeps nothing that was pressed, and
+      nothing in `scene::hostWork()` says a spoiler was pressed, so there is
+      nothing for `src/app/` to keep and answer with. A message covered for
+      good is worse than one said plainly, so no line says one today.
 - [ ] Where nothing measures a line there are surely more than one node whose
       size came of nothing: six chips and the fold above an answer were the
       two found, both now said their size, and nothing else pressable has
