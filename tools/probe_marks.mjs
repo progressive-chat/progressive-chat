@@ -1,13 +1,13 @@
 import { chromium } from 'playwright';
 
 // What the marks in a line come to on the glass: said in the style they said
-// and not said as themselves. A line the sample has both in it is read out
-// of the page -- a backticked stretch that is drawn in the monospace face on
-// a plate of its own, with no backtick left anywhere -- and a star inside
-// one is read back as a star, because nothing inside code is a mark.
+// and not said as themselves. A message this probe writes itself, because
+// what is asked is what the page does with marks and not what the sample
+// happens to say: ** around one word, a backtick either side of two more,
+// and _ around a last one.
 //
-// Nothing here counts pixels: what the mirror says of a text's runs, which
-// is what the page drew, is what this asks.
+// Nothing here counts pixels: what the mirror says of a text's runs -- which
+// is what the page drew -- is what this asks.
 
 const url = process.argv[2] ||
     `https://progressive-chat.github.io/progressive-chat/?asked=${Date.now()}`;
@@ -21,28 +21,43 @@ await page.waitForFunction('window.__pchat_started === true', null,
                            { timeout: 180000 });
 await page.waitForTimeout(8000);
 
-// Every stretch drawn in the monospace face, which is every stretch said in
-// code and nothing else on the screen.
-const code = await page.evaluate(() => Array.from(
-    document.querySelectorAll('#skiff span'))
-    .filter((one) => {
-      const face = getComputedStyle(one).fontFamily.toLowerCase();
-      return face.includes('mono') && one.textContent.trim() !== '';
-    })
-    .map((one) => one.textContent));
-console.log('said in code:', JSON.stringify(code));
+// Written into the field and said out of it with Enter, as a reader would.
+await page.mouse.click(640, 862);
+await page.waitForTimeout(500);
+await page.keyboard.type('**bold** and `code with p * p in it` and _slanted_ said');
+await page.waitForTimeout(600);
+await page.keyboard.press('Enter');
+await page.waitForTimeout(2500);
 
-// Everything else: what the page says as text, breaks and all.
+// Every run the page drew of it: what each says, and how each is drawn.
+const runs = await page.evaluate(() => Array.from(
+    document.querySelectorAll('#skiff span'))
+    .filter((one) => one.textContent.trim() !== '')
+    .map((one) => {
+      const way = getComputedStyle(one);
+      return [one.textContent, parseInt(way.fontWeight),
+              way.fontFamily.toLowerCase().includes('mono'), way.fontStyle];
+    }));
+const in_code = runs.filter(([, , mono]) => mono).map(([said]) => said);
+const strong = runs.filter(([, weight]) => weight >= 700).map(([said]) => said);
+const slanted = runs.filter(([, , , way]) => way === 'italic').map(([said]) => said);
+console.log('said in code:', JSON.stringify(in_code.slice(-3)));
+console.log('said bold:', JSON.stringify(strong.slice(-3)));
+console.log('said slanted:', JSON.stringify(slanted.slice(-3)));
+
+// And that none of the marks themselves was left anywhere in the line: what
+// is read back out of the page is what a reader reads.
 const says = await page.evaluate(() => document.getElementById('skiff')
     .innerText.replace(/\s+/g, ' '));
-console.log('a star said in code kept:', says.includes('p * p'));
-console.log('backticks left in it:', says.includes('`'));
+const said_all = says.includes('bold and code with p * p in it and slanted said');
+console.log('read without its marks:', said_all);
+console.log('kept what the code said inside it:', says.includes('p * p'));
 
 await browser.close();
-const drawn = code.length > 0 && code.some((one) => one.includes('vector<bool>'));
-const kept = says.includes('p * p');
-const clean = !says.includes('`');
-console.log(drawn && kept && clean
-    ? 'the marks are drawn and not said, and what is in code stands as it was'
-    : `NOT: drawn ${drawn}, star kept ${kept}, no backtick ${clean}`);
-process.exit(drawn && kept && clean ? 0 : 1);
+const drawn = in_code.some((one) => one === 'code with p * p in it') &&
+              strong.some((one) => one === 'bold') &&
+              slanted.some((one) => one === 'slanted');
+console.log(drawn && said_all
+    ? 'the marks are drawn as what they said, and said as themselves never'
+    : `NOT: drawn ${drawn}, said whole ${said_all}`);
+process.exit(drawn && said_all ? 0 : 1);
