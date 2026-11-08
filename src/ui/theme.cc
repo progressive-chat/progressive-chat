@@ -33,7 +33,12 @@ struct paints {
   Colour avatar = 0xff2f6b3au;
   Colour on_avatar = 0xffffffffu;
   Colour thought = 0xff6ede8au;   // a model's thinking, folded above its answer
+  Colour link = 0xff86d19bu;      // a place said in a message, pressed to go to it
   Colour scrim_top = 0x000c160cu; // see-through, the top of the messages
+  // Nothing at all, painted whole: what takes a press away from a card that
+  // came out of three dots, seen nowhere and answered everywhere else in the
+  // room -- the press that puts the card away and asks nothing more of it.
+  Colour away = 0x00000000u;
   Colour search_bar = 0xd9162616u; // the pills over the list
   Colour scrim =
       0x99000000u;    // over the messages, while the drawer is over them
@@ -68,6 +73,9 @@ struct paints {
   // no other part on the screen borrows, so that thinking read above an
   // answer is never mistaken for the answer.
   out.thought = scheme.tertiary;
+  // A link is drawn in the colour everything pressed is drawn in: it is the
+  // one thing in a message that answers a press.
+  out.link = scheme.primary;
   out.scrim_top = scheme.background & 0x00ffffffu;
   out.search_bar = (out.card & 0x00ffffffu) | (0xd9u << 24);
   out.scrim = 0x99000000u;

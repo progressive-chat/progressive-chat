@@ -53,6 +53,32 @@ Remember too that the element mirrored for a field is not the node drawn for
 it: its node is one level up, and the element inside answers a height of its
 own that is not the node's.
 
+## How one line of text is said in the mirror
+
+A text node is not mirrored as one element. It is broken at every point
+where what is said of it changes -- a style begun or ended, a link begun or
+ended, a picture standing in for a placeholder -- and each stretch is
+written as its own `<span>`, or its own `<a href>` where it is a link, in
+the line the text stands in. What each of them carries, which is what a
+probe reads of a run:
+
+| what was drawn of it | what the mirror says of it |
+| --- | --- |
+| `strong` | `font-weight: bold` |
+| `emphasis` | `font-style: italic` |
+| `code` | `font-family: monospace`, and a faint plate behind it |
+| `quote` | the colour handed as the quote's own (`setStyles`'s second argument) |
+| a link | `<a href>` in the colour handed as the links' own |
+| `marked` | a plate of the quote's colour behind it |
+| a custom emoji | an `<img>` whose `alt` is the placeholder it stands for |
+
+Nothing else about a run is said in the mirror: how deep a quote stands, or
+what scale it was drawn at, is drawn and not mirrored, so a question about
+either is asked of colours or of nothing. And what the whole text says to
+`innerText` is one node per line of it and no markup at all, which is the
+right thing to read when what is asked is what a *reader* reads: whether a
+mark was left in, or a stop of quote, or a link's own stops.
+
 ## What a press reaches
 
 `hitPath` walks every child, and the child drawn last is the one a press is
@@ -131,6 +157,44 @@ have. This is how `skiff-widgets` carries its own texts, and the rule either
 way for what is written after: a node with no children must never be sized
 by what it holds -- it measures its words right and stands at no bounds
 still, which on a page reads right and presses nowhere.
+
+## What the page says was pressed is what it painted last
+
+Not the node whose bounds are smallest, and not the one drawn in front: in
+the page a press is asked of one element, the one the browser itself would
+have given it to, and that is the last element in the tree that holds the
+point -- later in the tree is painted later, and later is on top. From that
+element the walk goes *up*, to its parents, and nowhere else: a node beside
+it, however much nearer it is to the point, is never asked.
+
+What it costs: one node kept to hold a press, given `fill` and so the whole
+breadth of its parent, is painted after every press to its left and over
+them -- so the four presses in the bar over the messages each held the whole
+bar, and every press anywhere in the bar went to the last of them (the one
+hidden in a window with room for three). Nothing in the bar answered a press
+anywhere: what every model is told, this conversation taken into one of its
+own, given away. Behind three dots, where the room is too narrow and the
+rows say their own size, the same three things did answer -- which is how
+this was found, and how the difference between them was said.
+
+What is said instead: a node made only to hold a press is given the size of
+what it presses and no more, in its own place, the way the rows behind the
+three dots already were. Nothing here asks a node to be transparent to
+presses, for no such thing was found in this library.
+
+Said once more, because knowing the rule and still getting it wrong are two
+different things: a plate taking the whole room to put away what three dots
+opened took nothing at all where it was first put -- beside the plate the
+drawer already keeps, painted before the list, the messages and the bar, and
+so *under* every one of them. The rule says what is painted last takes the
+press; what it does not say is what order a window paints its own children
+in, and that order is read where it is written (`app_window::forEachChild`,
+`src/ui/window.cc`): paper, messages, the drawer's shade, drawer, list, what
+puts a card away, bar, card, settings, design, prompt. A plate meant to take
+presses from everything below it goes as low in that list as it can while
+staying above all of it -- above the messages, the list and the drawer, for
+what three dots opened, and below the bar and the card, whose own three dots
+and the rows behind them go on being pressed for what they say.
 
 ## Nothing else that has surprised this program yet
 

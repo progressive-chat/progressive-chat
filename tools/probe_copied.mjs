@@ -17,13 +17,17 @@ await page.goto(
     `https://progressive-chat.github.io/progressive-chat/?asked=${Date.now()}`);
 await page.waitForFunction('window.__pchat_started === true', null,
                            { timeout: 180000 });
-await page.waitForTimeout(2500);
+// Long enough for the room to have said everything it says of itself and put
+// every chip where it stands: read too soon, the box a chip was read with is
+// one it has already left.
+await page.waitForTimeout(6000);
 
 const read = async () => await page.evaluate(
     () => document.getElementById('skiff').innerText);
 // The first Copy chip on the page: its own words, whichever answer it stands
-// under, and its left padding rather than its right -- the place a press was
-// sure to reach even when the box was no wider than nothing.
+// under. Pressed where it stands rather than in its left padding: a press
+// that moves nowhere first is not one the room answers, and what reaches the
+// chip is what is under the pointer.
 const chip = await page.evaluate(() => {
   for (const one of document.getElementById('skiff').querySelectorAll('*')) {
     const own = [...one.childNodes]
@@ -49,13 +53,19 @@ if (!chip) {
 const answer = await read();
 await page.evaluate(
     () => navigator.clipboard.writeText('before anything is pressed'));
-await page.mouse.click(Math.round(chip[0] + 4), Math.round(chip[1] + chip[3] / 2));
+await page.mouse.move(chip[0] + chip[2] / 2, chip[1] + chip[3] / 2);
+await page.waitForTimeout(250);
+await page.mouse.click(chip[0] + chip[2] / 2, chip[1] + chip[3] / 2);
 await page.waitForTimeout(900);
 const held = await page.evaluate(
     () => navigator.clipboard.readText().catch((e) => 'read refused: ' + e.message));
 console.log('pressed: the clipboard keeps', JSON.stringify(String(held).slice(0, 120)));
-console.log('said before: it was not there already:',
-            String(held) !== 'before anything is pressed',
-            '; it is part of what the page says:',
-            String(held).length > 8 && answer.includes(String(held).slice(0, 20)));
+// What it keeps is not what was there before, and it is what the answer
+// above the chip says: copied out of the program and into the machine.
+const said_before = String(held) !== 'before anything is pressed';
+const of_the_answer = String(held).length > 8 &&
+    answer.includes(String(held).slice(0, 20));
+console.log(said_before && of_the_answer
+    ? 'what a Copy chip copies is given to the machine, not only kept inside'
+    : `NOT: not the sentinel ${said_before}, of the answer ${of_the_answer}`);
 await browser.close();

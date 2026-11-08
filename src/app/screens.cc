@@ -16,6 +16,8 @@ import pchat.core;
 import pchat.config;
 import pchat.theme;
 import pchat.ui;
+import pchat.platform.notified;
+import pchat.platform.opened;
 import pchat.provider;
 import pchat.provider.run;
 import pchat.platform.carry;
@@ -54,6 +56,9 @@ public:
         spl::overloaded{
             [&](const open_conversation &asking) {
               root_.opened = asking.chat;
+              // The card of faces belongs to the conversation it was opened
+              // in: nothing written into it follows its reader elsewhere.
+              faces_ = false;
               // A drawer that came over the messages has been used:
               // put away, leaving the conversation it opened.
               if (width_ < ui::side_by_side_from)
@@ -67,6 +72,10 @@ public:
               root_.messages.push_back(said.said);
               recount(asking.chat);
               ask_a_model(asking.chat);
+              // What was written has left the field, and the card that
+              // writes into it goes with it: nothing left open would write
+              // into a field that has already been given away.
+              faces_ = false;
             },
 
             [&](const new_chat &) {
@@ -93,8 +102,16 @@ public:
             // One line of the settings page: what it says is given whole.
             [&](const copy_text &asking) { this->give(asking.text); },
             // Asked again: this answer taken away, and every one after it, so
-            // that the question above it is open to be answered again.
-            [&](const regenerate_answer &asking) { cut_away(asking.said); },
+            // that the question above it is open to be answered again -- and
+            // asked again it is, then and there, for a question left open is
+            // not what this one was pressed for. Before, it only took the
+            // answer away: pressed again, again, a conversation lost an
+            // answer each time and never had one back, though what asks for
+            // one was already here and only this line kept it out.
+            [&](const regenerate_answer &asking) {
+              cut_away(asking.said);
+              ask_a_model(asking.chat);
+            },
             // Into a chat of its own: everything asked and answered up to this
             // answer, and nothing said after it.
             [&](const fork_answer &asking) {
@@ -127,8 +144,20 @@ public:
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
-            [&](const open_settings &) { settings_ = true; },
+            // The settings are opened from the card's own three dots as well
+            // as from the drawer, and what opened them is put away either
+            // way: two cards over each other are one too many.
+            [&](const open_settings &) {
+              settings_ = true;
+              editor_menu_ = false;
+            },
             [&](const close_settings &) { settings_ = false; },
+            // What the drawer's two rows are there for: nothing stands behind
+            // either of them yet, and so nothing is opened. They are drawn
+            // where the panel has them, and what they ask for is answered
+            // the day there is something to answer it with.
+            [&](const open_tasks &) {},
+            [&](const open_remote &) {},
             [&](const fork_conversation &asking) {
               conversation *said = nullptr;
               for (conversation &one : root_.conversations)
@@ -178,6 +207,31 @@ public:
                 this->give(whole);
             },
             [&](const toggle_more &) { more_ = !more_; },
+            // What the card's three dots hold: thinking, how hard it is asked
+            // to think, and the large settings. Thinking and how hard are how
+            // every answer in every conversation is asked for from now on
+            // (pchat.config, `asking`), which is what the settings' own rows
+            // would have said of them.
+            [&](const toggle_editor_menu &) { editor_menu_ = !editor_menu_; },
+            // The card of faces above the face beside the clip: opened by a
+            // press on it, and put away by another press anywhere else in
+            // the room, which is what nothing measured asks for
+            // (src/ui/window.cc).
+            [&](const toggle_faces &) { faces_ = !faces_; },
+            // One face pressed: to the front of the ones pressed most
+            // lately, wherever in them it stood before, and no longer a row
+            // than the card draws. Kept as they were pressed and not as
+            // often, so that what comes first is the one that was wanted
+            // last and not the one that was wanted most often.
+            [&](const face_written &asking) {
+              if (asking.face.empty()) return;
+              std::erase(faces_lately_, asking.face);
+              faces_lately_.insert(faces_lately_.begin(), asking.face);
+              if (faces_lately_.size() > ui::faces_lately_kept)
+                faces_lately_.resize(ui::faces_lately_kept);
+            },
+            [&](const set_thinking &asking) { how_.thinking = asking.on; },
+            [&](const set_effort &asking) { how_.how_hard = asking.how_hard; },
             // What every model is told before anything is said to it: read
             // and written whole, the conversation keeping it as it is typed.
             [&](const set_system_prompt &asking) {
@@ -209,6 +263,19 @@ public:
               shown_.amoled = asking.enabled;
               recolour();
             },
+            // What the drawer's rows are then drawn with: no colour grows
+            // out of either of these, and so nothing is grown again.
+            [&](const set_avatars &asking) { shown_.avatars = asking.enabled; },
+            [&](const set_row_times &asking) {
+              shown_.row_times = asking.enabled;
+            },
+            // A test notification: nothing of the program's own knows whether
+            // the machine it runs on will show it, so all this does is ask the
+            // platform and go on.
+            [&](const send_test_notification &) {
+              platform::notified::say("progressive-chat",
+                                      "This is a test notification.");
+            },
             // Larger type: every size drawn in the body of a message is asked
             // for again with this multiply in it, so what is set larger is
             // what the answers are written in.
@@ -228,6 +295,11 @@ public:
             // A tool switched: one of the three this program owns, and what
             // it is switched to.
             [&](const set_tool &asking) {
+              how_ = set_of(how_, asking.which, asking.on);
+            },
+            // One of the seven switched: what a row of the settings page
+            // said, and nothing of the others.
+            [&](const set_switch &asking) {
               how_ = set_of(how_, asking.which, asking.on);
             },
             // An answerer put into the conversation open, or taken out of
@@ -256,10 +328,23 @@ public:
   void before_frame(double) {
     for (const request &one : asked_.drain())
       take(one);
+    // A link pressed in a message since the last frame: skiff says which
+    // ones were pressed, standing in whatever text they were drawn in, and
+    // each is handed to the machine to open -- a browser of its own on a
+    // desk and a phone, another tab where this is a page. Nothing of what
+    // opens then is this program's to know.
+    for (const std::string &place : std::exchange(scene::hostWork().links, {}))
+      platform::opened::open(place);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
-                        design_, system_, more_, drawer_, width_, height_,
-                        &asked_);
+    scene_.root().again(look_, root_, shown_, how_, query_, dark_,
+                        ui::what_is_open{.settings = settings_,
+                                         .design = design_,
+                                         .prompt = system_,
+                                         .more = more_,
+                                         .editor_menu = editor_menu_,
+                                         .faces = faces_,
+                                         .drawer = drawer_},
+                        faces_lately_, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -307,6 +392,11 @@ private:
     platform::carrying carried;
     tools::owned mine;
     moment began;
+    // Every call this answer has stopped to ask for so far, and what each of
+    // them was answered: kept here, over every round of the asking, because
+    // what asked for them and what answered them are two ends of a wire and
+    // neither of them is the loop between.
+    std::vector<call_made> calls{};
   };
   std::optional<answer_coming> answering_;
 
@@ -399,12 +489,17 @@ private:
       return;   // and it is not over yet
     }
     const moment ended = now_ms();
-    if (message *there = found(one.said))
+    if (message *there = found(one.said)) {
       *there = one.going.answer_of(provider::put_in{.id = one.said,
                                                     .chat = one.chat,
                                                     .author = ending_of(one.chat),
                                                     .sent = ended,
                                                     .took_ms = ended - one.began});
+      // Those calls are the thought's to keep, once there is a thought: what
+      // it wrote to itself is read beside them.
+      if (there->before)
+        there->before->calls = one.calls;
+    }
     recount(one.chat);
     answering_.reset();
   }
@@ -415,11 +510,16 @@ private:
   // where it belongs.
   [[nodiscard]] bool asked_again(answer_coming &one) {
     std::vector<provider::call_answered> answered;
-    for (const provider::tool_call &call : one.going.asked_for())
-      answered.push_back(
-          provider::call_answered{.own = call.id,
-                                  .said = one.mine.answered(call.name, call.arguments)
-                                              .value_or("nothing here answers that call")});
+    for (const provider::tool_call &call : one.going.asked_for()) {
+      const std::string said =
+          one.mine.answered(call.name, call.arguments)
+              .value_or("nothing here answers that call");
+      answered.push_back(provider::call_answered{.own = call.id, .said = said});
+      // Said for the fold above the answer too, and not only for the wire
+      // that asked again: what it stopped to ask for, and what came of it.
+      one.calls.push_back(
+          call_made{.tool = call.name, .asked = call.arguments, .answered = said});
+    }
     return one.going.again(std::move(answered));
   }
 
@@ -564,6 +664,17 @@ private:
   // Whether what stands behind the three dots is out: put away again by one
   // press of anything it holds, or of the dots themselves.
   bool more_ = false;
+  // Whether what stands behind the card's three dots is out: thinking, how
+  // hard it is asked to think, and the way into the large settings (the
+  // design says them under *The editor's row*).
+  bool editor_menu_ = false;
+  // Whether the card of faces above the face beside the clip is out.
+  bool faces_ = false;
+  // The faces pressed most lately, newest first, and no more of them than
+  // the card's own row holds: drawn above the rest of them, which is what
+  // they were kept for (and what `pchat.config`'s `recent_emoji` is for,
+  // once there are runs to keep them between).
+  std::vector<std::string> faces_lately_{};
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
 

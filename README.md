@@ -33,6 +33,13 @@ before, **summer**. Until then what is in this repository is **not yet a
 product**: it is a test bench. Everything in it may be rewritten, and what it
 draws today is here so that the next thing has something to be drawn over.
 
+## Roadmap
+
+- **2026** -- drafting, and corrections here and there.
+- **Beginning of 2027** -- serious work planned: no more drafting, the real
+  core gets written.
+- **Near mid-2027** -- the app is already useful.
+
 ## Why this project exists
 
 It did not begin as this. What was wanted first was a modern client for
@@ -66,6 +73,12 @@ said of that day.
 It (this readme section's workdays summaries) is written by hand. Nothing
 writes here that is not that hand, and no paragraph of it is written by a
 model, an agent or a script on its own.
+
+### 2026-11-07
+
+The last 24h gave only a thousand of new code lines. But I fixed many things
+in the UI, and I am currently working on bringing better Material Design 3
+in C++ to this project.
 
 ### 2026-11-06
 

@@ -53,6 +53,41 @@ has taken, empty where there is room left. Those two never move and never go
 away: writing to a model without being told which one it is, or without being
 told how near the edge this chat has come, is writing blind.
 
+## The drawer
+
+The list of conversations comes over the messages where the room is too narrow
+to keep it beside them, and stands beside them where it is not. It is never the
+whole room wide: a strip of the messages is left in sight beside it, and that
+strip, pressed, is what puts it away again.
+
+Down it, in this order:
+
+* **Conversations** — the panel's heading, set large and bold, further in from
+  the panel's own edge than the things under it.
+* **Search conversations...** — the only search there is: its own ground,
+  rounded the whole way round, a magnifier before the hint, and the hint in
+  grey.
+* **Tasks**, and **Remote** under it, only a few pixels apart: both on one
+  ground, and rounded between them so that the two read as one row cut in two
+  — the upper rounded above and barely below, the lower barely above and
+  rounded below.
+* **+ New Chat** — its own ground, rounded the whole way round, as the field
+  is.
+* The conversations, one row each.
+* **Settings** — the panel's last row: a gear and its name on the same ground
+  as Tasks and Remote, rounded as the field is. This is the only way into the
+  settings, because nothing else in the room has room to spare.
+
+A conversation's row says **its name**, **what was said last**, and a **badge
+for what is unread**. It does not say how long ago that was: the time is one
+thing a row may be asked for, and it is asked for nowhere by default. What the
+row keeps clear at its right is three times what it keeps at its left, so that
+a name read to its end is not read into the badge.
+
+Nor does a circle stand for a conversation by default — no letter, no picture.
+Where one is asked for, the row's own circle is put before its name, and
+everything after it stands over by the circle's breadth.
+
 ## A message you wrote
 
 Yours are **bubbles**, and are put on **the right** of the room. A bubble may
@@ -180,7 +215,10 @@ this program has to be able to say yes or no to, and to what degree.
 **Multimodal**
 
 * **Image transcription** — a vision model asked what is in a picture, so that
-  what cannot see can still be told.
+  what cannot see can still be told. What this program answers for stands under
+  this row as a switch to each of the two: **read a picture into words**, and
+  **make a picture out of words**. One switched off is not offered at all, and
+  nothing here says either of them more than the row above it does.
 * **Image generation** — pictures made out of what was written.
 
 **Tools**
@@ -202,18 +240,35 @@ this program has to be able to say yes or no to, and to what degree.
 **Network**
 
 * **Proxy** — everything asked routed through an HTTP or a SOCKS proxy.
+  Whether it is put through one at all stands under this row as a switch:
+  **speak through another program**. It is off until something asks for it,
+  because a proxy nothing is routed through is nothing said.
 * **WebUI** — this program driven from a browser, from another machine.
 
 **Memory & Data**
 
 * **Memory** — what is remembered while it runs, and what is kept in files.
 * **Skills** — instruction files the model can be given.
-* **Data control** — everything of yours given out as a file, or taken back in.
+* **Data control** — everything of yours given out as a file, or taken back
+  in. What is kept at all stands under this row as a switch to each of the
+  three: **keep what has been said here**, **keep what it has been taught**,
+  and **keep what has been given to it**.
+
+**Notifications**
+
+* **Test** — one notification of this program's own, shown by the machine it
+  runs on: a press asks for it, and what is asked for is a test, not a
+  message. Where the machine lets an app show notifications only once it has
+  been let (Android 13 and later), the first press asks for that and shows
+  nothing, and the press after it shows one. Nothing behind this row keeps
+  anything: there are no notifications to speak of yet.
 
 **Appearance & Language**
 
-* **Appearance** — the theme, its scheme of colours, and whether the colours
-  follow the machine's own.
+* **Appearance** — the theme, its scheme of colours, whether the colours
+  follow the machine's own, and what the drawer's rows are asked for: whether
+  a circle stands by the names in it, and whether a row says how long ago what
+  it shows was said. Both are asked for nowhere by default.
 * **Language** — which language the program itself speaks on the screen.
 
 **About**
@@ -228,8 +283,13 @@ Of all this, what is drawn today is **Appearance** — the theme, its scheme,
 its type and its dark; the five things an answer is asked with, under
 **Generation**; which answerers answer in the chat that is open, under
 **Models**; the three tools this program owns, under **Tools**; and what this
-build is, under **About**. The other three groups stand empty, each with its
-name, waiting for the thing behind it.
+build is, under **About**; and a switch to each of the seven things a switch
+is offered for, which is what the other three groups had stood empty for —
+two under **Multimodal**, one under **Network** and three under **Memory &
+**Data**. What any of the seven does when it is switched on is not written yet:
+the row says it is offered, and nothing here says more than that. A press
+under **Test** asks the machine it runs on for one notification of the
+program's own.
 
 ## What this design does not do
 

@@ -60,6 +60,12 @@ struct copy_text {
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
+// The two rows the drawer keeps beside its search: what the program has been
+// told to do on its own, and what another machine is spoken to through.
+// Neither stands behind either row in the program yet; asking for one is
+// answered by nothing until what it names is.
+struct open_tasks {};
+struct open_remote {};
 // What the top edge asks for: another answerer in this same conversation,
 // this conversation taken whole into one of its own, this conversation given
 // out, and what every answerer in it is told before anything is said to it.
@@ -82,6 +88,29 @@ struct set_system_prompt {
   std::string text;
 };
 struct toggle_more {};
+// The same three dots again, where they stand at the card's own foot: one
+// press opens what they hold and one puts it away.
+struct toggle_editor_menu {};
+// The face beside the clip: what it opens is the card of faces, and one of
+// them pressed writes itself into the field (src/ui/composer.cc), which is
+// why nothing the program keeps is asked for it.
+struct toggle_faces {};
+// One face pressed, said to the program so that it is one of the ones
+// pressed most lately and drawn first in the card: what the press writes
+// into the field is still not asked of it -- whose field it is has never
+// been anything but the card's own -- but which ones were pressed, and in
+// what order, is what the program keeps, for this run and the runs after.
+struct face_written { std::string face; };
+// What a row behind them says (design-doc.md, "The editor's row"): whether
+// what answers here is asked to think at all before it answers, and how hard
+// it is asked to think where it is. Neither is a row of the settings, for
+// both are said of this conversation's own card and not of the program.
+struct set_thinking {
+  bool on = false;
+};
+struct set_effort {
+  effort how_hard = effort::some;
+};
 // The design said in the room itself: what stands written at the top of the
 // tree is read here too, and put away again.
 struct open_design {};
@@ -89,6 +118,20 @@ struct close_design {};
 struct set_amoled {
   bool enabled;
 };
+// What a row in the drawer is asked for, from the Appearance page: whether a
+// circle stands for the conversation it names, and whether it says how long
+// ago the last thing in it was said. Neither is drawn until it is asked for
+// here -- a panel read by what its conversations are called.
+struct set_avatars {
+  bool enabled;
+};
+struct set_row_times {
+  bool enabled;
+};
+// What the Notifications page asks for: one notification of the program's
+// own, shown by the machine it runs on, so that it can be seen whether it is
+// let show any. A test, and nothing it pretends is a message.
+struct send_test_notification {};
 // What the Appearance page asks for: which seed the colours grow out of,
 // whether the type is set larger, and whose face it is set in. Each row asks
 // for one whole thing, not for the set of looks it would like to see, because
@@ -117,6 +160,13 @@ struct set_tool {
   tool_choice which = tool_choice::conversation_search;
   bool on = false;
 };
+// One of the seven a switch is offered for, switched: whether it is
+// offered at all, which a row of the settings page says by which way it
+// stands (pchat.config, `switch_choice`).
+struct set_switch {
+  switch_choice which = switch_choice::picture_to_words;
+  bool on = false;
+};
 // One of the answerers offered (pchat.config), in a conversation or out of
 // it: which of them answers where nothing else has been said.
 struct set_answerer {
@@ -130,12 +180,18 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
                              share_answer, delete_answer, set_query,
                              toggle_drawer, open_settings, close_settings,
+                             open_tasks, open_remote,
                              fork_conversation,
                              share_conversation, open_system_prompt,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
+                             toggle_editor_menu, toggle_faces, face_written,
+                             set_thinking,
+                             set_effort,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
-                              set_generation, set_tool,
+                                set_avatars, set_row_times,
+                                send_test_notification,
+                                set_generation, set_tool, set_switch,
                               set_answerer, copy_text>;
 
 class requests {

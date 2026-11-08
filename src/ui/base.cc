@@ -12,6 +12,7 @@ import pchat.core;
 import pchat.config;
 import pchat.app.requests;
 import :theme;
+import :icons;
 
 export namespace pchat::ui {
 
@@ -22,6 +23,29 @@ namespace nodes = skiff::nodes;
 // enough to keep it beside the messages instead of over them, how tall the
 // bar over the list, how far the bubbles may reach.
 inline constexpr float drawer_width = 360.0f;
+// How much of the messages is left in sight beside a drawer come over them:
+// the panel never takes the whole of the room, and what is left of the
+// messages beside it is what the reader presses to put it away.
+inline constexpr float drawer_open_room = 48.0f;
+// What the panel keeps between itself and its own parts: its heading further
+// in than the field and the rows under it.
+inline constexpr float drawer_margin = 20.0f;
+// What a name is set in at the head of the panel.
+inline constexpr float drawer_heading_size = 26.0f;
+// One row of the panel's own -- Tasks, Remote, a new chat, the settings --
+// how tall it is, how far it is rounded, and what a row keeps clear at its
+// right against what it keeps at its left.
+inline constexpr float drawer_row_height = 44.0f;
+inline constexpr float drawer_row_size = 15.0f;
+inline constexpr float drawer_row_radius = 14.0f;
+// Where two rows meet: the corners between them are rounded only barely, so
+// that the two of them read as one row cut in two.
+inline constexpr float drawer_row_corner = 4.0f;
+inline constexpr float drawer_row_gap = 4.0f;
+// How much wider a conversation's row keeps its right margin than its left.
+inline constexpr float drawer_right_margin = 3.0f;
+// How big the mark before a name is, in the panel's own rows and in its field.
+inline constexpr float drawer_mark = 18.0f;
 inline constexpr float side_by_side_from = 960.0f;
 inline constexpr float top_bar_height = 52.0f;
 inline constexpr float top_scrim = 180.0f;
@@ -48,11 +72,8 @@ inline constexpr float body_size = 15.0f;
 // plate that only asks -- a pill, the shade over the messages a drawer is
 // open over -- has nothing else in it.
 struct ask_box : scene::Node {
-  nodes::Box<> fPlate{0u};
   app::requests *asked = nullptr;
   app::request one{app::toggle_drawer{}};
-
-  ask_box() { fPlate.apply({.fill = true}); }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
@@ -65,10 +86,55 @@ struct ask_box : scene::Node {
   void again(app::requests *sink, app::request asking, scene::Colour colour) {
     asked = sink;
     one = std::move(asking);
-    fPlate.setColour(colour);
+    // Its ground said of itself and not of a plate inside it: a plate fills
+    // by the corner radius it was told itself, and none was told it one, so
+    // every round press in the program was painted square. Declared of the
+    // node, the ground is painted in the node's own rounded box -- however
+    // the corners were given it where it stands, all four alike or each its
+    // own -- and what it holds is clipped by the same.
+    this->apply({.background = colour});
   }
 
-  void forEachChild(auto &&f) { f(fPlate); }
+  void forEachChild(auto &&f) {}
+};
+
+// One press with a mark painted in the middle of it: what closes a card, put
+// away at the corner of it. The mark is painted after the plate, and what a
+// page says was pressed there is the mark -- a walk from it climbs to this
+// node and no higher, and a node that answers nothing answers nothing for
+// the plate either. So this one answers for the plate too, wherever in its
+// own box the press came, and nowhere else: the box is no wider than the
+// plate is, which is the same thing said twice for every press in the bar
+// over the messages (`docs/skiff-notes.md`).
+struct press_box : scene::Node {
+  ask_box fPlate{};
+  nodes::Icon fMark{shape::close(), 0u};
+
+  explicit press_box(nodes::IconShape mark = shape::close())
+      : fMark(std::move(mark), 0u) {
+    fMark.apply({.width = 18.0f,
+                 .height = 18.0f,
+                 .anchor = scene::anchor::kCentre,
+                 .origin = scene::anchor::kCentre});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool onClick(float x, float y) { return fPlate.onClick(x, y); }
+
+  void again(app::requests *sink, const scene::Spec &where, app::request asking,
+             scene::Colour colour) {
+    this->apply(where);
+    fPlate.again(sink, std::move(asking), colour);
+    fPlate.apply({.fill = true, .cornerRadius = 18.0f});
+  }
+
+  void mark_colour(scene::Colour colour) { fMark.setColour(colour); }
+  void hide() { this->setVisible(false); }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fMark);
+  }
 };
 
 // What the window gives the screens: its size, and what that size asks for.

@@ -16,12 +16,11 @@
 export module pchat.ui:message_list;
 
 import std;
-import skia;
 import skiff.scene;
 import skiff.nodes;
-import skiff.paint;
 import pchat.core;
 import pchat.logic.lists;
+import pchat.logic.formatting;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -59,28 +58,54 @@ inline constexpr std::size_t foot_count = 6;
   }
   return std::to_string(took_ms) + " ms";
 }
-
-// How wide a line is in the face every piece of text here is drawn with, and
-// how tall one of its lines stands: asked of what measures them, which is the
-// font the window was handed. Nothing here counts characters, and nothing
-// guesses.
-//
-// Asked because a node holding words keeps a size of nothing where nothing
-// measured them -- a browser, whose font carries no face of this program's --
-// and a box as wide as the words in it is then a box of nothing at all: a
-// press on the words reaches no node, however wide they read on the page.
-[[nodiscard]] inline float words_wide(const std::string &line, float size) {
-  skia::SkFont *font = skiff::paint::defaultFont();
-  if (font == nullptr || line.empty())
-    return 0.0f;
-  const skiff::paint::Painter said(nullptr, *font, false);
-  const float wide = said.measure(line, size, false);
-  // Nothing came of it where the font carries no face of this program's:
-  // then what a letter of a fixed pitch would come to in this size, which is
-  // the advance skiff itself keeps for a face it cannot read.
-  return wide > 1.0f ? wide : size * 0.55f * static_cast<float>(line.size());
+// What a line says of a place in it: every link, said as a place named in
+// the line or written in it as writing writes one, each in the order they
+// stand. Given to the text that says the line, which draws each in the
+// colour links are drawn in, underlines it, and opens the place when a press
+// lands on it and nowhere else -- a press that moves is a selection first,
+// and a link is opened by one that does not.
+[[nodiscard]] std::vector<scene::TextLink> links_in(const logic::drawn &line) {
+  std::vector<scene::TextLink> links;
+  for (const logic::place &one : logic::links_of(line.said))
+    links.push_back({.first = one.first, .last = one.last, .target = one.target});
+  for (const logic::place &one : line.places)
+    links.push_back({.first = one.first, .last = one.last, .target = one.target});
+  std::ranges::sort(links, {}, [](const scene::TextLink &one) { return one.first; });
+  return links;
 }
-[[nodiscard]] inline float line_tall(float size) { return size * 1.25f; }
+
+// What the marks meant, said as the text draws them: bold, slanted, code.
+// Read out of the line once (`pchat.logic.formatting`), along with the line
+// as it is drawn without them, so that what stands at an offset here stands
+// at the same offset in what the reader sees.
+[[nodiscard]] std::vector<scene::TextStyled> styles_in(
+    const std::vector<logic::run_place> &runs) {
+  std::vector<scene::TextStyled> styles;
+  for (const logic::run_place &one : runs)
+    styles.push_back({.first = one.first,
+                      .last = one.last,
+                      .strong = (one.style & logic::bold) != 0,
+                      .emphasis = (one.style & logic::italic) != 0,
+                      .code = (one.style & logic::code) != 0,
+                      .struck = (one.style & logic::struck) != 0,
+                      .underline = (one.style & logic::underline) != 0,
+                      .block = (one.style & logic::block) != 0,
+                      .quote = one.quoted > 0,
+                      .depth = one.quoted});
+  return styles;
+}
+
+// One line of a message drawn, which three places in the room want and want
+// alike: what it says with its marks taken out of it, what those marks
+// meant, and every place said in it, which a press that lands and does not
+// move goes to.
+void say(nodes::Text &body, std::string_view said, const paints &look) {
+  const logic::drawn line = logic::drawn_of(said);
+  body.setText(line.said);
+  body.setSelectable(true);
+  body.setLinks(links_in(line), look.link);
+  body.setStyles(styles_in(line.runs), look.dim);
+}
 
 // ---- the reader's bubble --------------------------------------------------
 
@@ -102,13 +127,16 @@ struct bubble : nodes::Stack {
                  .padding = scene::Margin{bubble_pad_y, bubble_pad_x,
                                           bubble_pad_y, bubble_pad_x}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
-    fTime.apply(
-        {.alignSelf = scene::align::kEnd});
+    fTime.apply({.alignSelf = scene::align::kEnd});
   }
 
   void blank() {
     this->setVisible(false);
     fBody.setText("");
+    // No links either once nothing is said: none of them stands anywhere in
+    // a line that is not there.
+    fBody.setLinks({}, 0u);
+    fBody.setStyles({}, 0u);
     fTime.setText("");
   }
 
@@ -125,7 +153,7 @@ struct bubble : nodes::Stack {
                                            .topRight = bubble_radius,
                                            .bottomRight = bubble_corner,
                                            .bottomLeft = bubble_radius}});
-    fBody.setText(std::string(said));
+    say(fBody, said, look);
     fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest - 2.0f * bubble_pad_x});
@@ -157,7 +185,9 @@ struct foot_chip : scene::Node {
     this->apply({.autoSize = scene::axes::kBoth,
                  .cornerRadius = 9.0f,
                  .padding = scene::Margin{4.0f, 8.0f, 4.0f, 6.0f}});
-    fPlate.apply({.fill = true});
+    // What the chip is rounded by: its own plate, which fills by the radius
+    // it was told itself and not by the chip's.
+    fPlate.apply({.fill = true, .cornerRadius = 9.0f});
     fMark.apply({.width = 14.0f,
                  .height = 14.0f,
                  .anchor = scene::anchor::kCentreLeft,
@@ -179,17 +209,6 @@ struct foot_chip : scene::Node {
     }
     return true;
   }
-  // Wide and tall as its words say they are, which is what no measurement
-  // inside one gives it in a browser: a chip as narrow as nothing no press on
-  // the words of it ever reaches. See `words_wide`.
-  void wide_as_the_words(nodes::Text &one, const std::string &what,
-                         float size) {
-    const float wide = words_wide(what, size);
-    one.apply({.autoSize = scene::axes::kNone,
-               .width = wide > 1.0f ? wide + 2.0f : 0.0f,
-               .height = line_tall(size)});
-  }
-
   // Left down or not: what the one that tells about an answer answers with,
   // and what its row reads to know whether to show what it knows.
   [[nodiscard]] bool down() const noexcept { return fDown; }
@@ -205,7 +224,6 @@ struct foot_chip : scene::Node {
     fMark.setVisible(true);
     fLabel.setText(std::string(label));
     fLabel.setColour(look.faint);
-    this->wide_as_the_words(fLabel, std::string(label), 11.0f);
     fPlate.setColour(0u);
   }
 
@@ -218,7 +236,6 @@ struct foot_chip : scene::Node {
     fMark.setVisible(true);
     fLabel.setText(std::string(label));
     fLabel.setColour(fDown ? look.primary : look.faint);
-    this->wide_as_the_words(fLabel, std::string(label), 11.0f);
     fPlate.setColour(fDown ? look.field : 0u);
   }
 
@@ -267,12 +284,29 @@ struct foot_row : nodes::Stack {
 
 // ---- what was thought before an answer -----------------------------------
 
+// Every call a thought stopped to ask for, said the same way it was made:
+// which tool, what it asked it for, and what that tool answered it, one line
+// under the other. Nothing at all where there were none.
+[[nodiscard]] inline std::string
+calls_said(const std::vector<call_made> &calls) {
+  std::string out;
+  for (const call_made &one : calls) {
+    if (!out.empty())
+      out += "\n";
+    out += "> " + one.tool + ": " + one.asked + "\n    " + one.answered;
+  }
+  return out;
+}
+
+
 // Folded above an answer: how long it was thinking, how many tool calls it
 // made, and -- once it is pressed open -- what it wrote to itself while it
-// was, in green, the way a thread writes it.
+// was, and each thing it stopped to ask for on the way, in green, the way a
+// thread writes it.
 struct history_fold : nodes::Stack {
   nodes::Text fSummary{"", 12.0f, 0u};
   nodes::Text fThought{"", 12.0f, 0u};
+  nodes::Text fCalls{"", 12.0f, 0u};
   bool fOpen = false;
 
   history_fold() {
@@ -281,11 +315,11 @@ struct history_fold : nodes::Stack {
                  .padding = scene::Margin{8.0f, 12.0f, 8.0f, 12.0f}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 6.0f};
     fThought.setVisible(false);
+    fCalls.setVisible(false);
   }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
-  // The press that opens it opens the greentext with it, or shuts both.
   [[nodiscard]] bool onClick(float, float) {
     fOpen = !fOpen;
     return true;
@@ -295,8 +329,10 @@ struct history_fold : nodes::Stack {
     this->setVisible(false);
     fSummary.setText("");
     fThought.setText("");
+    fCalls.setText("");
     fOpen = false;
     fThought.setVisible(false);
+    fCalls.setVisible(false);
   }
 
   void again(const paints &look, const thought &before, float widest) {
@@ -304,40 +340,39 @@ struct history_fold : nodes::Stack {
     this->apply({.autoSize = scene::axes::kBoth,
                  .maxWidth = widest,
                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
-    const std::string line =
-        "Thought for " + took_of(before.took_ms) + " · " +
-        std::to_string(before.tool_calls) +
-        (before.tool_calls == 1 ? " tool call" : " tool calls");
-    fSummary.setText(line);
+    fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
+                     std::to_string(before.tool_calls) +
+                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
     fSummary.setColour(look.dim);
-    // Wide and tall as they were measured, never wider than the room: see
-    // what `words_wide` says of why they are said here at all.
-    const float room = widest - 24.0f;
-    const float wide = words_wide(line, 12.0f);
-    fSummary.apply({.autoSize = scene::axes::kNone,
-                    .width = wide > 1.0f ? std::min(wide + 2.0f, room) : room,
-                    .height = line_tall(12.0f),
-                    .maxWidth = room});
+    fSummary.apply(
+        { .maxWidth = widest - 24.0f});
     // What it wrote to itself, greentext: shown while it is pressed open.
-    fThought.setText(before.said);
+    // Said with its marks taken out of it, as anything a model wrote is.
+    const logic::drawn thinking = logic::drawn_of(before.said);
+    fThought.setText(thinking.said);
+    // A quote in what a model thought is drawn in the colour thinking is
+    // drawn in, and not in the dim one every other quote is.
+    fThought.setStyles(styles_in(thinking.runs), look.thought);
     fThought.setColour(look.thought);
     fThought.setMonospace(true);
     fThought.setVisible(fOpen && !before.said.empty());
-    // As many lines as what was written comes to in the room, each one line
-    // tall: the same reason the summary is sized here, and for the same want
-    // -- that a press anywhere in it is a press on the fold.
-    const float said_wide = words_wide(before.said, 12.0f);
-    const float lines = std::max(1.0f, std::ceil(said_wide / room));
-    fThought.apply({.autoSize = scene::axes::kNone,
-                    .width = said_wide > 1.0f ? std::min(said_wide + 2.0f, room)
-                                              : room,
-                    .height = lines * line_tall(12.0f),
-                    .maxWidth = room});
+    fThought.apply(
+        {.maxWidth = widest - 24.0f});
+    // Each thing it stopped to ask for, under what it wrote to itself and
+    // opened with it: which tool, what it asked, what came back.
+    const std::string calls = calls_said(before.calls);
+    fCalls.setText(calls);
+    fCalls.setColour(look.thought);
+    fCalls.setMonospace(true);
+    fCalls.setVisible(fOpen && !calls.empty());
+    fCalls.apply(
+        {.maxWidth = widest - 24.0f});
   }
 
   void forEachChild(auto &&f) {
     f(fSummary);
     f(fThought);
+    f(fCalls);
   }
 };
 
@@ -398,6 +433,8 @@ struct answer_row : nodes::Stack {
     this->setVisible(false);
     fFold.blank();
     fBody.setText("");
+    fBody.setLinks({}, 0u);
+    fBody.setStyles({}, 0u);
     fInfo.setText("");
   }
 
@@ -412,10 +449,10 @@ struct answer_row : nodes::Stack {
       fFold.again(look, *said.before, widest);
     else
       fFold.blank();
-    fBody.setText(said.text);
+    say(fBody, said.text, look);
     fBody.setColour(look.text);
     fBody.setFontSize(look.size);
-    fBody.apply({.fillX = true});
+    fBody.apply({.maxWidth = widest});
     fFoot.again(sink, look, said);
     // What About tells: what answered, and what this answer came to -- the
     // model that keeps this chat, then how long it thought, how often it
@@ -482,6 +519,10 @@ struct message_row : nodes::Stack {
 // The messages of one conversation, in a column of their own: the rows' own
 // flow, so each begins under the height the one before it came to.
 struct message_screen : nodes::Stack {
+  // Said on the screen while the widths are being looked into: what room the
+  // column has, what widest the bubbles were given of it, and what the first
+  // row, its bubble and the text in it came to.
+
   // One row for every message there is, made as they are asked for and kept
   // once made: a column of thirty-two of them was a third of a thousand
   // nodes, and as a member of this node -- where it was made, and again

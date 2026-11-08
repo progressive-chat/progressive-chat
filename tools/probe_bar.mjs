@@ -18,7 +18,10 @@ for (const [name, x] of [['new', 1250], ['add', 1206], ['system', 1166], ['fork'
   await page.mouse.click(x, 26);
   await page.waitForTimeout(900);
   const said = await page.evaluate(page_mirror);
-  console.log(name, 'said:', said.length, 'sonnet:', said.includes('sonnet-4'),
+  // The one answerer this sample's room names, said by the room itself:
+  // asked here for a model this page never says, this was `false` for a
+  // whole night and looked like a room that would not name anything.
+  console.log(name, 'said:', said.length, 'named:', said.includes('Claude Haiku 4'),
               'newchat:', said.includes('New chat'), 'card:', said.includes('Told to every model'),
               'forked:', said.includes('forked'));
 }

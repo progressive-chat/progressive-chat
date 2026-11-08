@@ -11,7 +11,7 @@ await page.waitForTimeout(2500);
 
 const read = async () => await page.evaluate(page_mirror);
 const start = await read();
-console.log('start:', start.length, 'bubble:', start.includes('~4.1k / 1M tokens'));
+console.log('start:', start.length, 'bubble:', start.includes('4.1k tokens'));
 
 // Three dots, where the room is too narrow for four presses to stand in it.
 await page.mouse.click(566, 26);
@@ -36,4 +36,23 @@ await page.waitForTimeout(1000);
 const back = await read();
 console.log('back:', back.length, 'menu again:', back.includes('Fork conversation'));
 console.log('tail:', JSON.stringify(back.slice(-200)));
+
+// Put away by a press on the room below it: the card's own three dots are
+// put away the same way, by the same plate taking the room's presses while
+// either card is out and nothing of it at all when none is. Three dots put a
+// menu out and take it in again by turns, so this asks whether it is out
+// before it says anything about putting it away -- pressed a third time it
+// was already put away, and the check read `false -> false` and meant
+// nothing at all.
+let out = await read();
+if (!out.includes('Fork conversation')) {
+  await page.mouse.click(566, 26);
+  await page.waitForTimeout(1200);
+  out = await read();
+}
+await page.mouse.click(300, 500);
+await page.waitForTimeout(1200);
+const gone = await read();
+console.log('put away by the room:', out.includes('Fork conversation'),
+            '->', gone.includes('Fork conversation'));
 await browser.close();

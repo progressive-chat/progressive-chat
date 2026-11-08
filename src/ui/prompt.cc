@@ -74,8 +74,7 @@ struct prompt_screen : scene::Node {
   std::shared_ptr<prompt_sink> fSink = std::make_shared<prompt_sink>();
   widgets::TextArea<prompt_told> fField{widgets::Theme{}, std::string(default_told),
                                         prompt_told{fSink}};
-  ask_box fClosePlate{};
-  nodes::Icon fCloseMark{shape::close(), 0u};
+  press_box fClose{};
   // Which conversation the field is writing into, so that opening it on
   // another one puts that one's words in the field and not the last one's.
   std::string fShown;
@@ -96,19 +95,6 @@ struct prompt_screen : scene::Node {
                   .relativeSize = scene::axes::kNone,
                   .cornerRadius = 16.0f,
                   .padding = scene::Margin::all(edge)});
-    fClosePlate.apply({.width = 36.0f,
-                       .height = 36.0f,
-                       .cornerRadius = 18.0f,
-                       .anchor = scene::anchor::kTopRight,
-                       .origin = scene::anchor::kTopRight,
-                       .x = -20.0f,
-                       .y = 20.0f});
-    fCloseMark.apply({.width = 18.0f,
-                      .height = 18.0f,
-                      .anchor = scene::anchor::kTopRight,
-                      .origin = scene::anchor::kCentre,
-                      .x = -(20.0f + 18.0f),
-                      .y = 38.0f});
     this->setVisible(false);
   }
 
@@ -168,25 +154,17 @@ struct prompt_screen : scene::Node {
     fSaid.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
                  .y = above + 56.0f});
-    fClosePlate.again(asked, app::close_system_prompt{}, look.raised);
-    fClosePlate.apply({.width = 36.0f,
-                       .height = 36.0f,
-                       .cornerRadius = 18.0f,
-                       .anchor = scene::anchor::kTopRight,
-                       .origin = scene::anchor::kTopRight,
-                       .relativeSize = scene::axes::kNone,
-                       .x = -(beside + 20.0f),
-                       .y = above + 20.0f,
-                       .visible = true});
-    fCloseMark.apply({.width = 18.0f,
-                      .height = 18.0f,
-                      .anchor = scene::anchor::kTopRight,
-                      .origin = scene::anchor::kCentre,
-                      .relativeSize = scene::axes::kNone,
-                      .x = -(beside + 20.0f + 18.0f),
-                      .y = above + 38.0f,
-                      .visible = true});
-    fCloseMark.setColour(look.text);
+    fClose.again(asked,
+                 {.anchor = scene::anchor::kTopRight,
+                  .origin = scene::anchor::kTopRight,
+                  .relativeSize = scene::axes::kNone,
+                  .width = 36.0f,
+                  .height = 36.0f,
+                  .x = -(beside + 20.0f),
+                  .y = above + 20.0f,
+                  .visible = true},
+                 app::close_system_prompt{}, look.raised);
+    fClose.mark_colour(look.text);
   }
 
   void forEachChild(auto &&f) {
@@ -195,8 +173,7 @@ struct prompt_screen : scene::Node {
     f(fHead);
     f(fSaid);
     f(fField);
-    f(fClosePlate);
-    f(fCloseMark);
+    f(fClose);
   }
 };
 
