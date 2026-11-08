@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.logic.formatting -- A message's text as the runs it is drawn in:
-// bold, italic, struck, code, a link. Read once here, and the screen draws
-// runs and never looks at a star again.
+// bold, italic, struck, code, underlined, a link. Read once here, and the
+// screen draws runs and never looks at a star again.
 export module pchat.logic.formatting;
 
 import std;
@@ -17,6 +17,7 @@ inline constexpr run_style italic = 1u << 1;
 inline constexpr run_style code = 1u << 2;
 inline constexpr run_style link = 1u << 3;
 inline constexpr run_style struck = 1u << 4;
+inline constexpr run_style underline = 1u << 5;
 
 struct run {
   std::string_view text;
@@ -49,6 +50,7 @@ struct mark {
 inline constexpr mark marks[] = {
   {std::string_view{"**"}, bold, false},
   {std::string_view{"*"}, italic, false},
+  {std::string_view{"__"}, underline, false},
   {std::string_view{"_"}, italic, false},
   {std::string_view{"~~"}, struck, false},
   {std::string_view{"`"}, code, false},
