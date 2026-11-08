@@ -488,10 +488,14 @@ struct settings_rows : scene::Node {
   nodes::Text fRead{"Read the design", 15.0f, 0u};
   // The archive, offered under what this build is made of: a plate like the
   // design's, pressed to write everything this program holds into one .prgrssv
-  // file where the machine keeps files.
+  // file where the machine keeps files. Said the way every other label of this
+  // page is said -- empty until the row says it, elided within its room -- and
+  // not held as words from the moment it was made: a label written once and
+  // never again is laid out by nobody.
   ask_box fArchive{};
-  nodes::Text fArchiveText{"An archive of everything", 15.0f, 0u};
+  nodes::Text fArchiveText{"", 15.0f, 0u};
   settings_rows() {
+    fArchiveText.setElided(true);
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .y = 24.0f});
@@ -599,6 +603,8 @@ struct settings_rows : scene::Node {
                     .height = settings_row_height,
                     .relativeSize = scene::axes::kNone,
                     .cornerRadius = 14.0f});
+    fArchiveText.setText("An archive of everything");
+    fArchiveText.setColour(look.text);
     fArchiveText.apply({.maxWidth = std::max(0.0f, row_width - 32.0f)});
     fArchiveText.apply({.anchor = scene::anchor::kCentreLeft,
                         .origin = scene::anchor::kCentreLeft,
