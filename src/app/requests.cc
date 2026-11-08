@@ -173,6 +173,11 @@ struct set_answerer {
   std::string name;
   bool wanted = false;
 };
+// The archive of everything this program holds, written into one .prgrssv file
+// where the machine keeps files: asked for on the settings page's About, and
+// answered with a save dialog of the machine's own -- the chosen path comes
+// back through the program (pchat.app.program, save_path_chosen).
+struct save_archive {};
 
 // What is asked, as one value: spl::variant, so that every kind of it is
 // handled where it is read and a new one cannot be forgotten.
@@ -192,7 +197,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 set_avatars, set_row_times,
                                 send_test_notification,
                                 set_generation, set_tool, set_switch,
-                              set_answerer, copy_text>;
+                              set_answerer, copy_text, save_archive>;
 
 class requests {
 public:
