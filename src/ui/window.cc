@@ -102,8 +102,9 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
              const asking &how, const std::string &query, bool dark,
-             const what_is_open &open, float width, float height,
-             app::requests *asked) {
+             const what_is_open &open,
+             const std::vector<std::string> &faces_lately, float width,
+             float height, app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
     const std::string opened = root.opened ? root.opened->value : std::string{};
@@ -226,7 +227,7 @@ struct app_window : scene::Node {
                      .visible = true});
     if (open_chat)
       fComposer.again(look, *open_chat, how, asked, open.editor_menu,
-                      open.faces);
+                      open.faces, faces_lately);
     // Any of the three cards, put away by a press on anything below them:
     // the bar's three dots first where two of them are out at once, and then
     // the one written into, on a second press of the same kind.
