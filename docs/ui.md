@@ -233,6 +233,12 @@ with a line through it -- and says nothing of how they were written. What is sai
 inside code is said as it stands: a star in it is a star and not the
 beginning of slanted, which is why `p * p` still reads `p * p`.
 
+Three backticks at the head of a line, and three at the head of another,
+say what stands between them is a block of code: said in the monospace face,
+and said as it stands, so that nothing inside it is read as a mark -- a star
+in code is a star. Neither fence is said, nor the word written on the opening
+one.
+
 Where a link stands in the line is read the same way, out of the line as it
 is drawn and not out of what was written, so that where the screen is told a
 place begins is where the reader sees it begin.
@@ -241,7 +247,10 @@ Asked of the page by `tools/probe_marks.mjs`: a stretch written in code read
 back out of the page drawn in the monospace face, one struck out read back
 with a line drawn through it, one underlined read back with a line drawn
 under it, no backtick or pair of tildes left anywhere in what the page says,
-and the star inside one still there.
+and the star inside one still there. A block is asked of the page by
+`tools/probe_block.mjs`, of the answer the room says before anything is
+written in it, which says one at the end of it: every line of it read back in
+the monospace face, and no fence of three backticks read anywhere.
 
 ## What a line stands quoted in
 
