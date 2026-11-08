@@ -52,29 +52,69 @@ await page.waitForTimeout(250);
 await page.mouse.click(entry[0], entry[1]);
 await page.waitForTimeout(1200);
 console.log(`said: ${JSON.stringify(await five())}`);
-// Where each of the five rows stands, found by pressing: across the right of
-// the card and down the column, until a press moves something and what moved
-// says which row it was pressed in.
-let before = JSON.stringify(await five());
+// Where each of the five rows stands, said by itself: the leaf that says its
+// name, and the row around it, which is the widest thing that holds it. Then
+// into the room -- a row below the fold is said nowhere at any breadth, so it
+// is wheeled up until it stands between the room's own edges.
+const rows_of = () => page.evaluate((names) => {
+  const found = {};
+  for (const one of document.getElementById('skiff').querySelectorAll('*')) {
+    const words = (one.textContent || '').trim();
+    if (one.children.length !== 0 || !names.includes(words))
+      continue;
+    let row = one.parentElement;
+    while (row && row.getBoundingClientRect().width < 300)
+      row = row.parentElement;
+    if (!row)
+      continue;
+    const box = row.getBoundingClientRect();
+    found[words] = {x: Math.round(box.x), width: Math.round(box.width),
+                    y: Math.round(box.y + box.height / 2.0)};
+  }
+  return found;
+}, names);
+
 const found = [];
-for (let y = 380; y <= 660 && found.length < 5; y += 4) {
-  for (const x of [900, 930, 955, 975]) {
-    await page.mouse.click(x, y);
-    await page.waitForTimeout(120);
-    const now = JSON.stringify(await five());
-    if (now !== before) {
-      const moved = await five();
-      const which = moved.findIndex((one, at) => one !== JSON.parse(before)[at]);
-      found.push(`${names[which]} at ${x},${y}: ${moved[which]}`);
-      before = now;
-      break;
-    }
+for (const name of names) {
+  let rows = await rows_of();
+  for (let tried = 0; tried < 25 && rows[name] &&
+                     (rows[name].y < 120 || rows[name].y > 780); ++tried) {
+    await page.mouse.move(640, 450);
+    await page.mouse.wheel(0, rows[name].y - 500);
+    await page.waitForTimeout(400);
+    rows = await rows_of();
+  }
+  if (!rows[name] || rows[name].y < 120 || rows[name].y > 780) {
+    console.log(`${name} was not wheeled into the room`);
+    continue;
+  }
+  const before = await five();
+  // Pressed twice over the breadth of its own row -- the value stands at the
+  // row's far side, and what answers there is whichever part of the row was
+  // reached, said by what the five then say.
+  // Sixty in raises it; eighty back from the row's far end lowers it, which
+  // is the only way one that stands at its own ceiling can be moved at all.
+  for (const along of [60, rows[name].width - 80, rows[name].width - 30,
+                       rows[name].width - 60]) {
+    const x = rows[name].x + along;
+    await page.mouse.move(x, rows[name].y);
+    await page.waitForTimeout(250);
+    await page.mouse.click(x, rows[name].y);
+    await page.waitForTimeout(500);
+    const after = await five();
+    const which = after.findIndex((one, at) => one !== before[at]);
+    if (which < 0)
+      continue;
+    found.push(`${names[which]} at ${x},${rows[name].y}: ` +
+               `${before[which]} -> ${after[which]}`);
+    break;
   }
 }
+
 // Five things are said, and whether a press moves them is what comes next:
 // the rows stand below the fold of the card, and nothing here has reached
 // them yet, so an empty answer below is not the page saying no.
-console.log(`said and moved by a press: ${found.length ? JSON.stringify(found) : 'none reached yet -- the rows stand below the fold of the card'}`);
+console.log(`said and moved by a press: ${found.length ? JSON.stringify(found) : 'no row of the five answers a press in its own row'}`);
 console.log(`after: ${JSON.stringify(await five())}`);
 await page.screenshot({ path: 'generation.png' }).catch(() => {});
 await browser.close();
