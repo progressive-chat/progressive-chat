@@ -20,7 +20,7 @@ node tools/probe_faces.mjs http://127.0.0.1:8126/index.html   # an artifact
 
 ## What a probe's press has to do to be answered
 
-Four things a press has to be for the room to answer it, all learned the hard
+Five things a press has to be for the room to answer it, all learned the hard
 way by probes that asked nothing for a while (`probe_copied.mjs` first):
 
 - **The mirror's box is a square of layout, not of the glass.** It says
@@ -32,6 +32,11 @@ way by probes that asked nothing for a while (`probe_copied.mjs` first):
   at x 450, y 480 opens the design, which no reading of boxes would have
   found. So a probe that cannot press its way to a thing must not say the
   thing answers nothing -- it has only said it did not find it.
+- **Read whether it is out before saying it was put away.** A plate that
+  turns a card out and in by turns has to be asked which way it stands now:
+  `probe_more.mjs` pressed its three dots a third time to put the card away,
+  and the card had already gone, so it read `false -> false` and meant
+  nothing by either of them.
 - **The pointer stands on it first.** A press put down where nothing had been
   pointed at is not answered: move onto what is pressed before the press, and
   press where it stands rather than in the padding beside its words.
@@ -64,11 +69,13 @@ that the next one found in that state is recognised for it.
 | `probe_generation.mjs`, `probe_now.mjs` | opened settings at (330,30) | open it by the word "Settings", read where it stands |
 | `probe_switches.mjs` | hunted a gear drawn in a 36x36 square near the top left, and fell over when there was none | open settings by the word; all seven switches are drawn and move again |
 
-One still says a square the page has left, and has not been mended yet:
-`probe_more.mjs` asks whether the bubble over the messages says
-`~4.1k / 1M tokens`, and what the page says now is `4.1k tokens` -- the probe
-still presses and is still answered (`newchat`, `card` and `forked` all true),
-so nothing there is unasked, only that one reading is older than the words.
+A seventh was mended the same evening: `probe_more.mjs` asked whether the
+bubble over the messages says `~4.1k / 1M tokens`, and what the page says now
+is `4.1k tokens`, so its first reading said `false` from the start and meant
+nothing. It asks for what is said, and it asks which way the three dots stand
+before it says the menu was put away -- pressed a third time the card had
+already gone, and that check read `false -> false`. It reads `true -> false`
+now: out before, gone after.
 
 ## What the whole page says
 
