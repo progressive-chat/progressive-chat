@@ -84,6 +84,12 @@ build and the next.
       with, what a proxy is asked through, and where what is kept is kept.
       The row says a thing is offered; what offering it changes is the rest
       of it.
+
+      Every one of the seven is written up, with what it would take to be
+      true to its own words, in `docs/switches.md` -- read that first, for it
+      says which of them waits on the back end and which waits on something
+      this tree has not got yet.
+
 - [x] What a model wrote to itself, folded above its answer, is pressed open
       and read: `history_fold` keeps it (`src/ui/message_list.cc`), and a probe
       of the page in a browser says a press anywhere in the line opens it and
