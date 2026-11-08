@@ -91,13 +91,18 @@ struct endpoint {
 // ends, the same way their own docs put it. A third shape is Anthropic's own,
 // and no base ending says where that one is asked: the family does, named by
 // the answerer the model is.
-enum class wire { chat, responses, anthropic };
+enum class wire { chat, responses, anthropic, gemini };
 
 [[nodiscard]] inline wire wire_of(const endpoint &one) {
   // Who is asked speaks before the base's ending does: Anthropic's family
   // keeps its own wire wherever its base stands, suffixes and all.
   if (family_of(one.model) == "anthropic")
     return wire::anthropic;
+  // The family before the base's ending here too: a base ending in /v1beta is
+  // OpenAI's words under a Google name, and which words the model reads is
+  // asked of the model and not of the base's suffix.
+  if (family_of(one.model) == "gemini")
+    return wire::gemini;
   const std::string_view base(one.base);
   if (base.ends_with("/v1beta") || base.ends_with("/responses"))
     return wire::responses;
@@ -112,11 +117,24 @@ enum class wire { chat, responses, anthropic };
     return "/responses";
   case wire::anthropic:
     return "/messages";
+  case wire::gemini:
+    // The method is the path here, model and all: see url_of.
+    return "";
   }
   return "/chat/completions";
 }
 
 [[nodiscard]] inline std::string url_of(const endpoint &one) {
+  // Gemini's method carries the model inside it and asks for the answer as
+  // the stream of events it is made of: base, model, method, and the form
+  // that says the events are the stream and not one blob.
+  if (wire_of(one) == wire::gemini) {
+    std::string out = one.base;
+    out += "/models/";
+    out += one.model;
+    out += ":streamGenerateContent?alt=sse";
+    return out;
+  }
   std::string out = one.base;
   out += path_of(wire_of(one));
   return out;
@@ -134,6 +152,14 @@ headers_of(const endpoint &one) {
     if (!one.key.empty())
       out.emplace_back("x-api-key", one.key);
     out.emplace_back("anthropic-version", "2023-06-01");
+    return out;
+  }
+  if (wire_of(one) == wire::gemini) {
+    // Where Google's own wire asks for the key: its header's own name and
+    // nothing beside it -- which version this wire is has gone into the base
+    // of its URL with its method.
+    if (!one.key.empty())
+      out.emplace_back("x-goog-api-key", one.key);
     return out;
   }
   if (!one.key.empty())
@@ -302,6 +328,109 @@ template <std::ranges::forward_range Turns>
   return out.take();
 }
 
+// What a gemini wire wants said to it: the same things in its own words --
+// the turns as contents of parts, what it is told as a systemInstruction
+// beside them, and every choice an answer is made by under one
+// generationConfig of this wire's own naming (Gemini's generateContent body).
+// What this shape has no field for is not said: the penalties a chat wire
+// takes are not Google's, and thinking is a budget of tokens here -- named
+// in the thousands when the reader asked for thinking, and named zero when
+// they did not, because this wire thinks on by itself where no budget says
+// otherwise and this tree says otherwise.
+template <std::ranges::forward_range Turns>
+  requires std::same_as<std::ranges::range_value_t<Turns>, turn>
+[[nodiscard]] inline std::string gemini_body_of(const endpoint &one, Turns &&turns,
+                                                const wanted &wants = {}) {
+  json::writing out;
+  out.thing();
+  out.name("contents").list();
+  std::string system;
+  // What each call went out under, kept as it is answered: a functionResponse
+  // answers by the name of the call, and a turn carries only the id of the
+  // one it answers.
+  std::vector<std::pair<std::string, std::string>> asked;
+  for (const turn &said : turns) {
+    if (said.who == role::system) {
+      if (!system.empty())
+        system += "\n\n";
+      system += said.text;
+      continue;
+    }
+    for (const tool_call &call : said.calls)
+      asked.emplace_back(call.id, call.name);
+    // What a person wrote is a user's and what the model answered is a
+    // model's; an answer to a call goes back as a user's part against the
+    // call it answers, which is this wire's own word for it.
+    const std::string_view speaks =
+        said.who == role::assistant ? "model" : std::string_view("user");
+    out.thing().name("role").text(speaks).name("parts").list();
+    if (said.who == role::tool && !said.own.empty()) {
+      std::string called = said.own;
+      for (const auto &[id, name] : asked)
+        if (id == said.own)
+          called = name;
+      out.thing().name("functionResponse").thing().name("name").text(called);
+      out.name("response").thing().name("result").text(said.text).shut();
+      out.shut().shut();
+    } else if (!said.calls.empty()) {
+      if (!said.text.empty())
+        out.thing().name("text").text(said.text).shut();
+      for (const tool_call &call : said.calls) {
+        out.thing().name("functionCall").thing().name("name").text(call.name);
+        out.name("args").raw(call.arguments.empty() ? "{}" : call.arguments);
+        out.shut().shut();
+      }
+    } else {
+      out.thing().name("text").text(said.text).shut();
+    }
+    out.shut();
+    out.shut();
+  }
+  out.shut();
+  if (!system.empty()) {
+    out.name("systemInstruction").thing();
+    out.name("parts").list();
+    out.thing().name("text").text(system).shut();
+    out.shut();
+    out.shut();
+  }
+  out.name("generationConfig").thing();
+  if (wants.temperature)
+    out.name("temperature").number(*wants.temperature);
+  if (wants.top_p)
+    out.name("topP").number(*wants.top_p);
+  if (wants.max_tokens)
+    out.name("maxOutputTokens").number(static_cast<std::int64_t>(*wants.max_tokens));
+  out.name("thinkingConfig").thing();
+  out.name("thinkingBudget").number(static_cast<std::int64_t>(wants.thinking ? 8192 : 0));
+  out.shut();
+  out.shut();
+  if (!wants.tools.empty()) {
+    out.name("tools").list();
+    out.thing().name("functionDeclarations").list();
+    for (const offered &one_tool : wants.tools) {
+      out.thing();
+      out.name("name").text(one_tool.name);
+      out.name("description").text(one_tool.told);
+      out.name("parameters").thing().name("type").text("object");
+      out.name("properties").thing();
+      for (const auto &[takes, said] : one_tool.taken)
+        out.name(takes).thing().name("type").text("string").name("description").text(said).shut();
+      out.shut();
+      out.name("required").list();
+      for (const auto &[takes, said] : one_tool.taken)
+        out.text(takes);
+      out.shut();
+      out.shut().shut();
+    }
+    out.shut();
+    out.shut();
+    out.shut();
+  }
+  out.shut();
+  return out.take();
+}
+
 // What a chat wire wants said to it: the model, that it is asked to stream,
 // the turns, and that it says what it cost at the end of the stream and not
 // only in the answer no stream gives.
@@ -313,6 +442,10 @@ template <std::ranges::forward_range Turns>
   // words instead, they are what go out.
   if (wire_of(one) == wire::anthropic)
     return anthropic_body_of(one, turns, wants);
+  // And where it asks for Google's: the same things again, said the way
+  // generateContent reads them.
+  if (wire_of(one) == wire::gemini)
+    return gemini_body_of(one, turns, wants);
   json::writing out;
   out.thing();
   out.name("model").text(one.model);

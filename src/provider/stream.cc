@@ -10,6 +10,7 @@
 // reads an answer.
 module;
 #include "anthropic/wire.h"
+#include "gemini/wire.h"
 
 export module pchat.provider.stream;
 
@@ -39,6 +40,8 @@ public:
   explicit stream(wire of = wire::chat) : wire_(of) {
     if (of == wire::anthropic)
       wire_state_.reset(anthropic_open());
+    if (of == wire::gemini)
+      gemini_state_.reset(gemini_open());
   }
 
   // A piece of the wire, in whatever sizes the transport hands it over in: a
@@ -55,7 +58,9 @@ public:
         one.pop_back();
       if (wire_ == wire::anthropic)
         anthropic_line(one);
-      else
+        else if (wire_ == wire::gemini)
+          gemini_line(one);
+        else
         line_said(one);
     }
   }
@@ -143,7 +148,73 @@ private:
     }
   }
 
-  // One line of SSE: a comment, a field, or the blank line that ends a frame.
+// One line of gemini's SSE: the framing the shaped wire beside it reads --
+    // data, blank line, next frame -- with the payload whole at the blank that
+    // ends it, as the other shaped wire reads it too.
+    void gemini_line(const std::string &one) {
+      if (one.empty()) {
+        if (wire_payload_.empty())
+          return;
+        const std::vector<gemini_frame> came = gemini_step(gemini_state_.get(), wire_payload_);
+        wire_payload_.clear();
+        for (const gemini_frame &frame : came)
+          gemini_said(frame);
+        return;
+      }
+      if (one.front() == ':')
+        return;
+      if (!one.starts_with("data:"))
+        return; // event:, id:, retry: -- the payload says its own type
+      std::string_view data(one);
+      data.remove_prefix(5);
+      if (!data.empty() && data.front() == ' ')
+        data.remove_prefix(1);
+      if (!wire_payload_.empty())
+        wire_payload_.push_back('\n');
+      wire_payload_.append(data);
+    }
+
+    // One decoded frame said the way everything here is said: into the same
+    // accumulators every other wire fills, so nothing reading an answer can
+    // tell which of the three shapes it arrived in. A gemini call comes whole
+    // with a name and no id, and the id stays empty rather than invented.
+    void gemini_said(const gemini_frame &one) {
+      switch (one.what) {
+      case gemini_frame::kind::text:
+        answer_said(one.said);
+        return;
+      case gemini_frame::kind::thought:
+        thought_said(one.said);
+        return;
+      case gemini_frame::kind::tool: {
+        const tool_call call{
+            .id = one.call_id, .name = one.call_name, .arguments = one.call_arguments};
+        calls_.push_back(call);
+        said_.push_back(event{.what = event::kind::tool, .call = call});
+        return;
+      }
+      case gemini_frame::kind::usage:
+        cost_.in = one.used_in;
+        cost_.out = one.used_out;
+        said_.push_back(event{.what = event::kind::usage, .cost = cost_});
+        return;
+      case gemini_frame::kind::ended:
+        content_ended();
+        if (ended_)
+          return;
+        finish_ = one.finish.empty() ? std::string("stop") : one.finish;
+        ended_ = true;
+        said_.push_back(event{.what = event::kind::ended, .finish = finish_});
+        return;
+      case gemini_frame::kind::failed:
+        failed_ = true;
+        failure_ = one.said;
+        said_.push_back(event{.what = event::kind::failed, .said = failure_});
+        return;
+      }
+    }
+
+      // One line of SSE: a comment, a field, or the blank line that ends a frame.
   void line_said(const std::string &one) {
     if (one.empty() || one.front() == ':')
       return;
@@ -572,6 +643,8 @@ private:
   wire wire_ = wire::chat;
   std::unique_ptr<anthropic_state, void (*)(anthropic_state *)> wire_state_{nullptr,
                                                                             &anthropic_close};
+    std::unique_ptr<gemini_state, void (*)(gemini_state *)> gemini_state_{nullptr,
+                                                                          &gemini_close};
   std::string wire_payload_;
   // What the thinking lexer holds: a beginning of a tag it has not settled
   // yet, whether it is reading thought at this moment, and which tag is to
