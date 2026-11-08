@@ -90,10 +90,16 @@ inline constexpr std::size_t foot_count = 6;
   return styles;
 }
 
-// One line drawn: what it says with its marks taken out of it, what those
-// marks meant, and the places in it that are said of somewhere else.
-[[nodiscard]] logic::drawn line_of(std::string_view said) {
-  return logic::drawn_of(said);
+// One line of a message drawn, which three places in the room want and want
+// alike: what it says with its marks taken out of it, what those marks
+// meant, and every place said in it, which a press that lands and does not
+// move goes to.
+void say(nodes::Text &body, std::string_view said, const paints &look) {
+  const logic::drawn line = logic::drawn_of(said);
+  body.setText(line.said);
+  body.setSelectable(true);
+  body.setLinks(links_in(line), look.link);
+  body.setStyles(styles_in(line.runs), look.dim);
 }
 
 // ---- the reader's bubble --------------------------------------------------
@@ -125,6 +131,7 @@ struct bubble : nodes::Stack {
     // No links either once nothing is said: none of them stands anywhere in
     // a line that is not there.
     fBody.setLinks({}, 0u);
+    fBody.setStyles({}, 0u);
     fTime.setText("");
   }
 
@@ -141,11 +148,7 @@ struct bubble : nodes::Stack {
                                            .topRight = bubble_radius,
                                            .bottomRight = bubble_corner,
                                            .bottomLeft = bubble_radius}});
-    const logic::drawn line = line_of(said);
-    fBody.setText(line.said);
-    fBody.setSelectable(true);
-    fBody.setLinks(links_in(line), look.link);
-    fBody.setStyles(styles_in(line.runs), look.dim);
+    say(fBody, said, look);
     fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest - 2.0f * bubble_pad_x});
@@ -339,7 +342,10 @@ struct history_fold : nodes::Stack {
     fSummary.apply(
         { .maxWidth = widest - 24.0f});
     // What it wrote to itself, greentext: shown while it is pressed open.
-    fThought.setText(before.said);
+    // Said with its marks taken out of it, as anything a model wrote is.
+    const logic::drawn thinking = logic::drawn_of(before.said);
+    fThought.setText(thinking.said);
+    fThought.setStyles(styles_in(thinking.runs), look.dim);
     fThought.setColour(look.thought);
     fThought.setMonospace(true);
     fThought.setVisible(fOpen && !before.said.empty());
@@ -421,6 +427,7 @@ struct answer_row : nodes::Stack {
     fFold.blank();
     fBody.setText("");
     fBody.setLinks({}, 0u);
+    fBody.setStyles({}, 0u);
     fInfo.setText("");
   }
 
@@ -435,11 +442,7 @@ struct answer_row : nodes::Stack {
       fFold.again(look, *said.before, widest);
     else
       fFold.blank();
-    const logic::drawn line = line_of(said.text);
-    fBody.setText(line.said);
-    fBody.setSelectable(true);
-    fBody.setLinks(links_in(line), look.link);
-    fBody.setStyles(styles_in(line.runs), look.dim);
+    say(fBody, said.text, look);
     fBody.setColour(look.text);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest});
