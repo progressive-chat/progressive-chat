@@ -173,4 +173,12 @@ build and the next.
       has a WebGL to draw through, and it came back with 1532 nodes and the
       page's whole text. What it still comes back without is the narrow
       page: 390x844 with the worker blocked does not start, and nobody has
-      looked at why.
+      looked at why -- looked at now, on 2026-11-08, and it is not the
+      narrow page at all. It starts at 390x844 and says 973 characters,
+      worker or no; what stops it is the worker being blocked, and that at
+      either width, for it is the worker that isolates the page and so the
+      reason there are threads to draw on. Where one refuses to be taken
+      the page said nothing but "starting" for as long as it was left
+      open, which says neither what went wrong nor that anything had: it
+      says what is missing now (`web/bootstrap.js`), and
+      `tools/probe_worker_blocked.mjs` reads that back at both widths.
