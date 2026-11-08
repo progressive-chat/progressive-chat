@@ -24,6 +24,16 @@ struct run {
   friend bool operator==(const run&, const run&) = default;
 };
 
+// One run and where it stands: where it begins and ends in the line as it is
+// drawn, which is what the screen is told, and nothing is looked up by
+// counting marks again.
+struct run_place {
+  std::size_t first = 0;
+  std::size_t last = 0;
+  run_style style = plain;
+  friend bool operator==(const run_place&, const run_place&) = default;
+};
+
 namespace formatting_detail {
 
 // One mark, and the run it opens.
@@ -106,6 +116,27 @@ struct place {
   std::string target;
   friend bool operator==(const place&, const place&) = default;
 };
+
+// The line as the screen draws it: what is said with every mark that said it
+// taken out of it, and where each run stands in what is left. A star and a
+// backtick are how a model says bold and code: the screen draws what they
+// said, and says none of them.
+struct drawn {
+  std::string said;
+  std::vector<run_place> runs;   // each stretch that is not plain
+};
+
+[[nodiscard]] inline drawn drawn_of(std::string_view text) {
+  drawn out;
+  for (const run &one : runs_of(text)) {
+    if (one.style != plain)
+      out.runs.push_back({.first = out.said.size(),
+                          .last = out.said.size() + one.text.size(),
+                          .style = one.style});
+    out.said += one.text;
+  }
+  return out;
+}
 
 [[nodiscard]] inline std::vector<place> links_of(std::string_view text) {
   using formatting_detail::link_stops_at;

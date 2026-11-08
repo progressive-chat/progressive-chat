@@ -103,6 +103,29 @@ SAID(logic, the_links_in_a_line_and_where_each_goes) {
   EXPECT_TRUE(logic::links_of("see https:// there").empty());
 }
 
+SAID(logic, what_the_marks_said_and_where_each_run_stands) {
+  const logic::drawn drawn = logic::drawn_of("**bold** and `code`");
+  // Said without a star or a backtick in it: the screen draws what they said
+  // and none of them.
+  EXPECT_EQ(drawn.said, std::string("bold and code"));
+  EXPECT_EQ(drawn.runs.size(), 2u);
+  // Each run stands where its own words stand in what is drawn -- which is
+  // what the screen is told, and how it knows how much of the line to draw
+  // in that style.
+  EXPECT_EQ(std::string(drawn.said.substr(drawn.runs[0].first,
+                                         drawn.runs[0].last - drawn.runs[0].first)),
+            std::string("bold"));
+  EXPECT_TRUE((drawn.runs[0].style & logic::bold) != 0);
+  EXPECT_EQ(std::string(drawn.said.substr(drawn.runs[1].first,
+                                         drawn.runs[1].last - drawn.runs[1].first)),
+            std::string("code"));
+  EXPECT_TRUE((drawn.runs[1].style & logic::code) != 0);
+  // A line with nothing said of it is itself, said in no run at all.
+  const logic::drawn no_marks = logic::drawn_of("nothing of the sort");
+  EXPECT_EQ(no_marks.said, std::string("nothing of the sort"));
+  EXPECT_TRUE(no_marks.runs.empty());
+}
+
 int main() { return pchat::tests::run(); }
 
 

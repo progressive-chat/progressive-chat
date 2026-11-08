@@ -65,9 +65,31 @@ inline constexpr std::size_t foot_count = 6;
 // and a link is opened by one that does not.
 [[nodiscard]] std::vector<scene::TextLink> links_in(std::string_view said) {
   std::vector<scene::TextLink> links;
-  for (const logic::link &one : logic::links_of(said))
+  for (const logic::place &one : logic::links_of(said))
     links.push_back({.first = one.first, .last = one.last, .target = one.target});
   return links;
+}
+
+// What the marks meant, said as the text draws them: bold, slanted, code.
+// Read out of the line once (`pchat.logic.formatting`), along with the line
+// as it is drawn without them, so that what stands at an offset here stands
+// at the same offset in what the reader sees.
+[[nodiscard]] std::vector<scene::TextStyled> styles_in(
+    const std::vector<logic::run_place> &runs) {
+  std::vector<scene::TextStyled> styles;
+  for (const logic::run_place &one : runs)
+    styles.push_back({.first = one.first,
+                      .last = one.last,
+                      .strong = (one.style & logic::bold) != 0,
+                      .emphasis = (one.style & logic::italic) != 0,
+                      .code = (one.style & logic::code) != 0});
+  return styles;
+}
+
+// One line drawn: what it says with its marks taken out of it, what those
+// marks meant, and the places in it that are said of somewhere else.
+[[nodiscard]] logic::drawn line_of(std::string_view said) {
+  return logic::drawn_of(said);
 }
 
 // ---- the reader's bubble --------------------------------------------------
@@ -115,9 +137,11 @@ struct bubble : nodes::Stack {
                                            .topRight = bubble_radius,
                                            .bottomRight = bubble_corner,
                                            .bottomLeft = bubble_radius}});
-    fBody.setText(std::string(said));
+    const logic::drawn line = line_of(said);
+    fBody.setText(line.said);
     fBody.setSelectable(true);
-    fBody.setLinks(links_in(said), look.link);
+    fBody.setLinks(links_in(line.said), look.link);
+    fBody.setStyles(styles_in(line.runs), look.dim);
     fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest - 2.0f * bubble_pad_x});
@@ -407,9 +431,11 @@ struct answer_row : nodes::Stack {
       fFold.again(look, *said.before, widest);
     else
       fFold.blank();
-    fBody.setText(said.text);
+    const logic::drawn line = line_of(said.text);
+    fBody.setText(line.said);
     fBody.setSelectable(true);
-    fBody.setLinks(links_in(said.text), look.link);
+    fBody.setLinks(links_in(line.said), look.link);
+    fBody.setStyles(styles_in(line.runs), look.dim);
     fBody.setColour(look.text);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest});
