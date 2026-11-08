@@ -59,9 +59,13 @@ else: which conversations a search names (`search`), what one row of them is
 called (`lists`), what a message's text is as the runs it is drawn in
 (`formatting`), what the design's own words are (`doc`), what the field holds
 and what sending it makes (`composer`), and what was being written to each
-conversation when its reader left it (`drafts`). Not all of them are asked
-yet: `formatting` says bold, italic, code and a link and nothing asks it,
-which makes it the second thing written for no one to read.
+conversation when its reader left it (`drafts`).
+
+Which of them are asked: every line the room draws is read once by
+`formatting` -- its marks taken out of it and said as the runs they meant,
+every place named in it or written in it as writing writes one said as a link
+that opens where it goes -- and `lists` is asked what the field in the drawer
+names. The rest is as it was written.
 
 `src/tokens.cc` says how much room what was said takes in a model's window,
 and how much it is worth; `src/tools.cc` says which three tools are this
