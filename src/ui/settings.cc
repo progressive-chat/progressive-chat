@@ -587,6 +587,9 @@ struct settings_rows : scene::Node {
     // The archive, offered under the three: a plate the breadth of them with
     // its own words over it, pressed to ask where the machine keeps files --
     // and the bytes follow when a path is said back (screens, save_archive).
+    // The words are laid out the way the page's other words are: a width to be
+    // laid out against first, then where they stand -- an anchored text with no
+    // width of its own is measured to none and drawn where nothing shows it.
     fArchive.again(asked, app::save_archive{}, look.raised);
     fArchive.apply({.anchor = scene::anchor::kTopLeft,
                     .origin = scene::anchor::kTopLeft,
@@ -596,10 +599,12 @@ struct settings_rows : scene::Node {
                     .height = settings_row_height,
                     .relativeSize = scene::axes::kNone,
                     .cornerRadius = 14.0f});
+    fArchiveText.apply({.maxWidth = std::max(0.0f, row_width - 32.0f)});
     fArchiveText.apply({.anchor = scene::anchor::kCentreLeft,
                         .origin = scene::anchor::kCentreLeft,
                         .x = 32.0f,
-                        .y = at + settings_row_height / 2.0f});
+                        .y = at + settings_row_height / 2.0f,
+                        .visible = true});
     at += settings_row_stride;
     return at;
   }
