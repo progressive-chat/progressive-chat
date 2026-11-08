@@ -44,25 +44,29 @@ const said = () => page.evaluate((names) => {
   return found;
 }, names);
 
-// The drawer's gear opens the settings: the only way in, and a press in its
-// middle that answers is a press on the node that holds it.
+// The settings plate, opened by the word "Settings" itself, read where it
+// stands rather than guessed at: for a while this looked for a gear drawn in
+// a square near the top left corner, and there is no such square any more,
+// so the search ended empty and the probe fell over before it asked a thing.
 await page.goto(
     `https://progressive-chat.github.io/progressive-chat/?asked=${Date.now()}`);
 await page.waitForFunction('window.__pchat_started === true', null,
                            { timeout: 180000 });
-let at = null;
-for (let tried = 0; tried < 30 && !at; ++tried) {
-  await page.waitForTimeout(1000);
-  at = await page.evaluate(() => {
-    for (const one of document.getElementById('skiff').querySelectorAll('*')) {
-      const box = one.getBoundingClientRect();
-      if (Math.round(box.width) === 36 && Math.round(box.height) === 36 &&
-          box.y < 24 && box.x < window.innerWidth / 2)
-        return [Math.round(box.x + 18), Math.round(box.y + 18)];
-    }
-    return null;
-  });
-}
+await page.waitForTimeout(6000);
+const at = await page.evaluate(() => {
+  for (const one of document.getElementById('skiff').querySelectorAll('*')) {
+    const own = [...one.childNodes].map((n) => (n.nodeType === 3 ? n.textContent : ''))
+        .join(' ').replace(/\s+/g, ' ').trim();
+    if (own !== 'Settings') continue;
+    const b = one.getBoundingClientRect();
+    if (b.width < 1) continue;
+    return [Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2)];
+  }
+  return null;
+});
+if (!at) { console.log('nothing says Settings on the page'); await browser.close(); process.exit(1); }
+await page.mouse.move(at[0], at[1]);
+await page.waitForTimeout(250);
 await page.mouse.click(at[0], at[1]);
 await page.waitForTimeout(1500);
 
