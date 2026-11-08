@@ -66,6 +66,7 @@ them.
 | `probe_faces_lately.mjs` | that the faces pressed most lately stand in a row above the rest, newest first |
 | `probe_marks.mjs` | the marks in a line: said in the style they said, drawn as none of them, and what is said in code standing as it was |
 | `probe_links_opened.mjs` | a place said in a message: its own link in what the mirror says of the page, and the tab a press on it opens |
+| `probe_quoted.mjs` | a line said quoted: read back with none of its stops left, what it says said whole, and the marks inside it still drawn |
 | `probe_drafts.mjs` | that what is written belongs to one conversation and comes back to it |
 | `probe_copied.mjs` | that what a Copy chip copies reached the machine's own clipboard |
 
