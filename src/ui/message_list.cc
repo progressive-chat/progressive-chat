@@ -58,15 +58,19 @@ inline constexpr std::size_t foot_count = 6;
   }
   return std::to_string(took_ms) + " ms";
 }
-// What a line says of a place in it: where each link stands in it, and where
-// it goes. Given to the text that says the line, which draws each in the
+// What a line says of a place in it: every link, said as a place named in
+// the line or written in it as writing writes one, each in the order they
+// stand. Given to the text that says the line, which draws each in the
 // colour links are drawn in, underlines it, and opens the place when a press
 // lands on it and nowhere else -- a press that moves is a selection first,
 // and a link is opened by one that does not.
-[[nodiscard]] std::vector<scene::TextLink> links_in(std::string_view said) {
+[[nodiscard]] std::vector<scene::TextLink> links_in(const logic::drawn &line) {
   std::vector<scene::TextLink> links;
-  for (const logic::place &one : logic::links_of(said))
+  for (const logic::place &one : logic::links_of(line.said))
     links.push_back({.first = one.first, .last = one.last, .target = one.target});
+  for (const logic::place &one : line.places)
+    links.push_back({.first = one.first, .last = one.last, .target = one.target});
+  std::ranges::sort(links, {}, [](const scene::TextLink &one) { return one.first; });
   return links;
 }
 
@@ -140,7 +144,7 @@ struct bubble : nodes::Stack {
     const logic::drawn line = line_of(said);
     fBody.setText(line.said);
     fBody.setSelectable(true);
-    fBody.setLinks(links_in(line.said), look.link);
+    fBody.setLinks(links_in(line), look.link);
     fBody.setStyles(styles_in(line.runs), look.dim);
     fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
@@ -434,7 +438,7 @@ struct answer_row : nodes::Stack {
     const logic::drawn line = line_of(said.text);
     fBody.setText(line.said);
     fBody.setSelectable(true);
-    fBody.setLinks(links_in(line.said), look.link);
+    fBody.setLinks(links_in(line), look.link);
     fBody.setStyles(styles_in(line.runs), look.dim);
     fBody.setColour(look.text);
     fBody.setFontSize(look.size);

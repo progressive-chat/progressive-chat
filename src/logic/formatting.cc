@@ -65,6 +65,20 @@ inline constexpr mark marks[] = {
   return std::nullopt;
 }
 
+// A link written the way writing writes one: [what it is called](where it
+// goes), and nothing after either of them is part of it. What it is called
+// is drawn as it stands, one run of the line, and nothing in it is read for
+// marks of its own.
+[[nodiscard]] inline std::optional<std::tuple<std::string_view, std::string_view, std::size_t>>
+link_written_at(std::string_view text, std::size_t at) {
+  const std::size_t shut = text.find("](", at + 1);
+  if (shut == std::string_view::npos) return std::nullopt;
+  const std::size_t gone = text.find(')', shut + 2);
+  if (gone == std::string_view::npos) return std::nullopt;
+  return std::tuple{text.substr(at + 1, shut - at - 1),
+                    text.substr(shut + 2, gone - shut - 2), gone + 1 - at};
+}
+
 // What begins a place said in a line, longest first so that https:// is read
 // as itself and not as http:// with an s left over.
 inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "www."};
@@ -91,6 +105,19 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
   run_style open = plain;
   std::size_t from = 0;
   for (std::size_t at = 0; at < text.size();) {
+    // A link written as one is written in what a model says: what it is
+    // called in square stops, and where it goes in round ones after them.
+    // Neither pair is drawn, as no mark is.
+    if (!(open & code) && text[at] == '[') {
+      if (const auto said_place = formatting_detail::link_written_at(text, at)) {
+        const auto [said, target, taken] = *said_place;
+        if (at > from) runs.push_back({.text = text.substr(from, at - from), .style = open});
+        runs.push_back({.text = said, .style = open | link, .target = target});
+        at += taken;
+        from = at;
+        continue;
+      }
+    }
     if (const auto found = formatting_detail::opening_at(text, at, open)) {
       const auto [taken, style] = *found;
       if (at > from) runs.push_back({.text = text.substr(from, at - from), .style = open});
@@ -108,9 +135,6 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
   if (text.size() > from) runs.push_back({.text = text.substr(from), .style = open});
   return runs;
 }
-
-// The words of a run, as the lines it is broken into want them.
-[[nodiscard]] inline bool is_break(char unit) { return unit == ' ' || unit == '\n' || unit == '\t'; }
 
 // Where a link stands in a line, called a place as the writing here calls
 // it: the first unit of it, one past its last, and where it goes. Read as a
@@ -130,7 +154,8 @@ struct place {
 // said, and says none of them.
 struct drawn {
   std::string said;
-  std::vector<run_place> runs;   // each stretch that is not plain
+  std::vector<run_place> runs;     // each stretch that is not plain
+  std::vector<place> places;       // each link written in it, and where it goes
 };
 
 [[nodiscard]] inline drawn drawn_of(std::string_view text) {
@@ -140,6 +165,10 @@ struct drawn {
       out.runs.push_back({.first = out.said.size(),
                           .last = out.said.size() + one.text.size(),
                           .style = one.style});
+    if (one.style & link)
+      out.places.push_back({.first = out.said.size(),
+                            .last = out.said.size() + one.text.size(),
+                            .target = std::string{one.target}});
     out.said += one.text;
   }
   return out;
