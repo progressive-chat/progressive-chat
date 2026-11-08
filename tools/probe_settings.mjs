@@ -18,8 +18,27 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 await page.goto('https://progressive-chat.github.io/progressive-chat/', { waitUntil: 'load' });
 await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 180000 });
 const mirror = () => page.evaluate(() => document.getElementById('skiff').innerText);
-// The settings plate: the right of the drawer, which is 360 wide here.
-await page.mouse.click(330, 30);
+// Long enough for the room to have said everything it says: read too soon,
+// even the word "Settings" has not been drawn yet.
+await page.waitForTimeout(6000);
+// The settings plate: opened by the word "Settings" itself, which stands in
+// the drawer -- read where it stands rather than guessed at, because the
+// square it was once pressed at is one it left long ago.
+const entry = await page.evaluate(() => {
+  for (const one of document.getElementById('skiff').querySelectorAll('*')) {
+    const own = [...one.childNodes].map((n) => (n.nodeType === 3 ? n.textContent : ''))
+        .join(' ').replace(/\s+/g, ' ').trim();
+    if (own !== 'Settings') continue;
+    const b = one.getBoundingClientRect();
+    if (b.width < 1) continue;
+    return [b.x + b.width / 2, b.y + b.height / 2];
+  }
+  return null;
+});
+if (!entry) { console.log('nothing says Settings on the page'); await browser.close(); process.exit(1); }
+await page.mouse.move(entry[0], entry[1]);   // a press reaches what the pointer stood on first
+await page.waitForTimeout(250);
+await page.mouse.click(entry[0], entry[1]);
 await page.waitForTimeout(800);
 const said = await mirror();
 console.log(`settings: ${said.length} chars`);
@@ -39,7 +58,24 @@ console.log(`scrolled: ${foot.length} chars | moved: ${foot !== said}`);
 console.log(`seeds still said: ${foot.includes('Midnight')}`);
 console.log(`row offered: ${foot.includes('Read the design')}`);
 await page.screenshot({ path: 'settings.png' }).catch(() => {});
-await page.mouse.click(640, 700);
+// The same for the row that offers the design: read where it stands now that
+// the column has been scrolled to its foot, rather than pressing a square
+// that belonged to the room and not to this page.
+const row = await page.evaluate(() => {
+  for (const one of document.getElementById('skiff').querySelectorAll('*')) {
+    const own = [...one.childNodes].map((n) => (n.nodeType === 3 ? n.textContent : ''))
+        .join(' ').replace(/\s+/g, ' ').trim();
+    if (!own.includes('Read the design')) continue;
+    const b = one.getBoundingClientRect();
+    if (b.width < 1) continue;
+    return [b.x + b.width / 2, b.y + b.height / 2];
+  }
+  return null;
+});
+if (!row) { console.log('no row offers the design'); await browser.close(); process.exit(1); }
+await page.mouse.move(row[0], row[1]);
+await page.waitForTimeout(250);
+await page.mouse.click(row[0], row[1]);
 await page.waitForTimeout(1200);
 const design = await mirror();
 console.log(`design: ${design.length} chars | title said: ${design.includes('The design of a chat')}`);
