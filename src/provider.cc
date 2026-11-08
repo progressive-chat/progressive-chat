@@ -400,9 +400,9 @@ template <std::ranges::forward_range Turns>
   if (wants.top_p)
     out.name("topP").number(*wants.top_p);
   if (wants.max_tokens)
-    out.name("maxOutputTokens").number(*wants.max_tokens);
+    out.name("maxOutputTokens").number(static_cast<std::int64_t>(*wants.max_tokens));
   out.name("thinkingConfig").thing();
-  out.name("thinkingBudget").number(wants.thinking ? 8192 : 0);
+  out.name("thinkingBudget").number(static_cast<std::int64_t>(wants.thinking ? 8192 : 0));
   out.shut();
   out.shut();
   if (!wants.tools.empty()) {
