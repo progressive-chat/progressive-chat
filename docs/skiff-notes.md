@@ -53,6 +53,32 @@ Remember too that the element mirrored for a field is not the node drawn for
 it: its node is one level up, and the element inside answers a height of its
 own that is not the node's.
 
+## How one line of text is said in the mirror
+
+A text node is not mirrored as one element. It is broken at every point
+where what is said of it changes -- a style begun or ended, a link begun or
+ended, a picture standing in for a placeholder -- and each stretch is
+written as its own `<span>`, or its own `<a href>` where it is a link, in
+the line the text stands in. What each of them carries, which is what a
+probe reads of a run:
+
+| what was drawn of it | what the mirror says of it |
+| --- | --- |
+| `strong` | `font-weight: bold` |
+| `emphasis` | `font-style: italic` |
+| `code` | `font-family: monospace`, and a faint plate behind it |
+| `quote` | the colour handed as the quote's own (`setStyles`'s second argument) |
+| a link | `<a href>` in the colour handed as the links' own |
+| `marked` | a plate of the quote's colour behind it |
+| a custom emoji | an `<img>` whose `alt` is the placeholder it stands for |
+
+Nothing else about a run is said in the mirror: how deep a quote stands, or
+what scale it was drawn at, is drawn and not mirrored, so a question about
+either is asked of colours or of nothing. And what the whole text says to
+`innerText` is one node per line of it and no markup at all, which is the
+right thing to read when what is asked is what a *reader* reads: whether a
+mark was left in, or a stop of quote, or a link's own stops.
+
 ## What a press reaches
 
 `hitPath` walks every child, and the child drawn last is the one a press is
