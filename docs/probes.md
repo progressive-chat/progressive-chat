@@ -20,8 +20,8 @@ node tools/probe_faces.mjs http://127.0.0.1:8126/index.html   # an artifact
 
 ## What a probe's press has to do to be answered
 
-Two things a press has to be for the room to answer it, both learned the hard
-way by one that asked nothing for a while (`probe_copied.mjs`):
+Four things a press has to be for the room to answer it, all learned the hard
+way by probes that asked nothing for a while (`probe_copied.mjs` first):
 
 - **The mirror's box is a square of layout, not of the glass.** It says
   where a thing is put, not where it is painted or whether a press reaches
@@ -46,6 +46,29 @@ way by one that asked nothing for a while (`probe_copied.mjs`):
 Neither is about this program in particular: what they say is that a press a
 probe makes is a press and nothing else, so a probe that presses sooner, or
 somewhere it never pointed, is asking nothing at all.
+
+## A probe goes stale, and says nothing while it does
+
+A probe keeps asking what it was written to ask even after the page has moved
+from under it -- and what it answers then is either a string of `false` or a
+crash, neither of which is the page saying no. Six of them were found that way
+in one night (2026-11-08) and mended; each is here with what went stale, so
+that the next one found in that state is recognised for it.
+
+| probe | what had gone stale | what mends it |
+| --- | --- | --- |
+| `probe_copied.mjs` | pressed without pointing first, and read the room after 2.5 s | move onto the chip, press it, wait 6 s |
+| `probe_search.mjs`, `probe_search2.mjs`, `probe_search3.mjs` | waited for `textarea[aria-label="Search conversations"]`, and the field is not said with a textarea | find it by its label alone |
+| `probe_settings.mjs` | pressed the row at the square the mirror gave it, y 2417 | presses its way down the column instead, and reaches the design |
+| `probe_design.mjs` | opened settings at (330,30) and pressed the row at (640,720) | opens settings by the word, presses until the design is said |
+| `probe_generation.mjs`, `probe_now.mjs` | opened settings at (330,30) | open it by the word "Settings", read where it stands |
+| `probe_switches.mjs` | hunted a gear drawn in a 36x36 square near the top left, and fell over when there was none | open settings by the word; all seven switches are drawn and move again |
+
+One still says a square the page has left, and has not been mended yet:
+`probe_more.mjs` asks whether the bubble over the messages says
+`~4.1k / 1M tokens`, and what the page says now is `4.1k tokens` -- the probe
+still presses and is still answered (`newchat`, `card` and `forked` all true),
+so nothing there is unasked, only that one reading is older than the words.
 
 ## What the whole page says
 
