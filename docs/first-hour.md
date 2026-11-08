@@ -142,6 +142,7 @@ not been asked yet, and nothing is pushed before a check has built it.
 | `docs/verifying.md` | how a question is asked of a built page, and what one can ask |
 | `docs/probes.md` | what every probe in `tools/` already asks |
 | `docs/tests.md` | what every test asks, without a window and without a wire |
+| `docs/words.md` | the vocabulary every file here is written in, said word by word |
 | `docs/skiff-notes.md` | what skiff does that nothing else does, and the two traps in it |
 | `docs/how-mux-was-found.md` | how the stack this is built on was found read |
 | `README.md` | what it is, where it stands, and how to build it |
