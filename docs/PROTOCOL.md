@@ -209,11 +209,13 @@ Where each of them comes from today:
   whoever owns it -- here a small module of three questions, later a server
   writing the rest of this client's back end, which answers through the same
   `call_answered` and nothing else.
-- One second provider's shape, and only one: Anthropic's frames are read
-  through a folder of its own (`src/provider/anthropic`), and its bodies are
-  written in its own words. Gemini's and a local Ollama's still arrive as
-  chat -- the three names thought arrives under are gathered already, which
-  is most of what differs.
+- Each provider's shape in a folder of its own: Anthropic's frames are read
+  through `src/provider/anthropic` and its bodies written in its own words,
+  and Gemini's the same way through `src/provider/gemini` -- contents of
+  parts, an instruction beside them, thinking as the budget it names, and a
+  call answered by the name it went out under. A local Ollama's still arrives
+  as chat -- the three names thought arrives under are gathered already,
+  which is most of what differs.
 - No measuring of time inside a `run`: how long an answer took is given to it
   when it is written into a message, because a clock is the program's and not
   the protocol's.
