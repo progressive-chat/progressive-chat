@@ -18,6 +18,22 @@ node tools/probe_faces.mjs http://127.0.0.1:8126/index.html   # an artifact
 `probe.yml` runs `tools/probe_painted.mjs` on what it has put out, or a
 `said_by_hand.mjs` written into the run when something else is wanted.
 
+## What a probe's press has to do to be answered
+
+Two things a press has to be for the room to answer it, both learned the hard
+way by one that asked nothing for a while (`probe_copied.mjs`):
+
+- **The pointer stands on it first.** A press put down where nothing had been
+  pointed at is not answered: move onto what is pressed before the press, and
+  press where it stands rather than in the padding beside its words.
+- **The room has finished saying itself.** Six seconds is long enough; two is
+  not. Read too soon, the box a chip was read with is one the chip has
+  already left, and what the press lands on is not the chip.
+
+Neither is about this program in particular: what they say is that a press a
+probe makes is a press and nothing else, so a probe that presses sooner, or
+somewhere it never pointed, is asking nothing at all.
+
 ## What the whole page says
 
 | probe | what it asks |
