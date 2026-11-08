@@ -20,7 +20,7 @@ await page.waitForFunction('window.__pchat_started === true', null, { timeout: 1
 await page.waitForTimeout(2500);
 console.log('start:', await page.evaluate(titles));
 
-const field = page.locator('textarea[aria-label="Search conversations"]').first();
+const field = page.locator('[aria-label="Search conversations"]').first();
 await field.click();
 await page.waitForTimeout(400);
 await page.keyboard.type('lemon');
