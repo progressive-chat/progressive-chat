@@ -114,91 +114,87 @@ SAID(gemini, a_body_is_written_the_way_generateContent_reads_it) {
   if (!whole)
     return;
   const auto *root = &*whole;
-  const auto said = [](const auto *one, const auto &key) {
-    return pchat::json::said(one, key);
-  };
-  const auto text_of = [](const auto *one) { return pchat::json::text_of(one); };
 
   // What it is told stands as an instruction of its own, not as a turn.
-  const auto *told = said(root, "systemInstruction");
+  const auto *told = pchat::json::said(root, "systemInstruction");
   EXPECT_TRUE(told != nullptr);
   if (told) {
-    const auto *parts = said(said(told, "parts"), 0);
+    const auto *parts = pchat::json::said(pchat::json::said(told, "parts"), 0);
     EXPECT_TRUE(parts != nullptr);
     if (parts)
-      EXPECT_EQ(std::string(text_of(said(parts, "text")).value_or("")),
+      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(parts, "text")).value_or("")),
                 std::string("Answer shortly."));
   }
 
   // Every turn as contents: what a person wrote, what the model answered with
   // its call beside its text, the answer to that call, and the last word.
-  const auto *contents = said(root, "contents");
+  const auto *contents = pchat::json::said(root, "contents");
   EXPECT_TRUE(contents != nullptr);
   if (contents) {
-    const auto *first = said(contents, 0);
+    const auto *first = pchat::json::said(contents, 0);
     EXPECT_TRUE(first != nullptr);
     if (first) {
-      EXPECT_EQ(std::string(text_of(said(first, "role")).value_or("")), std::string("user"));
-      const auto *first_part = said(said(first, "parts"), 0);
-      EXPECT_EQ(std::string(text_of(said(first_part, "text")).value_or("")),
+      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(first, "role")).value_or("")), std::string("user"));
+      const auto *first_part = pchat::json::said(pchat::json::said(first, "parts"), 0);
+      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(first_part, "text")).value_or("")),
                 std::string("Two eggs?"));
     }
 
-    const auto *second = said(contents, 1);
+    const auto *second = pchat::json::said(contents, 1);
     EXPECT_TRUE(second != nullptr);
     if (second) {
-      EXPECT_EQ(std::string(text_of(said(second, "role")).value_or("")), std::string("model"));
-      const auto *called = said(said(said(second, "parts"), 1), "functionCall");
+      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(second, "role")).value_or("")), std::string("model"));
+      const auto *called = pchat::json::said(pchat::json::said(pchat::json::said(second, "parts"), 1), "functionCall");
       EXPECT_TRUE(called != nullptr);
       if (called)
-        EXPECT_EQ(std::string(text_of(said(called, "name")).value_or("")),
+        EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(called, "name")).value_or("")),
                   std::string("get_time"));
     }
 
     // The answer to the call goes back as a user's part, against the name the
     // call went out under and not the id only this tree keeps.
-    const auto *third = said(contents, 2);
+    const auto *third = pchat::json::said(contents, 2);
     EXPECT_TRUE(third != nullptr);
     if (third) {
-      EXPECT_EQ(std::string(text_of(said(third, "role")).value_or("")), std::string("user"));
-      const auto *answered = said(said(said(third, "parts"), 0), "functionResponse");
+      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(third, "role")).value_or("")), std::string("user"));
+      const auto *answered = pchat::json::said(pchat::json::said(pchat::json::said(third, "parts"), 0), "functionResponse");
       EXPECT_TRUE(answered != nullptr);
       if (answered) {
-        EXPECT_EQ(std::string(text_of(said(answered, "name")).value_or("")),
+        EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(answered, "name")).value_or("")),
                   std::string("get_time"));
-        const auto *response = said(answered, "response");
-        EXPECT_EQ(std::string(text_of(said(response, "result")).value_or("")),
+        const auto *response = pchat::json::said(answered, "response");
+        EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(response, "result")).value_or("")),
                   std::string("noon"));
       }
     }
-    EXPECT_TRUE(said(contents, 3) != nullptr);
+    EXPECT_TRUE(pchat::json::said(contents, 3) != nullptr);
   }
 
   // The choices an answer is made by under one config, and thinking as a
   // budget of tokens: thousands when the reader asked for it.
-  const auto *config = said(root, "generationConfig");
+  const auto *config = pchat::json::said(root, "generationConfig");
   EXPECT_TRUE(config != nullptr);
   if (config) {
-    const auto *heat = said(config, "temperature");
+    const auto *heat = pchat::json::said(config, "temperature");
     EXPECT_TRUE(heat != nullptr);
     if (heat)
       EXPECT_EQ(*pchat::json::number_of(*heat), 0.5);
-    const auto *thinking = said(config, "thinkingConfig");
+    const auto *thinking = pchat::json::said(config, "thinkingConfig");
     EXPECT_TRUE(thinking != nullptr);
     if (thinking)
-      EXPECT_EQ(*pchat::json::number_of(*said(thinking, "thinkingBudget")), 8192.0);
+      EXPECT_EQ(*pchat::json::number_of(*pchat::json::said(thinking, "thinkingBudget")), 8192.0);
   }
 
   // A tool as this wire reads it: one declaration, one question.
-  const auto *tools = said(root, "tools");
+  const auto *tools = pchat::json::said(root, "tools");
   EXPECT_TRUE(tools != nullptr);
   if (tools) {
-    const auto *decl = said(said(said(tools, 0), "functionDeclarations"), 0);
+    const auto *decl = pchat::json::said(pchat::json::said(pchat::json::said(tools, 0), "functionDeclarations"), 0);
     EXPECT_TRUE(decl != nullptr);
     if (decl) {
-      EXPECT_EQ(std::string(text_of(said(decl, "name")).value_or("")),
+      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(decl, "name")).value_or("")),
                 std::string("get_time"));
-      const auto *takes = said(said(said(decl, "parameters"), "properties"), "city");
+      const auto *takes = pchat::json::said(pchat::json::said(pchat::json::said(decl, "parameters"), "properties"), "city");
       EXPECT_TRUE(takes != nullptr);
     }
   }
