@@ -23,6 +23,15 @@ node tools/probe_faces.mjs http://127.0.0.1:8126/index.html   # an artifact
 Two things a press has to be for the room to answer it, both learned the hard
 way by one that asked nothing for a while (`probe_copied.mjs`):
 
+- **The mirror's box is a square of layout, not of the glass.** It says
+  where a thing is put, not where it is painted or whether a press reaches
+  it: for the row "Read the design" it gives y **2417** in a page 900 high,
+  and every press aimed there landed in nothing -- three probes that way,
+  each ending in "nothing answers". What finds it is to press: scroll a step,
+  press across the column, and read whether what was wanted was said. A press
+  at x 450, y 480 opens the design, which no reading of boxes would have
+  found. So a probe that cannot press its way to a thing must not say the
+  thing answers nothing -- it has only said it did not find it.
 - **The pointer stands on it first.** A press put down where nothing had been
   pointed at is not answered: move onto what is pressed before the press, and
   press where it stands rather than in the padding beside its words.
