@@ -150,6 +150,36 @@ SAID(logic, a_link_written_the_way_writing_writes_one) {
   EXPECT_EQ(no_link.said, std::string("read [this very thing, said"));
 }
 
+SAID(logic, a_line_said_in_quotes_and_how_deep_it_stands) {
+  // What a model writes quoted is drawn quoted, and no stop of quote that
+  // said so is drawn.
+  const logic::drawn said = logic::drawn_of("> quoted once\n> > and again\nsaid plain\n");
+  EXPECT_EQ(said.said, std::string("quoted once\nand again\nsaid plain\n"));
+  EXPECT_EQ(said.runs.size(), std::size_t{2});
+  if (said.runs.size() >= 2) {
+    EXPECT_EQ(said.runs[0].first, std::size_t{0});
+    EXPECT_EQ(said.runs[0].last, std::size_t{12});
+    EXPECT_EQ(said.runs[0].quoted, 1);
+    EXPECT_EQ(said.runs[1].first, std::size_t{12});
+    EXPECT_EQ(said.runs[1].last, std::size_t{22});
+    EXPECT_EQ(said.runs[1].quoted, 2);
+  }
+  // A stop of quote said in the middle of a line is said, and not read as
+  // how deep anything stands.
+  const logic::drawn kept = logic::drawn_of("2 > 1 said");
+  EXPECT_EQ(kept.said, std::string("2 > 1 said"));
+  EXPECT_TRUE(kept.runs.empty());
+  // Marks inside a quoted line are still the marks they are.
+  const logic::drawn both = logic::drawn_of("> **in quotes** here\n");
+  EXPECT_EQ(both.said, std::string("in quotes here\n"));
+  EXPECT_EQ(both.runs.size(), std::size_t{2});
+  if (both.runs.size() >= 2) {
+    EXPECT_TRUE((both.runs[0].style & logic::bold) != 0);
+    EXPECT_EQ(both.runs[0].quoted, 1);
+    EXPECT_EQ(both.runs[1].quoted, 1);
+  }
+}
+
 int main() { return pchat::tests::run(); }
 
 
