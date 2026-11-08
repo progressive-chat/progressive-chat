@@ -31,9 +31,27 @@ const runs = await page.evaluate(() => Array.from(
     .filter((one) => one.textContent.trim() !== '')
     .map((one) => [one.textContent, getComputedStyle(one).color,
                    parseInt(getComputedStyle(one).fontWeight)]));
-const about = runs.filter(([said, , weight]) =>
-    said === 'in quotes' || said === 'and bold' || said === ' said');
+const about = runs.filter(([said]) => said.includes('in quotes') ||
+    said === 'and bold' || said === ' said');
 console.log('said quoted:', JSON.stringify(about));
+
+// That what stands quoted is drawn in the colour a quote is drawn in, which
+// is not the colour most of the page says its words in.
+const colours = await page.evaluate(() => {
+  const said = document.querySelectorAll('#skiff span');
+  const how_many = {};
+  for (const one of said) {
+    const way = getComputedStyle(one).color;
+    if (way === 'rgba(0, 0, 0, 0)' || one.textContent.trim() === '') continue;
+    how_many[way] = (how_many[way] || 0) + 1;
+  }
+  return Object.entries(how_many).sort((one, two) => two[1] - one[1])
+      .map(([colour]) => colour);
+});
+const quoted_colour = about.length > 0 ? about[0][1] : '';
+const common_colour = colours.length > 0 ? colours[0] : '';
+console.log('said in the quote\'s colour:', quoted_colour,
+            '-- and the rest in', common_colour);
 const bold = runs.filter(([, , weight]) => weight >= 700).map(([said]) => said);
 console.log('said bold inside it:', JSON.stringify(bold.slice(-1)));
 
@@ -49,9 +67,10 @@ console.log('said bold inside it kept its mark out:', bold.includes('and bold'))
 
 await browser.close();
 const drawn = about.length > 0 && said_all && bold.includes('and bold') &&
-    !about.some(([said]) => said.includes('>'));
+    quoted_colour !== '' && !about.some(([said]) => said.includes('>'));
 console.log(drawn
     ? 'a line said quoted is drawn quoted, and no stop of quote is drawn'
     : `NOT: about ${JSON.stringify(about)}, read whole ${said_all},
+       quoted colour ${quoted_colour}, common ${common_colour},
        stops left ${stops_left}`);
 process.exit(drawn ? 0 : 1);
