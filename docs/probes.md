@@ -56,7 +56,7 @@ somewhere it never pointed, is asking nothing at all.
 
 A probe keeps asking what it was written to ask even after the page has moved
 from under it -- and what it answers then is either a string of `false` or a
-crash, neither of which is the page saying no. Twelve of them were found that way
+crash, neither of which is the page saying no. Thirteen of them were found that way
 in one night (2026-11-08) and mended; each is here with what went stale, so
 that the next one found in that state is recognised for it.
 
@@ -68,6 +68,7 @@ that the next one found in that state is recognised for it.
 | `probe_design.mjs` | opened settings at (330,30) and pressed the row at (640,720) | opens settings by the word, presses until the design is said |
 | `probe_generation.mjs`, `probe_now.mjs` | opened settings at (330,30) | open it by the word "Settings", read where it stands |
 | `probe_switches.mjs` | hunted a gear drawn in a 36x36 square near the top left, and fell over when there was none | open settings by the word; all seven switches are drawn and move again |
+| `probe_bar.mjs` | asked the room for `sonnet-4`, a model this page never says, and read `false` for every press | ask for the answerer the room names, `Claude Haiku 4`; `named: true` on every plate |
 | `probe_generation.mjs` | scanned a fixed band of the card for something that moved, and never reached a row, for the rows stand below the fold | read each row by its own name, wheel it into the room, press either side; all five move -- `0.70 -> 0.65`, `1.00 -> 0.95`, `2048 -> 1792`, `0.00 -> -0.10` twice |
 | `probe_typed.mjs` | opened the card with the first plate of the top row, where the system words are behind the second, and hunted the field by pressing down the card | open the second plate at 1206,26 and read the field by its label; it stands at 640,450 and keeps what was written, `kept: true` |
 | `probe_editor_menu.mjs` | pressed each square of the card's top row without pointing at it first, and found no dots at all | point first; the three dots stand at 1245,818 and open five words: thinking, effort, advanced |
