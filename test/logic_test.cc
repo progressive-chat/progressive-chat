@@ -195,6 +195,20 @@ SAID(logic, a_stretch_struck_out_says_what_it_said) {
   EXPECT_TRUE(one.runs.empty());
 }
 
+SAID(logic, a_stretch_said_underlined_and_one_said_slanted) {
+  // Two stops of underscore are a line under it, and one is slanted: what
+  // the longer of the two opens is read first, as `**` is before `*`.
+  const logic::drawn said = logic::drawn_of("__under__ and _over_ said");
+  EXPECT_EQ(said.said, std::string("under and over said"));
+  EXPECT_EQ(said.runs.size(), std::size_t{2});
+  if (said.runs.size() == 2) {
+    EXPECT_TRUE((said.runs[0].style & logic::underline) != 0);
+    EXPECT_TRUE((said.runs[0].style & logic::italic) == 0);
+    EXPECT_TRUE((said.runs[1].style & logic::italic) != 0);
+    EXPECT_TRUE((said.runs[1].style & logic::underline) == 0);
+  }
+}
+
 int main() { return pchat::tests::run(); }
 
 

@@ -25,7 +25,8 @@ await page.waitForTimeout(8000);
 await page.mouse.click(640, 862);
 await page.waitForTimeout(500);
 await page.keyboard.type(
-    '**bold** and `code with p * p in it` and _slanted_ and ~~gone~~ said');
+    '**bold** and `code with p * p in it` and _slanted_ and ~~gone~~ and' +
+    ' __under__ said');
 await page.waitForTimeout(600);
 await page.keyboard.press('Enter');
 await page.waitForTimeout(2500);
@@ -45,17 +46,21 @@ const strong = runs.filter(([, weight]) => weight >= 700).map(([said]) => said);
 const slanted = runs.filter(([, , , way]) => way === 'italic').map(([said]) => said);
 const struck = runs.filter(([, , , , over]) => over.includes('line-through'))
     .map(([said]) => said);
+const under = runs.filter(([, , , , over]) => over.includes('underline'))
+    .map(([said]) => said);
 console.log('said in code:', JSON.stringify(in_code.slice(-3)));
 console.log('said bold:', JSON.stringify(strong.slice(-3)));
 console.log('said slanted:', JSON.stringify(slanted.slice(-3)));
 console.log('said struck out:', JSON.stringify(struck.slice(-3)));
+console.log('said underlined:', JSON.stringify(under.slice(-3)));
 
 // And that none of the marks themselves was left anywhere in the line: what
 // is read back out of the page is what a reader reads.
 const says = await page.evaluate(() => document.getElementById('skiff')
     .innerText.replace(/\s+/g, ' '));
 const said_all =
-    says.includes('bold and code with p * p in it and slanted and gone said');
+    says.includes('bold and code with p * p in it and slanted and gone and' +
+                  ' under said');
 console.log('read without its marks:', said_all);
 console.log('kept what the code said inside it:', says.includes('p * p'));
 
@@ -63,7 +68,8 @@ await browser.close();
 const drawn = in_code.some((one) => one === 'code with p * p in it') &&
               strong.some((one) => one === 'bold') &&
               slanted.some((one) => one === 'slanted') &&
-              struck.some((one) => one === 'gone');
+              struck.some((one) => one === 'gone') &&
+              under.some((one) => one === 'under');
 console.log(drawn && said_all
     ? 'the marks are drawn as what they said, and said as themselves never'
     : `NOT: drawn ${drawn}, said whole ${said_all}`);
