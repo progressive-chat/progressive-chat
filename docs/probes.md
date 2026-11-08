@@ -38,6 +38,11 @@ way by one that asked nothing for a while (`probe_copied.mjs`):
 Neither is about this program in particular: what they say is that a press a
 probe makes is a press and nothing else, so a probe that presses sooner, or
 somewhere it never pointed, is asking nothing at all.
+- **What is looked for is said the way the page says it.** The mirror gives a
+  field a label and not a tag, and one field is an `input` where another is a
+  `textarea`: a probe that says which tag to wait for waits for a thing the
+  page never says, and times out asking nothing. Look for the label
+  (`[aria-label="Search conversations"]`), never the tag.
 
 ## What the whole page says
 
