@@ -259,13 +259,14 @@ struct answerer_choice {
   std::string_view alias;
   std::uint32_t window = 0;
 };
-inline constexpr std::array<answerer_choice, 6> answerers_offered{{
+inline constexpr std::array<answerer_choice, 7> answerers_offered{{
     {"haiku-4", "Claude Haiku 4", "anthropic", 1'000'000},
     {"sonnet-4", "Claude Sonnet 4", "anthropic", 1'000'000},
     {"opus-4", "Claude Opus 4", "anthropic", 1'000'000},
     {"o4-mini", "o4 Mini", "openai", 200'000},
     {"local-8b", "Local 8B", "local", 32'000},
     {"local-70b", "Local 70B", "local", 128'000},
+    {"gemini-2.5-flash", "Gemini2.5 Flash", "gemini", 1'048'576},
 }};
 
 // What one of them is called on the screen: the model as it is named, and the
