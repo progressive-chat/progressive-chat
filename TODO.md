@@ -112,6 +112,18 @@ build and the next.
       lines that each know what they are, rather than one run of runs as it
       is today (`src/logic/formatting.cc`, and every place a message's body
       is said in `src/ui/message_list.cc`).
+- [ ] **The row that offers the design answers no press that has been found.**
+      Asked of the page three ways in `tools/probe_settings.mjs`: pressed at
+      the square the probe had always used (640x700), pressed at the middle
+      of whatever node says "Read the design", and pressed at the smallest
+      thing that says it. Each time what the page says afterwards is the
+      conversations drawer again, and nothing says "The design of a chat".
+      Neither waiting for the room, nor standing on the square first, changes
+      it. What is drawn is there: `settings_rows` keeps an `ask_box` for it
+      (`fReadPlate`, asked with `app::open_design{}`) behind the words
+      `nodes::Text fRead{"Read the design"}` -- so either the press does not
+      reach the plate, or `open_design` is asked and nothing answers. Read
+      the host work again before saying which.
 - [ ] **What a model said for later (`||` either side of it) is not said at
       all.** It can be read into a run and drawn covered behind a plate of
       dots -- which was done, and asked of the page: the run is drawn with
