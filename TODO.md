@@ -112,25 +112,30 @@ build and the next.
       lines that each know what they are, rather than one run of runs as it
       is today (`src/logic/formatting.cc`, and every place a message's body
       is said in `src/ui/message_list.cc`).
-- [ ] **What stands below the fold of the settings page cannot be reached.**
-      At 1280x900 the row "Read the design" is drawn at y **5394** with
-      nothing scrolled, and at y **2408** when the column is scrolled as far
-      as it goes (one wheel of 4000, or eight of 600: both come to the same
-      square, which is the end of what scrolls). Nothing else moves it --
-      dragging either way leaves it where the wheel had put it, twelve
-      presses of PageDown do nothing, and left alone it stands still, one
-      reading a second for twelve seconds -- so the column is not growing
-      frame by frame either. It moves by 2986 and no more: the page is 900
-      high, so everything from two thirds of the way down onwards -- the
-      lower groups, the seeds, this row -- stays below the window however
-      far it is scrolled.
-      Where to read next is `src/ui/settings.cc`: the column says of itself
-      `height = at + edge`, which is as tall as what it holds and no taller,
-      and what it is put in is one card reaching "almost its whole height" of
-      the room. Something there is measuring the column by its content and
-      not by the room it stands in -- what scrolls moves 2986 of the 5394 it
-      has to move, which is what it would do if what it was scrolled *in*
-      were itself about 2986 shorter than the column.
+- [ ] **The settings page answers no press that any probe has made, and its
+      lower half has not been brought into the page.** What was measured, and
+      all of it said from the outside:
+      - The row "Read the design" is drawn at y **5394** with nothing
+        scrolled, and at y **2408** once the column has been wheeled as far
+        as it goes (4000 in one go and 8x600 both stop at the same square).
+        It moves 2986 and no more. Dragging either way, twelve presses of
+        PageDown, and twelve seconds left alone all leave it where it was.
+      - Pressed there, at 2417, nothing happens; the page says the same and
+        the shot afterwards is the same file, byte for byte. Three presses
+        inside the card after scrolling to its end -- at y 820, 700 and 560
+        over the middle of its breadth -- change nothing either: the shot
+        taken after them is the same file again.
+      So either nothing below two thirds of the way down is reachable, or a
+      press inside this page is routed somewhere else than a press in the
+      room is -- the Copy chip in the room answers, and nothing here does.
+      Two things could make both readings lies at once, and neither has been
+      ruled out: the mirror's boxes may not follow the scroll the way what is
+      painted does, in which case every square above is a square of layout
+      and not of the glass; and what a press in this page changes may be
+      colours and switches, which the text of the page does not say. Read
+      `src/ui/settings.cc` next -- the column is given `height = at + edge`,
+      the card and the `ScrollContainer` are both given the room's height --
+      and settle it with pixels rather than with either of those two.
 
 - [ ] **What a model said for later (`||` either side of it) is not said at
       all.** It can be read into a run and drawn covered behind a plate of
