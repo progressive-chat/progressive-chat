@@ -508,8 +508,11 @@ struct settings_rows : scene::Node {
     for (auto &group : *fItems)
       for (item_name &one : group) {
         one.name.setText(std::string{});
-        one.name.apply({.anchor = scene::anchor::kCentreLeft,
-                        .origin = scene::anchor::kCentreLeft,
+        // The same corner the frame above it places it by: an origin left at
+        // kCentreLeft here would hang on from the making of the window, and
+        // half the row's centre would keep being added to where it stands.
+        one.name.apply({.anchor = scene::anchor::kTopLeft,
+                        .origin = scene::anchor::kTopLeft,
                         .x = 32.0f,
                         .visible = false});
       }
@@ -856,10 +859,14 @@ struct settings_rows : scene::Node {
                       .height = row_height,
                       .relativeSize = scene::axes::kNone,
                       .cornerRadius = row.cornerRadius});
-    fRead.apply({.anchor = scene::anchor::kCentreLeft,
-                 .origin = scene::anchor::kCentreLeft,
+    // Where the design stands, and what it says in the plate: anchored the way
+    // a heading of this page is anchored -- a kCentreLeft with the row's own
+    // y here would add the centre of the whole column to it and lay the words
+    // out past the column, where nothing draws them (the archive's label stood
+    // the same way; src/ui/settings.cc, say_about).
+    fRead.apply({.anchor = scene::anchor::kTopLeft,
                  .x = 32.0f,
-                 .y = top + read_at + row_height / 2.0f});
+                 .y = top + read_at + (row_height - 19.0f) / 2.0f});
     // Where the rest of the page begins: under the row that offers the
     // design, and the room left between it and the next group.
     return top + read_at + settings_row_height + settings_group_gap;
@@ -898,10 +905,13 @@ struct settings_rows : scene::Node {
         item.name.setText(std::string(named.items[one]));
         item.name.setColour(look.text);
         item.name.apply({.maxWidth = std::max(0.0f, breadth - 52.0f)});
-        item.name.apply({.anchor = scene::anchor::kCentreLeft,
-                         .origin = scene::anchor::kCentreLeft,
+        // Top left, as the group's own heading stands: an item asked for its
+        // centre here was given the column's centre along with its row's and
+        // was laid out past the column, where no item of this page has ever
+        // been drawn (the sum skiff's anchoredBox makes -- see say_about).
+        item.name.apply({.anchor = scene::anchor::kTopLeft,
                          .x = 32.0f,
-                         .y = at + settings_row_height / 2.0f,
+                         .y = at + (settings_row_height - 19.0f) / 2.0f,
                          .visible = true});
         at += settings_row_stride;
         // Under one of its items a group says more than its name: what it
