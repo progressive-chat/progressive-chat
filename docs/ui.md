@@ -256,9 +256,20 @@ reads it empty again before the next frame, putting what was in it at the
 end of what has been written. Twenty-eight stand in four rows of seven, over
 the messages and above the face they came out of; sending what was written
 puts them away, and so does opening another conversation, for a face belongs
-to the field it was opened over. Which ones are pressed most is kept in
-`recent_emoji` (`pchat.config`), for rows nobody draws yet.
+to the field it was opened over.
+
+Above them, once one of them has been pressed, is a row of the ones pressed
+most lately, newest first and no longer than a row's breadth: a press says
+`face_written` as well as writing itself, the screen keeps them in the order
+they were pressed and not the order of how often, and the card is one row
+taller while it shows them. Nothing below them moves: the twenty-eight stand
+where they stood, for the card grew upwards and its row went into the room it
+was made by. `recent_emoji` (`pchat.config`) is what is to keep them between
+runs; what keeps them today is the screen, until there are runs to keep them
+between.
 
 Asked of the page by `tools/probe_faces.mjs`: the face opens twenty-eight,
 a press on two of them writes two into the field, and a press in the middle
-of the messages puts the card away again.
+of the messages puts the card away again -- and by
+`tools/probe_faces_lately.mjs`, that opening the card again says the same two
+in the row above, newest first, in the order the field does not keep them in.
