@@ -315,6 +315,25 @@ target_sources(pchat_platform PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/platform/carry.cc)
 target_compile_features(pchat_platform PUBLIC cxx_std_26)
 target_compile_options(pchat_platform PUBLIC ${pchat_std_flags})
+# What a window asks with: this machine's own curl -- the one HTTP client the
+# ported tree already brings into the build for its own transport (host-only,
+# as it says: Android has no curl in its sysroot, and a page does not need
+# one). Where it is not found, `any()` says nothing carries and the program
+# asks nobody anything, which is what it did before this stood here.
+if(NOT ANDROID AND NOT PCHAT_BROWSER)
+  find_package(CURL QUIET)
+  if(CURL_FOUND OR CURL_LIBRARY_RELEASE)
+    target_sources(pchat_platform PRIVATE src/platform/carry_desktop.cpp)
+    target_compile_definitions(pchat_platform PRIVATE PCHAT_HAVE_CURL=1)
+    if(TARGET CURL::libcurl)
+      target_link_libraries(pchat_platform PRIVATE CURL::libcurl)
+    else()
+      target_include_directories(pchat_platform PRIVATE ${CURL_INCLUDE_DIRS})
+      target_link_libraries(pchat_platform PRIVATE ${CURL_LIBRARIES})
+    endif()
+    message(STATUS "progressive-chat: a window carries through curl")
+  endif()
+endif()
 
 if(PCHAT_UI)
   pchat_find_package(skiff 0.1.0 COMPONENTS ${pchat_skiff_components} REQUIRED)

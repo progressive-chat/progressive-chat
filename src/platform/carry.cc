@@ -3,6 +3,7 @@ module;
 #include <emscripten/console.h>
 #include <emscripten/fetch.h>
 #endif
+#include "carry_desktop.h"
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.platform.carry -- One body handed to the platform the program is
 // running on, and the bytes it answers with, taken back out of it.
@@ -12,12 +13,16 @@ module;
 // arrived in. Which is all a provider's stream needs, and all that differs
 // between a page, a window and a phone.
 //
-// Only the page carries anything today -- through the browser's own fetch,
-// because that is what a page has -- and everywhere else this says so
-// (`any()`): everything not written for the page is built with an empty
-// carrying in it, and asking it for bytes asks nobody anything. What a desk
-// and a phone will carry with (Asio on fibers, as mux carries Matrix) is
-// written here when it is written, and nothing above changes.
+// The page carries through the browser's own fetch, because that is what a
+// page has; a window carries through this machine's own curl -- the one HTTP
+// client the build already links, the ported tree having brought it in for
+// its own transport -- pumped from the program's own loop so that nothing
+// here waits on a socket (src/platform/carry_desktop.cpp). A phone carries
+// neither today, and `any()` says so of it: everything not written for a
+// platform is built with an empty carrying in it, and asking it for bytes
+// asks nobody anything. What a phone will carry with (Asio on fibers, as mux
+// carries Matrix) is written here when it is written, and nothing above
+// changes.
 export module pchat.platform.carry;
 
 import std;
@@ -39,7 +44,8 @@ public:
       : place_(std::move(gone.place_)), wrote_(std::move(gone.wrote_)),
         fields_(std::move(gone.fields_)), flat_(std::move(gone.flat_)),
         arrived_(std::move(gone.arrived_)), trouble_(std::move(gone.trouble_)),
-        over_(gone.over_), read_(gone.read_) {
+        over_(gone.over_), read_(gone.read_),
+        desk_(std::exchange(gone.desk_, nullptr)) {
 #if defined(__EMSCRIPTEN__)
     held_ = std::exchange(gone.held_, nullptr);
     attempts_ = std::exchange(gone.attempts_, 0);
@@ -56,6 +62,7 @@ public:
       trouble_ = std::move(gone.trouble_);
       over_ = gone.over_;
       read_ = gone.read_;
+      desk_ = std::exchange(gone.desk_, nullptr);
 #if defined(__EMSCRIPTEN__)
       held_ = std::exchange(gone.held_, nullptr);
       attempts_ = std::exchange(gone.attempts_, 0);
@@ -70,6 +77,8 @@ public:
   [[nodiscard]] bool any() const {
 #if defined(__EMSCRIPTEN__)
     return true;
+#elif defined(PCHAT_HAVE_CURL)
+    return true;
 #else
     return false;
 #endif
@@ -83,10 +92,16 @@ public:
 #if defined(__EMSCRIPTEN__)
     if (held_)
       return;
+#endif
     for (const auto &[name, value] : headers) {
       fields_.push_back(name);
       fields_.push_back(value);
     }
+    wrote_ = std::string(body);
+    place_ = std::string(url);
+    read_ = 0;
+    attempts_ = 0;
+#if defined(__EMSCRIPTEN__)
     // The browser reads the names and the values where they were written, and
     // keeps reading them until it is answered: so they are kept here, whole,
     // and not only for the length of this call.
@@ -94,11 +109,20 @@ public:
     for (const std::string &one : fields_)
       flat_.push_back(one.c_str());
     flat_.push_back(nullptr);
-    wrote_ = std::string(body);
-    place_ = std::string(url);
-    read_ = 0;
-    attempts_ = 0;
     fire();
+#elif defined(PCHAT_HAVE_CURL)
+    // A window asks through this machine's own curl: the same words a page
+    // would give the browser, said through one line this module never opens
+    // itself (carry_desktop.h), and answered while the loop goes on.
+    over_ = false;
+    arrived_.clear();
+    trouble_.reset();
+    if (!desk_)
+      desk_ = desktop_open();
+    if (desk_ == nullptr || !desktop_ask_at(desk_, place_, fields_, wrote_)) {
+      trouble_ = "this machine could not ask for it";
+      over_ = true;
+    }
 #endif
   }
 
@@ -111,6 +135,8 @@ public:
       emscripten_fetch_close(held_);
       held_ = nullptr;
     }
+#elif defined(PCHAT_HAVE_CURL)
+    pump_desktop();
 #endif
     return std::exchange(arrived_, std::string{});
   }
@@ -228,17 +254,70 @@ private:
     if (held_)
       emscripten_fetch_close(held_);
     held_ = nullptr;
+#elif defined(PCHAT_HAVE_CURL)
+    desktop_close(&desk_);
 #endif
   }
 
-#if defined(__EMSCRIPTEN__)
-  emscripten_fetch_t *held_ = nullptr;
+#if defined(PCHAT_HAVE_CURL)
+  // The window's own asking pumped from the program's own loop: what arrived
+  // since the last take, and where the asking stands -- with the one case a
+  // carrying may ask again of itself: the connection went before a byte of an
+  // answer came, three askings in all, exactly as the page asks again
+  // (went_wrong).
+  void pump_desktop() {
+    if (desk_ == nullptr || over_)
+      return;
+    std::string piece;
+    std::string why;
+    const desktop_end stood = desktop_pump(desk_, piece, why);
+    switch (stood) {
+      case desktop_end::working:
+        break;
+      case desktop_end::answered:
+        over_ = true;
+        break;
+      case desktop_end::refused:
+        if (!trouble_)
+          trouble_ = std::move(why);
+        over_ = true;
+        break;
+      case desktop_end::lost:
+        if (attempts_ + 1 < kAskings && read_ == 0) {
+          ++attempts_;
+          if (desktop_ask_at(desk_, place_, fields_, wrote_))
+            break;
+        }
+        if (!trouble_)
+          trouble_ = why.empty() ? std::string("the machine could not ask for it")
+                                 : why;
+        over_ = true;
+        break;
+    }
+    // What a server says it will not answer with is not an answer: a refusal's
+    // own body is dropped here, in `trouble`'s words alone -- while everything
+    // else a wire says on the way is taken as it comes, piece by piece.
+    if (stood != desktop_end::refused && !piece.empty()) {
+      read_ += piece.size();
+      arrived_ += piece;
+    }
+    if (over_)
+      desktop_close(&desk_);
+  }
+#endif
+
   // How many askings this carrying made and lost to the connection, and the
-  // ceiling they are counted against: three in all, said here where the
-  // retry lives (went_wrong).
+  // ceiling they are counted against: three in all, said here where the retry
+  // lives (went_wrong, pump_desktop).
   static constexpr std::uint32_t kAskings = 3;
   std::uint32_t attempts_ = 0;
+#if defined(__EMSCRIPTEN__)
+  emscripten_fetch_t *held_ = nullptr;
 #endif
+  // The machine's own asking, where this platform has a machine that asks
+  // (carry_desktop.cpp): null everywhere it does not, and kept whole through
+  // a move like everything else here.
+  desktop_ask *desk_ = nullptr;
   std::string place_;
   std::string wrote_;
   std::vector<std::string> fields_;
