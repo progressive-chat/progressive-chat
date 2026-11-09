@@ -1,0 +1,295 @@
+diff --git a/design-doc.md b/design-doc.md
+index 682408d6..5b0e3dae 100644
+--- a/design-doc.md
++++ b/design-doc.md
+@@ -240,9 +240,11 @@ name, waiting for the thing behind it.
+   held in a shape.
+ * It does not put the time of an answer beside every line of it: only yours
+   keep a time, and it is kept inside them.
+-* It does not open what it folds. The line above an answer -- how long it
+-  took, how many calls it made -- is written as one line and stays one: the
+-  thinking under it and the calls it counts are not read anywhere yet.
++* It keeps the calls it counts to itself no longer: opened, the fold says
++  what it thought as greentext and, under that, one line to every tool it
++  stopped to ask for, in the order it asked. What it still does not do is
++  open anything past the sixth of them: a seventh line says how many are
++  left rather than grow past the room.
+ * It does not yet count anything for real. Until the program's own back end is
+   here, what fills the room is sample: the numbers said above are written in it
+   like any other words, and nothing measures them.
+diff --git a/src/app/sample.cc b/src/app/sample.cc
+index 9c18d090..42718c2c 100644
+--- a/src/app/sample.cc
++++ b/src/app/sample.cc
+@@ -60,9 +60,11 @@ export namespace pchat::app {
+        "minutes, one pan, and nothing "
+        "of it was bought today.",
+        1'763'000'200'000, delivery::seen, std::nullopt,
+-       thought{4'200, 3,
++       thought{4'200,
+                "no recipe of its own known; three reads of the pantry, then "
+-               "written"},
++               "written",
++               {"read the pantry", "read the shelf it stands on",
++                "read the pantry once more"}},
+        1'240},
+       {message_id{"3"}, conversation_id{"kitchen"}, "Reader", true,
+        "And if I would rather have it sweet?", 1'763'000'300'000,
+@@ -73,8 +75,9 @@ export namespace pchat::app {
+        "stirred over a low heat until it thickens and let to cool. Spread on "
+        "the same toast.",
+        1'763'000'400'000, delivery::sent, std::nullopt,
+-       thought{1'900, 1,
+-               "the same four things asked again, the sweet way round"},
++       thought{1'900,
++               "the same four things asked again, the sweet way round",
++               {"read the pantry"}},
+        680},
+       {message_id{"5"}, conversation_id{"sieve"}, "Reader", true,
+        "Write me a sieve of Eratosthenes in C++ that takes its bound at run "
+@@ -92,10 +95,13 @@ export namespace pchat::app {
+        "either keep `bound` below "
+        "that or write `p <= bound / p`.",
+        1'763'000'200'000, delivery::seen, std::nullopt,
+-       thought{8'700, 6,
++       thought{8'700,
+                "the bound written down before the loop; the overflow thought "
+                "about twice, once past "
+-               "four billion; one small test compiled and run"},
++               "four billion; one small test compiled and run",
++               {"write the bound down", "read the bound back",
++                "compile the sieve", "run the sieve to a hundred",
++                "run the sieve past four billion", "read what it printed"}},
+        2'310},
+       {message_id{"7"}, conversation_id{"notices"}, "", false,
+        "Nothing of this is answered yet: what fills this is the sample, until "
+diff --git a/src/core.cc b/src/core.cc
+index 496d9221..765e4b57 100644
+--- a/src/core.cc
++++ b/src/core.cc
+@@ -94,12 +94,13 @@ struct conversation {
+ };
+ 
+ // What came before an answer, where one thought before it spoke: how long
+-// it was thinking, how many tool calls it made on the way, and what it
+-// wrote to itself while it was (its greentext).
++// it was thinking, what it stopped to ask a tool for on the way -- every one
++// of them, in the order it asked -- and what it wrote to itself while it was
++// (its greentext).
+ struct thought {
+   std::int64_t took_ms = 0;
+-  std::uint32_t tool_calls = 0;
+   std::string said;
++  std::vector<std::string> called;
+   friend bool operator==(const thought &, const thought &) = default;
+ };
+ 
+diff --git a/src/provider/loop.cc b/src/provider/loop.cc
+index b461b736..4082f315 100644
+--- a/src/provider/loop.cc
++++ b/src/provider/loop.cc
+@@ -107,7 +107,7 @@ class loop {
+   // said in all of them, what it thought, how many tools it asked for, what
+   // all of it cost -- and failed where it could not be had at all.
+   [[nodiscard]] message answer_of(const put_in &into) const {
+-    return provider::answer_of(into, said_, thinking_, calls_, cost_,
++    return provider::answer_of(into, said_, thinking_, asked_, cost_,
+                                ended_ == provider::over::failed);
+   }
+ 
+diff --git a/src/provider/run.cc b/src/provider/run.cc
+index 8ff70106..f271ca4b 100644
+--- a/src/provider/run.cc
++++ b/src/provider/run.cc
+@@ -51,10 +51,9 @@ struct put_in {
+ // or one question that had to be asked again before it was answered. Whose it
+ // is written as, where it was said, how long it took, and failed where nothing
+ // of it came -- said once here so that it is said the same way twice.
+-[[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
+-                                       std::string_view thinking,
+-                                       std::size_t asking, usage cost,
+-                                       bool failed) {
++[[nodiscard]] inline message answer_of(
++    const put_in &into, std::string_view said, std::string_view thinking,
++    std::span<const tool_call> asking, usage cost, bool failed) {
+   message out{.id = into.id,
+               .chat = into.chat,
+               .author = into.author,
+@@ -65,10 +64,12 @@ struct put_in {
+   out.tokens = static_cast<std::uint32_t>(cost.in + cost.out);
+   // Said in full: `thought` is what an answer thought, and not the same word
+   // as the type what it thought is kept in.
+-  if (!thinking.empty() || into.took_ms != 0 || asking != 0)
+-    out.before = ::pchat::thought{.took_ms = into.took_ms,
+-                                  .tool_calls = static_cast<std::uint32_t>(asking),
+-                                  .said = std::string(thinking)};
++  if (!thinking.empty() || into.took_ms != 0 || !asking.empty()) {
++    ::pchat::thought before{.took_ms = into.took_ms, .said = std::string(thinking)};
++    for (const tool_call &one : asking)
++      before.called.push_back(one.name);
++    out.before = std::move(before);
++  }
+   return out;
+ }
+ 
+@@ -159,7 +160,7 @@ class run {
+   // and nothing here is put into a conversation: where it goes is asked
+   // elsewhere.
+   [[nodiscard]] message answer_of(const put_in &into) const {
+-    return provider::answer_of(into, said(), thought(), tool_calls(), cost(),
++    return provider::answer_of(into, said(), thought(), coming_.calls(), cost(),
+                                ended_ == over::failed);
+   }
+ 
+diff --git a/src/ui/message_list.cc b/src/ui/message_list.cc
+index d535bfc7..fb7e90c6 100644
+--- a/src/ui/message_list.cc
++++ b/src/ui/message_list.cc
+@@ -238,6 +238,16 @@ struct foot_row : nodes::Stack {
+ struct history_fold : nodes::Stack {
+   nodes::Text fSummary{"", 12.0f, 0u};
+   nodes::Text fThought{"", 12.0f, 0u};
++  // Every call it stopped to ask for, a line to each, shown while it is
++  // pressed open under what it wrote to itself. Six, because that is how
++  // many a fold has ever had to carry at once; a seventh says how many more
++  // there were rather than grow past the room.
++  std::array<nodes::Text, 6> fCalls{nodes::Text{"", 12.0f, 0u},
++                                    nodes::Text{"", 12.0f, 0u},
++                                    nodes::Text{"", 12.0f, 0u},
++                                    nodes::Text{"", 12.0f, 0u},
++                                    nodes::Text{"", 12.0f, 0u},
++                                    nodes::Text{"", 12.0f, 0u}};
+   bool fOpen = false;
+ 
+   history_fold() {
+@@ -248,6 +258,10 @@ struct history_fold : nodes::Stack {
+     fSummary.apply({.autoSize = scene::axes::kBoth});
+     fThought.apply({.autoSize = scene::axes::kBoth});
+     fThought.setVisible(false);
++    for (nodes::Text &one : fCalls) {
++      one.apply({.autoSize = scene::axes::kBoth});
++      one.setVisible(false);
++    }
+   }
+ 
+   [[nodiscard]] bool acceptsInput() const { return true; }
+@@ -263,6 +277,8 @@ struct history_fold : nodes::Stack {
+     fThought.setText("");
+     fOpen = false;
+     fThought.setVisible(false);
++    for (nodes::Text &one : fCalls)
++      one.setVisible(false);
+   }
+ 
+   void again(const paints &look, const thought &before, float widest) {
+@@ -271,8 +287,8 @@ struct history_fold : nodes::Stack {
+                  .maxWidth = widest,
+                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
+     fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
+-                     std::to_string(before.tool_calls) +
+-                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
++                     std::to_string(before.called.size()) +
++                     (before.called.size() == 1 ? " tool call" : " tool calls"));
+     fSummary.setColour(look.dim);
+     fSummary.apply(
+         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+@@ -283,11 +299,31 @@ struct history_fold : nodes::Stack {
+     fThought.setVisible(fOpen && !before.said.empty());
+     fThought.apply(
+         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
++    // A line to each call it asked for, and past the sixth of them the ones
++    // that are left said by how many they are and not by what they were.
++    for (std::size_t one = 0u; one < fCalls.size(); ++one) {
++      const bool past = one + 1u == fCalls.size() && before.called.size() > one + 1u;
++      if (past) {
++        fCalls[one].setText("and " + std::to_string(before.called.size() - one) + " more");
++        fCalls[one].setVisible(fOpen);
++      } else {
++        fCalls[one].setText(before.called.size() > one
++                                ? "called " + before.called[one]
++                                : std::string{});
++        fCalls[one].setVisible(fOpen && before.called.size() > one);
++      }
++      fCalls[one].setColour(look.dim);
++      fCalls[one].setFontSize(12.0f);
++      fCalls[one].apply(
++          {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
++    }
+   }
+ 
+   void forEachChild(auto &&f) {
+     f(fSummary);
+     f(fThought);
++    for (nodes::Text &one : fCalls)
++      f(one);
+   }
+ };
+ 
+@@ -377,7 +413,7 @@ struct answer_row : nodes::Stack {
+       info += std::string(model) + " · ";
+     info +=
+         std::string(said.before ? took_of(said.before->took_ms) + " · " : "") +
+-        std::to_string(said.before ? said.before->tool_calls : 0u) +
++        std::to_string(said.before ? said.before->called.size() : 0u) +
+         " tool calls · " + tokens_said(said.tokens) + " tokens · " +
+         clock_of(said.sent);
+     fInfo.setText(info);
+diff --git a/test/provider_loop_test.cc b/test/provider_loop_test.cc
+index e812ddeb..41382abc 100644
+--- a/test/provider_loop_test.cc
++++ b/test/provider_loop_test.cc
+@@ -118,7 +118,8 @@ SAID(provider_loop, what_a_tool_answered_goes_back_into_the_asking) {
+   EXPECT_EQ(said.state, delivery::sent);
+   // What both rounds cost, together.
+   EXPECT_EQ(said.tokens, 33u);
+-  EXPECT_EQ(said.before->tool_calls, 1u);
++  // One tool asked for over both rounds, said by name before the answer.
++  EXPECT_EQ(said.before->called.size(), 1u);
+ }
+ 
+ SAID(provider_loop, a_call_the_wire_gave_no_name_to_is_named_here) {
+diff --git a/test/provider_run_test.cc b/test/provider_run_test.cc
+index d156aa76..a2e77a8d 100644
+--- a/test/provider_run_test.cc
++++ b/test/provider_run_test.cc
+@@ -162,11 +162,39 @@ SAID(provider_run, the_answer_as_the_model_keeps_it) {
+   EXPECT_EQ(said.tokens, 19u);
+   EXPECT_TRUE(said.before.has_value());
+   EXPECT_EQ(said.before->took_ms, 900);
+-  EXPECT_EQ(said.before->tool_calls, 1u);
++  // One tool, asked for in the answer and said again before it: the call
++  // itself is carried whole, and not only how many there were.
++  EXPECT_EQ(said.before->called.size(), 1u);
++  EXPECT_EQ(said.before->called.front(), std::string("weather"));
+   EXPECT_EQ(said.before->said,
+             std::string("first the weather\n> weather({})\n"));
+ }
+ 
++// Two tools asked for in one answer, in the order they were asked for in:
++// what the fold above an answer says one line each (src/ui/message_list.cc).
++constexpr std::string_view two_calls =
++    "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"function\":{\"name\":\"weather\",\"arguments\":\"{}\"}}]},\"index\":0}]}\n\n"
++    "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":1,\"id\":\"call_2\",\"function\":{\"name\":\"clock\",\"arguments\":\"{}\"}}]},\"index\":0}]}\n\n"
++    "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":3,\"completion_tokens\":4}}\n\n"
++    "data: [DONE]\n\n";
++
++// Two tools asked for in one answer, in the order they were asked for in:
++// what the fold above an answer says one line to each (src/ui/message_list.cc).
++SAID(provider_run, every_call_asked_for_is_said_before_the_answer) {
++  provider::run one{an_endpoint(), std::vector<provider::turn>{}};
++  one.carried();
++  one.arrive(two_calls);
++  one.carried_over(std::nullopt);
++  const message said = one.answer_of(provider::put_in{
++      .id = message_id{"m-3"},
++      .chat = conversation_id{"chat-1"},
++      .author = "o4-mini"});
++  EXPECT_TRUE(said.before.has_value());
++  EXPECT_EQ(said.before->called.size(), 2u);
++  EXPECT_EQ(said.before->called.front(), std::string("weather"));
++  EXPECT_EQ(said.before->called.back(), std::string("clock"));
++}
++
+ SAID(provider_run, an_answer_that_never_came_is_a_failed_message) {
+   provider::run one{an_endpoint(), std::vector<provider::turn>{}};
+   one.carried();

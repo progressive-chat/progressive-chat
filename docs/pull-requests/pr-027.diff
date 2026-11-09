@@ -1,0 +1,1236 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 250aea8e..12ac380f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -284,10 +284,18 @@ add_library(pchat_provider)
+ # saying what it adds here (cmake/providers.cmake).
+ include(cmake/providers.cmake)
+ target_sources(pchat_provider PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+-  FILES src/provider.cc src/provider/stream.cc src/provider/run.cc
+-        src/provider/loop.cc)
++  FILES src/provider.cc src/provider/budget.cc src/provider/stream.cc
++        src/provider/run.cc src/provider/loop.cc)
+ target_compile_features(pchat_provider PUBLIC cxx_std_26)
+ target_compile_options(pchat_provider PUBLIC ${pchat_std_flags})
++# The fitting itself, as a classic translation unit: where Agora's own headers
++# are at home and never in a module unit, the same as the counters (src/
++# tokens_worth.cpp) and as the wires each provider folder stands up. The tree's
++# own src/ is said plainly below it: a file set carries no include path of its
++# own, so a classic unit two folders deep reaches the counters' door the way
++# the test units do.
++target_sources(pchat_provider PRIVATE src/provider/budget.cpp)
++target_include_directories(pchat_provider PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+ target_link_libraries(pchat_provider PUBLIC pchat_core pchat_json)
+ 
+ # What a control asks the program for: said before the screens are, as they
+@@ -424,9 +432,13 @@ add_subdirectory(ports/agora-core)
+ if(PCHAT_TESTS)
+   enable_testing()
+   add_subdirectory(test)
+-  # The port's own test binary joins the same ask: one `pchat-tests` build
+-  # gives ctest everything this program says by test.
+-  foreach(port_test agora_core_tests agora_portable_crypto_test)
++  # The port's own test binaries join the same ask: one `pchat-tests` build
++  # gives ctest everything this program says by test. Every one of them is
++  # named here, and named under a target that may not be there at all -- a
++  # port test behind a library this machine has not got is added by the port
++  # only where it is, so naming it costs nothing where it is not.
++  foreach(port_test agora_core_tests agora_portable_crypto_test
++                    agora_ssh_transport_tests)
+     if(TARGET ${port_test})
+       add_dependencies(pchat-tests ${port_test})
+     endif()
+diff --git a/CODE_STYLE.md b/CODE_STYLE.md
+index 52a2059d..d86d6154 100644
+--- a/CODE_STYLE.md
++++ b/CODE_STYLE.md
+@@ -105,46 +105,4 @@ skiff over Skia — and this document says how that stack is used here.
+   it.
+ - English everywhere: code, comments, commits, documents.
+ - A commit message says what changed and why: a short first line, then the
+-  reason. The first line is read most -- in `git log`, beside a build, in a
+-  file's own name -- so there is a rule for how it is written.
+-
+-### How a commit is named
+-
+-A name finishes one sentence, always the same one:
+-
+-    After this commit, <the name>.
+-
+-Everything wanted of a name comes of asking that, and nothing else has to be
+-remembered:
+-
+-- **It begins lower case.** It is not a sentence of its own, but the tail of
+-  another. "After this commit, where there is no GL it draws in software
+-  instead." A name that starts with a capital begins a sentence it never
+-  finishes.
+-- **It says what is true afterwards, not what was done.** Not "add arm64 to
+-  the desktop build" but "the desktop is built for arm64 as well": no
+-  imperative -- no `add`, `fix`, `update`, `remove` -- because the imperative
+-  answers a different question, and reads in a log as a thing still to be
+-  done.
+-- **It is about the program, not about the files.** "what the first frame
+-  began after is said apart", not "program.cc: log first frame". The body
+-  names the files freely, and usually should.
+-- **Nothing comes in front of it.** No `feat:`, no `fix:`, no number. What
+-  sort of change it is, it says by what it says is true.
+-- **No full stop.** The sentence it is the tail of ends where the name does,
+-  and it is not the name that ends it.
+-- **One thing.** A name that needs "and" twice is two commits. Nor is it said
+-  in the name what went wrong on the way there: the name is what came of it,
+-  and what was tried is what the body is for.
+-- **Short.** No more than 72 characters, and fewer wherever they can be
+-  spared. A name that will not fit is two things said as one, or one thing
+-  said at too much length; and these names are put into the names of builds.
+-
+-Two that came out of it:
+-
+-    where there is no GL it draws in software instead
+-    why it is called Progressive Chat, said
+-
+-`tools/commit.py` refuses the beginning of the rule -- a capital letter, a
+-full stop, a prefix, an imperative, or more than 96 characters -- and says
+-which of them it was. The rest is read by whoever writes it.
++  reason.
+diff --git a/README.md b/README.md
+index 456e0c73..2e8c9569 100644
+--- a/README.md
++++ b/README.md
+@@ -67,6 +67,17 @@ It (this readme section's workdays summaries) is written by hand. Nothing
+ writes here that is not that hand, and no paragraph of it is written by a
+ model, an agent or a script on its own.
+ 
++### 2026-11-08
++
++The GitHub repository has been created with the code that exists at this point.
++The git repository keeps its creation date of November 3, and the whole of its
++history comes over with it. Today's work was on automating testing on Android,
++cloud-based among it, with different tasks in front of it -- for example to
++tell quickly that the application does not start on Android. Various
++functionality was also written, for example data export. Work was done on the
++documentation. From the next day on I will count the number of lines exactly,
++and of commits too, every day. This day two thousand lines were written.
++
+ ### 2026-11-07
+ 
+ The last 24h gave only a thousand of new code lines. But I fixed many things
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index cd7662c2..1be6a7e2 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -21,6 +21,7 @@ import pchat.ui;
+ import pchat.platform.notified;
+ import pchat.platform.opened;
+ import pchat.provider;
++import pchat.provider.budget;
+ import pchat.provider.run;
+ import pchat.platform.carry;
+ import pchat.provider.loop;
+@@ -440,17 +441,33 @@ class screens {
+     const provider::endpoint at{.base = opened_.base,
+                                 .model = ending_of(chat),
+                                 .told = told_of(chat)};
+-    // Not const: a view over messages asked of more than once is read more
+-    // than once, and reading it again is not a thing a const view of it says
+-    // yes to.
+-    auto turns = root_.messages |
+-                       std::views::filter([&chat](const message &one) {
+-                         return one.chat == chat;
+-                       });
++    // The conversation whole, as both halves of the asking read it: the tools
++    // are given every message of it, because a tool asked about this
++    // conversation is asked about all of it, and the wire is given what fits
++    // the window its answerer has -- said below over these same messages, and
++    // leaving every one of them where it is.
++    const std::vector<message> said =
++        root_.messages |
++        std::views::filter(
++            [&chat](const message &one) { return one.chat == chat; }) |
++        std::ranges::to<std::vector<message>>();
+     // What is ours to answer goes in the asking, so a model knows it may stop
+     // and ask; and it is kept here, because answering those calls later is
+     // this program's and nobody else's.
+-    tools::owned mine{turns, now_ms()};
++    tools::owned mine{said, now_ms()};
++    // How the reader has asked for it to answer, whole: the five numbers, the
++    // thinking and how hard, and the tools that were left on -- both halves
++    // said in one place (src/tools.cc, `wanted_of`), where before this the
++    // asking carried the tools alone and none of what the settings rows move.
++    const provider::wanted wants = tools::wanted_of(how_);
++    // What of the conversation fits the window its answerer has: the oldest
++    // message of it that is asked about, which is where the asking starts
++    // below. Nothing is cut from the conversation to find it out -- the
++    // messages stay whole, are drawn as they were, and are read whole by the
++    // tools -- only what is written onto the wire is decided here, which is
++    // what Agora's own preparation decides there (src/provider/budget.cc).
++    const message_id from =
++        provider::fit_from(said, at, room_of(chat), wants);
+     // Put where it will stay before anything is given to it: what a platform
+     // carries for is answerable at the address it was given, and a carrying
+     // that is moved afterwards answers into what was left behind -- it came,
+@@ -459,11 +476,13 @@ class screens {
+         answer_coming{.chat = chat,
+                       .said = message_id{chat.value + "-" +
+                                          std::to_string(root_.messages.size())},
+-                      .going = provider::loop{at,
+-                                              turns,
+-                                              4,
+-                                              provider::wanted{
+-                                                  .tools = mine.offered()}},
++                      .going = provider::loop{
++                          at,
++                          said | std::views::drop_while([&from](const message &one) {
++                            return one.id != from;
++                          }),
++                          4,
++                          wants},
+                       .carried = std::move(carried),
+                       .mine = std::move(mine),
+                       .began = now_ms()});
+@@ -609,6 +628,15 @@ class screens {
+         return one.told_for();
+     return std::string(default_told);
+   }
++  // How much room this chat's answerer has to be asked in: what the window of
++  // the conversation says, and none where no conversation is open -- which
++  // cuts nothing of anything, because nobody has said how much room there is.
++  [[nodiscard]] std::uint32_t room_of(const conversation_id &chat) const {
++    for (const conversation &one : root_.conversations)
++      if (one.id == chat)
++        return one.window;
++    return 0;
++  }
+   // What this chat has spent of the room its answerer has: said again whole
+   // after any message enters or leaves it, and after the window changes, so
+   // that what the foot's circle reads is the messages added up.
+diff --git a/src/platform/carry.cc b/src/platform/carry.cc
+index fc0293cf..0b0229bf 100644
+--- a/src/platform/carry.cc
++++ b/src/platform/carry.cc
+@@ -42,6 +42,7 @@ class carrying {
+         over_(gone.over_), read_(gone.read_) {
+ #if defined(__EMSCRIPTEN__)
+     held_ = std::exchange(gone.held_, nullptr);
++    attempts_ = std::exchange(gone.attempts_, 0);
+ #endif
+   }
+   carrying &operator=(carrying &&gone) {
+@@ -57,6 +58,7 @@ class carrying {
+       read_ = gone.read_;
+ #if defined(__EMSCRIPTEN__)
+       held_ = std::exchange(gone.held_, nullptr);
++      attempts_ = std::exchange(gone.attempts_, 0);
+ #endif
+     }
+     return *this;
+@@ -95,28 +97,8 @@ class carrying {
+     wrote_ = std::string(body);
+     place_ = std::string(url);
+     read_ = 0;
+-
+-    emscripten_fetch_attr_t asking;
+-    emscripten_fetch_attr_init(&asking);
+-    std::strcpy(asking.requestMethod, "POST");
+-    asking.requestHeaders = flat_.data();
+-    asking.requestData = wrote_.data();
+-    asking.requestDataSize = wrote_.size();
+-    // Both: the whole of it is wanted even where a browser never hands it
+-    // over a piece at a time, and where it does, what answers arrives while
+-    // it is read, which is what an arriving answer looks like.
+-    asking.attributes =
+-        EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_STREAM_DATA;
+-    asking.userData = this;
+-    asking.onprogress = &carrying::went_along;
+-    asking.onerror = &carrying::went_wrong;
+-    asking.onreadystatechange = &carrying::went_on;
+-    asking.onsuccess = &carrying::went_well;
+-    held_ = emscripten_fetch(&asking, place_.c_str());
+-    if (!held_) {
+-      trouble_ = "the page would not ask for it";
+-      over_ = true;
+-    }
++    attempts_ = 0;
++    fire();
+ #endif
+   }
+ 
+@@ -149,6 +131,33 @@ class carrying {
+   // through a pointer to a function and not to anything of ours: each one is
+   // given this object back in `userData` and says everything to it.
+ #if defined(__EMSCRIPTEN__)
++  // The asking itself, built out of what begin() kept: said apart because a
++  // carrying that could not connect asks again with those very same fields
++  // rather than building them anew (went_wrong).
++  void fire() {
++    emscripten_fetch_attr_t asking;
++    emscripten_fetch_attr_init(&asking);
++    std::strcpy(asking.requestMethod, "POST");
++    asking.requestHeaders = flat_.data();
++    asking.requestData = wrote_.data();
++    asking.requestDataSize = wrote_.size();
++    // Both: the whole of it is wanted even where a browser never hands it
++    // over a piece at a time, and where it does, what answers arrives while
++    // it is read, which is what an arriving answer looks like.
++    asking.attributes =
++        EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_STREAM_DATA;
++    asking.userData = this;
++    asking.onprogress = &carrying::went_along;
++    asking.onerror = &carrying::went_wrong;
++    asking.onreadystatechange = &carrying::went_on;
++    asking.onsuccess = &carrying::went_well;
++    held_ = emscripten_fetch(&asking, place_.c_str());
++    if (!held_) {
++      trouble_ = "the page would not ask for it";
++      over_ = true;
++    }
++  }
++
+   // A piece arrived, and where the piece says it arrived: take what of it has
+   // not been taken yet, and nothing of it twice. A browser that hands the
+   // whole body over at once instead says this too, once.
+@@ -168,6 +177,19 @@ class carrying {
+   }
+   static void went_wrong(emscripten_fetch_t *one) {
+     auto &self = *static_cast<carrying *>(one->userData);
++    // Not an answer but the connection: what a client that retries on
++    // connection failure asks again -- the port's client_policy() says to
++    // (provider/http/wire.h) -- three askings in all, and only while not one
++    // byte has come. An answer that says no is never asked again (went_on
++    // says why).
++    emscripten_fetch_close(one);
++    self.held_ = nullptr;
++    if (self.attempts_ + 1 < kAskings && self.read_ == 0) {
++      ++self.attempts_;
++      self.fire();
++      if (self.held_)
++        return;
++    }
+     if (!self.trouble_)
+       self.trouble_ = "the page could not ask for it";
+     self.over_ = true;
+@@ -211,6 +233,11 @@ class carrying {
+ 
+ #if defined(__EMSCRIPTEN__)
+   emscripten_fetch_t *held_ = nullptr;
++  // How many askings this carrying made and lost to the connection, and the
++  // ceiling they are counted against: three in all, said here where the
++  // retry lives (went_wrong).
++  static constexpr std::uint32_t kAskings = 3;
++  std::uint32_t attempts_ = 0;
+ #endif
+   std::string place_;
+   std::string wrote_;
+diff --git a/src/provider.cc b/src/provider.cc
+index 2d436be0..22764095 100644
+--- a/src/provider.cc
++++ b/src/provider.cc
+@@ -245,9 +245,9 @@ struct wanted {
+ // the turns as content blocks, what it is told as a field named `system`, and
+ // the choices written in the order its own writer writes them (port
+ // anthropic_request.cpp, write_request_body). What this shape has no field for
+-// is not said: thinking arrives with budgets only where the asking carries them
+-// through the preparation this tree does not do yet, and the penalties a chat
+-// wire takes are not Anthropic's.
++// is not said: thinking is asked for in the budget this family takes it in,
++// where the model takes a thinking at all, and the penalties a chat wire takes
++// are not Anthropic's.
+ template <std::ranges::forward_range Turns>
+   requires std::same_as<std::ranges::range_value_t<Turns>, turn>
+ [[nodiscard]] inline std::string anthropic_body_of(const endpoint &one, Turns &&turns,
+@@ -297,13 +297,38 @@ template <std::ranges::forward_range Turns>
+   // The ceiling the model family allows, and the asking's own count under it:
+   // Anthropic reads max_tokens on every body, so one is always said.
+   const long long ceiling = pchat_anthropic_ceiling(one.model.c_str());
+-  const std::int64_t room =
++  // Whether this model thinks before it answers, and what it is given to
++  // think with: the reader asking for it, and this model being able to take
++  // what is asked of it. Nothing of it is said below where either is not
++  // there, which is how a wire is told no thinking without a word about it.
++  const anthropic_thinking_cap cap = pchat_anthropic_thinking(one.model.c_str());
++  const bool thinks = wants.thinking && cap.thinking[0] != '\0';
++  // Thinking is written out of the same room the answer is written in, so
++  // where it is asked for, the room is made to hold it first: the budget, and
++  // the headroom to answer in beside it, as Agora makes room before it asks
++  // (AnthropicProvider, ANSWER_HEADROOM_TOKENS), under the same ceiling.
++  constexpr std::int64_t headroom = 8192;
++  std::int64_t room =
+       wants.max_tokens ? std::min<std::int64_t>(*wants.max_tokens, ceiling) : ceiling;
++  if (thinks)
++    room = std::min<std::int64_t>(std::max<std::int64_t>(room, cap.budget + headroom),
++                                  ceiling);
+   out.name("max_tokens").number(room);
+   out.name("stream").truth(wants.stream);
+-  if (wants.temperature)
++  if (thinks) {
++    out.name("thinking").thing().name("type").text(cap.thinking);
++    if (cap.budget > 0)
++      out.name("budget_tokens").number(static_cast<std::int64_t>(cap.budget));
++    out.name("display").text("summarized").shut();
++  }
++  // The two numbers that choose its words, read where this model still reads
++  // them: sampling is taken off the generations that think (temperature not at
++  // all beside a thinking, and top_p only in the 0.95..1 that is left legal
++  // there), which is the condition Agora keeps on the same two fields.
++  if (cap.sampling && !thinks && wants.temperature)
+     out.name("temperature").number(*wants.temperature);
+-  if (wants.top_p)
++  if (cap.sampling && wants.top_p &&
++      (!thinks || (*wants.top_p >= 0.95 && *wants.top_p <= 1.0)))
+     out.name("top_p").number(*wants.top_p);
+   if (!wants.tools.empty()) {
+     out.name("tools").list();
+diff --git a/src/provider/anthropic/wire.cpp b/src/provider/anthropic/wire.cpp
+index ada32cba..aee638e7 100644
+--- a/src/provider/anthropic/wire.cpp
++++ b/src/provider/anthropic/wire.cpp
+@@ -11,6 +11,7 @@
+ #include "agora/core/anthropic_request.hpp"
+ #include "agora/core/anthropic_stream.hpp"
+ #include "agora/core/stream_normalization.hpp"
++#include "agora/core/thinking_capability.hpp"
+ 
+ namespace pchat::provider {
+ namespace {
+@@ -113,4 +114,28 @@ long long pchat_anthropic_ceiling(const char *model) {
+   return ceiling.value_or(32768);
+ }
+ 
++anthropic_thinking_cap pchat_anthropic_thinking(const char *model) {
++  namespace tc = agora::core::thinking_capability;
++  const tc::Capability capability =
++      tc::for_model(tc::ThinkingProviderFamily::Anthropic, model != nullptr ? model : "");
++  const bool sampling = capability.supports_sampling_params;
++  // Whether this model takes a thinking parameter at all, asked the way Agora
++  // asks it: a generation that predates extended thinking is given no
++  // parameter of it, and nothing about the answer blocks a request.
++  if (!capability.supports_effort() && !capability.supports_thinking_budget)
++    return {"", 0, sampling};
++  // A budget beside it, where this model takes one: what Agora keeps as its
++  // default when a reader has said no number of their own, kept to what this
++  // model allows -- never under 1024, which is the floor the wire itself
++  // holds an enabled thinking to.
++  if (capability.supports_thinking_budget)
++    return {"enabled", tc::clamp_budget(capability, tc::kDefaultBudgetTokens), sampling};
++  // And the adaptive form for a model that offers an effort to choose by and
++  // no budget of its own to think with: which is the form no budget may be
++  // said beside.
++  if (capability.supports_effort())
++    return {"adaptive", 0, sampling};
++  return {"enabled", tc::clamp_budget(capability, tc::kDefaultBudgetTokens), sampling};
++}
++
+ }  // namespace pchat::provider
+diff --git a/src/provider/anthropic/wire.h b/src/provider/anthropic/wire.h
+index 005596c5..8f83fdb1 100644
+--- a/src/provider/anthropic/wire.h
++++ b/src/provider/anthropic/wire.h
+@@ -49,6 +49,20 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
+ // The ceiling of one model's output in the tokens Anthropic allows (agora's
+ // AnthropicOutputLimits), and 32768 where no model is known to have one.
+ long long pchat_anthropic_ceiling(const char *model);
++
++// What one model may be asked, of the two a reader asks for here: whether it
++// thinks before it answers -- in the words this wire takes a thinking in, a
++// type beside the budget of tokens it may think with, and nothing at all
++// where this model takes no thinking parameter -- and whether the numbers
++// that choose its words are read beside it. Both answers come out of the one
++// capability Agora keeps for a model (ports/agora-core, ModelThinkingCapability),
++// so they are said in one place and cannot disagree with each other.
++struct anthropic_thinking_cap {
++  const char *thinking;  // "enabled", "adaptive", or "" where none is taken
++  long long budget;      // tokens to think with; 0 where `thinking` says none
++  bool sampling;         // whether temperature and top_p are read at all
++};
++anthropic_thinking_cap pchat_anthropic_thinking(const char *model);
+ }  // namespace pchat::provider
+ 
+ #endif  // PCHAT_PROVIDER_ANTHROPIC_WIRE_H
+diff --git a/src/provider/budget.cc b/src/provider/budget.cc
+new file mode 100644
+index 00000000..97449355
+--- /dev/null
++++ b/src/provider/budget.cc
+@@ -0,0 +1,56 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.provider.budget -- What of a conversation is asked about, and what is
++// left out of the asking: the window an answerer has decides it, with Agora's
++// own preparation standing behind this file (ports/agora-core), over what this
++// program counts a message with. The oldest message that fits is said as an
++// id, so that whoever asks may say "from this one on" over the conversation
++// it holds already.
++//
++// Nothing here cuts a conversation: every message of it stays where it is, is
++// drawn as it was, and is read whole by the tools -- only what goes onto the
++// wire is decided here, which is the deciding Agora's limitContext does there.
++module;
++#include "provider/budget.h"
++
++export module pchat.provider.budget;
++
++import std;
++import pchat.core;
++import pchat.config;
++import pchat.provider;
++
++export namespace pchat::provider {
++
++// The oldest message of what was said that is worth asking about: every
++// message from it on is asked about, and none before it, and the newest one
++// of it alone where not one of them fits. Where the conversation is empty, or
++// where nothing said how much room its answerer has, every message of it is
++// asked about -- which is what a question asked before this did too.
++[[nodiscard]] inline message_id fit_from(std::span<const message> said,
++                                          const endpoint &at,
++                                          std::uint32_t window,
++                                          const wanted &wants) {
++  std::vector<budgeted> seen;
++  seen.reserve(said.size());
++  for (const message &one : said)
++    seen.push_back(budgeted{.id = one.id.value,
++                            .text = one.text,
++                            .outgoing = one.outgoing});
++  std::vector<budgeted_tool> kit;
++  kit.reserve(wants.tools.size());
++  for (const offered &one : wants.tools)
++    kit.push_back(budgeted_tool{.name = one.name,
++                                .told = one.told,
++                                .taken = one.taken});
++  // The model in the words a cost model is asked with: the family that says
++  // which wire's words it reads -- who it is asked through, said before its
++  // name with a colon between. A model of a family not known here is named
++  // alone, and is priced as any model nobody has heard of.
++  const std::string_view family = family_of(at.model);
++  const std::string named = family.empty() ? std::string(at.model)
++                                            : std::string(family) + ":" +
++                                                  std::string(at.model);
++  return message_id{budget_fit(seen, kit, window, at.told, named)};
++}
++
++}  // namespace pchat::provider
+diff --git a/src/provider/budget.cpp b/src/provider/budget.cpp
+new file mode 100644
+index 00000000..93e0f25b
+--- /dev/null
++++ b/src/provider/budget.cpp
+@@ -0,0 +1,123 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// The fitting itself, in the classic translation unit where Agora's own
++// headers are at home: what is decided here is which messages a wire is given,
++// decided with Agora's ContextBudget and its ContextLimiter over what this
++// program counts a message with -- and none of agora's headers is ever seen by
++// a module unit, which is the same arrangement as src/tokens_worth.cpp and
++// src/provider/http/wire.cpp.
++#include "provider/budget.h"
++
++#include <algorithm>
++#include <optional>
++
++#include "agora/core/context_budget.hpp"
++#include "agora/core/message_preparation.hpp"
++#include "agora/core/openai_request.hpp"
++#include "tokens_worth.h"
++
++namespace pchat::provider {
++namespace {
++
++namespace context = agora::core::context_budget;
++namespace prep = agora::core::prep;
++
++// What one piece of text is worth, priced the way this program counts it for
++// the circle in the foot: the carried o200k vocabulary, handed in once where
++// the program starts (src/app/program.cc), and the character-class heuristic
++// until then.
++[[nodiscard]] std::int64_t counted(std::string_view text) {
++  return ::pchat::tokens_worth(text.data(), text.size());
++}
++
++// What the messages are, in the words the preparation reads them in: one row
++// per message of the conversation, in the order it was said.
++[[nodiscard]] std::vector<prep::ChatMessage> as_prep(std::span<const budgeted> said) {
++  std::vector<prep::ChatMessage> out;
++  out.reserve(said.size());
++  for (const budgeted &one : said) {
++    prep::ChatMessage each;
++    each.id.assign(one.id);
++    each.text.assign(one.text);
++    each.participant = one.outgoing ? prep::Participant::User : prep::Participant::Model;
++    out.push_back(std::move(each));
++  }
++  return out;
++}
++
++// What the tools are, in the words their cost is counted in: the shape a chat
++// wire is given them in (src/provider.cc, body_of), where the schema is the
++// one this program writes and not one a provider was handed from elsewhere.
++[[nodiscard]] std::vector<agora::core::openai::ToolDefinition> as_prep(
++    std::span<const budgeted_tool> tools) {
++  std::vector<agora::core::openai::ToolDefinition> out;
++  out.reserve(tools.size());
++  for (const budgeted_tool &one : tools) {
++    agora::core::openai::ToolDefinition each;
++    each.type = "function";
++    each.function.name = one.name;
++    each.function.description = one.told;
++    each.function.parameters.type = "object";
++    for (const auto &[takes, said] : one.taken) {
++      agora::core::openai::ToolProperty property;
++      property.type = "string";
++      property.description = said;
++      each.function.parameters.properties.push_back({takes, std::move(property)});
++      each.function.parameters.required.push_back(takes);
++    }
++    out.push_back(std::move(each));
++  }
++  return out;
++}
++
++}  // namespace
++
++std::string budget_fit(std::span<const budgeted> said,
++                       std::span<const budgeted_tool> tools,
++                       std::uint32_t window, std::string_view told,
++                       std::string_view named) {
++  if (said.empty())
++    return std::string{};
++  // No window says nothing about how much room there is: where nobody said,
++  // nothing is cut, and a conversation of a model this program knows no
++  // window of is asked about whole, as it was before.
++  if (window == 0)
++    return std::string(said.front().id);
++
++  // The budget as Agora sets it at every read of one: a number kept from an
++  // older build, a default where none was set, and the same bounds everywhere.
++  const int room = context::normalize(static_cast<int>(window));
++  const prep::ContextCostModel costs = prep::cost_model_for(
++      prep::parse_prefixed_model_id(std::string(named)), counted);
++  const prep::CostModelContextEstimator prices(costs);
++  // What stands ahead of the messages comes off the window before they are
++  // counted against it -- what the model is told, and the tools it may ask
++  // for on the way, priced as Agora prices the same two before it limits.
++  const std::optional<std::string> prompt =
++      told.empty() ? std::nullopt : std::optional<std::string>{std::string(told)};
++  const int fixed =
++      prices.estimate_fixed(prompt, as_prep(tools), std::nullopt, false, false, false);
++  const int left = std::max(room - fixed, 1);
++
++  // False, and said why: a thought of an earlier answer is not written back
++  // to a wire in this tree, so it is not counted against the window either.
++  // Said here rather than left to be found later, for whoever one is written
++  // back to has to turn this over at the same time.
++  const std::vector<prep::ChatMessage> kept =
++      prep::limit_context(as_prep(said), left, /*include_assistant_reasoning=*/false, costs);
++  // Not one message of it is from the reader, which is the only way nothing
++  // is kept: the newest is asked about anyway, because a question is asked
++  // with something in it, and a chat that never had a reader's word in it is
++  // not a reason to ask a wire with nothing at all.
++  if (kept.empty())
++    return std::string(said.back().id);
++  // The oldest that is kept, said in the conversation's own words: the
++  // limiting keeps a run of the newest messages and gives up the ones before
++  // them, so the oldest kept one is where the asking starts.
++  const std::string_view oldest = kept.front().id;
++  for (const budgeted &one : said)
++    if (one.id == oldest)
++      return std::string(one.id);
++  return std::string(said.back().id);
++}
++
++}  // namespace pchat::provider
+diff --git a/src/provider/budget.h b/src/provider/budget.h
+new file mode 100644
+index 00000000..584be809
+--- /dev/null
++++ b/src/provider/budget.h
+@@ -0,0 +1,60 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// What of a conversation fits the window its answerer has, said across the
++// one line a module unit and a classic translation unit may share: Agora's
++// own preparation stands behind this file (ports/agora-core, its ContextBudget
++// and its ContextLimiter), and its headers stay on the classic side entirely,
++// as the counters' do (src/tokens_worth.h).
++#ifndef PCHAT_PROVIDER_BUDGET_H
++#define PCHAT_PROVIDER_BUDGET_H
++
++#include <cstdint>
++#include <span>
++#include <string>
++#include <string_view>
++#include <vector>
++
++namespace pchat::provider {
++
++// One message of a conversation, as the fitting reads it: what it said, who
++// said it, and what it is called. Nothing else of it is read -- a thought of
++// an earlier answer is not written back to a wire in this tree, so it is not
++// priced here either.
++struct budgeted {
++  std::string_view id;
++  std::string_view text;
++  bool outgoing = false;
++};
++
++// One tool the asking offers, as the fitting prices it: the same three the
++// body says -- its name, what it is told it does, and what it takes.
++struct budgeted_tool {
++  std::string name;
++  std::string told;
++  std::vector<std::pair<std::string, std::string>> taken;
++};
++
++// The oldest message of what was said that is worth asking about: every
++// message from it on is asked about, and none before it -- Agora's
++// limitContext, the newest protocol-complete suffix that fits the window,
++// with what stands ahead of the messages (what the model is told, and the
++// tools it may ask for on the way) taken off the window first.
++//
++// Said as the id of a message rather than as a count, so that whoever holds
++// the conversation may say "from this one on" over a range it has read
++// already. The newest message's own id where not one of it fits, because a
++// question is asked with something in it; the first message's own id where
++// nothing said how much room there is to fit into; and nothing at all where
++// nothing was said.
++//
++// `named` is the model in the words Agora names one for its cost models -- a
++// provider and its model with a colon between, "anthropic:sonnet-4" -- so that
++// a Claude is priced with Claude's envelope and a model nobody knows of with
++// the plain one.
++std::string budget_fit(std::span<const budgeted> said,
++                       std::span<const budgeted_tool> tools,
++                       std::uint32_t window, std::string_view told,
++                       std::string_view named);
++
++}  // namespace pchat::provider
++
++#endif  // PCHAT_PROVIDER_BUDGET_H
+diff --git a/src/provider/run.cc b/src/provider/run.cc
+index 2a6aa5f7..631b5cb4 100644
+--- a/src/provider/run.cc
++++ b/src/provider/run.cc
+@@ -9,6 +9,11 @@
+ // data too; and it says when it has finished carrying them. Which is what
+ // lets one answer be said whole by a test with no network under it, and the
+ // same answer later be carried by a page's fetch, a socket, or fibers.
++module;
++// Relative to this file's own place (src/provider/), the way provider.cc's own
++// include is relative to src/: the folder's one plain header.
++#include "http/wire.h"
++
+ export module pchat.provider.run;
+ 
+ import std;
+@@ -86,7 +91,18 @@ class run {
+       : asking_{.url = std::string(url_of(at)),
+                 .headers = headers_of(at),
+                 .body = body_of(at, turns, wants)},
+-      coming_(wire_of(at)) {}
++      coming_(wire_of(at)) {
++    // What the port's guard refuses, this never sets out with: an API
++    // credential over plain http:// to a host that is not this machine's own,
++    // said no to by the port itself (provider/http/wire.h, the cleartext
++    // guard). Said here, at the making of the asking, so that no transport
++    // ever sees it and the screens read why it never went.
++    if (!cleartext_is_safe(asking_.url, asking_.headers))
++      stop_over(over::failed,
++                "Refusing to send API credentials over cleartext HTTP to a "
++                "non-local host. Use an https:// endpoint, or reach it over "
++                "LAN/Tailscale.");
++  }
+ 
+   // ---- what a transport reads and is given back --------------------------
+ 
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 7cc70634..55a26ba8 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -31,10 +31,16 @@ pchat_test(logic pchat_core)
+ pchat_test(json pchat_json)
+ pchat_test(provider pchat_provider)
+ pchat_test(provider_run pchat_provider)
++pchat_test(provider_budget pchat_provider)
+ pchat_test(provider_loop pchat_provider)
+ pchat_test(provider_anthropic pchat_provider)
+ pchat_test(provider_gemini pchat_provider)
+ pchat_test(provider_http pchat_provider)
++# The folder's plain header is reached over the tree's own src/: the file set
++# carries its base dirs to the modules, while a test unit includes the header
++# in its own global fragment and needs the root said plainly.
++target_include_directories(pchat-provider_http-test PRIVATE
++  "${PROJECT_SOURCE_DIR}/src")
+ pchat_test(tools pchat_tools)
+ pchat_test(tokens pchat_core pchat_json)
+ pchat_test(prgrssv pchat_core pchat_json)
+diff --git a/test/provider_budget_test.cc b/test/provider_budget_test.cc
+new file mode 100644
+index 00000000..7db9225b
+--- /dev/null
++++ b/test/provider_budget_test.cc
+@@ -0,0 +1,181 @@
++module;
++#include "tests.h"
++export module pchat.test.provider_budget;
++// SPDX-License-Identifier: AGPL-3.0-only
++// What of a conversation is asked about: the window an answerer has decides
++// it, with what the model is told and the tools it may ask for taken off that
++// window first. A conversation that fits is asked about whole; one that does
++// not starts at the oldest message that still fits, and begins on the
++// reader's own word, which is where every wire is happy to be started; the
++// newest message is asked about even where it alone is wider than the window,
++// because a question is asked with something in it.
++//
++// Nothing of any of it reaches the conversation: the messages stay where they
++// are, whole, and are drawn again as they were.
++import std;
++import pchat.core;
++import pchat.provider;
++import pchat.provider.budget;
++import pchat.tokens;
++
++using namespace pchat;
++
++namespace {
++
++const conversation_id the_chat{"budget"};
++
++// What one message of the conversation says: a line a reader or a model said,
++// in the order the messages are given -- the reader first, as a chat starts.
++[[nodiscard]] message line_of(const std::size_t at, const bool outgoing,
++                              std::string words) {
++  return message{.id = message_id{the_chat.value + "-" + std::to_string(at)},
++                 .chat = the_chat,
++                 .author = outgoing ? "reader" : "model",
++                 .outgoing = outgoing,
++                 .text = std::move(words)};
++}
++
++// Enough words to be worth a count: what a message is measured against when
++// the window is small, and what every message of a long chat is made of here.
++[[nodiscard]] std::string many_words(const std::size_t how_many,
++                                     const std::size_t which) {
++  std::string out;
++  for (std::size_t one = 0; one < how_many; ++one) {
++    out += "the streets are full of people and the weather is warm, number ";
++    out += std::to_string(which);
++    out += " piece ";
++    out += std::to_string(one);
++    out += "; ";
++  }
++  return out;
++}
++
++// A conversation of `how_many` messages, each said by the reader where it
++// comes at an even place and by the model where it comes at an odd one.
++[[nodiscard]] std::vector<message> conversation_of(const std::size_t how_many,
++                                                   const std::size_t words) {
++  std::vector<message> out;
++  out.reserve(how_many);
++  for (std::size_t at = 0; at < how_many; ++at)
++    out.push_back(line_of(at, at % 2 == 0, many_words(words, at)));
++  return out;
++}
++
++[[nodiscard]] provider::endpoint an_endpoint(std::string told = "You are brief.") {
++  return provider::endpoint{
++      .base = "https://api.openai.com/v1", .model = "sonnet-4",
++      .told = std::move(told)};
++}
++
++// Where an id is in a conversation, or one past the end of it where it is in
++// nothing at all.
++[[nodiscard]] std::size_t place_of(const std::vector<message> &said,
++                                   const message_id &one) {
++  for (std::size_t at = 0; at < said.size(); ++at)
++    if (said[at].id == one)
++      return at;
++  return said.size();
++}
++
++}  // namespace
++
++SAID(provider_budget, a_conversation_that_fits_is_asked_about_whole) {
++  tokens::vocabulary(tokens::o200k());
++  const std::vector<message> said = conversation_of(12, 8);
++  const message_id from =
++      provider::fit_from(said, an_endpoint(), 1'048'576, provider::wanted{});
++  EXPECT_EQ(from, said.front().id);
++}
++
++SAID(provider_budget, one_that_does_not_fit_starts_where_it_still_fits) {
++  tokens::vocabulary(tokens::o200k());
++  const std::vector<message> said = conversation_of(60, 40);
++  // The smallest window there is, and a conversation far wider than it: what
++  // is asked about is a run of the newest messages, and it starts on the
++  // reader's own word -- never on an answer, which is what a wire reads as a
++  // question with nothing asked in it.
++  const message_id from = provider::fit_from(said, an_endpoint(), 4'096,
++                                             provider::wanted{});
++  EXPECT_NE(from, said.front().id);
++  const std::size_t at = place_of(said, from);
++  EXPECT_LT(at, said.size());
++  EXPECT_TRUE(said[at].outgoing);
++}
++
++SAID(provider_budget, what_the_model_is_told_comes_off_the_window_first) {
++  tokens::vocabulary(tokens::o200k());
++  const std::vector<message> said = conversation_of(60, 40);
++  const std::size_t brief =
++      place_of(said, provider::fit_from(said, an_endpoint("You are brief."),
++                                        4'096, provider::wanted{}));
++  const std::size_t told =
++      place_of(said, provider::fit_from(
++                         said, an_endpoint(many_words(1'500, 0)), 4'096,
++                         provider::wanted{}));
++  // Said once and said at length, with the same conversation and the same
++  // window: what the model is told stands ahead of the messages, so the more
++  // of it there is, the less of the conversation fits behind it.
++  EXPECT_LT(brief, told);
++}
++
++SAID(provider_budget, the_tools_it_may_ask_for_come_off_it_too) {
++  tokens::vocabulary(tokens::o200k());
++  const std::vector<message> said = conversation_of(60, 40);
++  const std::size_t bare =
++      place_of(said, provider::fit_from(said, an_endpoint(), 4'096,
++                                        provider::wanted{}));
++  provider::wanted with_tools{};
++  with_tools.tools.push_back(provider::offered{
++      .name = "look_up_in_this_conversation",
++      .told = "Read back what was said in this very conversation.",
++      .taken = {{"what", "the words to look for, as one string"}}});
++  const std::size_t offered =
++      place_of(said,
++               provider::fit_from(said, an_endpoint(), 4'096, with_tools));
++  EXPECT_GE(offered, bare);
++}
++
++SAID(provider_budget, the_newest_is_asked_about_even_where_it_is_too_wide) {
++  tokens::vocabulary(tokens::o200k());
++  std::vector<message> said;
++  said.push_back(line_of(0, true, "Hello"));
++  said.push_back(line_of(1, false, "Good morning"));
++  said.push_back(line_of(2, true, many_words(400, 2)));
++  // The newest message alone is wider than the smallest window there is, and
++  // it is the one that is asked about anyway: Agora keeps a legal reader's
++  // word and the newest complete message even where that one alone does not
++  // fit, and this is that, in the conversation's own words.
++  const message_id from = provider::fit_from(said, an_endpoint(), 4'096,
++                                             provider::wanted{});
++  EXPECT_EQ(from, said.back().id);
++}
++
++SAID(provider_budget, where_nobody_said_how_much_room_nothing_is_left_out) {
++  tokens::vocabulary(tokens::o200k());
++  const std::vector<message> said = conversation_of(60, 40);
++  // A chat of a model this program knows no window of: nobody said how much
++  // room there is, so nothing is decided about it, and the whole of it goes
++  // as it did before any of this stood here.
++  const message_id from = provider::fit_from(said, an_endpoint(), 0,
++                                             provider::wanted{});
++  EXPECT_EQ(from, said.front().id);
++  // And where there is nothing said at all, there is nothing to ask about.
++  const std::vector<message> none;
++  EXPECT_EQ(provider::fit_from(none, an_endpoint(), 4'096, provider::wanted{}),
++            message_id{});
++}
++
++SAID(provider_budget, where_not_one_word_is_the_readers_the_newest_is_asked_for) {
++  tokens::vocabulary(tokens::o200k());
++  // A conversation of answers only, which no wire is started with from the
++  // top: the newest is what is asked about, because asking with nothing at
++  // all is not an asking.
++  std::vector<message> said;
++  for (std::size_t at = 0; at < 4; ++at)
++    said.push_back(line_of(at, false, many_words(4, at)));
++  const message_id from = provider::fit_from(said, an_endpoint(), 4'096,
++                                             provider::wanted{});
++  EXPECT_EQ(from, said.back().id);
++}
++
++int main() { return pchat::tests::run(); }
+diff --git a/test/provider_run_test.cc b/test/provider_run_test.cc
+index d156aa76..6801eabc 100644
+--- a/test/provider_run_test.cc
++++ b/test/provider_run_test.cc
+@@ -179,4 +179,38 @@ SAID(provider_run, an_answer_that_never_came_is_a_failed_message) {
+   EXPECT_FALSE(said.before.has_value());
+ }
+ 
++SAID(provider_run, a_credential_never_sets_out_in_the_clear) {
++  const std::vector<provider::turn> turns{
++      provider::turn{.who = provider::role::user, .text = "Hello"}};
++  // A key, a plain-http place and a host that is not this machine's own: the
++  // port's guard refuses it, so the run is over before any transport could
++  // carry it, and why it never went is said for the screens.
++  provider::run refused{
++      provider::endpoint{.base = "http://api.example.com/v1",
++                         .key = "sk-secret",
++                         .model = "o4-mini",
++                         .told = "You are brief."},
++      turns};
++  EXPECT_TRUE(refused.done());
++  EXPECT_TRUE(refused.ended() == provider::over::failed);
++  EXPECT_TRUE(refused.trouble().has_value());
++  EXPECT_TRUE(refused.trouble()->find("cleartext") != std::string::npos);
++  // Encrypted, and a host of this machine's own: both asked of as usual.
++  provider::run encrypted{
++      provider::endpoint{.base = "https://api.openai.com/v1",
++                         .key = "sk-secret",
++                         .model = "o4-mini",
++                         .told = "You are brief."},
++      turns};
++  EXPECT_TRUE(encrypted.where() == provider::standing::ready);
++  EXPECT_TRUE(encrypted.ended() == provider::over::none);
++  provider::run at_home{
++      provider::endpoint{.base = "http://127.0.0.1:11434/v1",
++                         .key = "sk-secret",
++                         .model = "local-model",
++                         .told = "You are brief."},
++      turns};
++  EXPECT_TRUE(at_home.where() == provider::standing::ready);
++}
++
+ int main() { return pchat::tests::run(); }
+diff --git a/test/provider_test.cc b/test/provider_test.cc
+index ec1103a2..5002440c 100644
+--- a/test/provider_test.cc
++++ b/test/provider_test.cc
+@@ -282,4 +282,118 @@ SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
+   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
+ }
+ 
++namespace {
++
++// What stands under one name in a body, or nothing where the body says
++// nothing of it -- so that a body missing a field is a check that did not
++// hold and not a read past the end of one.
++[[nodiscard]] const json::value *in(const json::value &body, std::string_view name) {
++  return json::said(&body, name);
++}
++
++// The number under one name, or -1 where there is none.
++[[nodiscard]] double number_in(const json::value &body, std::string_view name) {
++  const json::value *one = in(body, name);
++  if (one == nullptr)
++    return -1.0;
++  return json::number_of(*one).value_or(-1.0);
++}
++
++// The word under one name, or nothing where there is none.
++[[nodiscard]] std::string text_in(const json::value &body, std::string_view name) {
++  const json::value *one = in(body, name);
++  if (one == nullptr)
++    return std::string{};
++  return std::string(json::text_of(*one).value_or(""));
++}
++
++}  // namespace
++
++// What a thinking costs the body it is asked for in: a budget in the words
++// this family takes it in, room for an answer beside that budget -- and the
++// two numbers that choose the words taken off it, because this family does
++// not read them beside a thinking at all.
++SAID(provider, thinking_on_anthropic_is_a_budget_and_room_to_answer) {
++  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
++                              .model = "haiku-4"};
++  const std::vector<provider::turn> turns{
++      provider::turn{.who = provider::role::user, .text = "Say go"}};
++  const asking how{.thinking = true, .temperature = 0.7, .top_p = 1.0,
++                   .max_tokens = 2048};
++  const auto body = json::read(provider::body_of(at, turns, provider::wants_of(how)));
++  EXPECT_TRUE(body.has_value());
++  if (!body.has_value())
++    return;
++  const json::value *thinking = in(*body, "thinking");
++  EXPECT_TRUE(thinking != nullptr);
++  if (thinking == nullptr)
++    return;
++  EXPECT_EQ(text_in(*thinking, "type"), std::string("enabled"));
++  const double budget = number_in(*thinking, "budget_tokens");
++  EXPECT_GE(budget, 1024.0);
++  // Anthropic reads the budget and the answer out of the same max_tokens, so
++  // the room asked for is the budget plus what is left to answer in with it.
++  EXPECT_LT(budget, number_in(*body, "max_tokens"));
++  EXPECT_TRUE(in(*body, "temperature") == nullptr);
++  EXPECT_EQ(number_in(*body, "top_p"), 1.0);
++}
++
++// And the same body where the reader asked for no thinking: nothing said of
++// it, and the two numbers back where they were.
++SAID(provider, thinking_off_anthropic_leaves_the_numbers_where_they_were) {
++  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
++                              .model = "haiku-4"};
++  const std::vector<provider::turn> turns{
++      provider::turn{.who = provider::role::user, .text = "Say go"}};
++  const asking how{.thinking = false, .temperature = 0.7, .top_p = 0.8,
++                   .max_tokens = 2048};
++  const auto body = json::read(provider::body_of(at, turns, provider::wants_of(how)));
++  EXPECT_TRUE(body.has_value());
++  if (!body.has_value())
++    return;
++  EXPECT_TRUE(in(*body, "thinking") == nullptr);
++  EXPECT_EQ(number_in(*body, "temperature"), 0.7);
++  EXPECT_EQ(number_in(*body, "top_p"), 0.8);
++  EXPECT_EQ(number_in(*body, "max_tokens"), 2048.0);
++}
++
++// A top_p beside a thinking, kept only where this family still allows one:
++// 0.95 and above go out with it, and anything under that is left out rather
++// than sent to be refused.
++SAID(provider, a_top_p_beside_a_thinking_is_kept_only_in_095_and_up) {
++  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
++                              .model = "haiku-4"};
++  const std::vector<provider::turn> turns{
++      provider::turn{.who = provider::role::user, .text = "Say go"}};
++  const asking borderline{.thinking = true, .top_p = 0.95};
++  const auto kept =
++      json::read(provider::body_of(at, turns, provider::wants_of(borderline)));
++  EXPECT_TRUE(kept.has_value());
++  if (kept.has_value())
++    EXPECT_EQ(number_in(*kept, "top_p"), 0.95);
++  const asking under{.thinking = true, .top_p = 0.7};
++  const auto gone =
++      json::read(provider::body_of(at, turns, provider::wants_of(under)));
++  EXPECT_TRUE(gone.has_value());
++  if (gone.has_value())
++    EXPECT_TRUE(in(*gone, "top_p") == nullptr);
++}
++
++// And a model that never thought -- a generation from before extended
++// thinking, which the capability says so about -- is given no thinking
++// parameter at all, however much the reader asked for one.
++SAID(provider, a_model_that_never_thought_is_asked_for_no_thinking) {
++  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
++                              .model = "claude-3-haiku"};
++  const std::vector<provider::turn> turns{
++      provider::turn{.who = provider::role::user, .text = "Say go"}};
++  const asking how{.thinking = true, .temperature = 0.7};
++  const auto body = json::read(provider::body_of(at, turns, provider::wants_of(how)));
++  EXPECT_TRUE(body.has_value());
++  if (!body.has_value())
++    return;
++  EXPECT_TRUE(in(*body, "thinking") == nullptr);
++  EXPECT_EQ(number_in(*body, "temperature"), 0.7);
++}
++
+ int main() { return pchat::tests::run(); }
+diff --git a/tools/probe_asked.mjs b/tools/probe_asked.mjs
+new file mode 100644
+index 00000000..91a5d8c5
+--- /dev/null
++++ b/tools/probe_asked.mjs
+@@ -0,0 +1,116 @@
++// pchat.probe.asked -- What a question carries to the wire: the reader's own
++// settings whole in the body of the request the page makes -- the five
++// numbers, the thinking where the model takes one, and the tools left on --
++// read off the request itself, which is the one place all of them are said
++// together. The page cannot say what it wrote; the request can.
++//
++// The answer is made here, in the frames the wire this sample asks through
++// writes them (an anthropic one -- the opened conversation answers through
++// haiku), so that nothing waits on a server to see what went out. What is
++// asked for is checked against what the settings rows say, and the probe ends
++// with a code that says whether all of them held.
++import { chromium } from 'playwright';
++
++const url = `https://progressive-chat.github.io/progressive-chat/?asked=${Date.now()}`;
++
++// One whole answer as anthropic writes it: a message that begins, a text
++// block, and the message said over with what it cost.
++const answer = [
++  'data: {"type":"message_start","message":{"id":"msg_1","type":"message","role":"assistant","model":"haiku-4","usage":{"input_tokens":7}}}',
++  '',
++  'event: content_block_start',
++  'data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}',
++  '',
++  'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"answered-by-wire"}}',
++  '',
++  'data: {"type":"content_block_stop","index":0}',
++  '',
++  'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":5}}',
++  '',
++  'data: {"type":"message_stop"}',
++  '',
++].join('\n');
++
++const checks = [];
++const that = (holds, said) => checks.push(`${holds ? 'ok  ' : 'FAIL'} ${said}`);
++
++const browser = await chromium.launch({
++  args: [
++    '--no-sandbox',
++    '--disable-dev-shm-usage',
++    '--use-gl=angle',
++    '--use-angle=swiftshader',
++    '--enable-unsafe-swiftshader',
++    '--js-flags=--max-old-space-size=3072',
++  ],
++});
++const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
++const page = await context.newPage();
++page.on('pageerror', error => console.log(`pageerror: ${String(error).slice(0, 400)}`));
++let asked_url = null;
++let asked_body = null;
++await context.route(() => true, async route => {
++  const request = route.request();
++  if (request.method() !== 'POST' || !request.url().includes('/v1/'))
++    return route.continue();
++  asked_url = request.url();
++  asked_body = request.postData() ?? '';
++  return route.fulfill({
++    status: 200,
++    headers: { 'Content-Type': 'text/event-stream', 'Access-Control-Allow-Origin': '*' },
++    body: answer,
++  });
++});
++
++await page.goto(url, { waitUntil: 'load' });
++await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 180000 });
++await page.waitForTimeout(4000);
++// Said into the composer the way a reader says something: the window is one
++// canvas, so where the field is is put to the bottom of it by pointer.
++await page.mouse.click(640, 855);
++await page.keyboard.type('Say something, anything.');
++await page.keyboard.press('Enter');
++await page.waitForTimeout(12000);
++
++console.log(`asked: ${asked_url ?? 'nothing was asked'}`);
++if (asked_body === null) {
++  console.log('FAIL no request left the page at all');
++  await browser.close();
++  process.exit(1);
++}
++console.log(`body: ${asked_body.replace(/\s+/g, ' ').slice(0, 1600)}`);
++let body = null;
++try {
++  body = JSON.parse(asked_body);
++} catch (error) {
++  console.log(`FAIL the body is not JSON: ${String(error).slice(0, 200)}`);
++  await browser.close();
++  process.exit(1);
++}
++
++// What the settings rows say, checked against what went out: the conversation
++// opens on haiku, so this is an anthropic body -- thinking beside a budget,
++// sampling taken off beside it, and the numbers the generation rows move.
++that(body.model === 'haiku-4', `asked of haiku (said ${body.model})`);
++that(!!body.thinking, 'thinking is asked for');
++if (body.thinking) {
++  that(body.thinking.type === 'enabled', `thinking is enabled (said ${body.thinking.type})`);
++  that((body.thinking.budget_tokens ?? 0) >= 1024,
++       `thinking carries a budget of at least 1024 (said ${body.thinking.budget_tokens})`);
++  that(body.temperature === undefined,
++       `temperature is not said beside a thinking (said ${body.temperature})`);
++  that((body.max_tokens ?? 0) > (body.thinking.budget_tokens ?? 0),
++       `max_tokens holds the budget and the answer (said ${body.max_tokens})`);
++}
++that(body.top_p === 1.0, `top_p is the 1.0 a thinking still allows (said ${body.top_p})`);
++that(Array.isArray(body.tools) && body.tools.length === 3,
++     `the three tools are offered (said ${JSON.stringify((body.tools ?? []).map(one => one.name))})`);
++that(typeof body.system === 'string' && body.system.length > 0, 'what it is told goes with it');
++that(Array.isArray(body.messages) && body.messages.length > 0,
++     `the conversation goes with it (${(body.messages ?? []).length} messages)`);
++
++for (const line of checks) console.log(line);
++const failed = checks.filter(line => line.startsWith('FAIL')).length;
++console.log(failed === 0 ? `\n${checks.length} checks held.` : `\n${failed} of ${checks.length} checks did not hold.`);
++await browser.close();
++process.exit(failed === 0 ? 0 : 1);

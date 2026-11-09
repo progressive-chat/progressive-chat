@@ -1,0 +1,382 @@
+diff --git a/src/ui/appearance.cc b/src/ui/appearance.cc
+index 32af1775..80811a67 100644
+--- a/src/ui/appearance.cc
++++ b/src/ui/appearance.cc
+@@ -42,8 +42,7 @@ struct seed_row : scene::Node {
+                 .x = 16.0f});
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+-                 .x = 56.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .x = 56.0f});
+     fTick.apply({.width = 18.0f,
+                  .height = 18.0f,
+                  .anchor = scene::anchor::kCentreRight,
+diff --git a/src/ui/composer.cc b/src/ui/composer.cc
+index d3ac7c17..05a8c32a 100644
+--- a/src/ui/composer.cc
++++ b/src/ui/composer.cc
+@@ -81,8 +81,7 @@ struct composer : scene::Node {
+     fModel.apply({.anchor = scene::anchor::kTopLeft,
+                   .origin = scene::anchor::kCentreLeft,
+                   .x = 18.0f,
+-                  .y = 22.0f,
+-                  .autoSize = scene::axes::kBoth});
++                  .y = 22.0f});
+     fGauge.apply({.width = 18.0f,
+                   .height = 18.0f,
+                   .anchor = scene::anchor::kTopRight,
+diff --git a/src/ui/controls.cc b/src/ui/controls.cc
+index bcff0919..3563ba3d 100644
+--- a/src/ui/controls.cc
++++ b/src/ui/controls.cc
+@@ -34,8 +34,7 @@ using compose::row;
+   return compose::column(compose::vbox(0.0f, {.width = size, .height = size, .cornerRadius = size / 2.0f,
+                                               .background = look.avatar}),
+                          caption(std::string(1, first), size * 0.44f, look.on_avatar, true,
+-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre,
+-                                  .autoSize = scene::axes::kBoth}));
++                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
+ }
+ 
+ // A plate rounded all the way round: a pill with its label centred in it.
+@@ -47,8 +46,7 @@ using compose::row;
+     made.cornerRadius = std::max(made.height.value_or(pill_radius * 2.0f) / 2.0f, 1.0f);
+   return compose::column(compose::vbox(0.0f, made),
+                          caption(std::move(label), size, text, bold,
+-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre,
+-                                  .autoSize = scene::axes::kBoth}));
++                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
+ }
+ 
+ // A badge: how much is unread, in a circle of the accent.
+@@ -56,8 +54,7 @@ using compose::row;
+   const scene::Spec spec{.width = size, .height = size, .cornerRadius = size / 2.0f, .background = colour};
+   return compose::column(compose::vbox(0.0f, spec),
+                          caption(count > 99 ? "99+" : std::to_string(count), size * 0.52f, on_colour, true,
+-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre,
+-                                  .autoSize = scene::axes::kBoth}));
++                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
+ }
+ 
+ // Two lines, one above the other: what a row in a list says.
+diff --git a/src/ui/doc.cc b/src/ui/doc.cc
+index 5df698bd..3f85522d 100644
+--- a/src/ui/doc.cc
++++ b/src/ui/doc.cc
+@@ -105,7 +105,6 @@ struct doc_body : nodes::Stack {
+       line.setBold(bold);
+       line.setColour(said.kind == logic::doc_kind::gap ? look.dim : look.text);
+       line.apply({.fillX = true,
+-                  .autoSize = scene::axes::kY,
+                   .maxWidth = breadth,
+                   .visible = true});
+     }
+diff --git a/src/ui/drawer.cc b/src/ui/drawer.cc
+index f5bbcbe2..0ca7f791 100644
+--- a/src/ui/drawer.cc
++++ b/src/ui/drawer.cc
+@@ -75,17 +75,14 @@ struct conversation_row : scene::Node {
+     fTitle.apply({.anchor = scene::anchor::kTopLeft,
+                   .x = edge + avatar + gap,
+                   .y = 14.0f,
+-                  .autoSize = scene::axes::kBoth,
+                   .maxWidth = 160.0f});
+     fWhen.apply({.anchor = scene::anchor::kTopRight,
+                  .origin = scene::anchor::kTopRight,
+                  .x = -edge,
+-                 .y = 16.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .y = 16.0f});
+     fSaid.apply({.anchor = scene::anchor::kTopLeft,
+                  .x = edge + avatar + gap,
+                  .y = 38.0f,
+-                 .autoSize = scene::axes::kBoth,
+                  .maxWidth = 190.0f});
+     fBadge.apply({.width = 20.0f,
+                   .height = 20.0f,
+@@ -97,8 +94,7 @@ struct conversation_row : scene::Node {
+     fCount.apply({.anchor = scene::anchor::kTopRight,
+                   .origin = scene::anchor::kCentre,
+                   .x = -edge - 10.0f,
+-                  .y = 48.0f,
+-                  .autoSize = scene::axes::kBoth});
++                  .y = 48.0f});
+   }
+ 
+   // A row is pressed to open what it names: said as a request, and answered
+@@ -190,8 +186,7 @@ struct drawer_screen : scene::Node {
+     fPaper.apply({.fill = true});
+     fHeading.apply({.anchor = scene::anchor::kTopLeft,
+                     .x = edge,
+-                    .y = edge,
+-                    .autoSize = scene::axes::kBoth});
++                    .y = edge});
+     fSearch.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = edge,
+                    .y = edge + 34.0f,
+@@ -214,8 +209,7 @@ struct drawer_screen : scene::Node {
+                          .y = edge + 18.0f});
+     fNone.apply({.anchor = scene::anchor::kTopLeft,
+                  .x = edge,
+-                 .y = edge + 86.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .y = edge + 86.0f});
+     fNone.setVisible(false);
+   }
+ 
+diff --git a/src/ui/message_list.cc b/src/ui/message_list.cc
+index 04e10eae..1a2f07b5 100644
+--- a/src/ui/message_list.cc
++++ b/src/ui/message_list.cc
+@@ -102,9 +102,8 @@ struct bubble : nodes::Stack {
+                  .padding = scene::Margin{bubble_pad_y, bubble_pad_x,
+                                           bubble_pad_y, bubble_pad_x}});
+     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
+-    fBody.apply({.autoSize = scene::axes::kBoth});
+     fTime.apply(
+-        {.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
++        {.alignSelf = scene::align::kEnd});
+   }
+ 
+   void blank() {
+@@ -129,8 +128,7 @@ struct bubble : nodes::Stack {
+     fBody.setText(std::string(said));
+     fBody.setColour(look.on_sent);
+     fBody.setFontSize(look.size);
+-    fBody.apply({.autoSize = scene::axes::kBoth,
+-                 .maxWidth = widest - 2.0f * bubble_pad_x});
++    fBody.apply({.maxWidth = widest - 2.0f * bubble_pad_x});
+     fTime.setText(std::string(when));
+     fTime.setColour(look.on_sent & 0xb0ffffffu);
+   }
+@@ -167,8 +165,7 @@ struct foot_chip : scene::Node {
+                  .x = 7.0f});
+     fLabel.apply({.anchor = scene::anchor::kCentreLeft,
+                   .origin = scene::anchor::kCentreLeft,
+-                  .x = 24.0f,
+-                  .autoSize = scene::axes::kBoth});
++                  .x = 24.0f});
+   }
+ 
+   [[nodiscard]] bool acceptsInput() const { return true; }
+@@ -283,8 +280,6 @@ struct history_fold : nodes::Stack {
+                  .cornerRadius = 10.0f,
+                  .padding = scene::Margin{8.0f, 12.0f, 8.0f, 12.0f}});
+     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 6.0f};
+-    fSummary.apply({.autoSize = scene::axes::kBoth});
+-    fThought.apply({.autoSize = scene::axes::kBoth});
+     fThought.setVisible(false);
+   }
+ 
+@@ -395,7 +390,6 @@ struct answer_row : nodes::Stack {
+     fStack = {.direction = nodes::direction::vertical{},
+               .spacingY = answer_gap};
+     fFoot.apply({.fillX = true, .autoSize = scene::axes::kY});
+-    fInfo.apply({.autoSize = scene::axes::kBoth});
+     fInfo.setVisible(false);
+     this->blank();
+   }
+@@ -421,7 +415,7 @@ struct answer_row : nodes::Stack {
+     fBody.setText(said.text);
+     fBody.setColour(look.text);
+     fBody.setFontSize(look.size);
+-    fBody.apply({.autoSize = scene::axes::kY, .fillX = true});
++    fBody.apply({.fillX = true});
+     fFoot.again(sink, look, said);
+     // What About tells: what answered, and what this answer came to -- the
+     // model that keeps this chat, then how long it thought, how often it
+diff --git a/src/ui/prompt.cc b/src/ui/prompt.cc
+index 7fbb1bc2..5ee81685 100644
+--- a/src/ui/prompt.cc
++++ b/src/ui/prompt.cc
+@@ -161,15 +161,13 @@ struct prompt_screen : scene::Node {
+     fHead.setColour(look.text);
+     fHead.apply({.anchor = scene::anchor::kTopCentre,
+                  .origin = scene::anchor::kTopCentre,
+-                 .y = above + 22.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .y = above + 22.0f});
+     fSaid.setText("Told to every model that answers here, before anything "
+                   "else is said to it.");
+     fSaid.setColour(look.faint);
+     fSaid.apply({.anchor = scene::anchor::kTopCentre,
+                  .origin = scene::anchor::kTopCentre,
+-                 .y = above + 56.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .y = above + 56.0f});
+     fClosePlate.again(asked, app::close_system_prompt{}, look.raised);
+     fClosePlate.apply({.width = 36.0f,
+                        .height = 36.0f,
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index 5cb977f1..64f41fc2 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -129,8 +129,7 @@ struct switch_row : scene::Node {
+     fPlate.apply({.fill = true});
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+-                 .x = 16.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .x = 16.0f});
+     fTrack.apply({.width = 42.0f,
+                   .height = 24.0f,
+                   .cornerRadius = 12.0f,
+@@ -225,14 +224,12 @@ struct knob_row : scene::Node {
+     fPlate.apply({.fill = true});
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+-                 .x = 16.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .x = 16.0f});
+     // What it stands at, right of its name and left of the two presses: not
+     // centred, because a number that grows is read where it began.
+     fValue.apply({.anchor = scene::anchor::kCentreRight,
+                   .origin = scene::anchor::kCentreRight,
+-                  .x = -118.0f,
+-                  .autoSize = scene::axes::kBoth});
++                  .x = -118.0f});
+     fLess.apply({.anchor = scene::anchor::kCentreRight,
+                  .origin = scene::anchor::kCentreRight,
+                  .x = -60.0f,
+@@ -241,8 +238,7 @@ struct knob_row : scene::Node {
+                  .cornerRadius = 10.0f});
+     fLessMark.apply({.anchor = scene::anchor::kCentreRight,
+                      .origin = scene::anchor::kCentre,
+-                     .x = -80.0f,
+-                     .autoSize = scene::axes::kBoth});
++                     .x = -80.0f});
+     fMore.apply({.anchor = scene::anchor::kCentreRight,
+                  .origin = scene::anchor::kCentreRight,
+                  .x = -14.0f,
+@@ -251,8 +247,7 @@ struct knob_row : scene::Node {
+                  .cornerRadius = 10.0f});
+     fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
+                      .origin = scene::anchor::kCentre,
+-                     .x = -34.0f,
+-                     .autoSize = scene::axes::kBoth});
++                     .x = -34.0f});
+   }
+ 
+   void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+@@ -306,12 +301,10 @@ struct about_row : scene::Node {
+                  .cornerRadius = 14.0f});
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+-                 .x = 16.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .x = 16.0f});
+     fSaid.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+-                 .x = 190.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .x = 190.0f});
+   }
+ 
+   [[nodiscard]] bool acceptsInput() const { return true; }
+@@ -387,13 +380,11 @@ struct settings_rows : scene::Node {
+   settings_rows() {
+     fHeading.apply({.anchor = scene::anchor::kTopLeft,
+                     .x = 20.0f,
+-                    .y = 24.0f,
+-                    .autoSize = scene::axes::kBoth});
++                    .y = 24.0f});
+     for (group_name &one : *fGroups) {
+       one.name.setText(std::string{});
+       one.name.apply({.anchor = scene::anchor::kTopLeft,
+                       .x = 20.0f,
+-                      .autoSize = scene::axes::kBoth,
+                       .visible = false});
+     }
+     for (auto &group : *fItems)
+@@ -402,7 +393,6 @@ struct settings_rows : scene::Node {
+         one.name.apply({.anchor = scene::anchor::kCentreLeft,
+                         .origin = scene::anchor::kCentreLeft,
+                         .x = 32.0f,
+-                        .autoSize = scene::axes::kBoth,
+                         .visible = false});
+       }
+     for (std::size_t at = 0; at < max_seeds; ++at)
+@@ -642,8 +632,7 @@ struct settings_rows : scene::Node {
+     fRead.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+                  .x = 32.0f,
+-                 .y = top + 156.0f + row_height / 2.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .y = top + 156.0f + row_height / 2.0f});
+     // Where the rest of the page begins: under the row that offers the
+     // design, and the room left between it and the next group.
+     return top + 156.0f + settings_row_height + settings_group_gap;
+@@ -668,7 +657,6 @@ struct settings_rows : scene::Node {
+       head.name.apply({.anchor = scene::anchor::kTopLeft,
+                        .x = 20.0f,
+                        .y = at,
+-                       .autoSize = scene::axes::kBoth,
+                        .visible = true});
+       at += settings_group_stride;
+       for (std::size_t one = 0u; one < max_settings_items; ++one) {
+@@ -683,7 +671,6 @@ struct settings_rows : scene::Node {
+                          .origin = scene::anchor::kCentreLeft,
+                          .x = 32.0f,
+                          .y = at + settings_row_height / 2.0f,
+-                         .autoSize = scene::axes::kBoth,
+                          .visible = true});
+         at += settings_row_stride;
+         // Under one of its items a group says more than its name: what it
+diff --git a/src/ui/top_bar.cc b/src/ui/top_bar.cc
+index cedcf9aa..5b03a570 100644
+--- a/src/ui/top_bar.cc
++++ b/src/ui/top_bar.cc
+@@ -44,8 +44,7 @@ struct bar_pill : scene::Node {
+                  .x = 12.0f});
+     fLabel.apply({.anchor = scene::anchor::kCentreLeft,
+                   .origin = scene::anchor::kCentreLeft,
+-                  .x = 36.0f,
+-                  .autoSize = scene::axes::kBoth});
++                  .x = 36.0f});
+   }
+ 
+   void again(const paints &look, scene::Colour plate, std::string_view label) {
+@@ -90,8 +89,7 @@ struct answerer_bubble : scene::Node {
+     fPlate.apply({.fill = true});
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+-                 .x = 12.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .x = 12.0f});
+   }
+ 
+   void again(const paints &look, const scene::Spec &where,
+@@ -173,8 +171,7 @@ struct more_row : scene::Node {
+     fPlate.apply({.fill = true});
+     fLabel.apply({.anchor = scene::anchor::kCentreLeft,
+                   .origin = scene::anchor::kCentreLeft,
+-                  .x = 14.0f,
+-                  .autoSize = scene::axes::kBoth});
++                  .x = 14.0f});
+   }
+ 
+   void again(app::requests *sink, const paints &look, float top,
+@@ -300,12 +297,10 @@ struct top_bar : scene::Node {
+     fTokens.apply({.anchor = scene::anchor::kTopRight,
+                    .origin = scene::anchor::kCentreRight,
+                    .x = -(edge + bar_press_width + bar_gap),
+-                   .y = top_bar_height / 2.0f,
+-                   .autoSize = scene::axes::kBoth});
++                   .y = top_bar_height / 2.0f});
+     fTitle.apply({.anchor = scene::anchor::kTopCentre,
+                   .origin = scene::anchor::kTopCentre,
+-                  .y = 14.0f,
+-                  .autoSize = scene::axes::kBoth});
++                  .y = 14.0f});
+   }
+ 
+   void again(app::requests *sink, const paints &look, bool menu, bool narrow,
+@@ -397,7 +392,6 @@ struct top_bar : scene::Node {
+                               (answerer_bubble_width + bar_gap)),
+                    .y = top_bar_height / 2.0f,
+                    .relativeSize = scene::axes::kNone,
+-                   .autoSize = scene::axes::kBoth,
+                    .visible = true});
+   }
+ 

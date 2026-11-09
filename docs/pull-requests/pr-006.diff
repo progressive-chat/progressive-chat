@@ -1,0 +1,229 @@
+diff --git a/src/app/requests.cc b/src/app/requests.cc
+index cc273208..98f5b27b 100644
+--- a/src/app/requests.cc
++++ b/src/app/requests.cc
+@@ -77,6 +77,14 @@ struct open_system_prompt {
+   conversation_id chat;
+ };
+ struct close_system_prompt {};
++// What is being written to a conversation and has not been sent: said again
++// every time what stands in the field changes, so that leaving a
++// conversation and coming back to it finds it as it was left
++// (src/logic/drafts.cc).
++struct keep_draft {
++  conversation_id chat;
++  std::string text;
++};
+ struct set_system_prompt {
+   conversation_id chat;
+   std::string text;
+@@ -132,7 +140,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
+                              toggle_drawer, open_settings, close_settings,
+                              fork_conversation,
+                              share_conversation, open_system_prompt,
+-                             close_system_prompt, set_system_prompt,
++                             close_system_prompt, keep_draft, set_system_prompt,
+                              toggle_more, open_design, close_design,
+                              pick_seed, set_amoled, set_font_scale, pick_theme,
+                               set_generation, set_tool,
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index 1e28d781..53b395a2 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -24,6 +24,7 @@ import pchat.tools;
+ import pchat.app.requests;
+ import pchat.app.sample;
+ import pchat.logic.composer;
++import pchat.logic.drafts;
+ import pchat.logic.lists;
+ 
+ namespace scene = skiff::scene;
+@@ -60,6 +61,9 @@ class screens {
+                 drawer_ = false;
+             },
+             [&](const send_message &asking) {
++              // Sent, and so nothing is being written to it any more: what
++              // the field does with what it had is its own to do.
++              drafts_.clear(asking.chat);
+               const logic::sent_message said = logic::send(
+                   logic::sending_request{
+                       asking.chat, asking.text, {}, std::nullopt},
+@@ -127,6 +131,11 @@ class screens {
+             [&](const delete_answer &asking) { cut_away(asking.said); },
+             [&](const set_query &asking) { query_ = asking.text; },
+             [&](const toggle_drawer &) { drawer_ = !drawer_; },
++            // What is being written, kept until it is sent: said by the field
++            // again every time what stands in it changes.
++            [&](const keep_draft &asking) {
++              drafts_.write(asking.chat, asking.text);
++            },
+             [&](const open_settings &) { settings_ = true; },
+             [&](const close_settings &) { settings_ = false; },
+             [&](const fork_conversation &asking) {
+@@ -257,9 +266,14 @@ class screens {
+     for (const request &one : asked_.drain())
+       take(one);
+     read_what_arrived();
+-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
+-                        design_, system_, more_, drawer_, width_, height_,
+-                        &asked_);
++    // What was being written in the conversation that is open, as the field
++    // is to be filled: nothing, where none of them is open.
++    const std::string draft =
++        root_.opened ? std::string(drafts_.text_of(*root_.opened))
++                     : std::string{};
++    scene_.root().again(look_, root_, shown_, how_, query_, draft, dark_,
++                        settings_, design_, system_, more_, drawer_, width_,
++                        height_, &asked_);
+   }
+ 
+   [[nodiscard]] chats_root &root() noexcept { return root_; }
+@@ -547,6 +561,9 @@ class screens {
+   ui::paints look_;
+   requests asked_;
+   std::string query_;
++  // What is being written in each conversation while it is not being looked
++  // at: kept by the program and not by the field (src/logic/drafts.cc).
++  logic::drafts drafts_;
+   bool dark_ = true;
+   bool settings_ = false;
+   // The drawer is beside the messages, where the window has room for both,
+diff --git a/src/ui/composer.cc b/src/ui/composer.cc
+index d3ac7c17..7beb809e 100644
+--- a/src/ui/composer.cc
++++ b/src/ui/composer.cc
+@@ -60,6 +60,13 @@ struct composer : scene::Node {
+   nodes::Text fModel{"", 12.0f, 0u, true};
+   nodes::Icon fGauge{shape::info(), 0u};
+   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
++  // Which conversation the field last took its words from, and what those
++  // were: another conversation opened puts the words being written to *it*
++  // in the field -- and not what the last one had in it -- while what is
++  // typed is left alone, because what stands in the field then is what put
++  // them there.
++  conversation_id fShownChat;
++  std::string fShownDraft;
+   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
+                                           message_given{fSink}};
+   nodes::Icon fClip{shape::clip(), 0u};
+@@ -126,9 +133,25 @@ struct composer : scene::Node {
+   }
+ 
+   void again(const paints &look, const conversation &chat,
+-             app::requests *asked) {
++             const std::string &draft, app::requests *asked) {
+     fSink->asked = asked;
+     fSink->chat = chat.id;
++    // What was being written to this conversation when it was last left, put
++    // in the field the moment it is the one being written to.
++    if (fSink->chat != fShownChat) {
++      fShownChat = fSink->chat;
++      fShownDraft = draft;
++      if (draft != fField.text())
++        fField.setText(draft);
++    }
++    // And what is written in it is said back, once for every time it
++    // changes: the program keeps it until it is sent, which is what leaving
++    // a conversation and coming back to it is expected to find.
++    const std::string written(fField.text());
++    if (written != fShownDraft && asked) {
++      asked->ask(app::keep_draft{fSink->chat, written});
++      fShownDraft = written;
++    }
+     fCard.setColour(look.card);
+     fClip.setColour(look.faint);
+     fFace.setColour(look.faint);
+diff --git a/src/ui/window.cc b/src/ui/window.cc
+index 484b1543..59f1481c 100644
+--- a/src/ui/window.cc
++++ b/src/ui/window.cc
+@@ -66,7 +66,8 @@ struct app_window : scene::Node {
+ 
+   // Everything drawn again from the model, for this size of window.
+   void again(const paints &look, const chats_root &root, const looks &shown,
+-             const asking &how, const std::string &query, bool dark,
++             const asking &how, const std::string &query,
++             const std::string &draft, bool dark,
+              bool settings_open,
+              bool design_open, bool prompt_open, bool more_open,
+              bool drawer_open, float width,
+@@ -184,7 +185,7 @@ struct app_window : scene::Node {
+                      .height = composer_height + 2.0f * edge,
+                      .visible = in_chat});
+     if (open_chat)
+-      fComposer.again(look, *open_chat, asked);
++      fComposer.again(look, *open_chat, draft, asked);
+     // The settings page, over everything, when it is opened.
+     if (settings_open)
+       fSettings.again(asked, look, shown, how, answering, dark, width,
+diff --git a/test/logic_test.cc b/test/logic_test.cc
+index 6b458e6d..134c1453 100644
+--- a/test/logic_test.cc
++++ b/test/logic_test.cc
+@@ -9,6 +9,7 @@ import pchat.core;
+ import pchat.logic.lists;
+ import pchat.logic.search;
+ import pchat.logic.composer;
++import pchat.logic.drafts;
+ import pchat.logic.formatting;
+ import pchat.logic.doc;
+ 
+@@ -131,3 +132,58 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
+   EXPECT_TRUE(titled);
+   EXPECT_TRUE(listed);
+ }
++
++SAID(logic, a_draft_is_kept_for_the_conversation_it_was_written_to) {
++  logic::drafts kept;
++  const conversation_id one{"general"};
++  const conversation_id two{"random"};
++  EXPECT_TRUE(kept.text_of(one).empty());
++  kept.write(one, "half a thought");
++  EXPECT_EQ(std::string(kept.text_of(one)), std::string("half a thought"));
++  // Nothing was written to the other, and so it reads as nothing.
++  EXPECT_TRUE(kept.text_of(two).empty());
++  EXPECT_EQ(kept.all().size(), 1u);
++}
++
++SAID(logic, a_draft_is_written_over_and_taken_away_again) {
++  logic::drafts kept;
++  const conversation_id one{"general"};
++  kept.write(one, "one");
++  kept.write(one, "two");
++  EXPECT_EQ(std::string(kept.text_of(one)), std::string("two"));
++  EXPECT_EQ(kept.all().size(), 1u);
++  // Empty, and nothing else said about it: there is nothing to keep, and so
++  // it is not kept -- one entry fewer, and read as nothing.
++  kept.write(one, "");
++  EXPECT_TRUE(kept.text_of(one).empty());
++  EXPECT_TRUE(kept.all().empty());
++  // Sent or thrown away: the same, and of a conversation with nothing in it
++  // too, which is nothing at all rather than a wrong answer.
++  kept.write(one, "three");
++  kept.clear(one);
++  EXPECT_TRUE(kept.text_of(one).empty());
++  kept.clear(conversation_id{"never-had-one"});
++  EXPECT_TRUE(kept.all().empty());
++}
++
++SAID(logic, what_a_draft_is_a_reply_to_is_kept_with_it) {
++  logic::drafts kept;
++  const conversation_id one{"general"};
++  kept.answering(one, message_id{"m-1"});
++  // Nothing written in it yet, and still kept: what it answers is said to be
++  // an answer to m-1 even before there are words in it.
++  EXPECT_TRUE(kept.text_of(one).empty());
++  EXPECT_EQ(kept.reply_of(one).value_or(message_id{"nothing"}).value,
++            std::string("m-1"));
++  kept.write(one, "yes");
++  EXPECT_EQ(kept.reply_of(one).value_or(message_id{"nothing"}).value,
++            std::string("m-1"));
++  // The reply put away again, and the words still standing: it is written to
++  // the conversation and to no message in it now.
++  kept.answering(one, std::nullopt);
++  EXPECT_EQ(std::string(kept.text_of(one)), std::string("yes"));
++  EXPECT_FALSE(kept.reply_of(one).has_value());
++  // Nothing written and nothing answered: not kept at all.
++  kept.write(one, "");
++  EXPECT_TRUE(kept.all().empty());
++}

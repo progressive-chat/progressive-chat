@@ -1,0 +1,765 @@
+diff --git a/.github/workflows/probe.yml b/.github/workflows/probe.yml
+index eb1403a7..18a92d0a 100644
+--- a/.github/workflows/probe.yml
++++ b/.github/workflows/probe.yml
+@@ -4,6 +4,14 @@ name: probe
+ # Only ever asked for by hand: what the deployed page paints is not what a
+ # push changes, and a browser takes its minutes here for nothing if every
+ # push pays them.
++#
++# Asked for on any ref, though, and not only on main: the second job below
++# builds the page the ref itself makes and asks it everything the deployed
++# one is asked, so that what has not been deployed yet -- every pull
++# request, in other words -- is answered about what it paints rather than
++# about what its code seems to say. Which pull request that is, is said by
++# the request itself: [probe] in its title asks for it, and a title without
++# it leaves every push paying nothing for a browser nobody asked to see it.
+ on:
+   workflow_dispatch:
+     inputs:
+@@ -15,12 +23,114 @@ on:
+         description: 'A probe script, in place of the one in the tree'
+         required: false
+         default: ''
++  # What asks for the page of the push itself to be probed is the request's
++  # own title, said below: nothing is paid for here until a pull request asks.
++  pull_request:
+ 
+ permissions:
+   contents: read
+ 
+ jobs:
++  pushed:
++    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.title, '[probe]') }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 60
++    steps:
++      - uses: actions/checkout@v5
++      - uses: ./.github/actions/desktop-setup
++      - uses: ./.github/actions/web-setup
++      # The same three steps the web workflow builds the deployed page with,
++      # said again here: what is asked about below is this ref's own page and
++      # not a page somebody put somewhere (../web.yml).
++      - name: Where the standard library's modules are
++        run: |
++          set -euo pipefail
++          json="$(em++ -print-file-name=libc++.modules.json 2>/dev/null || true)"
++          if [ ! -f "$json" ]; then
++            json="$(find "$HOME/.cache/pchat-emsdk/upstream/emscripten/cache/sysroot" \
++              -name 'libc++.modules.json' -print -quit 2>/dev/null || true)"
++          fi
++          if [ ! -f "$json" ]; then
++            echo "::error::no libc++.modules.json came with this SDK"
++            exit 1
++          fi
++          echo "found $json"
++          echo "PCHAT_MODULES_JSON=$json" >> "$GITHUB_ENV"
++      - name: Configure
++        run: |
++          emcmake cmake -S . -B build-web -G Ninja \
++            -DCMAKE_BUILD_TYPE=Debug \
++            -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" \
++            -DCMAKE_C_FLAGS_DEBUG="-Os -g0" \
++            -DCMAKE_C_FLAGS="-pthread -msimd128" \
++            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fexceptions -pthread -msimd128" \
++            -DCMAKE_CXX_STDLIB_MODULES_JSON="$PCHAT_MODULES_JSON" \
++            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$HOME/.cache/pchat-emsdk/upstream/bin/clang-scan-deps" \
++            -DPCHAT_TESTS=OFF
++      - name: Build
++        run: cmake --build build-web --target progressive-chat -- -k 0
++      - name: Serve it, as a host serves a page
++        run: |
++          set -euo pipefail
++          cd build-web/web
++          # Left standing behind every step after this one: the same runner,
++          # and the same process tree, is what all of them are said to.
++          nohup python3 -m http.server 8123 --bind 127.0.0.1 > served.log 2>&1 &
++          for try in $(seq 1 30); do
++            curl -sf -o /dev/null http://127.0.0.1:8123/index.html && break
++            sleep 1
++          done
++          curl -sf -o /dev/null -w 'the page answers with %{http_code}\n' \
++            http://127.0.0.1:8123/index.html
++      - uses: actions/setup-node@v4
++        with:
++          node-version: '24'
++      - name: A browser that can be driven
++        run: |
++          npm init -y
++          # Said of a version and not "the newest": a playwright is put out
++          # before the core it is said on top of, and a probe that cannot be
++          # installed is no probe at all -- this one is moved on by hand when
++          # the next is settled.
++          npm install playwright@1.64.1
++          npx playwright install --with-deps chromium
++      - name: What to say to the page, when it is said by hand
++        if: ${{ github.event.inputs.script != '' }}
++        run: printf '%s' "${{ github.event.inputs.script }}" > said_by_hand.mjs
++      # Three probes, asked in this order: a whole script written out here,
++      # one this very tree keeps of its own say (tools/probe_by_hand.mjs),
++      # and the tester's -- the last of them asked of everything else.
++      - name: Which probe is asked
++        run: |
++          set -euo pipefail
++          if [ -f said_by_hand.mjs ]; then
++            probe=said_by_hand.mjs
++          elif [ -f tools/probe_by_hand.mjs ]; then
++            probe=tools/probe_by_hand.mjs
++          else
++            probe=tools/probe_painted.mjs
++          fi
++          echo "asked of the page: $probe"
++          echo "PCHAT_PROBE=$probe" >> "$GITHUB_ENV"
++      - name: Shoot the page this ref built
++        env:
++          # What the probe asks, in place of the page everybody else sees:
++          # this ref's own, off the host it was served onto above.
++          PCHAT_PAGE: http://127.0.0.1:8123/index.html
++        run: node "$PCHAT_PROBE"
++      - uses: actions/upload-artifact@v4
++        with:
++          name: painted-here
++          # Every shot of the page, whatever the probe that made it named
++          # them: a probe driven by hand names them as it likes.
++          path: |
++            *.png
++          if-no-files-found: error
++
+   painted:
++    # What everybody already sees, and nothing to do with a push: a change is
++    # not what this page is made of until it has landed.
++    if: ${{ github.event_name == 'workflow_dispatch' }}
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     steps:
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1b1fab0b..95c691ba 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -224,6 +224,7 @@ target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
+         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
+         src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc
++        src/logic/forgotten.cc
+           src/tokens.cc)
+ target_compile_features(pchat_core PUBLIC cxx_std_26)
+ target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
+diff --git a/TODO.md b/TODO.md
+index 18214570..8b9a6e1a 100644
+--- a/TODO.md
++++ b/TODO.md
+@@ -57,15 +57,17 @@ build and the next.
+       clipboard now (`scene::setClipboardText`), which no probe has read
+       back yet -- a page kept in a browser is asked for its clipboard by
+       permission and nobody has asked.
+-- [ ] Three of the eight settings groups still stand named and empty:
+-      Multimodal, Network, and Memory & Data. What is drawn today under the
+-      others is Appearance (the theme, its type and its dark), what answers
+-      in the conversation that is open (Services, Models), Generation
+-      (Responses), the three tools this program owns (Tools), and what this
+-      build is (About). The three left want things this program has no part
+-      of yet -- a picture asked about, a proxy asked through, a memory kept
+-      between conversations -- and drawing a row for something nothing does
+-      is how a stub is made.
++- [ ] Two of the eight settings groups still stand named and empty:
++      Multimodal and Network. Memory & Data, which stood with them, says
++      what the window is holding now: everything said in the conversation
++      that is open, and every conversation, each taken away by a press on
++      it and said with how much there is of it. The two left want things
++      this program has no part of yet -- a picture asked about, and a proxy
++      asked through -- and drawing a row for something nothing does is how
++      a stub is made. What Memory says could not have been drawn either
++      while nothing was written anywhere but in the window: what is taken
++      away here is taken away for good, and nothing was ever kept anywhere
++      else to take it out of.
+ - [ ] What a model wrote to itself, folded above its answer, has never been
+       pressed open and read: `history_fold` keeps it (`src/ui/message_list.cc`)
+       and no probe has said whether a press opens it.
+diff --git a/design-doc.md b/design-doc.md
+index 682408d6..e6d5fe44 100644
+--- a/design-doc.md
++++ b/design-doc.md
+@@ -207,6 +207,10 @@ this program has to be able to say yes or no to, and to what degree.
+ **Memory & Data**
+ 
+ * **Memory** — what is remembered while it runs, and what is kept in files.
++  *(Drawn: everything said in the chat that is open, taken away by a press;
++  every conversation taken away by another, said each with how much there is
++  of it. What the window keeps is all there is to take away: nothing of it is
++  written into a file yet, and nothing of it is remembered after this run.)*
+ * **Skills** — instruction files the model can be given.
+ * **Data control** — everything of yours given out as a file, or taken back in.
+ 
+@@ -227,9 +231,10 @@ this program has to be able to say yes or no to, and to what degree.
+ Of all this, what is drawn today is **Appearance** — the theme, its scheme,
+ its type and its dark; the five things an answer is asked with, under
+ **Generation**; which answerers answer in the chat that is open, under
+-**Models**; the three tools this program owns, under **Tools**; and what this
+-build is, under **About**. The other three groups stand empty, each with its
+-name, waiting for the thing behind it.
++**Models**; the three tools this program owns, under **Tools**; what of yours
++it is holding, under **Memory & Data**; and what this build is, under
++**About**. The other two groups stand empty, each with its name, waiting for
++the thing behind it.
+ 
+ ## What this design does not do
+ 
+diff --git a/src/app/requests.cc b/src/app/requests.cc
+index cc273208..a3574426 100644
+--- a/src/app/requests.cc
++++ b/src/app/requests.cc
+@@ -60,6 +60,14 @@ struct copy_text {
+ struct toggle_drawer {};
+ struct open_settings {};
+ struct close_settings {};
++// What Settings asks for under Memory: everything said in the conversation
++// this window has open taken away, and every conversation taken away with
++// everything said in them. Nothing of either is kept anywhere else to be
++// asked back.
++struct forget_conversation {
++  conversation_id chat;
++};
++struct forget_everything {};
+ // What the top edge asks for: another answerer in this same conversation,
+ // this conversation taken whole into one of its own, this conversation given
+ // out, and what every answerer in it is told before anything is said to it.
+@@ -136,7 +144,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
+                              toggle_more, open_design, close_design,
+                              pick_seed, set_amoled, set_font_scale, pick_theme,
+                               set_generation, set_tool,
+-                              set_answerer, copy_text>;
++                              set_answerer, copy_text, forget_conversation,
++                             forget_everything>;
+ 
+ class requests {
+ public:
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index 1e28d781..a2353097 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -25,6 +25,7 @@ import pchat.app.requests;
+ import pchat.app.sample;
+ import pchat.logic.composer;
+ import pchat.logic.lists;
++import pchat.logic.forgotten;
+ 
+ namespace scene = skiff::scene;
+ 
+@@ -125,6 +126,24 @@ class screens {
+             // it to.
+             [&](const share_answer &asking) { this->give(text_of(asking.said)); },
+             [&](const delete_answer &asking) { cut_away(asking.said); },
++            // Everything said in one conversation, taken away: the
++            // conversation stands where it stood, named in the drawer and
++            // open in the room, with nothing said under it. What is being
++            // written to it is kept: taking away what was said is not taking
++            // away what is being said next.
++            [&](const forget_conversation &asking) {
++              logic::take_said_away(root_, asking.chat);
++              recount(asking.chat);
++            },
++            // Every conversation taken away, and everything said in them:
++            // nothing is left open, nothing is left in the drawer, and what
++            // the drawer was searched for is forgotten with them.
++            [&](const forget_everything &) {
++              logic::take_everything_away(root_);
++              query_.clear();
++              drawer_ = false;
++              settings_ = false;
++            },
+             [&](const set_query &asking) { query_ = asking.text; },
+             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+             [&](const open_settings &) { settings_ = true; },
+diff --git a/src/logic/forgotten.cc b/src/logic/forgotten.cc
+new file mode 100644
+index 00000000..0c555747
+--- /dev/null
++++ b/src/logic/forgotten.cc
+@@ -0,0 +1,42 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.logic.forgotten -- What is taken away when a reader asks for it:
++// everything said in one conversation, or every conversation there is with
++// everything said in them. Nothing of it is asked back afterwards, and
++// nothing carries it anywhere: what is taken away is taken away of the model
++// this window keeps, and of nothing else.
++export module pchat.logic.forgotten;
++
++import std;
++import pchat.core;
++
++export namespace pchat::logic {
++
++// How much is said in one conversation, before any of it is taken away: what
++// a row tells of it, so that what a press takes can be counted before it
++// goes and not only remembered.
++[[nodiscard]] inline std::size_t said_in(const chats_root &root,
++                                         const conversation_id &chat) {
++  return static_cast<std::size_t>(std::ranges::count_if(
++      root.messages, [&](const message &one) { return one.chat == chat; }));
++}
++
++// Everything said in one conversation, taken away, and nothing else said in
++// any other: the conversation itself stays -- named in the drawer, open in
++// the room, still the one every answerer in it answers in -- with nothing
++// under it. What it thought and what it cost are said with the messages they
++// were said with, so nothing of them is left to read either.
++inline void take_said_away(chats_root &root, const conversation_id &chat) {
++  std::erase_if(root.messages,
++                [&](const message &one) { return one.chat == chat; });
++}
++
++// Every conversation taken away together with everything said in them: what
++// is left is a room with nothing open in it, for there is nothing left to
++// open. Nothing of what the drawer says is said of them again.
++inline void take_everything_away(chats_root &root) {
++  root.messages.clear();
++  root.conversations.clear();
++  root.opened = std::nullopt;
++}
++
++} // namespace pchat::logic
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index 5cb977f1..f4c81a60 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -11,6 +11,7 @@ import skiff.nodes;
+ import pchat.config;
+ import pchat.theme;
+ import pchat.app.requests;
++import pchat.logic.forgotten;
+ import :theme;
+ import :base;
+ import :appearance;
+@@ -60,7 +61,8 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
+ // What one of them draws under the item it stands under, where it draws
+ // anything: one of these five, and never two of them, because no two of
+ // them are what one place in the page is made of.
+-enum class group_rows { none, appearance, generation, tools, answerers, about };
++enum class group_rows { none, appearance, generation, tools, answerers, about,
++                       memory };
+ 
+ struct settings_group {
+   std::string_view name;
+@@ -92,8 +94,8 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
+      group_rows::tools},
+     {"Network", {{"Proxy", "WebUI"}}, 2u, max_settings_items,
+      group_rows::none},
+-    {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u,
+-     max_settings_items, group_rows::none},
++    {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u, 0u,
++     group_rows::memory},
+     {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u,
+      group_rows::appearance},
+     {"About", {{"About"}}, 1u, 0u, group_rows::about},
+@@ -114,6 +116,11 @@ inline constexpr float settings_group_gap = 20.0f;
+ // away whole by a press.
+ inline constexpr std::size_t max_about_rows = 3u;
+ 
++// What Memory says: one row for everything said in the conversation open, and
++// one for every conversation there is. Two, and no more than two, for both of
++// them take something away that is not asked back.
++inline constexpr std::size_t max_memory_rows = 2u;
++
+ // A switch, as a row: what it is called, and the pill that says which way it
+ // is put -- lit when it is on.
+ struct switch_row : scene::Node {
+@@ -347,6 +354,64 @@ struct about_row : scene::Node {
+   std::string given;
+ };
+ 
++// A row under Memory: what a press takes away, said with how much of it there
++// is to take away, so that what is being given up is counted before it goes
++// and not only remembered afterwards.
++struct take_row : scene::Node {
++  ask_box fPlate{};
++  nodes::Text fName{"", 15.0f, 0u};
++  nodes::Text fSaid{"", 12.0f, 0u};
++
++  take_row() {
++    this->apply({.anchor = scene::anchor::kTopLeft,
++                 .height = settings_row_height,
++                 .cornerRadius = 14.0f});
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = 16.0f,
++                 .autoSize = scene::axes::kBoth});
++    // What there is of it, said at the row's other end: a number is read
++    // where it always stands, and not pushed about by the length of a name.
++    fSaid.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -16.0f,
++                 .autoSize = scene::axes::kBoth});
++  }
++
++  [[nodiscard]] bool acceptsInput() const { return true; }
++  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
++  [[nodiscard]] bool onClick(float, float) {
++    if (asked)
++      asked->ask(one);
++    return true;
++  }
++
++  void blank() { this->setVisible(false); }
++
++  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
++             std::string_view name, std::string_view said,
++             app::request asking) {
++    asked = sink;
++    one = std::move(asking);
++    fPlate.again(sink, one, 0u);
++    this->apply(spec);
++    this->setVisible(true);
++    fName.setText(std::string(name));
++    fName.setColour(look.text);
++    fSaid.setText(std::string(said));
++    fSaid.setColour(look.dim);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fName);
++    f(fSaid);
++  }
++
++  app::requests *asked = nullptr;
++  app::request one{app::forget_everything{}};
++};
++
+ struct settings_rows : scene::Node {
+   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
+   // One line to a text, kept on the heap and not as a member: sixty of them,
+@@ -380,6 +445,11 @@ struct settings_rows : scene::Node {
+   // About, drawn: what this build is, what it is under, and where its
+   // source is kept.
+   std::array<about_row, max_about_rows> fAbout;
++  // What Memory says: everything said in the conversation open, and every
++  // conversation, each of them taken away by a press on it. Nothing of them
++  // is asked back afterwards -- they are gone, and the row says how much had
++  // been said before it went.
++  std::array<take_row, max_memory_rows> fTaken;
+   // What the design is called when it is offered: pressed, the whole of it
+   // is said in the room, where it can be read against what is drawn.
+   ask_box fReadPlate{};
+@@ -418,6 +488,8 @@ struct settings_rows : scene::Node {
+       one.setVisible(false);
+     for (about_row &one : fAbout)
+       one.blank();
++    for (take_row &one : fTaken)
++      one.blank();
+     fBlack.fName.setText("Pure black");
+     fLarge.fName.setText("Larger type");
+     fLight.fName.setText("Light colours");
+@@ -450,6 +522,42 @@ struct settings_rows : scene::Node {
+     return at;
+   }
+ 
++  // Memory, drawn: what the window has open and everything said in it, then
++  // every conversation there is, and a press on either taking it away. Only
++  // the second is said where nothing is open, for there is nothing said in
++  // nothing.
++  [[nodiscard]] float say_memory(app::requests *asked, const paints &look,
++                                 const chats_root &root, float row_width,
++                                 float base) {
++    float at = base;
++    const auto spec_at = [row_width](float y) {
++      return scene::Spec{.anchor = scene::anchor::kTopLeft,
++                         .x = 16.0f,
++                         .y = y,
++                         .relativeSize = scene::axes::kNone,
++                         .width = row_width,
++                         .height = settings_row_height,
++                         .cornerRadius = 14.0f,
++                         .visible = true};
++    };
++    if (root.opened) {
++      const std::size_t said = logic::said_in(root, *root.opened);
++      fTaken[0].again(asked, spec_at(at), look,
++                      "Everything said here, taken away",
++                      said == 1u ? std::string("1 message said in it")
++                                 : std::to_string(said) + " messages said in it",
++                      app::forget_conversation{.chat = *root.opened});
++      at += settings_row_stride;
++    }
++    const std::size_t kept = root.conversations.size();
++    fTaken[1].again(asked, spec_at(at), look, "Every conversation, taken away",
++                    kept == 1u ? std::string("1 conversation kept")
++                               : std::to_string(kept) + " conversations kept",
++                    app::forget_everything{});
++    at += settings_row_stride;
++    return at;
++  }
++
+   // About, drawn: what this build is made of, what it is let out under, and
+   // where what it is made of is kept -- each of them given away whole.
+   [[nodiscard]] float say_about(app::requests *asked, const paints &look,
+@@ -485,8 +593,8 @@ struct settings_rows : scene::Node {
+                                const paints &look, const looks &shown,
+                                const asking &how,
+                                std::span<const std::string> answerers,
+-                               bool dark, float breadth, float row_width,
+-                               float base) {
++                               const chats_root &root, bool dark, float breadth,
++                               float row_width, float base) {
+     switch (rows) {
+     case group_rows::none:
+       return base;
+@@ -500,6 +608,8 @@ struct settings_rows : scene::Node {
+       return say_answerers(asked, look, answerers, row_width, base);
+     case group_rows::about:
+       return say_about(asked, look, row_width, base);
++    case group_rows::memory:
++      return say_memory(asked, look, root, row_width, base);
+     }
+     return base;
+   }
+@@ -650,7 +760,7 @@ struct settings_rows : scene::Node {
+   }
+   void again(app::requests *asked, const paints &look, const looks &shown,
+              const asking &how, std::span<const std::string> answerers,
+-             bool dark, float breadth) {
++             const chats_root &root, bool dark, float breadth) {
+     // Where the next thing said stands: every row in here says where it
+     // stands, so the page is laid out as it is read -- one group after the
+     // last, and nothing left to count by hand.
+@@ -689,8 +799,8 @@ struct settings_rows : scene::Node {
+         // Under one of its items a group says more than its name: what it
+         // is made of, in the room the items after it would have taken.
+         if (named.drawn_at == one)
+-          at = say_rows(named.drawn, asked, look, shown, how, answerers, dark,
+-                        breadth, row_width, at);
++          at = say_rows(named.drawn, asked, look, shown, how, answerers, root,
++                        dark, breadth, row_width, at);
+       }
+       at += settings_group_gap;
+     }
+@@ -734,6 +844,8 @@ struct settings_rows : scene::Node {
+     f(fRead);
+     for (about_row &one : fAbout)
+       f(one);
++    for (take_row &one : fTaken)
++      f(one);
+   }
+ };
+ 
+@@ -770,7 +882,7 @@ struct settings_screen : scene::Node {
+ 
+   void again(app::requests *asked, const paints &look, const looks &shown,
+              const asking &how, std::span<const std::string> answerers,
+-             bool dark, float width, float height) {
++             const chats_root &root, bool dark, float width, float height) {
+     this->setVisible(true);
+     // Opened anew, it is read from its beginning. Left alone it stood at
+     // its end: the column is taller than the room, and while it was still
+@@ -813,7 +925,7 @@ struct settings_screen : scene::Node {
+                       .width = 18.0f,
+                       .height = 18.0f});
+     std::get<0>(fRows.fChildren)
+-        .again(asked, look, shown, how, answerers, dark,
++        .again(asked, look, shown, how, answerers, root, dark,
+                breadth - 2.0f * edge);
+     fRows.apply({.anchor = scene::anchor::kTopCentre,
+                  .origin = scene::anchor::kTopCentre,
+diff --git a/src/ui/window.cc b/src/ui/window.cc
+index 484b1543..686e2413 100644
+--- a/src/ui/window.cc
++++ b/src/ui/window.cc
+@@ -187,7 +187,7 @@ struct app_window : scene::Node {
+       fComposer.again(look, *open_chat, asked);
+     // The settings page, over everything, when it is opened.
+     if (settings_open)
+-      fSettings.again(asked, look, shown, how, answering, dark, width,
++      fSettings.again(asked, look, shown, how, answering, root, dark, width,
+                       height);
+     else
+       fSettings.hide();
+diff --git a/test/logic_test.cc b/test/logic_test.cc
+index 6b458e6d..ca6f9a32 100644
+--- a/test/logic_test.cc
++++ b/test/logic_test.cc
+@@ -11,6 +11,7 @@ import pchat.logic.search;
+ import pchat.logic.composer;
+ import pchat.logic.formatting;
+ import pchat.logic.doc;
++import pchat.logic.forgotten;
+ 
+ 
+ 
+@@ -131,3 +132,40 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
+   EXPECT_TRUE(titled);
+   EXPECT_TRUE(listed);
+ }
++
++SAID(logic, what_is_said_in_one_conversation_is_taken_away_and_only_that) {
++  chats_root root;
++  root.conversations.push_back(conversation{.id = conversation_id{"1"}, .title = "Kept"});
++  root.conversations.push_back(conversation{.id = conversation_id{"2"}, .title = "Gone"});
++  root.messages.push_back(message{.id = message_id{"a"}, .chat = conversation_id{"1"}, .text = "here"});
++  root.messages.push_back(message{.id = message_id{"b"}, .chat = conversation_id{"2"}, .text = "taken"});
++  root.messages.push_back(message{.id = message_id{"c"}, .chat = conversation_id{"2"}, .text = "away"});
++  EXPECT_EQ(logic::said_in(root, conversation_id{"2"}), 2u);
++  logic::take_said_away(root, conversation_id{"2"});
++  EXPECT_EQ(root.messages.size(), 1u);
++  EXPECT_EQ(root.messages.front().text, std::string("here"));
++  // The conversation itself is still there, named in the drawer and open in
++  // the room, with nothing said under it.
++  EXPECT_EQ(root.conversations.size(), 2u);
++  EXPECT_EQ(logic::said_in(root, conversation_id{"2"}), 0u);
++  // Asked about a conversation nothing was ever said in: nothing changes.
++  logic::take_said_away(root, conversation_id{"3"});
++  EXPECT_EQ(root.messages.size(), 1u);
++}
++
++SAID(logic, every_conversation_taken_away_leaves_nothing_open) {
++  chats_root root;
++  root.conversations.push_back(conversation{.id = conversation_id{"1"}, .title = "One"});
++  root.conversations.push_back(conversation{.id = conversation_id{"2"}, .title = "Two"});
++  root.messages.push_back(message{.id = message_id{"a"}, .chat = conversation_id{"1"}, .text = "said"});
++  root.opened = conversation_id{"1"};
++  logic::take_everything_away(root);
++  EXPECT_TRUE(root.conversations.empty());
++  EXPECT_TRUE(root.messages.empty());
++  EXPECT_FALSE(root.opened.has_value());
++  // Taken away twice over: there is nothing left to take, and nothing said
++  // of it afterwards.
++  logic::take_everything_away(root);
++  EXPECT_TRUE(root.conversations.empty());
++  EXPECT_TRUE(root.messages.empty());
++}
+diff --git a/tools/probe_by_hand.mjs b/tools/probe_by_hand.mjs
+new file mode 100644
+index 00000000..357cb8e6
+--- /dev/null
++++ b/tools/probe_by_hand.mjs
+@@ -0,0 +1,132 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// One question asked of what Memory says: everything said in the conversation
++// that is open taken away by a press on the row that offers it, and every
++// conversation taken away by the row beside it -- each of them said before it
++// goes with how much there is of it, and nothing of either asked back
++// afterwards. What is read is what the page shows: the mirror skiff keeps says
++// every line as an element of its own, and what the scene has put away keeps
++// its words in it, so a line is read here only where the page is showing it.
++//
++// The rows stand low in Settings, which scrolls: they are looked for where
++// they are showing, and where they are not, the column is wheeled down until
++// they are. Nothing here knows where anything stands.
++import { chromium } from 'playwright';
++
++const url = process.env.PCHAT_PAGE ?? 'https://progressive-chat.github.io/progressive-chat/';
++
++const browser = await chromium.launch({
++  args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
++});
++const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
++page.on('pageerror', error => console.log(`pageerror: ${String(error).slice(0, 400)}`));
++await page.goto(url, { waitUntil: 'load' });
++await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 180000 });
++await page.waitForTimeout(6000);
++
++// What the mirror says, and where it says each of them, read one element at a
++// time: the middle of the place it stands, and whether the page is showing it.
++const lines = () =>
++  page.evaluate(() => {
++    const host = document.getElementById('skiff');
++    if (!host) return [];
++    return Array.from(host.querySelectorAll('*'))
++        .map((one) => {
++          const r = one.getBoundingClientRect();
++          return {
++            said: (one.textContent ?? '').replace(/\s+/g, ' ').trim(),
++            x: Math.round(r.x + r.width / 2),
++            y: Math.round(r.y + r.height / 2),
++            wide: Math.round(r.width),
++            tall: Math.round(r.height),
++            shown: one.checkVisibility
++                ? one.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
++                : true,
++            // Kept out of what is read: a line pressed from outside the room
++            // is a line no finger could have reached.
++            in_room: r.top >= 0 && r.bottom <= window.innerHeight &&
++                     r.left >= 0 && r.right <= window.innerWidth,
++          };
++        })
++        .filter((one) => one.said.length > 0 && one.wide > 0 && one.tall > 0 &&
++                         one.shown && one.in_room)
++        .slice(0, 400);
++  });
++const shown_text = async () => (await lines()).map((one) => one.said).join(' ');
++
++// Every place inside the room that says it, smallest first: what is looked for
++// is said once by the line itself and again by everything holding it.
++const places_saying = async (wants) => {
++  const every = await lines();
++  return every.filter((one) => one.said.includes(wants))
++      .sort((a, b) => a.wide * a.tall - b.wide * b.tall)
++      .slice(0, 5);
++};
++
++// Rolled down until what is looked for stands in the room, or until there is
++// nowhere further to roll: the card holds a column twice the room's height.
++const find_by_rolling = async (wants) => {
++  for (let rolled = 0; rolled <= 10; rolled++) {
++    const said = await places_saying(wants);
++    if (said.length > 0) return said;
++    await page.mouse.move(640, 500);
++    await page.mouse.wheel(0, 400);
++    await page.waitForTimeout(400);
++  }
++  return [];
++};
++
++// Pressed once, in the middle of the smallest thing inside the room that says
++// it.
++const press = async (wants) => {
++  for (const at of await find_by_rolling(wants)) {
++    await page.mouse.click(at.x, at.y);
++    await page.waitForTimeout(900);
++    console.log(`pressed "${wants}" at ${at.x},${at.y} (${at.wide}x${at.tall})`);
++    return at;
++  }
++  console.log(`nothing in the room said "${wants}"`);
++  return null;
++};
++
++// What the room says before anything is taken from it, and what of it is gone
++// when it has been: one answer whole, and the name of the conversation it was
++// said in.
++const spoken = await shown_text();
++const answer = 'lemony egg on toast';
++const named = 'kitchen';
++console.log(`the room as it was: ${spoken.includes(answer) ? 'an answer is said in it' : 'no answer is said in it at all'}`);
++
++// Settings, opened the way a finger opens it.
++await press('Settings');
++const opened = await shown_text();
++console.log(`settings opened: ${opened.includes('Appearance') ? 'yes' : 'no -- nothing that says Appearance came'}`);
++
++// How much there is of it, said beside the row before anything is taken: the
++// number Memory counted of what the window is holding.
++const rows = await find_by_rolling('taken away');
++for (const row of rows.slice(0, 2))
++  console.log(`memory says: ${row.said.slice(0, 120)}`);
++
++// Everything said in the conversation that is open, taken away.
++if (await press('Everything said here, taken away')) {
++  const after = await shown_text();
++  console.log(
++    `everything said here, taken away: ` +
++      `${!after.includes(answer) ? 'the answer is said no more' : 'the answer is still said'} -- ` +
++      `${after.includes(named) ? 'and the conversation is still named' : 'and the conversation is named no more'}`);
++  await page.screenshot({ path: 'forgotten-said.png' }).catch(() => {});
++}
++
++// Every conversation, taken away: what is left of the room afterwards.
++if (await press('Every conversation, taken away')) {
++  const after = await shown_text();
++  console.log(
++    `every conversation, taken away: ` +
++      `${!after.includes(named) ? 'nothing is named anywhere' : 'the room still names one'} -- ` +
++      `${after.includes('Appearance') ? 'and settings is still open' : 'and settings went away with them'}`);
++  console.log(`what the room says now: ${JSON.stringify(after.slice(0, 300))}`);
++  await page.screenshot({ path: 'forgotten-everything.png' }).catch(() => {});
++}
++
++await page.screenshot({ path: 'forgotten.png' }).catch(() => {});
++await browser.close();

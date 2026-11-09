@@ -1,0 +1,1895 @@
+diff --git a/.github/workflows/shoot.yml b/.github/workflows/shoot.yml
+new file mode 100644
+index 00000000..0b008aef
+--- /dev/null
++++ b/.github/workflows/shoot.yml
+@@ -0,0 +1,98 @@
++# SPDX-License-Identifier: AGPL-3.0-only
++name: shoot
++
++# Asked for by hand: what a window came to is read off it, and no check can
++# say whether a corner came out round -- only a picture can.
++on:
++  workflow_dispatch:
++    inputs:
++      # What the window looks like before it is shot: how wide and how tall
++      # the screen it is given is, so that what is narrow (a drawer coming
++      # over the messages) can be asked for as well as what is wide.
++      screen:
++        description: 'The screen to give it, as width x height'
++        required: false
++        default: '1440x900'
++
++permissions:
++  contents: read
++  actions: write
++
++jobs:
++  shot:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 60
++    steps:
++      - uses: actions/checkout@v5
++      - uses: ./.github/actions/desktop-setup
++      # Mesa in software, and an X server in front of it, as the crash is
++      # run in front of: Skia asks GL what it has and gets nothing from a
++      # display that was never started. And what reads a display to make a
++      # picture of it: xwd for the picture itself, and imagemagick to write
++      # it as one a reader can open.
++      - name: A screen to be shot, and what reads it
++        run: |
++          sudo apt-get install -y --no-install-recommends \
++          xvfb x11-apps imagemagick gdb libgl1-mesa-dri libglx-mesa0 libegl-mesa0
++      - uses: actions/cache@v4
++        with:
++          path: build-shoot
++          key: shoot-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/shoot.yml', '.github/actions/desktop-setup/action.yml') }}
++      - name: Configure
++        run: |
++          # No GL asked for: what this machine's GL answers about its own
++          # extensions is nothing, and inside that answer Skia goes before the
++          # program's first frame (GrGLExtensions::init). In software every
++          # box is painted by the same scene, rounded and coloured as a
++          # machine with a GPU paints it.
++          cmake -S . -B build-shoot -G Ninja \
++            -DCMAKE_BUILD_TYPE=Release \
++            -DPCHAT_GL=OFF \
++            -DCMAKE_C_COMPILER=clang \
++            -DCMAKE_CXX_COMPILER=clang++ \
++            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
++            -DPCHAT_REVISION="$(git rev-parse --short=12 HEAD)"
++      - name: Build the program
++        run: cmake --build build-shoot --target progressive-chat --parallel 4
++      # Started, and shot again and again on the way: a program that goes
++      # before its second frame has still put its first one up, and a shot
++      # taken before it went says more than the crash it went with. Then,
++      # where it went, said with the place: gdb over what is left of it.
++      - name: Run it and shoot what it drew
++        env:
++          SDL_AUDIODRIVER: dummy
++          LIBGL_ALWAYS_SOFTWARE: "1"
++          GALLIUM_DRIVER: llvmpipe
++        run: |
++          Xvfb :99 -screen 0 "${{ inputs.screen }}x24" &
++          sleep 2
++          DISPLAY=:99 ./build-shoot/progressive-chat >said.txt 2>&1 &
++          given=$!
++          for at in 1 2 3 4 5 6 7 8; do
++            sleep 3
++            DISPLAY=:99 xwd -root -silent | convert xwd:- "shot_${at}.png" || true
++          done
++          kill $given 2>/dev/null || true
++          echo "---- what it said ----"
++          cat said.txt || true
++          ls -l shot_*.png
++      # Only asked for where it did not stay up: it goes inside Skia, or in
++      # what SDL3 asked GL for, and neither is this program's own doing --
++      # but which it is has to be read off the run.
++      - name: Where it went, if it went
++        continue-on-error: true
++        env:
++          SDL_AUDIODRIVER: dummy
++          LIBGL_ALWAYS_SOFTWARE: "1"
++          GALLIUM_DRIVER: llvmpipe
++        run: |
++          pgrep -x Xvfb >/dev/null || (Xvfb :99 -screen 0 "${{ inputs.screen }}x24" & sleep 2)
++          ulimit -c 0
++          DISPLAY=:99 timeout 60 gdb -q -batch \
++            -ex 'run' -ex 'bt 30' -ex 'info threads' \
++            --args ./build-shoot/progressive-chat 2>&1 | tail -60
++      - uses: actions/upload-artifact@v4
++        with:
++          name: shot
++          path: shot_*.png
++          if-no-files-found: error
+diff --git a/android/AndroidManifest.xml b/android/AndroidManifest.xml
+index 89883ab6..079dcc0b 100644
+--- a/android/AndroidManifest.xml
++++ b/android/AndroidManifest.xml
+@@ -10,6 +10,10 @@ program is allowed to do.
+     package="chat.progressive.client">
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.VIBRATE" />
++    <!-- Notifications: from Android 13 on, the user lets an app post them,
++         and the asking itself is this line plus one question the system asks
++         when a test notification first asks for one. -->
++    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+     <uses-feature android:glEsVersion="0x00020000" android:required="false" />
+     <application android:label="Progressive Chat" android:allowBackup="false"
+         android:hasCode="true" android:extractNativeLibs="true"
+diff --git a/design-doc.md b/design-doc.md
+index 579d38be..256df2c4 100644
+--- a/design-doc.md
++++ b/design-doc.md
+@@ -53,6 +53,41 @@ has taken, empty where there is room left. Those two never move and never go
+ away: writing to a model without being told which one it is, or without being
+ told how near the edge this chat has come, is writing blind.
+ 
++## The drawer
++
++The list of conversations comes over the messages where the room is too narrow
++to keep it beside them, and stands beside them where it is not. It is never the
++whole room wide: a strip of the messages is left in sight beside it, and that
++strip, pressed, is what puts it away again.
++
++Down it, in this order:
++
++* **Conversations** — the panel's heading, set large and bold, further in from
++  the panel's own edge than the things under it.
++* **Search conversations...** — the only search there is: its own ground,
++  rounded the whole way round, a magnifier before the hint, and the hint in
++  grey.
++* **Tasks**, and **Remote** under it, only a few pixels apart: both on one
++  ground, and rounded between them so that the two read as one row cut in two
++  — the upper rounded above and barely below, the lower barely above and
++  rounded below.
++* **+ New Chat** — its own ground, rounded the whole way round, as the field
++  is.
++* The conversations, one row each.
++* **Settings** — the panel's last row: a gear and its name on the same ground
++  as Tasks and Remote, rounded as the field is. This is the only way into the
++  settings, because nothing else in the room has room to spare.
++
++A conversation's row says **its name**, **what was said last**, and a **badge
++for what is unread**. It does not say how long ago that was: the time is one
++thing a row may be asked for, and it is asked for nowhere by default. What the
++row keeps clear at its right is three times what it keeps at its left, so that
++a name read to its end is not read into the badge.
++
++Nor does a circle stand for a conversation by default — no letter, no picture.
++Where one is asked for, the row's own circle is put before its name, and
++everything after it stands over by the circle's breadth.
++
+ ## A message you wrote
+ 
+ Yours are **bubbles**, and are put on **the right** of the room. A bubble may
+@@ -219,10 +254,21 @@ this program has to be able to say yes or no to, and to what degree.
+   three: **keep what has been said here**, **keep what it has been taught**,
+   and **keep what has been given to it**.
+ 
++**Notifications**
++
++* **Test** — one notification of this program's own, shown by the machine it
++  runs on: a press asks for it, and what is asked for is a test, not a
++  message. Where the machine lets an app show notifications only once it has
++  been let (Android 13 and later), the first press asks for that and shows
++  nothing, and the press after it shows one. Nothing behind this row keeps
++  anything: there are no notifications to speak of yet.
++
+ **Appearance & Language**
+ 
+-* **Appearance** — the theme, its scheme of colours, and whether the colours
+-  follow the machine's own.
++* **Appearance** — the theme, its scheme of colours, whether the colours
++  follow the machine's own, and what the drawer's rows are asked for: whether
++  a circle stands by the names in it, and whether a row says how long ago what
++  it shows was said. Both are asked for nowhere by default.
+ * **Language** — which language the program itself speaks on the screen.
+ 
+ **About**
+@@ -240,8 +286,10 @@ its type and its dark; the five things an answer is asked with, under
+ build is, under **About**; and a switch to each of the seven things a switch
+ is offered for, which is what the other three groups had stood empty for —
+ two under **Multimodal**, one under **Network** and three under **Memory &
+-Data**. What any of the seven does when it is switched on is not written yet:
+-the row says it is offered, and nothing here says more than that.
++**Data**. What any of the seven does when it is switched on is not written yet:
++the row says it is offered, and nothing here says more than that. A press
++under **Test** asks the machine it runs on for one notification of the
++program's own.
+ 
+ ## What this design does not do
+ 
+diff --git a/src/app/requests.cc b/src/app/requests.cc
+index eecb578e..5d9caa27 100644
+--- a/src/app/requests.cc
++++ b/src/app/requests.cc
+@@ -60,6 +60,12 @@ struct copy_text {
+ struct toggle_drawer {};
+ struct open_settings {};
+ struct close_settings {};
++// The two rows the drawer keeps beside its search: what the program has been
++// told to do on its own, and what another machine is spoken to through.
++// Neither stands behind either row in the program yet; asking for one is
++// answered by nothing until what it names is.
++struct open_tasks {};
++struct open_remote {};
+ // What the top edge asks for: another answerer in this same conversation,
+ // this conversation taken whole into one of its own, this conversation given
+ // out, and what every answerer in it is told before anything is said to it.
+@@ -89,6 +95,20 @@ struct close_design {};
+ struct set_amoled {
+   bool enabled;
+ };
++// What a row in the drawer is asked for, from the Appearance page: whether a
++// circle stands for the conversation it names, and whether it says how long
++// ago the last thing in it was said. Neither is drawn until it is asked for
++// here -- a panel read by what its conversations are called.
++struct set_avatars {
++  bool enabled;
++};
++struct set_row_times {
++  bool enabled;
++};
++// What the Notifications page asks for: one notification of the program's
++// own, shown by the machine it runs on, so that it can be seen whether it is
++// let show any. A test, and nothing it pretends is a message.
++struct send_test_notification {};
+ // What the Appearance page asks for: which seed the colours grow out of,
+ // whether the type is set larger, and whose face it is set in. Each row asks
+ // for one whole thing, not for the set of looks it would like to see, because
+@@ -137,12 +157,15 @@ using request = spl::variant<open_conversation, send_message, new_chat,
+                              copy_answer, regenerate_answer, fork_answer,
+                              share_answer, delete_answer, set_query,
+                              toggle_drawer, open_settings, close_settings,
++                             open_tasks, open_remote,
+                              fork_conversation,
+                              share_conversation, open_system_prompt,
+                              close_system_prompt, set_system_prompt,
+                              toggle_more, open_design, close_design,
+                              pick_seed, set_amoled, set_font_scale, pick_theme,
+-                              set_generation, set_tool, set_switch,
++                                set_avatars, set_row_times,
++                                send_test_notification,
++                                set_generation, set_tool, set_switch,
+                               set_answerer, copy_text>;
+ 
+ class requests {
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index f63fe407..74f3e45e 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -16,6 +16,7 @@ import pchat.core;
+ import pchat.config;
+ import pchat.theme;
+ import pchat.ui;
++import pchat.platform.notified;
+ import pchat.provider;
+ import pchat.provider.run;
+ import pchat.platform.carry;
+@@ -137,6 +138,12 @@ class screens {
+             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+             [&](const open_settings &) { settings_ = true; },
+             [&](const close_settings &) { settings_ = false; },
++            // What the drawer's two rows are there for: nothing stands behind
++            // either of them yet, and so nothing is opened. They are drawn
++            // where the panel has them, and what they ask for is answered
++            // the day there is something to answer it with.
++            [&](const open_tasks &) {},
++            [&](const open_remote &) {},
+             [&](const fork_conversation &asking) {
+               conversation *said = nullptr;
+               for (conversation &one : root_.conversations)
+@@ -217,6 +224,19 @@ class screens {
+               shown_.amoled = asking.enabled;
+               recolour();
+             },
++            // What the drawer's rows are then drawn with: no colour grows
++            // out of either of these, and so nothing is grown again.
++            [&](const set_avatars &asking) { shown_.avatars = asking.enabled; },
++            [&](const set_row_times &asking) {
++              shown_.row_times = asking.enabled;
++            },
++            // A test notification: nothing of the program's own knows whether
++            // the machine it runs on will show it, so all this does is ask the
++            // platform and go on.
++            [&](const send_test_notification &) {
++              platform::notified::say("progressive-chat",
++                                      "This is a test notification.");
++            },
+             // Larger type: every size drawn in the body of a message is asked
+             // for again with this multiply in it, so what is set larger is
+             // what the answers are written in.
+diff --git a/src/config.cc b/src/config.cc
+index d2edec29..a26149bc 100644
+--- a/src/config.cc
++++ b/src/config.cc
+@@ -23,6 +23,11 @@ struct looks {
+   theme_mode mode = theme_mode::dark;
+   bool amoled = false;
+   bool reduce_motion = false;
++  // What a row in the drawer is asked for, and is asked for nowhere by
++  // default: a circle with the conversation's first letter in it, in the
++  // row's own colours, and how long ago what was said last was said.
++  bool avatars = false;
++  bool row_times = false;
+   double font_scale = 1.0;
+   font_choice font = font_choice::app;
+   friend bool operator==(const looks&, const looks&) = default;
+diff --git a/src/platform/jni_android.cc b/src/platform/jni_android.cc
+new file mode 100644
+index 00000000..f0169888
+--- /dev/null
++++ b/src/platform/jni_android.cc
+@@ -0,0 +1,56 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.platform.jni -- What an Android backend calls Java through: the JNI
++// environment of this thread, and text given to Java as UTF-8. From whichever
++// thread asks: SDL attaches it to the virtual machine.
++module;
++#include <SDL3/SDL.h>
++#include <jni.h>
++// SPDX-License-Identifier: AGPL-3.0-only
++export module pchat.platform.jni;
++
++import std;
++
++export namespace pchat::platform {
++
++// The JNI environment of this thread, with a frame the local references made
++// inside it are let go with, and whatever exception a call threw cleared as it
++// goes: an exception left standing throws again at the next call, which is not
++// where it came from.
++class jni_frame {
++ public:
++  jni_frame() : env_(static_cast<JNIEnv *>(SDL_GetAndroidJNIEnv())) {
++    ready_ = env_ && env_->PushLocalFrame(64) == JNI_OK;
++  }
++  jni_frame(const jni_frame &) = delete;
++  jni_frame &operator=(const jni_frame &) = delete;
++  ~jni_frame() {
++    if (env_ && env_->ExceptionCheck()) env_->ExceptionClear();
++    if (ready_) env_->PopLocalFrame(nullptr);
++  }
++  [[nodiscard]] JNIEnv *env() const { return ready_ ? env_ : nullptr; }
++
++ private:
++  JNIEnv *env_ = nullptr;
++  bool ready_ = false;
++};
++
++// UTF-8 as a java.lang.String: through new String(bytes, "UTF-8"), and not
++// through NewStringUTF, whose modified UTF-8 is not UTF-8 for what is past the
++// basic plane -- a title or a body with an emoji in it would come out wrong.
++[[nodiscard]] inline jstring string_of(JNIEnv *env, std::string_view text) {
++  std::vector<jbyte> bytes;
++  bytes.reserve(text.size());
++  for (const char one : text) bytes.push_back(static_cast<jbyte>(one));
++  jbyteArray array = env->NewByteArray(static_cast<jsize>(bytes.size()));
++  if (!array) return nullptr;
++  env->SetByteArrayRegion(array, 0, static_cast<jsize>(bytes.size()),
++                          bytes.data());
++  jclass string_class = env->FindClass("java/lang/String");
++  return static_cast<jstring>(
++      env->NewObject(string_class,
++                     env->GetMethodID(string_class, "<init>",
++                                      "([BLjava/lang/String;)V"),
++                     array, env->NewStringUTF("UTF-8")));
++}
++
++}  // namespace pchat::platform
+diff --git a/src/platform/notified.cc b/src/platform/notified.cc
+new file mode 100644
+index 00000000..e9cbd2dc
+--- /dev/null
++++ b/src/platform/notified.cc
+@@ -0,0 +1,21 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.platform.notified -- One notification, put where the machine this
++// program runs on puts notifications, for a screen to ask for: the title and
++// the body go in, and whether anything was shown comes out.
++//
++// Behind it is what the platform gives (src/platform/notified_backend*.cc):
++// a notification of Android's own on a phone, and nothing at all everywhere
++// else, which this says in what it answers with. Nothing above this knows
++// which of them it got.
++export module pchat.platform.notified;
++
++import std;
++import pchat.platform.notified.backend;
++
++export namespace pchat::platform::notified {
++
++bool say(std::string_view title, std::string_view text) {
++  return backend::say(title, text);
++}
++
++}  // namespace pchat::platform::notified
+diff --git a/src/platform/notified_backend.cc b/src/platform/notified_backend.cc
+new file mode 100644
+index 00000000..d3574b02
+--- /dev/null
++++ b/src/platform/notified_backend.cc
+@@ -0,0 +1,13 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.platform.notified.backend -- Where nothing puts notifications: this
++// program asks the machine for none, and is told that none was shown. What a
++// window and a page say until they are given one of their own.
++export module pchat.platform.notified.backend;
++
++import std;
++
++export namespace pchat::platform::notified::backend {
++
++bool say(std::string_view, std::string_view) { return false; }
++
++}  // namespace pchat::platform::notified::backend
+diff --git a/src/platform/notified_backend_android.cc b/src/platform/notified_backend_android.cc
+new file mode 100644
+index 00000000..cdfe473d
+--- /dev/null
++++ b/src/platform/notified_backend_android.cc
+@@ -0,0 +1,196 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.platform.notified.backend -- Android's notifications: one posted
++// through NotificationManager, in a channel of this program's own (Android 8
++// and later need one, and list an app that has none among those that send
++// nothing), opening the program when it is pressed. Asked through JNI, from
++// whichever thread asks: SDL attaches it to the virtual machine.
++//
++// Android 13 and later post a notification only for an app the user let post
++// them: the first press asks for that, and shows nothing, because the answer
++// is not given while this call is in it. It is the system's to keep, so it is
++// asked once and never again.
++module;
++#include <SDL3/SDL.h>
++#include <jni.h>
++// SPDX-License-Identifier: AGPL-3.0-only
++export module pchat.platform.notified.backend;
++
++import std;
++import pchat.platform.jni;
++
++namespace {
++
++// The channel a test notification is posted in, made each time: making one
++// again changes nothing the user has set in it.
++constexpr const char *channel_id = "tests";
++constexpr const char *channel_name = "Tests";
++constexpr jint importance_high = 4;  // NotificationManager.IMPORTANCE_HIGH
++
++// Whether this program may post: PackageManager.PERMISSION_GRANTED is 0.
++bool let_post(JNIEnv *env, jobject activity) {
++  jclass context = env->FindClass("android/content/Context");
++  if (!context) return false;
++  return env->CallIntMethod(activity,
++                            env->GetMethodID(context, "checkSelfPermission",
++                                             "(Ljava/lang/String;)I"),
++                            env->NewStringUTF(
++                                "android.permission.POST_NOTIFICATIONS")) == 0;
++}
++
++// Asked for it once, where it was not given yet: the system's own asking, for
++// whose answer nothing here waits.
++void ask_to_post(JNIEnv *env, jobject activity) {
++  jobjectArray asked = env->NewObjectArray(
++      1, env->FindClass("java/lang/String"), nullptr);
++  if (!asked) return;
++  env->SetObjectArrayElement(
++      asked, 0, env->NewStringUTF("android.permission.POST_NOTIFICATIONS"));
++  jclass activity_class = env->FindClass("android/app/Activity");
++  if (!activity_class) return;
++  env->CallVoidMethod(activity,
++                      env->GetMethodID(activity_class, "requestPermissions",
++                                       "([Ljava/lang/String;I)V"),
++                      asked, 0);
++}
++
++void make_channel(JNIEnv *env, jobject manager) {
++  jclass channel_class = env->FindClass("android/app/NotificationChannel");
++  if (!channel_class) return;
++  jobject channel = env->NewObject(
++      channel_class,
++      env->GetMethodID(channel_class, "<init>",
++                       "(Ljava/lang/String;Ljava/lang/CharSequence;I)V"),
++      env->NewStringUTF(channel_id), pchat::platform::string_of(env, channel_name),
++      importance_high);
++  if (!channel) return;
++  env->CallVoidMethod(
++      manager,
++      env->GetMethodID(env->GetObjectClass(manager),
++                       "createNotificationChannel",
++                       "(Landroid/app/NotificationChannel;)V"),
++      channel);
++}
++
++// What a press on it does: the program brought up, as its own icon would.
++jobject opening(JNIEnv *env, jobject activity, int sdk) {
++  jclass context = env->FindClass("android/content/Context");
++  if (!context) return nullptr;
++  jobject packages = env->CallObjectMethod(
++      activity, env->GetMethodID(context, "getPackageManager",
++                                 "()Landroid/content/pm/PackageManager;"));
++  jobject name = env->CallObjectMethod(
++      activity,
++      env->GetMethodID(context, "getPackageName", "()Ljava/lang/String;"));
++  if (!packages || !name) return nullptr;
++  jobject intent = env->CallObjectMethod(
++      packages,
++      env->GetMethodID(env->GetObjectClass(packages),
++                       "getLaunchIntentForPackage",
++                       "(Ljava/lang/String;)Landroid/content/Intent;"),
++      name);
++  if (!intent) return nullptr;
++  // FLAG_IMMUTABLE, which Android 12 and later ask of every PendingIntent;
++  // FLAG_UPDATE_CURRENT, the intent the newest one it was given.
++  constexpr jint immutable = 0x04000000, update_current = 0x08000000;
++  jclass pending = env->FindClass("android/app/PendingIntent");
++  if (!pending) return nullptr;
++  return env->CallStaticObjectMethod(
++      pending,
++      env->GetStaticMethodID(
++          pending, "getActivity",
++          "(Landroid/content/Context;ILandroid/content/Intent;I)"
++          "Landroid/app/PendingIntent;"),
++      activity, 1, intent, (sdk >= 23 ? immutable : 0) | update_current);
++}
++
++// The small icon at its left: the platform's own chat icon, asked for by name
++// -- this program ships no drawable of its own.
++jint icon(JNIEnv *env, jobject activity) {
++  jclass context = env->FindClass("android/content/Context");
++  if (!context) return 0;
++  jobject resources = env->CallObjectMethod(
++      activity, env->GetMethodID(context, "getResources",
++                                 "()Landroid/content/res/Resources;"));
++  if (!resources) return 0;
++  return env->CallIntMethod(
++      resources,
++      env->GetMethodID(env->GetObjectClass(resources), "getIdentifier",
++                       "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/"
++                       "String;)I"),
++      env->NewStringUTF("stat_notify_chat"), env->NewStringUTF("drawable"),
++      env->NewStringUTF("android"));
++}
++
++}  // namespace
++
++export namespace pchat::platform::notified::backend {
++
++bool say(std::string_view title, std::string_view text) {
++  const pchat::platform::jni_frame frame;
++  JNIEnv *env = frame.env();
++  if (!env) return false;
++  const auto activity = static_cast<jobject>(SDL_GetAndroidActivity());
++  if (!activity) return false;
++  const int sdk = SDL_GetAndroidSDKVersion();
++  if (sdk >= 33 && !let_post(env, activity)) {
++    ask_to_post(env, activity);
++    return false;
++  }
++  jclass context = env->FindClass("android/content/Context");
++  if (!context) return false;
++  jobject manager = env->CallObjectMethod(
++      activity, env->GetMethodID(context, "getSystemService",
++                                 "(Ljava/lang/String;)Ljava/lang/Object;"),
++      env->NewStringUTF("notification"));
++  if (!manager) return false;
++  if (sdk >= 26) make_channel(env, manager);
++  jclass builder_class = env->FindClass("android/app/Notification$Builder");
++  if (!builder_class) return false;
++  jobject builder =
++      sdk >= 26
++          ? env->NewObject(builder_class,
++                           env->GetMethodID(builder_class, "<init>",
++                                            "(Landroid/content/Context;"
++                                            "Ljava/lang/String;)V"),
++                           activity, env->NewStringUTF(channel_id))
++          : env->NewObject(builder_class,
++                           env->GetMethodID(
++                               builder_class, "<init>",
++                               "(Landroid/content/Context;)V"),
++                           activity);
++  if (!builder) return false;
++  const auto set = [&](const char *method, const char *signature,
++                       auto... arguments) {
++    env->CallObjectMethod(builder,
++                          env->GetMethodID(builder_class, method, signature),
++                          arguments...);
++  };
++  constexpr const char *says_builder =
++      "(Ljava/lang/CharSequence;)Landroid/app/Notification$Builder;";
++  set("setSmallIcon", "(I)Landroid/app/Notification$Builder;",
++      icon(env, activity));
++  set("setContentTitle", says_builder,
++      pchat::platform::string_of(env, title));
++  set("setContentText", says_builder, pchat::platform::string_of(env, text));
++  set("setAutoCancel", "(Z)Landroid/app/Notification$Builder;", JNI_TRUE);
++  // Priority and sound, which a channel says itself from Android 8 on: high,
++  // shown at once, with the system's own sound.
++  constexpr jint priority_high = 1, default_sound = 1;
++  set("setPriority", "(I)Landroid/app/Notification$Builder;", priority_high);
++  set("setDefaults", "(I)Landroid/app/Notification$Builder;", default_sound);
++  if (jobject pressed = opening(env, activity, sdk))
++    set("setContentIntent",
++        "(Landroid/app/PendingIntent;)Landroid/app/Notification$Builder;",
++        pressed);
++  jobject notification = env->CallObjectMethod(
++      builder,
++      env->GetMethodID(builder_class, "build", "()Landroid/app/Notification;"));
++  if (!notification) return false;
++  env->CallVoidMethod(manager,
++                      env->GetMethodID(env->GetObjectClass(manager), "notify",
++                                       "(ILandroid/app/Notification;)V"),
++                      1, notification);
++  return true;
++}
++
++}  // namespace pchat::platform::notified::backend
+diff --git a/src/ui/appearance.cc b/src/ui/appearance.cc
+index 80811a67..42732607 100644
+--- a/src/ui/appearance.cc
++++ b/src/ui/appearance.cc
+@@ -18,6 +18,10 @@ namespace scene = skiff::scene;
+ namespace nodes = skiff::nodes;
+ 
+ // How many seeds are offered.
++
++// What a seed's row keeps clear at its right, for the tick that marks the
++// seed in use.
++inline constexpr float tick_room = 91.0f;
+ inline constexpr std::size_t max_seeds = 8;
+ 
+ // One seed, as a row: its colour, its name, and whether it is in use. A row
+@@ -33,13 +37,16 @@ struct seed_row : scene::Node {
+ 
+   seed_row() {
+     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
+-    fPlate.apply({.fill = true});
++    // The plate fills by its own corner radius, not by the row's: told the
++    // same one, it is what makes the row's ground rounded.
++    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
+     fDot.apply({.width = 26.0f,
+                 .height = 26.0f,
+                 .cornerRadius = 13.0f,
+                 .anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f});
++    fName.setElided(true);
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+                  .x = 56.0f});
+@@ -72,6 +79,8 @@ struct seed_row : scene::Node {
+     fDot.setColour(seed);
+     fName.setText(std::string(name));
+     fName.setColour(look.text);
++    if (spec.width)
++      fName.apply({.maxWidth = std::max(0.0f, *spec.width - tick_room)});
+     fTick.setVisible(chosen);
+     fTick.setColour(look.primary);
+   }
+diff --git a/src/ui/base.cc b/src/ui/base.cc
+index 1f893973..dd4dccbd 100644
+--- a/src/ui/base.cc
++++ b/src/ui/base.cc
+@@ -23,6 +23,29 @@ namespace nodes = skiff::nodes;
+ // enough to keep it beside the messages instead of over them, how tall the
+ // bar over the list, how far the bubbles may reach.
+ inline constexpr float drawer_width = 360.0f;
++// How much of the messages is left in sight beside a drawer come over them:
++// the panel never takes the whole of the room, and what is left of the
++// messages beside it is what the reader presses to put it away.
++inline constexpr float drawer_open_room = 48.0f;
++// What the panel keeps between itself and its own parts: its heading further
++// in than the field and the rows under it.
++inline constexpr float drawer_margin = 20.0f;
++// What a name is set in at the head of the panel.
++inline constexpr float drawer_heading_size = 26.0f;
++// One row of the panel's own -- Tasks, Remote, a new chat, the settings --
++// how tall it is, how far it is rounded, and what a row keeps clear at its
++// right against what it keeps at its left.
++inline constexpr float drawer_row_height = 44.0f;
++inline constexpr float drawer_row_size = 15.0f;
++inline constexpr float drawer_row_radius = 14.0f;
++// Where two rows meet: the corners between them are rounded only barely, so
++// that the two of them read as one row cut in two.
++inline constexpr float drawer_row_corner = 4.0f;
++inline constexpr float drawer_row_gap = 4.0f;
++// How much wider a conversation's row keeps its right margin than its left.
++inline constexpr float drawer_right_margin = 3.0f;
++// How big the mark before a name is, in the panel's own rows and in its field.
++inline constexpr float drawer_mark = 18.0f;
+ inline constexpr float side_by_side_from = 960.0f;
+ inline constexpr float top_bar_height = 52.0f;
+ inline constexpr float top_scrim = 180.0f;
+@@ -49,12 +72,9 @@ inline constexpr float body_size = 15.0f;
+ // plate that only asks -- a pill, the shade over the messages a drawer is
+ // open over -- has nothing else in it.
+ struct ask_box : scene::Node {
+-  nodes::Box<> fPlate{0u};
+   app::requests *asked = nullptr;
+   app::request one{app::toggle_drawer{}};
+ 
+-  ask_box() { fPlate.apply({.fill = true}); }
+-
+   [[nodiscard]] bool acceptsInput() const { return true; }
+   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+   [[nodiscard]] bool onClick(float, float) {
+@@ -66,10 +86,16 @@ struct ask_box : scene::Node {
+   void again(app::requests *sink, app::request asking, scene::Colour colour) {
+     asked = sink;
+     one = std::move(asking);
+-    fPlate.setColour(colour);
++    // Its ground said of itself and not of a plate inside it: a plate fills
++    // by the corner radius it was told itself, and none was told it one, so
++    // every round press in the program was painted square. Declared of the
++    // node, the ground is painted in the node's own rounded box -- however
++    // the corners were given it where it stands, all four alike or each its
++    // own -- and what it holds is clipped by the same.
++    this->apply({.background = colour});
+   }
+ 
+-  void forEachChild(auto &&f) { f(fPlate); }
++  void forEachChild(auto &&f) {}
+ };
+ 
+ // One press with a mark painted in the middle of it: what closes a card, put
+diff --git a/src/ui/controls.cc b/src/ui/controls.cc
+index 3563ba3d..2f17200a 100644
+--- a/src/ui/controls.cc
++++ b/src/ui/controls.cc
+@@ -34,7 +34,8 @@ using compose::row;
+   return compose::column(compose::vbox(0.0f, {.width = size, .height = size, .cornerRadius = size / 2.0f,
+                                               .background = look.avatar}),
+                          caption(std::string(1, first), size * 0.44f, look.on_avatar, true,
+-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
++                                 {.anchor = scene::anchor::kCentre,
++                                  .origin = scene::anchor::kCentre}));
+ }
+ 
+ // A plate rounded all the way round: a pill with its label centred in it.
+@@ -46,7 +47,8 @@ using compose::row;
+     made.cornerRadius = std::max(made.height.value_or(pill_radius * 2.0f) / 2.0f, 1.0f);
+   return compose::column(compose::vbox(0.0f, made),
+                          caption(std::move(label), size, text, bold,
+-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
++                                 {.anchor = scene::anchor::kCentre,
++                                  .origin = scene::anchor::kCentre}));
+ }
+ 
+ // A badge: how much is unread, in a circle of the accent.
+@@ -54,7 +56,8 @@ using compose::row;
+   const scene::Spec spec{.width = size, .height = size, .cornerRadius = size / 2.0f, .background = colour};
+   return compose::column(compose::vbox(0.0f, spec),
+                          caption(count > 99 ? "99+" : std::to_string(count), size * 0.52f, on_colour, true,
+-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
++                                 {.anchor = scene::anchor::kCentre,
++                                  .origin = scene::anchor::kCentre}));
+ }
+ 
+ // Two lines, one above the other: what a row in a list says.
+diff --git a/src/ui/drawer.cc b/src/ui/drawer.cc
+index 50cfa6b9..04fd41db 100644
+--- a/src/ui/drawer.cc
++++ b/src/ui/drawer.cc
+@@ -1,7 +1,9 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+-// pchat.ui:drawer -- The list of conversations down the side: a field to
+-// search with, then one row per conversation -- its name, what was said
+-// last, how long ago, and a badge for what is unread.
++// pchat.ui:drawer -- The list of conversations down the side: what the panel
++// is called, the field it searches with, Tasks and beside it Remote, a new
++// chat, then one row per conversation -- its name, what was said last, how
++// long ago where that is asked for, and a badge for what is unread -- and the
++// settings at the foot of the list.
+ //
+ // A row is a node of its own, made with the drawer and filled in again
+ // whenever the model moves: the tree's shape is fixed, what it says is not.
+@@ -16,6 +18,7 @@ import skiff.scene;
+ import skiff.nodes;
+ import skiff.widgets.textarea;
+ import pchat.core;
++import pchat.config;
+ import pchat.logic.lists;
+ import pchat.logic.search;
+ import pchat.app.requests;
+@@ -49,13 +52,70 @@ struct search_given {
+   }
+ };
+ 
+-// One conversation, as a row: the name's circle, the name, the time, what was
+-// said last, and the badge. Pressed, it opens what it names. Filled in again
+-// whenever what it says changes.
++// One row of the panel's own: what it is called, with its mark before the
++// name, on a ground of its own and rounded as it is told to be. Pressed, it
++// asks for the one thing it stands there for.
++struct ask_row : scene::Node {
++  nodes::Icon fMark{shape::menu(), 0u};
++  nodes::Text fName{"", drawer_row_size, 0u, true};
++  app::requests *asked = nullptr;
++  app::request one{app::toggle_drawer{}};
++
++  ask_row(nodes::IconShape mark, std::string name, app::request asking,
++          const scene::Spec &made, bool with_mark = true)
++      : one(std::move(asking)) {
++    fMark.setShape(std::move(mark));
++    fMark.apply({.width = drawer_mark, .height = drawer_mark,
++                 .anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentre,
++                 .x = drawer_margin,
++                 .visible = with_mark});
++    fName.setElided(true);
++    fName.setText(std::move(name));
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = with_mark ? drawer_margin + drawer_mark + gap
++                                : drawer_margin});
++    this->apply(made);
++  }
++
++  [[nodiscard]] bool acceptsInput() const { return true; }
++  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
++  [[nodiscard]] bool onClick(float, float) {
++    if (asked)
++      asked->ask(one);
++    return true;
++  }
++
++  void again(app::requests *sink, const paints &look) {
++    asked = sink;
++    // The row's ground, said of the row itself and not of a plate inside it:
++    // a plate fills by its own corner radius alone, and these rows are
++    // rounded each corner its own -- Tasks above and Remote below, the two
++    // reading as one row cut in two. Declared of the node, the corners are
++    // what its ground is painted in and what its children are clipped by.
++    this->apply({.background = look.field});
++    fMark.setColour(look.text);
++    fName.setColour(look.text);
++    // One line, cut where the row ends: a name that wrapped stood its second
++    // line over whatever stood under it.
++    fName.apply({.maxWidth = std::max(
++                     0.0f, this->bounds().width() - 2.0f * drawer_margin -
++                               drawer_mark - gap)});
++  }
++
++  void forEachChild(auto &&f) {
++    f(fMark);
++    f(fName);
++  }
++};
++
++// One conversation, as a row: the name, and under it what was said last; the
++// time where it is asked for, and a badge for what is unread. Pressed, it
++// opens what it names. Filled in again whenever what it says changes.
+ struct conversation_row : scene::Node {
+   app::requests *asked = nullptr;
+   conversation_id said_of;
+-  nodes::Box<> fPlate{0u};
+   nodes::Box<> fAvatar{0u};
+   nodes::Text fTitle{"", 15.0f, 0u, true};
+   nodes::Text fWhen{"", 12.0f, 0u};
+@@ -65,35 +125,36 @@ struct conversation_row : scene::Node {
+ 
+   conversation_row() {
+     this->apply({.fillX = true, .height = row_height, .cornerRadius = 16.0f});
+-    fPlate.apply({.fill = true});
++    // One line each, cut where the row ends: a name that wraps stood its
++    // second line over what was said last, and what was said last over the
++    // row after it.
++    fTitle.setElided(true);
++    fSaid.setElided(true);
+     fAvatar.apply({.width = avatar,
+                    .height = avatar,
+                    .cornerRadius = avatar / 2.0f,
+                    .anchor = scene::anchor::kTopLeft,
+                    .x = edge,
+                    .y = (row_height - avatar) / 2.0f});
+-    fTitle.apply({.anchor = scene::anchor::kTopLeft,
+-                  .x = edge + avatar + gap,
+-                  .y = 14.0f,
+-                  .maxWidth = 160.0f});
++    fTitle.apply({.anchor = scene::anchor::kTopLeft, .y = 14.0f});
++    // What a row keeps clear at its right is more than what it keeps at its
++    // left: the time and the badge are read at the end of a line and not
++    // against the panel's own edge.
+     fWhen.apply({.anchor = scene::anchor::kTopRight,
+                  .origin = scene::anchor::kTopRight,
+-                 .x = -edge,
++                 .x = -drawer_right_margin * edge,
+                  .y = 16.0f});
+-    fSaid.apply({.anchor = scene::anchor::kTopLeft,
+-                 .x = edge + avatar + gap,
+-                 .y = 38.0f,
+-                 .maxWidth = 190.0f});
++    fSaid.apply({.anchor = scene::anchor::kTopLeft, .y = 38.0f});
+     fBadge.apply({.width = 20.0f,
+                   .height = 20.0f,
+                   .cornerRadius = 10.0f,
+                   .anchor = scene::anchor::kTopRight,
+                   .origin = scene::anchor::kTopRight,
+-                  .x = -edge,
++                  .x = -drawer_right_margin * edge,
+                   .y = 38.0f});
+     fCount.apply({.anchor = scene::anchor::kTopRight,
+                   .origin = scene::anchor::kCentre,
+-                  .x = -edge - 10.0f,
++                  .x = -drawer_right_margin * edge - 10.0f,
+                   .y = 48.0f});
+   }
+ 
+@@ -117,17 +178,30 @@ struct conversation_row : scene::Node {
+     fBadge.setVisible(false);
+   }
+ 
+-  void again(app::requests *sink, const paints &look, const conversation &chat,
+-             std::string_view said, std::string_view when, bool chosen) {
++  void again(app::requests *sink, const paints &look, const looks &shown,
++             const conversation &chat, std::string_view said,
++             std::string_view when, bool chosen) {
+     asked = sink;
+     said_of = chat.id;
+     this->setVisible(true);
+-    fPlate.setColour(chosen ? look.raised : 0u);
++    // Which row is open said by a ground under it, declared of the row and
++    // painted in its own rounded box: nothing else in the panel has one, and
++    // none of the rows that are not open is painted over the panel at all.
++    this->apply({.background = chosen ? look.raised : 0u});
++    // A circle for its name, where one is asked for at all, and everything
++    // named in the row standing over by it where there is one.
++    fAvatar.setVisible(shown.avatars);
+     fAvatar.setColour(look.avatar);
++    const float begins = shown.avatars ? edge + avatar + gap : edge;
++    fTitle.apply({.x = begins});
++    fSaid.apply({.x = begins});
+     fTitle.setText(chat.title);
+     fTitle.setColour(look.text);
+     fSaid.setText(std::string(said));
+     fSaid.setColour(look.dim);
++    // How long ago, where it is asked for: as the clock reads it, and the
++    // row is read without it where it is not.
++    fWhen.setVisible(shown.row_times);
+     fWhen.setText(std::string(when));
+     fWhen.setColour(look.faint);
+     fBadge.setVisible(chat.unread > 0);
+@@ -138,7 +212,6 @@ struct conversation_row : scene::Node {
+   }
+ 
+   void forEachChild(auto &&f) {
+-    f(fPlate);
+     f(fAvatar);
+     f(fTitle);
+     f(fWhen);
+@@ -149,77 +222,161 @@ struct conversation_row : scene::Node {
+ };
+ 
+ // The drawer: its own colour behind everything, its heading, the field it
+-// searches with, and the rows.
++// searches with, the two rows beside each other, the new chat, the rows, and
++// the settings at the foot of them.
+ struct drawer_screen : scene::Node {
++  // Said while the rows are being looked into: the room a row was given, the
++  // reach its texts were given of it, and where the first row's own name and
++  // last words came to stand -- whether one stands over the other.
++
+   nodes::Box<> fPaper{0u};
+-  nodes::Text fHeading{"Chats", 21.0f, 0u, true};
++  nodes::Text fHeading{"Conversations", drawer_heading_size, 0u, true};
+   // Said where the search kept nothing at all: the drawer standing empty
+   // says less than a line saying why.
+   nodes::Text fNone{"No conversation is named that, or says it.", 13.0f, 0u};
+-  // The page over the room, opened from here: the drawer is the only part
+-  // with a way in, because nothing else on the screen has room to spare.
+-  press_box fSettings{shape::gear()};
++  // The magnifier, in the field's own ground and before what it says: the
++  // field is a control of its own kind, and nothing else is drawn in it.
++  nodes::Icon fSearchMark{shape::search(), 0u};
+   std::shared_ptr<search_sink> fSink = std::make_shared<search_sink>();
+   widgets::TextArea<search_given> fSearch{
+       widgets::Theme{}, "Search conversations", search_given{fSink}};
++  // Two rows on one ground, rounded between them: pressed, the one says what
++  // runs here on its own, and the other what another machine is spoken to
++  // through. Neither stands behind anything in the program yet.
++  ask_row fTasks{shape::done(), "Tasks", app::open_tasks{},
++                 {.anchor = scene::anchor::kTopLeft,
++                  .x = edge,
++                  .fillX = true,
++                  .height = drawer_row_height,
++                  .corners = scene::Corners{.topLeft = drawer_row_radius,
++                                            .topRight = drawer_row_radius,
++                                            .bottomRight = drawer_row_corner,
++                                            .bottomLeft = drawer_row_corner}}};
++  ask_row fRemote{shape::system_prompt(), "Remote", app::open_remote{},
++                  {.anchor = scene::anchor::kTopLeft,
++                   .x = edge,
++                   .fillX = true,
++                   .height = drawer_row_height,
++                   .corners = scene::Corners{.topLeft = drawer_row_corner,
++                                             .topRight = drawer_row_corner,
++                                             .bottomRight = drawer_row_radius,
++                                             .bottomLeft = drawer_row_radius}}};
++  // A new chat, and the settings: the one rounded the whole way round, and
++  // the other at the foot of the list, which is the panel's only way into
++  // the page over the room.
++  ask_row fNewChat{shape::done(), "+ New Chat", app::new_chat{},
++                   {.anchor = scene::anchor::kTopLeft,
++                    .x = edge,
++                    .fillX = true,
++                    .height = drawer_row_height,
++                    .cornerRadius = drawer_row_height / 2.0f},
++                   false};
++  ask_row fSettings{shape::gear(), "Settings", app::open_settings{},
++                    {.anchor = scene::anchor::kTopLeft,
++                     .x = edge,
++                     .fillX = true,
++                     .height = drawer_row_height,
++                     .cornerRadius = drawer_row_height / 2.0f}};
+   // One row for every conversation the search kept, made as they are asked
+   // for and kept once made: nothing here is said two ways for being asked
+   // for twice, and no conversation is left out for there being many.
+   std::vector<std::unique_ptr<conversation_row>> fRows;
++  // Where the rows begin: under the new chat, said once here because the
++  // rows are put out from it and the settings stand at the foot of them.
++  float rows_top = 0.0f;
+ 
+   // The row for this place down the drawer, made there where there is none:
+   // every row says where it stands, told the place it was asked for.
+-  [[nodiscard]] conversation_row &row_at(std::size_t place) {
++  [[nodiscard]] conversation_row &row_at(std::size_t place, float text) {
+     while (fRows.size() <= place)
+       fRows.push_back(std::make_unique<conversation_row>());
+     conversation_row &row = *fRows[place];
+     row.apply({.anchor = scene::anchor::kTopLeft,
+                .x = edge,
+-               .y = edge + 86.0f +
+-                    static_cast<float>(place) * (row_height + 4.0f)});
++               .y = rows_top + static_cast<float>(place) * (row_height + 4.0f)});
++    // How far the name and what was said reach: the room the row was given,
++    // less the circle's and less what the time and the badge keep at its end
++    // -- a width of their own was one written for one width of drawer, and
++    // left them ended half way over a wider one.
++    row.fTitle.apply({.maxWidth = text});
++    row.fSaid.apply({.maxWidth = text});
+     return row;
+   }
+ 
+   explicit drawer_screen(float breadth) {
+     this->apply({.width = breadth, .fillY = true});
+     fPaper.apply({.fill = true});
++    // The field, its magnifier standing in it before what it says: one line,
++    // and its own ground and hint said again whenever the colours are.
++    fSearch.setSingleLine(true);
+     fHeading.apply({.anchor = scene::anchor::kTopLeft,
+-                    .x = edge,
+-                    .y = edge});
++                    .x = drawer_margin,
++                    .y = drawer_margin});
++    // The field, its magnifier standing in it before what it says.
++    const float search_y = drawer_margin + 34.0f;
+     fSearch.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = edge,
+-                   .y = edge + 34.0f,
++                   .y = search_y,
+                    .fillX = true,
+                    .height = 40.0f,
+                    .cornerRadius = 20.0f,
+-                   .padding = scene::Margin::horizontal(16.0f)});
++                   .padding = scene::SpecMargin(
++                       0.0f, drawer_margin, 0.0f,
++                       drawer_margin + drawer_mark + gap)});
++    fSearchMark.apply({.anchor = scene::anchor::kTopLeft,
++                       .origin = scene::anchor::kCentre,
++                       .width = drawer_mark,
++                       .height = drawer_mark,
++                       .x = edge + drawer_margin,
++                       .y = search_y + 20.0f});
++    // Tasks and Remote: one ground in two rows, only a few pixels apart, and
++    // the one a new chat begins from under them.
++    const float tasks_y = search_y + 40.0f + gap;
++    const float remote_y = tasks_y + drawer_row_height + drawer_row_gap;
++    const float new_y = remote_y + drawer_row_height + gap;
++    rows_top = new_y + drawer_row_height + gap;
++    fTasks.apply({.anchor = scene::anchor::kTopLeft, .x = edge, .y = tasks_y});
++    fRemote.apply(
++        {.anchor = scene::anchor::kTopLeft, .x = edge, .y = remote_y});
++    fNewChat.apply({.anchor = scene::anchor::kTopLeft, .x = edge, .y = new_y});
+     fNone.apply({.anchor = scene::anchor::kTopLeft,
+-                 .x = edge,
+-                 .y = edge + 86.0f});
++                 .x = drawer_margin,
++                 .y = rows_top});
+     fNone.setVisible(false);
+   }
+ 
+   // The colours, then what each row says: called by the program whenever the
+   // model moved. What the rows are is what the search asked for keeps -- the
+   // search is not this drawer's to do; the drawer only shows what was kept.
+-  void again(const paints &look, const chats_root &root,
++  void again(const paints &look, const looks &shown, const chats_root &root,
+              const std::string &opened, const std::string &query,
+              app::requests *asked) {
+     fPaper.setColour(look.drawer);
+     fHeading.setColour(look.text);
+     fNone.setColour(look.faint);
+-    fSettings.again(asked,
+-                    {.anchor = scene::anchor::kTopRight,
+-                     .origin = scene::anchor::kTopRight,
+-                     .relativeSize = scene::axes::kNone,
+-                     .width = 36.0f,
+-                     .height = 36.0f,
+-                     .x = -edge,
+-                     .y = edge,
+-                     .visible = true},
+-                    app::open_settings{}, look.raised);
+-    fSettings.mark_colour(look.text);
++    fSearchMark.setColour(look.faint);
++    // The field made of the same colours every other field is: its ground,
++    // the hint grey before anything has been typed into it.
++    widgets::Theme theme{};
++    theme.fSurface = look.field;
++    theme.fText = look.text;
++    theme.fTextDim = look.dim;
++    theme.fTextFaint = look.faint;
++    theme.fAccent = look.primary;
++    fSearch.setTheme(theme);
++    // A TextArea draws words and a caret and nothing else: no ground of its
++    // own, so the field there is searched with was no field at all -- only a
++    // hint standing on the panel. Its ground is said of the node, rounded
++    // the whole way round as the field is asked to be.
++    fSearch.apply({.background = look.field});
++    for (ask_row *one : {&fTasks, &fRemote, &fNewChat, &fSettings})
++      one->again(asked, look);
+     fSink->asked = asked;
++    const float row_room = this->bounds().width() - 2.0f * edge;
++    const float text = std::max(
++        60.0f, row_room - edge - drawer_right_margin * edge -
++                   (shown.avatars ? avatar + gap : 0.0f) -
++                   (shown.row_times ? 64.0f : 24.0f));
+     const auto rows = logic::matching(root, query);
+     fNone.setVisible(rows.empty());
+     for (std::size_t at = 0; at < rows.size(); ++at) {
+@@ -229,8 +386,8 @@ struct drawer_screen : scene::Node {
+       // what the row was kept for; else the last message in it, if there is
+       // one, else what the conversation is.
+       std::string said = chat.kind == conversation_kind::direct
+-                             ? "Say something"
+-                             : "No messages yet";
++                              ? "Say something"
++                              : "No messages yet";
+       for (const message &one : root.messages)
+         if (one.chat.value == chat.id.value)
+           said = one.text;
+@@ -240,10 +397,16 @@ struct drawer_screen : scene::Node {
+         said = places.front().found->text;
+       // How long ago, as the clock reads it: the moment the last thing was
+       // said in it, which is what the order of these rows comes from too.
+-      this->row_at(at).again(asked, look, chat, said,
+-                             clock_of(chat.last_activity),
+-                             chat.id.value == opened);
++      this->row_at(at, text).again(asked, look, shown, chat, said,
++                                   clock_of(chat.last_activity),
++                                   chat.id.value == opened);
+     }
++    // At the foot of them, whatever the list came to, the row the settings
++    // are opened from.
++    fSettings.apply({.anchor = scene::anchor::kTopLeft,
++                     .x = edge,
++                     .y = rows_top + static_cast<float>(rows.size()) *
++                                         (row_height + 4.0f)});
+     // What is left of the list where fewer conversations were kept than were
+     // kept here before: said by nobody.
+     for (std::size_t at = rows.size(); at < fRows.size(); ++at)
+@@ -254,10 +417,14 @@ struct drawer_screen : scene::Node {
+     f(fPaper);
+     f(fHeading);
+     f(fNone);
+-    f(fSettings);
++    f(fSearchMark);
+     f(fSearch);
++    f(fTasks);
++    f(fRemote);
++    f(fNewChat);
+     for (auto &row : fRows)
+       f(*row);
++    f(fSettings);
+   }
+ };
+ 
+diff --git a/src/ui/message_list.cc b/src/ui/message_list.cc
+index c577c9bb..4d2efd75 100644
+--- a/src/ui/message_list.cc
++++ b/src/ui/message_list.cc
+@@ -16,10 +16,8 @@
+ export module pchat.ui:message_list;
+ 
+ import std;
+-import skia;
+ import skiff.scene;
+ import skiff.nodes;
+-import skiff.paint;
+ import pchat.core;
+ import pchat.logic.lists;
+ import pchat.app.requests;
+@@ -59,29 +57,6 @@ inline constexpr std::size_t foot_count = 6;
+   }
+   return std::to_string(took_ms) + " ms";
+ }
+-
+-// How wide a line is in the face every piece of text here is drawn with, and
+-// how tall one of its lines stands: asked of what measures them, which is the
+-// font the window was handed. Nothing here counts characters, and nothing
+-// guesses.
+-//
+-// Asked because a node holding words keeps a size of nothing where nothing
+-// measured them -- a browser, whose font carries no face of this program's --
+-// and a box as wide as the words in it is then a box of nothing at all: a
+-// press on the words reaches no node, however wide they read on the page.
+-[[nodiscard]] inline float words_wide(const std::string &line, float size) {
+-  skia::SkFont *font = skiff::paint::defaultFont();
+-  if (font == nullptr || line.empty())
+-    return 0.0f;
+-  const skiff::paint::Painter said(nullptr, *font, false);
+-  const float wide = said.measure(line, size, false);
+-  // Nothing came of it where the font carries no face of this program's:
+-  // then what a letter of a fixed pitch would come to in this size, which is
+-  // the advance skiff itself keeps for a face it cannot read.
+-  return wide > 1.0f ? wide : size * 0.55f * static_cast<float>(line.size());
+-}
+-[[nodiscard]] inline float line_tall(float size) { return size * 1.25f; }
+-
+ // ---- the reader's bubble --------------------------------------------------
+ 
+ // A bubble: its own colour and corners behind two lines -- what was said, and
+@@ -102,8 +77,7 @@ struct bubble : nodes::Stack {
+                  .padding = scene::Margin{bubble_pad_y, bubble_pad_x,
+                                           bubble_pad_y, bubble_pad_x}});
+     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
+-    fTime.apply(
+-        {.alignSelf = scene::align::kEnd});
++    fTime.apply({.alignSelf = scene::align::kEnd});
+   }
+ 
+   void blank() {
+@@ -157,7 +131,9 @@ struct foot_chip : scene::Node {
+     this->apply({.autoSize = scene::axes::kBoth,
+                  .cornerRadius = 9.0f,
+                  .padding = scene::Margin{4.0f, 8.0f, 4.0f, 6.0f}});
+-    fPlate.apply({.fill = true});
++    // What the chip is rounded by: its own plate, which fills by the radius
++    // it was told itself and not by the chip's.
++    fPlate.apply({.fill = true, .cornerRadius = 9.0f});
+     fMark.apply({.width = 14.0f,
+                  .height = 14.0f,
+                  .anchor = scene::anchor::kCentreLeft,
+@@ -179,17 +155,6 @@ struct foot_chip : scene::Node {
+     }
+     return true;
+   }
+-  // Wide and tall as its words say they are, which is what no measurement
+-  // inside one gives it in a browser: a chip as narrow as nothing no press on
+-  // the words of it ever reaches. See `words_wide`.
+-  void wide_as_the_words(nodes::Text &one, const std::string &what,
+-                         float size) {
+-    const float wide = words_wide(what, size);
+-    one.apply({.autoSize = scene::axes::kNone,
+-               .width = wide > 1.0f ? wide + 2.0f : 0.0f,
+-               .height = line_tall(size)});
+-  }
+-
+   // Left down or not: what the one that tells about an answer answers with,
+   // and what its row reads to know whether to show what it knows.
+   [[nodiscard]] bool down() const noexcept { return fDown; }
+@@ -205,7 +170,6 @@ struct foot_chip : scene::Node {
+     fMark.setVisible(true);
+     fLabel.setText(std::string(label));
+     fLabel.setColour(look.faint);
+-    this->wide_as_the_words(fLabel, std::string(label), 11.0f);
+     fPlate.setColour(0u);
+   }
+ 
+@@ -218,7 +182,6 @@ struct foot_chip : scene::Node {
+     fMark.setVisible(true);
+     fLabel.setText(std::string(label));
+     fLabel.setColour(fDown ? look.primary : look.faint);
+-    this->wide_as_the_words(fLabel, std::string(label), 11.0f);
+     fPlate.setColour(fDown ? look.field : 0u);
+   }
+ 
+@@ -281,29 +244,6 @@ calls_said(const std::vector<call_made> &calls) {
+   return out;
+ }
+ 
+-// How wide its widest line comes to, and how many lines it comes to in a room
+-// this wide: one for each line it was written with, and as many more as that
+-// one is wrapped into. Said here rather than measured there, for the want
+-// every other size in this file is said here for -- see `words_wide`.
+-[[nodiscard]] inline std::pair<float, float> how_it_stands(std::string_view said,
+-                                                           float room,
+-                                                           float size) {
+-  float widest = 0.0f;
+-  float lines = 0.0f;
+-  for (std::size_t at = 0u;;) {
+-    const std::size_t next = said.find('\n', at);
+-    const std::string_view one = said.substr(
+-        at, next == std::string_view::npos ? std::string_view::npos
+-                                           : next - at);
+-    const float wide = words_wide(std::string(one), size);
+-    widest = widest < wide ? wide : widest;
+-    lines += std::max(1.0f, std::ceil(wide / room));
+-    if (next == std::string_view::npos)
+-      break;
+-    at = next + 1u;
+-  }
+-  return {widest, std::max(1.0f, lines)};
+-}
+ 
+ // Folded above an answer: how long it was thinking, how many tool calls it
+ // made, and -- once it is pressed open -- what it wrote to itself while it
+@@ -326,7 +266,6 @@ struct history_fold : nodes::Stack {
+ 
+   [[nodiscard]] bool acceptsInput() const { return true; }
+   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+-  // The press that opens it opens the greentext with it, or shuts both.
+   [[nodiscard]] bool onClick(float, float) {
+     fOpen = !fOpen;
+     return true;
+@@ -347,35 +286,19 @@ struct history_fold : nodes::Stack {
+     this->apply({.autoSize = scene::axes::kBoth,
+                  .maxWidth = widest,
+                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
+-    const std::string line =
+-        "Thought for " + took_of(before.took_ms) + " · " +
+-        std::to_string(before.tool_calls) +
+-        (before.tool_calls == 1 ? " tool call" : " tool calls");
+-    fSummary.setText(line);
++    fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
++                     std::to_string(before.tool_calls) +
++                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
+     fSummary.setColour(look.dim);
+-    // Wide and tall as they were measured, never wider than the room: see
+-    // what `words_wide` says of why they are said here at all.
+-    const float room = widest - 24.0f;
+-    const float wide = words_wide(line, 12.0f);
+-    fSummary.apply({.autoSize = scene::axes::kNone,
+-                    .width = wide > 1.0f ? std::min(wide + 2.0f, room) : room,
+-                    .height = line_tall(12.0f),
+-                    .maxWidth = room});
++    fSummary.apply(
++        { .maxWidth = widest - 24.0f});
+     // What it wrote to itself, greentext: shown while it is pressed open.
+     fThought.setText(before.said);
+     fThought.setColour(look.thought);
+     fThought.setMonospace(true);
+     fThought.setVisible(fOpen && !before.said.empty());
+-    // As many lines as what was written comes to in the room, each one line
+-    // tall: the same reason the summary is sized here, and for the same want
+-    // -- that a press anywhere in it is a press on the fold.
+-    const float said_wide = words_wide(before.said, 12.0f);
+-    const float lines = std::max(1.0f, std::ceil(said_wide / room));
+-    fThought.apply({.autoSize = scene::axes::kNone,
+-                    .width = said_wide > 1.0f ? std::min(said_wide + 2.0f, room)
+-                                              : room,
+-                    .height = lines * line_tall(12.0f),
+-                    .maxWidth = room});
++    fThought.apply(
++        {.maxWidth = widest - 24.0f});
+     // Each thing it stopped to ask for, under what it wrote to itself and
+     // opened with it: which tool, what it asked, what came back.
+     const std::string calls = calls_said(before.calls);
+@@ -383,12 +306,8 @@ struct history_fold : nodes::Stack {
+     fCalls.setColour(look.thought);
+     fCalls.setMonospace(true);
+     fCalls.setVisible(fOpen && !calls.empty());
+-    const auto [calls_wide, calls_lines] = how_it_stands(calls, room, 12.0f);
+-    fCalls.apply({.autoSize = scene::axes::kNone,
+-                  .width = calls_wide > 1.0f ? std::min(calls_wide + 2.0f, room)
+-                                             : room,
+-                  .height = calls_lines * line_tall(12.0f),
+-                  .maxWidth = room});
++    fCalls.apply(
++        {.maxWidth = widest - 24.0f});
+   }
+ 
+   void forEachChild(auto &&f) {
+@@ -472,7 +391,7 @@ struct answer_row : nodes::Stack {
+     fBody.setText(said.text);
+     fBody.setColour(look.text);
+     fBody.setFontSize(look.size);
+-    fBody.apply({.fillX = true});
++    fBody.apply({.maxWidth = widest});
+     fFoot.again(sink, look, said);
+     // What About tells: what answered, and what this answer came to -- the
+     // model that keeps this chat, then how long it thought, how often it
+@@ -539,6 +458,10 @@ struct message_row : nodes::Stack {
+ // The messages of one conversation, in a column of their own: the rows' own
+ // flow, so each begins under the height the one before it came to.
+ struct message_screen : nodes::Stack {
++  // Said on the screen while the widths are being looked into: what room the
++  // column has, what widest the bubbles were given of it, and what the first
++  // row, its bubble and the text in it came to.
++
+   // One row for every message there is, made as they are asked for and kept
+   // once made: a column of thirty-two of them was a third of a thousand
+   // nodes, and as a member of this node -- where it was made, and again
+diff --git a/src/ui/prompt.cc b/src/ui/prompt.cc
+index 745b2870..aa4cd37b 100644
+--- a/src/ui/prompt.cc
++++ b/src/ui/prompt.cc
+@@ -153,8 +153,7 @@ struct prompt_screen : scene::Node {
+     fSaid.setColour(look.faint);
+     fSaid.apply({.anchor = scene::anchor::kTopCentre,
+                  .origin = scene::anchor::kTopCentre,
+-                 .y = above + 56.0f,
+-                 .autoSize = scene::axes::kBoth});
++                 .y = above + 56.0f});
+     fClose.again(asked,
+                  {.anchor = scene::anchor::kTopRight,
+                   .origin = scene::anchor::kTopRight,
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index 7d632f86..b604db30 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -26,7 +26,7 @@ namespace nodes = skiff::nodes;
+ inline constexpr double large_type = 1.25;
+ 
+ // How many groups the page has, and how many items any one of them may say.
+-inline constexpr std::size_t max_settings_groups = 8u;
++inline constexpr std::size_t max_settings_groups = 9u;
+ inline constexpr std::size_t max_settings_items = 7u;
+ 
+ // The seeds offered, and the name each is known by.
+@@ -45,22 +45,24 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
+     {scheme_preset::ocean, "Ocean"},
+ }};
+ 
+-// The eight groups the page is made of, and what each holds, said once in
++// The nine groups the page is made of, and what each holds, said once in
+ // the order they are said in (design-doc.md, "The settings"). Every one of
+-// them now has what it is named for drawn under one of its items: what
+-// answers in a chat, under Services; how an answer is asked for, under
+-// Responses; and under the three that stood empty, a switch to each of the
+-// seven things a switch is offered for.
++// them has what it is named for drawn under one of its items: Appearance,
++// under Appearance & Language; what answers in a chat, under Services;
++// Generation, under Responses; the three tools this program owns, under
++// Tools; a switch to each of the seven under Multimodal, Network and
++// Memory & Data; a press that asks for one notification, under
++// Notifications; and what this build is, under About.
+ //
+ // Not one row here says what a group would do when it is pressed: none of
+ // them is pressed, because there is nothing behind any of them yet to be
+ // shown.
+ 
+ // What one of them draws under the item it stands under, where it draws
+-// anything: one of these five, and never two of them, because no two of
++// anything: one of these six, and never two of them, because no two of
+ // them are what one place in the page is made of.
+ enum class group_rows { none, appearance, generation, tools, switches,
+-                        answerers, about };
++                        answerers, notified, about };
+ 
+ struct settings_group {
+   std::string_view name;
+@@ -105,6 +107,7 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
+      group_rows::switches,
+      4u,
+      3u},
++    {"Notifications", {{"Test"}}, 1u, 0u, group_rows::notified},
+     {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u,
+      group_rows::appearance},
+     {"About", {{"About"}}, 1u, 0u, group_rows::about},
+@@ -118,6 +121,13 @@ inline constexpr float settings_card_widest = 720.0f;
+ // group's name above the items in it, and one group above the next.
+ inline constexpr float settings_row_height = 48.0f;
+ inline constexpr float settings_row_stride = 52.0f;
++// What a row keeps clear for what stands beside its name: the switch, the
++// knob's two presses with what the knob stands at, and, in a line of About,
++// where what is said of it begins.
++inline constexpr float switch_room = 82.0f;
++inline constexpr float knob_room = 142.0f;
++inline constexpr float about_name_room = 166.0f;
++inline constexpr float about_said_at = 206.0f;
+ inline constexpr float settings_group_stride = 30.0f;
+ inline constexpr float settings_group_gap = 20.0f;
+ 
+@@ -137,7 +147,10 @@ struct switch_row : scene::Node {
+ 
+   switch_row() {
+     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
+-    fPlate.apply({.fill = true});
++    // The plate is what is seen of the row, and it fills by its own corner
++    // radius alone: told the row's, the ground under it is rounded too.
++    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
++    fName.setElided(true);
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+                  .x = 16.0f});
+@@ -172,6 +185,8 @@ struct switch_row : scene::Node {
+     this->apply(spec);
+     fName.setText(std::string(name));
+     fName.setColour(look.text);
++    if (spec.width)
++      fName.apply({.maxWidth = std::max(0.0f, *spec.width - switch_room)});
+     fTrack.setColour(on ? look.primary : look.outline);
+     fKnob.setColour(on ? look.on_primary : look.dim);
+   }
+@@ -248,7 +263,8 @@ struct knob_row : scene::Node {
+ 
+   knob_row() {
+     this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
+-    fPlate.apply({.fill = true});
++    fPlate.apply({.fill = true, .cornerRadius = 14.0f});
++    fName.setElided(true);
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+                  .x = 16.0f});
+@@ -284,6 +300,8 @@ struct knob_row : scene::Node {
+     fPlate.setColour(look.field);
+     fName.setText(std::string(name));
+     fName.setColour(look.text);
++    if (spec.width)
++      fName.apply({.maxWidth = std::max(0.0f, *spec.width - knob_room)});
+     fValue.setText(said_value(field, value));
+     fValue.setColour(look.dim);
+     fLess.again(sink,
+@@ -326,9 +344,11 @@ struct about_row : scene::Node {
+     this->apply({.anchor = scene::anchor::kTopLeft,
+                  .height = settings_row_height,
+                  .cornerRadius = 14.0f});
++    fName.setElided(true);
++    fSaid.setElided(true);
+     fName.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+-                 .x = 16.0f});
++                 .x = 16.0f, .maxWidth = about_name_room});
+     fSaid.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+                  .x = 190.0f});
+@@ -355,6 +375,8 @@ struct about_row : scene::Node {
+     fName.setColour(look.text);
+     fSaid.setText(std::string(said));
+     fSaid.setColour(look.dim);
++    if (spec.width)
++      fSaid.apply({.maxWidth = std::max(0.0f, *spec.width - about_said_at)});
+   }
+ 
+   void forEachChild(auto &&f) {
+@@ -367,16 +389,66 @@ struct about_row : scene::Node {
+   std::string given;
+ };
+ 
++// One row of the Notifications page: pressed, it asks the machine this
++// program runs on to show one notification of the program's own -- a test,
++// whether it is let show any at all, and nothing that stands for a message.
++struct test_row : scene::Node {
++  ask_box fPlate{};
++  nodes::Text fName{"", 15.0f, 0u};
++  app::requests *asked = nullptr;
++
++  test_row() {
++    this->apply({.anchor = scene::anchor::kTopLeft,
++                 .height = settings_row_height,
++                 .cornerRadius = 14.0f});
++    fName.setElided(true);
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = 16.0f});
++  }
++
++  [[nodiscard]] bool acceptsInput() const { return true; }
++  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
++  [[nodiscard]] bool onClick(float, float) {
++    if (asked) asked->ask(app::send_test_notification{});
++    return true;
++  }
++
++  void blank() { this->setVisible(false); }
++
++  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
++             std::string_view name, float room) {
++    asked = sink;
++    fPlate.again(sink, app::send_test_notification{}, look.raised);
++    this->apply(spec);
++    this->setVisible(true);
++    fName.setText(std::string(name));
++    fName.setColour(look.text);
++    fName.apply({.maxWidth = std::max(0.0f, room - 32.0f)});
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fName);
++  }
++};
++
+ struct settings_rows : scene::Node {
++  // Said while the page is being looked into: the first two things said in
++  // it that stand on one another, by the name each is known by in the code
++  // and the room each came to stand in. Nothing is read of a page that says
++  // "no two stand on another".
+   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
+   // One line to a text, kept on the heap and not as a member: sixty of them,
+   // each with a size it is said in, is not what a machine's stack was asked
+   // to hold -- and every one of them is made whether it is said in or not.
+   struct group_name {
+     nodes::Text name{"", 16.0f, 0u, true};
++    group_name() { name.setElided(true); }
+   };
+   struct item_name {
+     nodes::Text name{"", 15.0f, 0u};
++    item_name() { name.setElided(true); }
+   };
+   std::unique_ptr<std::array<group_name, max_settings_groups>> fGroups =
+       std::make_unique<std::array<group_name, max_settings_groups>>();
+@@ -389,6 +461,10 @@ struct settings_rows : scene::Node {
+   switch_row fBlack;
+   switch_row fLarge;
+   switch_row fLight;
++  // What a row in the drawer is asked for, and asked for here: a circle for
++  // the conversation it names, and how long ago what it says was said.
++  switch_row fAvatars;
++  switch_row fTimes;
+   // Generation, drawn: one row for each of the five an answer is asked with.
+   std::array<knob_row, asking_offered.size()> fKnobs;
+   // The tools, drawn: a switch to each of the three, whether it is offered
+@@ -401,6 +477,8 @@ struct settings_rows : scene::Node {
+   // The answerers, drawn: a switch to each of them, whether it answers in
+   // the conversation the window has open or not.
+   std::array<switch_row, answerers_offered.size()> fAnswerers;
++  // Notifications, drawn: one press that asks for a test notification.
++  test_row fTest;
+   // About, drawn: what this build is, what it is under, and where its
+   // source is kept.
+   std::array<about_row, max_about_rows> fAbout;
+@@ -441,9 +519,12 @@ struct settings_rows : scene::Node {
+       one.setVisible(false);
+     for (about_row &one : fAbout)
+       one.blank();
++    fTest.blank();
+     fBlack.fName.setText("Pure black");
+     fLarge.fName.setText("Larger type");
+     fLight.fName.setText("Light colours");
++    fAvatars.fName.setText("Circles by the names");
++    fTimes.fName.setText("How long ago in a row");
+   }
+ 
+   // The answerers offered (pchat.config), as a row each: which of them
+@@ -524,12 +605,33 @@ struct settings_rows : scene::Node {
+       return say_switches(asked, look, how, row_width, base, from, said);
+     case group_rows::answerers:
+       return say_answerers(asked, look, answerers, row_width, base);
++    case group_rows::notified:
++      return say_notified(asked, look, row_width, base);
+     case group_rows::about:
+       return say_about(asked, look, row_width, base);
+     }
+     return base;
+   }
+ 
++  // Notifications, drawn: one row under the group's own item, pressed to ask
++  // the machine this program runs on for a test notification. Nothing here is
++  // told whether one was shown -- asking is all a row does, and whether this
++  // program is let show any is the system's own to answer.
++  [[nodiscard]] float say_notified(app::requests *asked, const paints &look,
++                                   float row_width, float base) {
++    fTest.again(asked,
++                {.anchor = scene::anchor::kTopLeft,
++                 .x = 16.0f,
++                 .y = base,
++                 .relativeSize = scene::axes::kNone,
++                 .width = row_width,
++                 .height = settings_row_height,
++                 .cornerRadius = 14.0f,
++                 .visible = true},
++                look, "Send a test notification", row_width);
++    return base + settings_row_stride;
++    }
++
+   // The seven, drawn: one switch to each of the run this group was given,
+   // standing under the item they belong under. Each says what it is switched
+   // to, and pressing one asks for the other.
+@@ -680,14 +782,39 @@ struct settings_rows : scene::Node {
+                  app::pick_theme{.mode = shown.mode == theme_mode::light
+                                              ? theme_mode::dark
+                                              : theme_mode::light});
++    // The drawer's own rows, asked for under the colours: neither stands in
++    // the panel until it is asked for here.
++    fAvatars.again(asked,
++                   {.anchor = row.anchor,
++                    .x = row.x,
++                    .y = top + 3.0f * settings_row_stride,
++                    .relativeSize = scene::axes::kNone,
++                    .width = row.width,
++                    .height = row.height,
++                    .cornerRadius = row.cornerRadius},
++                   look, "Circles by the names", shown.avatars,
++                   app::set_avatars{.enabled = !shown.avatars});
++    fTimes.again(asked,
++                 {.anchor = row.anchor,
++                  .x = row.x,
++                  .y = top + 4.0f * settings_row_stride,
++                  .relativeSize = scene::axes::kNone,
++                  .width = row.width,
++                  .height = row.height,
++                  .cornerRadius = row.cornerRadius},
++                 look, "How long ago in a row", shown.row_times,
++                 app::set_row_times{.enabled = !shown.row_times});
+     // The design, offered under the switches: a plate the whole breadth of
+     // the rows, and what it is called written in it.
+     const float row_height = row.height.value_or(48.0f);
++    // Where it stands: under every switch above it, which is as far as the
++    // last of them reaches and no counting by hand.
++    const float read_at = 5.0f * settings_row_stride;
+     fReadPlate.again(asked, app::open_design{}, look.raised);
+     fReadPlate.apply({.anchor = row.anchor,
+                       .origin = scene::anchor::kTopLeft,
+                       .x = row.x,
+-                      .y = top + 156.0f,
++                      .y = top + read_at,
+                       .width = row.width,
+                       .height = row_height,
+                       .relativeSize = scene::axes::kNone,
+@@ -695,10 +822,10 @@ struct settings_rows : scene::Node {
+     fRead.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+                  .x = 32.0f,
+-                 .y = top + 156.0f + row_height / 2.0f});
++                 .y = top + read_at + row_height / 2.0f});
+     // Where the rest of the page begins: under the row that offers the
+     // design, and the room left between it and the next group.
+-    return top + 156.0f + settings_row_height + settings_group_gap;
++    return top + read_at + settings_row_height + settings_group_gap;
+   }
+   void again(app::requests *asked, const paints &look, const looks &shown,
+              const asking &how, std::span<const std::string> answerers,
+@@ -717,9 +844,11 @@ struct settings_rows : scene::Node {
+       group_name &head = (*fGroups)[group];
+       head.name.setText(std::string(named.name));
+       head.name.setColour(look.dim);
++      head.name.apply({.maxWidth = std::max(0.0f, breadth - 40.0f)});
+       head.name.apply({.anchor = scene::anchor::kTopLeft,
+                        .x = 20.0f,
+                        .y = at,
++      
+                        .visible = true});
+       at += settings_group_stride;
+       for (std::size_t one = 0u; one < max_settings_items; ++one) {
+@@ -730,6 +859,7 @@ struct settings_rows : scene::Node {
+         }
+         item.name.setText(std::string(named.items[one]));
+         item.name.setColour(look.text);
++        item.name.apply({.maxWidth = std::max(0.0f, breadth - 52.0f)});
+         item.name.apply({.anchor = scene::anchor::kCentreLeft,
+                          .origin = scene::anchor::kCentreLeft,
+                          .x = 32.0f,
+@@ -775,6 +905,8 @@ struct settings_rows : scene::Node {
+     f(fBlack);
+     f(fLarge);
+     f(fLight);
++    f(fAvatars);
++    f(fTimes);
+     for (knob_row &one : fKnobs)
+       f(one);
+     for (switch_row &one : fTools)
+@@ -783,6 +915,7 @@ struct settings_rows : scene::Node {
+       f(one);
+     for (switch_row &one : fAnswerers)
+       f(one);
++    f(fTest);
+     f(fReadPlate);
+     f(fRead);
+     for (about_row &one : fAbout)
+diff --git a/src/ui/top_bar.cc b/src/ui/top_bar.cc
+index 282441ab..a66a61c3 100644
+--- a/src/ui/top_bar.cc
++++ b/src/ui/top_bar.cc
+@@ -36,7 +36,7 @@ struct bar_pill : scene::Node {
+   bar_pill() {
+     this->apply(
+         {.height = 36.0f, .autoSize = scene::axes::kX, .cornerRadius = 18.0f});
+-    fPlate.apply({.fill = true});
++    fPlate.apply({.fill = true, .cornerRadius = 18.0f});
+     fMark.apply({.width = 18.0f,
+                  .height = 18.0f,
+                  .anchor = scene::anchor::kCentreLeft,
+@@ -95,6 +95,11 @@ struct answerer_bubble : scene::Node {
+   void again(const paints &look, const scene::Spec &where,
+              std::string_view name) {
+     this->apply(where);
++    // The bubble is rounded as the spec brought here says, and it is its
++    // plate that is seen: given the same radius, and nothing else of where
++    // it stands, which the plate has of its own already.
++    if (where.cornerRadius)
++      fPlate.apply({.cornerRadius = *where.cornerRadius});
+     fPlate.setColour(look.search_bar);
+     fName.setText(std::string(name));
+     fName.setColour(look.text);
+diff --git a/src/ui/window.cc b/src/ui/window.cc
+index 484b1543..c440a7a1 100644
+--- a/src/ui/window.cc
++++ b/src/ui/window.cc
+@@ -81,7 +81,10 @@ struct app_window : scene::Node {
+     const bool in_chat = wide || !drawer_open;
+     const float column = in_chat ? width - (wide ? breadth : 0.0f) : width;
+     const bool aside = wide || drawer_open;
+-    const float left = aside ? breadth : 0.0f;
++    // The messages are drawn under the drawer where the drawer has come over
++    // them as well: what is left of them beside it is read there, and pressed
++    // it is what puts it away again.
++    const float left = wide ? breadth : 0.0f;
+     fPaper.setColour(look.paper);
+     // The messages' own ground, beside the drawer.
+     // A size in pixels, not a share: what these were made to fill once is
+@@ -93,10 +96,13 @@ struct app_window : scene::Node {
+                      .width = column,
+                      .height = height,
+                      .background = look.paper,
+-                     .visible = in_chat});
+-    // The drawer: beside the messages when the window is wide, out of the way
+-    // when it is not.
+-    const float drawer_breadth = wide ? breadth : width;
++                     .visible = true});
++    // The drawer: beside the messages when the window is wide, over them when
++    // it is not -- and over them it leaves a strip of them in sight, which is
++    // what the reader presses to put it away again.
++    const float drawer_breadth =
++        wide ? breadth
++             : std::min(width, std::max(breadth, width - drawer_open_room));
+     fDrawer.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = 0.0f,
+                    .y = 0.0f,
+@@ -114,7 +120,7 @@ struct app_window : scene::Node {
+                      .height = height,
+                      .visible = true,
+                      .background = look.drawer});
+-      fDrawer.again(look, root, opened, query, asked);
++      fDrawer.again(look, shown, root, opened, query, asked);
+     }
+     // The bar, over the top of the messages.
+     fTop.apply({.anchor = scene::anchor::kTopLeft,
+@@ -123,7 +129,7 @@ struct app_window : scene::Node {
+                 .relativeSize = scene::axes::kNone,
+                 .width = column,
+                 .height = top_scrim,
+-                .visible = in_chat});
++                .visible = true});
+     // The pill that opens the drawer is there where a drawer can be opened:
+     // a window wide enough to keep it beside the messages has none to open.
+     const conversation *open_chat = nullptr;
+@@ -173,7 +179,7 @@ struct app_window : scene::Node {
+          .width = column,
+          .height = std::max(
+              height - top_bar_height - composer_height - 2.0f * edge, 40.0f),
+-         .visible = in_chat});
++         .visible = true});
+     // The card at the foot.
+     fComposer.apply({.anchor = scene::anchor::kBottomLeft,
+                      .origin = scene::anchor::kBottomLeft,
+@@ -182,7 +188,7 @@ struct app_window : scene::Node {
+                      .relativeSize = scene::axes::kNone,
+                      .width = column,
+                      .height = composer_height + 2.0f * edge,
+-                     .visible = in_chat});
++                     .visible = true});
+     if (open_chat)
+       fComposer.again(look, *open_chat, asked);
+     // The settings page, over everything, when it is opened.
+diff --git a/tools/probe_settings.mjs b/tools/probe_settings.mjs
+index c8398a11..bddf0e10 100644
+--- a/tools/probe_settings.mjs
++++ b/tools/probe_settings.mjs
+@@ -1,6 +1,6 @@
+ // pchat.probe.settings -- What the settings page says, and whether what is
+ // said further down in it can be reached: the page opened, the names of the
+-// eight groups read back out of the text mirror, the column scrolled to its
++// nine groups read back out of the text mirror, the column scrolled to its
+ // foot, and the row that offers the design pressed there.
+ import { chromium } from 'playwright';
+ 
+@@ -26,6 +26,7 @@ console.log(`settings: ${said.length} chars`);
+ for (const name of ['Services', 'Providers', 'Models', 'Responses',
+   'Context', 'Multimodal', 'Image transcription', 'Tools', 'Web search',
+   'Automation', 'Network', 'Proxy', 'Memory & Data', 'Skills',
++  'Notifications', 'Send a test notification',
+   'Appearance & Language', 'Language', 'About'])
+   console.log(`said ${name}: ${said.includes(name)}`);
+ // The card stands in the middle of the room and what it holds scrolls: to

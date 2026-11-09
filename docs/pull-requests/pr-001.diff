@@ -1,0 +1,305 @@
+diff --git a/src/app/requests.cc b/src/app/requests.cc
+index cc273208..5f508591 100644
+--- a/src/app/requests.cc
++++ b/src/app/requests.cc
+@@ -111,6 +111,15 @@ struct set_generation {
+   asking_what field = asking_what::temperature;
+   double value = 0.0;
+ };
++// Thinking before an answer, and how hard it is to think: the first two of
++// the things a three-dot menu says (design-doc.md, "The editor's row"), read
++// into what every wire is asked for from then on.
++struct set_thinking {
++  bool on = false;
++};
++struct set_effort {
++  effort how = effort::some;
++};
+ // One of the tools this program owns, switched: on, and a model is told it
+ // may ask for it; off, and no answer this program writes mentions it.
+ struct set_tool {
+@@ -135,7 +144,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
+                              close_system_prompt, set_system_prompt,
+                              toggle_more, open_design, close_design,
+                              pick_seed, set_amoled, set_font_scale, pick_theme,
+-                              set_generation, set_tool,
++                              set_generation, set_thinking, set_effort, set_tool,
+                               set_answerer, copy_text>;
+ 
+ class requests {
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index 1e28d781..946f9417 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -225,6 +225,11 @@ class screens {
+             // pressed for, kept inside the lines it is said to have
+             // (pchat.config, `asking`).
+             [&](const set_generation &asking) { how(asking.field, asking.value); },
++            // Thinking switched, and how hard it is to think: carried into the
++            // asking every answer made from now on is written with, and so
++            // into every body sent for one.
++            [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
++            [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
+             // A tool switched: one of the three this program owns, and what
+             // it is switched to.
+             [&](const set_tool &asking) {
+diff --git a/src/config.cc b/src/config.cc
+index 49b0dd71..5cc8a662 100644
+--- a/src/config.cc
++++ b/src/config.cc
+@@ -59,6 +59,33 @@ inline constexpr std::size_t tools_owned = 3u;
+ // Said once here and written as each family names it by pchat.provider.
+ enum class effort { least, some, most, all };
+ 
++// What each of the four is called where a person reads it, and not where a
++// wire takes it: the row that says where thinking stands.
++[[nodiscard]] inline std::string_view said_how(effort one) {
++  switch (one) {
++  case effort::least:
++    return "a little";
++  case effort::some:
++    return "some";
++  case effort::most:
++    return "much";
++  case effort::all:
++    break;
++  }
++  return "all it has";
++}
++
++// One step either way round the four, stopped at either end: what a press on
++// either side of that row asks for.
++[[nodiscard]] constexpr effort stepped_of(effort one, int by) {
++  const int at = static_cast<int>(one) + by;
++  if (at <= static_cast<int>(effort::least))
++    return effort::least;
++  if (at >= static_cast<int>(effort::all))
++    return effort::all;
++  return static_cast<effort>(at);
++}
++
+ [[nodiscard]] inline std::string_view said_by(effort one) {
+   switch (one) {
+   case effort::least:
+@@ -166,6 +193,20 @@ struct asking_range {
+   return out;
+ }
+ 
++// The same, with whether a model thinks at all and how hard: what the three
++// dots above an answer say (design-doc.md, "The editor's row"), and what
++// every body written after it is then asked with (pchat.provider).
++[[nodiscard]] constexpr asking set_of(const asking &one, bool thinking) {
++  asking out = one;
++  out.thinking = thinking;
++  return out;
++}
++[[nodiscard]] constexpr asking set_of(const asking &one, effort how_hard) {
++  asking out = one;
++  out.how_hard = how_hard;
++  return out;
++}
++
+ // The same, with one of them moved: what a row's press either side of one
+ // asks for, kept inside the lines that one has.
+ [[nodiscard]] constexpr asking set_of(const asking &one, asking_what field,
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index 5cb977f1..94cb9ef1 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -287,6 +287,75 @@ struct knob_row : scene::Node {
+   }
+ };
+ 
++// How hard a model thinks before it answers, as a row: what it stands at
++// now, and a press either side of that moving it one step round the four
++// (pchat.config). Neither press says more than the step it was pressed for.
++struct effort_row : scene::Node {
++  nodes::Box<> fPlate{0u};
++  nodes::Text fName{"How hard it thinks", 15.0f, 0u};
++  nodes::Text fValue{"", 15.0f, 0u};
++  ask_box fLess{};
++  nodes::Text fLessMark{"\u2013", 16.0f, 0u, true};
++  ask_box fMore{};
++  nodes::Text fMoreMark{"+", 16.0f, 0u, true};
++
++  effort_row() {
++    this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
++    fPlate.apply({.fill = true});
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = 16.0f,
++                 .autoSize = scene::axes::kBoth});
++    fValue.apply({.anchor = scene::anchor::kCentreRight,
++                  .origin = scene::anchor::kCentreRight,
++                  .x = -118.0f,
++                  .autoSize = scene::axes::kBoth});
++    fLess.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -60.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fLessMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -80.0f,
++                     .autoSize = scene::axes::kBoth});
++    fMore.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -14.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -34.0f,
++                     .autoSize = scene::axes::kBoth});
++  }
++
++  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
++             effort now) {
++    this->apply(spec);
++    fPlate.setColour(look.field);
++    fName.setColour(look.text);
++    fValue.setText(std::string(said_how(now)));
++    fValue.setColour(look.dim);
++    fLess.again(sink, app::set_effort{stepped_of(now, -1)}, look.raised);
++    fMore.again(sink, app::set_effort{stepped_of(now, 1)}, look.raised);
++    fLessMark.setColour(look.text);
++    fMoreMark.setColour(look.text);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fName);
++    f(fValue);
++    f(fLess);
++    f(fLessMark);
++    f(fMore);
++    f(fMoreMark);
++  }
++};
++
+ // What the card holds: the seeds, the switches, and what else is said in
+ // the page. Of its own node, and not drawn straight into the page, so that
+ // what scrolls is these and not the card they are said in -- a page that
+@@ -371,6 +440,10 @@ struct settings_rows : scene::Node {
+   switch_row fLight;
+   // Generation, drawn: one row for each of the five an answer is asked with.
+   std::array<knob_row, asking_offered.size()> fKnobs;
++  // Thinking, drawn: that it is wanted at all, and how hard, under the name
++  // the page had left standing for the answerer's own generation.
++  switch_row fThinking;
++  effort_row fEffort;
+   // The tools, drawn: a switch to each of the three, whether it is offered
+   // to a model or not.
+   std::array<switch_row, tool_names.size()> fTools;
+@@ -412,6 +485,8 @@ struct settings_rows : scene::Node {
+     // it, and each of these says it is drawn when it is.
+     for (knob_row &one : fKnobs)
+       one.setVisible(false);
++    fThinking.setVisible(false);
++    fEffort.setVisible(false);
+     for (switch_row &one : fTools)
+       one.setVisible(false);
+     for (switch_row &one : fAnswerers)
+@@ -535,6 +610,21 @@ struct settings_rows : scene::Node {
+                                      const asking &how, float row_width,
+                                      float base) {
+     float at = base;
++    const auto row_at = [row_width](float y) {
++      return scene::Spec{.anchor = scene::anchor::kTopLeft,
++                         .x = 16.0f,
++                         .y = y,
++                         .relativeSize = scene::axes::kNone,
++                         .width = row_width,
++                         .height = settings_row_height,
++                         .cornerRadius = 14.0f,
++                         .visible = true};
++    };
++    fThinking.again(asked, row_at(at), look, "Think before answering",
++                    how.thinking, app::set_thinking{!how.thinking});
++    at += settings_row_stride;
++    fEffort.again(asked, row_at(at), look, how.how_hard);
++    at += settings_row_stride;
+     for (std::size_t one = 0u; one < asking_offered.size(); ++one) {
+       const asking_choice &said = asking_offered[one];
+       fKnobs[one].again(asked,
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index f325bf84..b233a5f1 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -4,6 +4,7 @@
+ # std and flags as the modules it reads -- one std BMI in the whole build.
+ #
+ #   pchat-core-test    the model: ids, conversations, messages
++#   pchat-config-test  what a room asks a model with: how hard it thinks
+ #   pchat-theme-test   the palette and what the looks give
+ #   pchat-logic-test   what the screens read out of the model
+ #   pchat-json-test    what comes off the wire, read into values and written back
+@@ -26,6 +27,7 @@ function(pchat_test name libraries)
+ endfunction()
+ 
+ pchat_test(core pchat_core)
++pchat_test(config pchat_core)
+ pchat_test(theme pchat_core)
+ pchat_test(logic pchat_core)
+ pchat_test(json pchat_json)
+diff --git a/test/config_test.cc b/test/config_test.cc
+new file mode 100644
+index 00000000..bd7d59f1
+--- /dev/null
++++ b/test/config_test.cc
+@@ -0,0 +1,53 @@
++module;
++#include "tests.h"
++export module pchat.test.config;
++// SPDX-License-Identifier: AGPL-3.0-only
++// What a room asks a model with: how hard it is asked to think, said where a
++// person reads it; one step either way along the four of them, kept inside
++// them at both ends; and what asking keeps when one of those is set in it.
++import std;
++import pchat.core;
++import pchat.config;
++
++using namespace pchat;
++
++SAID(config, how_hard_is_said_in_words_and_not_as_the_wire_takes_it) {
++  EXPECT_EQ(std::string(said_how(effort::least)), std::string("a little"));
++  EXPECT_EQ(std::string(said_how(effort::some)), std::string("some"));
++  EXPECT_EQ(std::string(said_how(effort::most)), std::string("much"));
++  EXPECT_EQ(std::string(said_how(effort::all)), std::string("all it has"));
++}
++
++SAID(config, a_step_along_the_four_stays_inside_them) {
++  EXPECT_EQ(stepped_of(effort::least, 1), effort::some);
++  EXPECT_EQ(stepped_of(effort::some, 1), effort::most);
++  EXPECT_EQ(stepped_of(effort::most, 1), effort::all);
++  // Past either end it stays at the end: four is all there is to walk.
++  EXPECT_EQ(stepped_of(effort::all, 1), effort::all);
++  EXPECT_EQ(stepped_of(effort::least, -1), effort::least);
++  EXPECT_EQ(stepped_of(effort::some, -1), effort::least);
++  EXPECT_EQ(stepped_of(effort::least, 9), effort::all);
++  EXPECT_EQ(stepped_of(effort::all, -9), effort::least);
++}
++
++SAID(config, thinking_set_in_what_is_asked_leaves_the_rest_alone) {
++  asking one{};
++  one.thinking = false;
++  one.how_hard = effort::least;
++  const asking said = set_of(one, true);
++  EXPECT_TRUE(said.thinking);
++  // What else it was asked -- including how hard -- stands as it stood.
++  EXPECT_EQ(said.how_hard, effort::least);
++  EXPECT_FALSE(set_of(set_of(one, true), false).thinking);
++}
++
++SAID(config, how_hard_set_in_what_is_asked_leaves_the_rest_alone) {
++  asking one{};
++  one.thinking = true;
++  const asking said = set_of(one, effort::most);
++  EXPECT_EQ(said.how_hard, effort::most);
++  EXPECT_TRUE(said.thinking);
++  EXPECT_FALSE(one.how_hard == effort::most);
++}
++
++int main() { return pchat::tests::run(); }

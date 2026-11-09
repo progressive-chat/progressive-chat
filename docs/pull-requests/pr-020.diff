@@ -1,0 +1,771 @@
+diff --git a/docs/PROTOCOL.md b/docs/PROTOCOL.md
+index bab6894c..a6611ecb 100644
+--- a/docs/PROTOCOL.md
++++ b/docs/PROTOCOL.md
+@@ -209,11 +209,13 @@ Where each of them comes from today:
+   whoever owns it -- here a small module of three questions, later a server
+   writing the rest of this client's back end, which answers through the same
+   `call_answered` and nothing else.
+-- One second provider's shape, and only one: Anthropic's frames are read
+-  through a folder of its own (`src/provider/anthropic`), and its bodies are
+-  written in its own words. Gemini's and a local Ollama's still arrive as
+-  chat -- the three names thought arrives under are gathered already, which
+-  is most of what differs.
++- Each provider's shape in a folder of its own: Anthropic's frames are read
++  through `src/provider/anthropic` and its bodies written in its own words,
++  and Gemini's the same way through `src/provider/gemini` -- contents of
++  parts, an instruction beside them, thinking as the budget it names, and a
++  call answered by the name it went out under. A local Ollama's still arrives
++  as chat -- the three names thought arrives under are gathered already,
++  which is most of what differs.
+ - No measuring of time inside a `run`: how long an answer took is given to it
+   when it is written into a message, because a clock is the program's and not
+   the protocol's.
+diff --git a/src/config.cc b/src/config.cc
+index 03973671..a3ab77af 100644
+--- a/src/config.cc
++++ b/src/config.cc
+@@ -259,13 +259,14 @@ struct answerer_choice {
+   std::string_view alias;
+   std::uint32_t window = 0;
+ };
+-inline constexpr std::array<answerer_choice, 6> answerers_offered{{
++inline constexpr std::array<answerer_choice, 7> answerers_offered{{
+     {"haiku-4", "Claude Haiku 4", "anthropic", 1'000'000},
+     {"sonnet-4", "Claude Sonnet 4", "anthropic", 1'000'000},
+     {"opus-4", "Claude Opus 4", "anthropic", 1'000'000},
+     {"o4-mini", "o4 Mini", "openai", 200'000},
+     {"local-8b", "Local 8B", "local", 32'000},
+     {"local-70b", "Local 70B", "local", 128'000},
++    {"gemini-2.5-flash", "Gemini2.5 Flash", "gemini", 1'048'576},
+ }};
+ 
+ // What one of them is called on the screen: the model as it is named, and the
+diff --git a/src/provider.cc b/src/provider.cc
+index 975c7237..2d436be0 100644
+--- a/src/provider.cc
++++ b/src/provider.cc
+@@ -91,13 +91,18 @@ struct endpoint {
+ // ends, the same way their own docs put it. A third shape is Anthropic's own,
+ // and no base ending says where that one is asked: the family does, named by
+ // the answerer the model is.
+-enum class wire { chat, responses, anthropic };
++enum class wire { chat, responses, anthropic, gemini };
+ 
+ [[nodiscard]] inline wire wire_of(const endpoint &one) {
+   // Who is asked speaks before the base's ending does: Anthropic's family
+   // keeps its own wire wherever its base stands, suffixes and all.
+   if (family_of(one.model) == "anthropic")
+     return wire::anthropic;
++  // The family before the base's ending here too: a base ending in /v1beta is
++  // OpenAI's words under a Google name, and which words the model reads is
++  // asked of the model and not of the base's suffix.
++  if (family_of(one.model) == "gemini")
++    return wire::gemini;
+   const std::string_view base(one.base);
+   if (base.ends_with("/v1beta") || base.ends_with("/responses"))
+     return wire::responses;
+@@ -112,11 +117,24 @@ enum class wire { chat, responses, anthropic };
+     return "/responses";
+   case wire::anthropic:
+     return "/messages";
++  case wire::gemini:
++    // The method is the path here, model and all: see url_of.
++    return "";
+   }
+   return "/chat/completions";
+ }
+ 
+ [[nodiscard]] inline std::string url_of(const endpoint &one) {
++  // Gemini's method carries the model inside it and asks for the answer as
++  // the stream of events it is made of: base, model, method, and the form
++  // that says the events are the stream and not one blob.
++  if (wire_of(one) == wire::gemini) {
++    std::string out = one.base;
++    out += "/models/";
++    out += one.model;
++    out += ":streamGenerateContent?alt=sse";
++    return out;
++  }
+   std::string out = one.base;
+   out += path_of(wire_of(one));
+   return out;
+@@ -136,6 +154,14 @@ headers_of(const endpoint &one) {
+     out.emplace_back("anthropic-version", "2023-06-01");
+     return out;
+   }
++  if (wire_of(one) == wire::gemini) {
++    // Where Google's own wire asks for the key: its header's own name and
++    // nothing beside it -- which version this wire is has gone into the base
++    // of its URL with its method.
++    if (!one.key.empty())
++      out.emplace_back("x-goog-api-key", one.key);
++    return out;
++  }
+   if (!one.key.empty())
+     out.emplace_back("Authorization", "Bearer " + one.key);
+   return out;
+@@ -302,6 +328,109 @@ template <std::ranges::forward_range Turns>
+   return out.take();
+ }
+ 
++// What a gemini wire wants said to it: the same things in its own words --
++// the turns as contents of parts, what it is told as a systemInstruction
++// beside them, and every choice an answer is made by under one
++// generationConfig of this wire's own naming (Gemini's generateContent body).
++// What this shape has no field for is not said: the penalties a chat wire
++// takes are not Google's, and thinking is a budget of tokens here -- named
++// in the thousands when the reader asked for thinking, and named zero when
++// they did not, because this wire thinks on by itself where no budget says
++// otherwise and this tree says otherwise.
++template <std::ranges::forward_range Turns>
++  requires std::same_as<std::ranges::range_value_t<Turns>, turn>
++[[nodiscard]] inline std::string gemini_body_of(const endpoint &one, Turns &&turns,
++                                                const wanted &wants = {}) {
++  json::writing out;
++  out.thing();
++  out.name("contents").list();
++  std::string system;
++  // What each call went out under, kept as it is answered: a functionResponse
++  // answers by the name of the call, and a turn carries only the id of the
++  // one it answers.
++  std::vector<std::pair<std::string, std::string>> asked;
++  for (const turn &said : turns) {
++    if (said.who == role::system) {
++      if (!system.empty())
++        system += "\n\n";
++      system += said.text;
++      continue;
++    }
++    for (const tool_call &call : said.calls)
++      asked.emplace_back(call.id, call.name);
++    // What a person wrote is a user's and what the model answered is a
++    // model's; an answer to a call goes back as a user's part against the
++    // call it answers, which is this wire's own word for it.
++    const std::string_view speaks =
++        said.who == role::assistant ? "model" : std::string_view("user");
++    out.thing().name("role").text(speaks).name("parts").list();
++    if (said.who == role::tool && !said.own.empty()) {
++      std::string called = said.own;
++      for (const auto &[id, name] : asked)
++        if (id == said.own)
++          called = name;
++      out.thing().name("functionResponse").thing().name("name").text(called);
++      out.name("response").thing().name("result").text(said.text).shut();
++      out.shut().shut();
++    } else if (!said.calls.empty()) {
++      if (!said.text.empty())
++        out.thing().name("text").text(said.text).shut();
++      for (const tool_call &call : said.calls) {
++        out.thing().name("functionCall").thing().name("name").text(call.name);
++        out.name("args").raw(call.arguments.empty() ? "{}" : call.arguments);
++        out.shut().shut();
++      }
++    } else {
++      out.thing().name("text").text(said.text).shut();
++    }
++    out.shut();
++    out.shut();
++  }
++  out.shut();
++  if (!system.empty()) {
++    out.name("systemInstruction").thing();
++    out.name("parts").list();
++    out.thing().name("text").text(system).shut();
++    out.shut();
++    out.shut();
++  }
++  out.name("generationConfig").thing();
++  if (wants.temperature)
++    out.name("temperature").number(*wants.temperature);
++  if (wants.top_p)
++    out.name("topP").number(*wants.top_p);
++  if (wants.max_tokens)
++    out.name("maxOutputTokens").number(static_cast<std::int64_t>(*wants.max_tokens));
++  out.name("thinkingConfig").thing();
++  out.name("thinkingBudget").number(static_cast<std::int64_t>(wants.thinking ? 8192 : 0));
++  out.shut();
++  out.shut();
++  if (!wants.tools.empty()) {
++    out.name("tools").list();
++    out.thing().name("functionDeclarations").list();
++    for (const offered &one_tool : wants.tools) {
++      out.thing();
++      out.name("name").text(one_tool.name);
++      out.name("description").text(one_tool.told);
++      out.name("parameters").thing().name("type").text("object");
++      out.name("properties").thing();
++      for (const auto &[takes, said] : one_tool.taken)
++        out.name(takes).thing().name("type").text("string").name("description").text(said).shut();
++      out.shut();
++      out.name("required").list();
++      for (const auto &[takes, said] : one_tool.taken)
++        out.text(takes);
++      out.shut();
++      out.shut().shut();
++    }
++    out.shut();
++    out.shut();
++    out.shut();
++  }
++  out.shut();
++  return out.take();
++}
++
+ // What a chat wire wants said to it: the model, that it is asked to stream,
+ // the turns, and that it says what it cost at the end of the stream and not
+ // only in the answer no stream gives.
+@@ -313,6 +442,10 @@ template <std::ranges::forward_range Turns>
+   // words instead, they are what go out.
+   if (wire_of(one) == wire::anthropic)
+     return anthropic_body_of(one, turns, wants);
++  // And where it asks for Google's: the same things again, said the way
++  // generateContent reads them.
++  if (wire_of(one) == wire::gemini)
++    return gemini_body_of(one, turns, wants);
+   json::writing out;
+   out.thing();
+   out.name("model").text(one.model);
+diff --git a/src/provider/gemini/CMakeLists.txt b/src/provider/gemini/CMakeLists.txt
+new file mode 100644
+index 00000000..01220696
+--- /dev/null
++++ b/src/provider/gemini/CMakeLists.txt
+@@ -0,0 +1,5 @@
++# SPDX-License-Identifier: AGPL-3.0-only
++# The gemini wire's own parts: what decodes its frames, compiled as classic
++# code and reached from the composed modules through the one header in this
++# folder (see cmake/providers.cmake).
++target_sources(pchat_provider PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/wire.cpp)
+diff --git a/src/provider/gemini/wire.cpp b/src/provider/gemini/wire.cpp
+new file mode 100644
+index 00000000..8d0fc0d4
+--- /dev/null
++++ b/src/provider/gemini/wire.cpp
+@@ -0,0 +1,129 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// The gemini wire's own parts: Agora's router behind the plain types the
++// modules name. One payload of one frame goes in; what the wire's events
++// decided comes out in the words pchat says every wire's frames in -- and the
++// router, its response types and their JSON stay on this side of wire.h, so a
++// module unit never sees them.
++#include "wire.h"
++
++#include <variant>
++
++#include "agora/core/gemini_stream.hpp"
++#include "agora/core/stream_normalization.hpp"
++
++namespace pchat::provider {
++namespace {
++
++namespace gs = agora::core::gemini_stream;
++namespace sn = agora::core::stream_normalization;
++
++// The reader: the wire's own router, and whether it has already said the end
++// or the failure of the stream (the router holds both as state, and emits
++// neither by itself).
++struct router_box {
++  gs::GeminiStreamRouter router;
++  bool ended_emitted = false;
++  bool failed_emitted = false;
++  router_box() : router([] { return sn::random_uuid_v4(); }, "Gemini") {}
++};
++
++// What a failure says where a screen reads why an answer failed: the message
++// the wire carried, in its own words. The same shapes of failure the other
++// wires' routers carry, so both folders speak them alike.
++std::string error_text(const sn::GenerationError &error) {
++  if (const auto *api = std::get_if<sn::ErrorApi>(&error))
++    return api->message;
++  if (const auto *network = std::get_if<sn::ErrorNetwork>(&error))
++    return network->message;
++  if (const auto *sse = std::get_if<sn::ErrorSseParse>(&error))
++    return sse->cause;
++  if (const auto *bad_call = std::get_if<sn::ErrorMalformedToolCall>(&error))
++    return bad_call->cause;
++  if (std::holds_alternative<sn::ErrorTimeout>(error))
++    return "the answer timed out";
++  return "the wire stopped the answer";
++}
++
++// One event of the wire, in the frames this folder hands over. A tool call is
++// only said whole, the router having gathered its pieces; Gemini gives a call
++// a name and no id, and the empty id is the honest thing to hand on. What the
++// hosted calls and the citations say is display material for a screen that has
++// none here yet.
++void frame_of(const gs::StreamEvent &event, std::vector<gemini_frame> &out) {
++  using frame = gemini_frame;
++  if (const auto *text = std::get_if<sn::TextChunk>(&event)) {
++    out.push_back(frame{.what = frame::kind::text, .said = text->text});
++  } else if (const auto *thought = std::get_if<sn::ThoughtChunk>(&event)) {
++    out.push_back(frame{.what = frame::kind::thought, .said = thought->thought});
++  } else if (const auto *usage = std::get_if<gs::UsageUpdate>(&event)) {
++    // The wire counts in ints and can leave one out; a count of tokens held as
++    // unsigned stops at zero, as the counters elsewhere do.
++    const int input = usage->usage.input_token_count.value_or(0);
++    const int output = usage->usage.output_token_count.value_or(0);
++    out.push_back(frame{.what = frame::kind::usage,
++                        .used_in = static_cast<std::uint32_t>(input > 0 ? input : 0),
++                        .used_out = static_cast<std::uint32_t>(output > 0 ? output : 0)});
++  } else if (const auto *call = std::get_if<sn::ToolCallRequest>(&event)) {
++    out.push_back(frame{.what = frame::kind::tool,
++                        .call_id = call->id,
++                        .call_name = call->name,
++                        .call_arguments = call->arguments});
++  }
++  // sn::ToolCallUpdate, sn::HostedToolCallUpdate, gs::CitationUpdate: nothing
++  // to say here yet.
++}
++
++}  // namespace
++
++gemini_state *gemini_open() {
++  gemini_state *state = new gemini_state();
++  state->router = new router_box();
++  return state;
++}
++
++void gemini_close(gemini_state *state) {
++  if (!state)
++    return;
++  delete static_cast<router_box *>(state->router);
++  delete state;
++}
++
++std::vector<gemini_frame> gemini_step(gemini_state *state, std::string_view payload) {
++  using frame = gemini_frame;
++  std::vector<gemini_frame> out;
++  if (state == nullptr || state->router == nullptr)
++    return out;
++  router_box &reader = *static_cast<router_box *>(state->router);
++  gs::DecodeFailure failure;
++  const std::optional<gs::ApiStreamResponse> decoded =
++      gs::decode_api_stream_response(payload, &failure);
++  if (!decoded) {
++    // What the router keeps of a line its events would not read: said as the
++    // failure it is, once, in the words the wire gave it.
++    reader.router.capture_parse_error(payload, failure.message);
++    if (reader.router.stream_error && !reader.failed_emitted) {
++      reader.failed_emitted = true;
++      out.push_back(frame{.what = frame::kind::failed,
++                          .said = error_text(*reader.router.stream_error)});
++    }
++    return out;
++  }
++  for (const gs::StreamEvent &event : reader.router.route(*decoded))
++    frame_of(event, out);
++  // A failure ends the reading of the stream here: nothing after it is an
++  // answer, and the end the wire may still name is not one worth saying.
++  if (reader.router.stream_error && !reader.failed_emitted) {
++    reader.failed_emitted = true;
++    out.push_back(frame{.what = frame::kind::failed,
++                        .said = error_text(*reader.router.stream_error)});
++    return out;
++  }
++  if (reader.router.saw_done && !reader.ended_emitted) {
++    reader.ended_emitted = true;
++    out.push_back(frame{.what = frame::kind::ended,
++                        .finish = reader.router.finish_reason.value_or("stop")});
++  }
++  return out;
++}
++
++}  // namespace pchat::provider
+diff --git a/src/provider/gemini/wire.h b/src/provider/gemini/wire.h
+new file mode 100644
+index 00000000..e3b712aa
+--- /dev/null
++++ b/src/provider/gemini/wire.h
+@@ -0,0 +1,54 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// The gemini wire's own parts, said across the one line a module unit and a
++// classic translation unit may share: the frames its stream decodes into and
++// the reader that turns one payload of them into them.
++//
++// Agora's router stands behind this file (ports/agora-core); its headers stay
++// on the classic side entirely. What crosses into a module unit is only these
++// plain types -- std includes in a global module fragment are what every test
++// unit in this tree already does with tests.h.
++#ifndef PCHAT_PROVIDER_GEMINI_WIRE_H
++#define PCHAT_PROVIDER_GEMINI_WIRE_H
++
++#include <cstdint>
++#include <string>
++#include <string_view>
++#include <vector>
++
++namespace pchat::provider {
++
++// One decoded frame of a gemini answer: text or thought as it arrives, a tool
++// call whole, what it cost with input and output kept apart, why it stopped, or
++// why it failed -- the same seven things every wire's frames say here, in the
++// words the reader already knows.
++struct gemini_frame {
++  enum class kind { text, thought, tool, usage, ended, failed } what = kind::text;
++  // The piece of text or of thought, or -- where it failed -- why.
++  std::string said;
++  // Gemini names a call where Anthropic gives it an id: an id is left empty
++  // here rather than invented, and the name and its arguments stand alone.
++  std::string call_id;
++  std::string call_name;
++  std::string call_arguments;
++  std::uint32_t used_in = 0;
++  std::uint32_t used_out = 0;
++  // Why it stopped, as the wire said it: empty only where it did not say.
++  std::string finish;
++};
++
++// The reader, one per stream: the wire's own router held behind a pointer so
++// that this header stays something a module unit may name.
++struct gemini_state {
++  void *router = nullptr;
++};
++
++gemini_state *gemini_open();
++void gemini_close(gemini_state *state);
++
++// One payload -- whatever the `data:` lines of one frame said -- read whole:
++// what the wire's events decided, and the end of it where it said there was one.
++std::vector<gemini_frame> gemini_step(gemini_state *state, std::string_view payload);
++
++}  // namespace pchat::provider
++
++#endif  // PCHAT_PROVIDER_GEMINI_WIRE_H
+diff --git a/src/provider/stream.cc b/src/provider/stream.cc
+index f9d2f3fa..0d8df1ad 100644
+--- a/src/provider/stream.cc
++++ b/src/provider/stream.cc
+@@ -10,6 +10,7 @@
+ // reads an answer.
+ module;
+ #include "anthropic/wire.h"
++#include "gemini/wire.h"
+ 
+ export module pchat.provider.stream;
+ 
+@@ -39,6 +40,8 @@ class stream {
+   explicit stream(wire of = wire::chat) : wire_(of) {
+     if (of == wire::anthropic)
+       wire_state_.reset(anthropic_open());
++    if (of == wire::gemini)
++      gemini_state_.reset(gemini_open());
+   }
+ 
+   // A piece of the wire, in whatever sizes the transport hands it over in: a
+@@ -55,7 +58,9 @@ class stream {
+         one.pop_back();
+       if (wire_ == wire::anthropic)
+         anthropic_line(one);
+-      else
++        else if (wire_ == wire::gemini)
++          gemini_line(one);
++        else
+         line_said(one);
+     }
+   }
+@@ -143,7 +148,73 @@ class stream {
+     }
+   }
+ 
+-  // One line of SSE: a comment, a field, or the blank line that ends a frame.
++// One line of gemini's SSE: the framing the shaped wire beside it reads --
++    // data, blank line, next frame -- with the payload whole at the blank that
++    // ends it, as the other shaped wire reads it too.
++    void gemini_line(const std::string &one) {
++      if (one.empty()) {
++        if (wire_payload_.empty())
++          return;
++        const std::vector<gemini_frame> came = gemini_step(gemini_state_.get(), wire_payload_);
++        wire_payload_.clear();
++        for (const gemini_frame &frame : came)
++          gemini_said(frame);
++        return;
++      }
++      if (one.front() == ':')
++        return;
++      if (!one.starts_with("data:"))
++        return; // event:, id:, retry: -- the payload says its own type
++      std::string_view data(one);
++      data.remove_prefix(5);
++      if (!data.empty() && data.front() == ' ')
++        data.remove_prefix(1);
++      if (!wire_payload_.empty())
++        wire_payload_.push_back('\n');
++      wire_payload_.append(data);
++    }
++
++    // One decoded frame said the way everything here is said: into the same
++    // accumulators every other wire fills, so nothing reading an answer can
++    // tell which of the three shapes it arrived in. A gemini call comes whole
++    // with a name and no id, and the id stays empty rather than invented.
++    void gemini_said(const gemini_frame &one) {
++      switch (one.what) {
++      case gemini_frame::kind::text:
++        answer_said(one.said);
++        return;
++      case gemini_frame::kind::thought:
++        thought_said(one.said);
++        return;
++      case gemini_frame::kind::tool: {
++        const tool_call call{
++            .id = one.call_id, .name = one.call_name, .arguments = one.call_arguments};
++        calls_.push_back(call);
++        said_.push_back(event{.what = event::kind::tool, .call = call});
++        return;
++      }
++      case gemini_frame::kind::usage:
++        cost_.in = one.used_in;
++        cost_.out = one.used_out;
++        said_.push_back(event{.what = event::kind::usage, .cost = cost_});
++        return;
++      case gemini_frame::kind::ended:
++        content_ended();
++        if (ended_)
++          return;
++        finish_ = one.finish.empty() ? std::string("stop") : one.finish;
++        ended_ = true;
++        said_.push_back(event{.what = event::kind::ended, .finish = finish_});
++        return;
++      case gemini_frame::kind::failed:
++        failed_ = true;
++        failure_ = one.said;
++        said_.push_back(event{.what = event::kind::failed, .said = failure_});
++        return;
++      }
++    }
++
++      // One line of SSE: a comment, a field, or the blank line that ends a frame.
+   void line_said(const std::string &one) {
+     if (one.empty() || one.front() == ':')
+       return;
+@@ -572,6 +643,8 @@ class stream {
+   wire wire_ = wire::chat;
+   std::unique_ptr<anthropic_state, void (*)(anthropic_state *)> wire_state_{nullptr,
+                                                                             &anthropic_close};
++    std::unique_ptr<gemini_state, void (*)(gemini_state *)> gemini_state_{nullptr,
++                                                                          &gemini_close};
+   std::string wire_payload_;
+   // What the thinking lexer holds: a beginning of a tag it has not settled
+   // yet, whether it is reading thought at this moment, and which tag is to
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index f325bf84..992dda9a 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -33,6 +33,7 @@ pchat_test(provider pchat_provider)
+ pchat_test(provider_run pchat_provider)
+ pchat_test(provider_loop pchat_provider)
+ pchat_test(provider_anthropic pchat_provider)
++pchat_test(provider_gemini pchat_provider)
+ pchat_test(tools pchat_tools)
+ pchat_test(tokens pchat_core pchat_json)
+ # The reference every entry of the carried vocabulary is measured against: read
+diff --git a/test/provider_gemini_test.cc b/test/provider_gemini_test.cc
+new file mode 100644
+index 00000000..13a41797
+--- /dev/null
++++ b/test/provider_gemini_test.cc
+@@ -0,0 +1,203 @@
++module;
++#include "tests.h"
++export module pchat.test.provider_gemini;
++// SPDX-License-Identifier: AGPL-3.0-only
++// What the gemini wire's frames and bodies say through the folder that reads
++// them: an answer's SSE -- a thought, a text, a whole tool call, what it cost
++// and why it stopped -- a failure the wire reports inside the stream, and a
++// body read back to the shape generateContent writes, part by part.
++import std;
++import pchat.json;
++import pchat.provider;
++import pchat.provider.stream;
++
++namespace {
++
++using pchat::provider::endpoint;
++using pchat::provider::event;
++using pchat::provider::role;
++using pchat::provider::stream;
++using pchat::provider::turn;
++using pchat::provider::wanted;
++using pchat::provider::wire;
++
++// One answer's bytes as gemini writes them over alt=sse: a data line per
++// event, a blank line between them, the thought before the answer as this
++// wire's own part of it, and the cost beside the reason it stopped on the
++// frame that ends it.
++[[nodiscard]] std::string answer_bytes() {
++  static constexpr std::array<std::string_view, 3> frames = {
++      R"(data: {"candidates":[{"content":{"role":"model","parts":[{"thought":"hmm."}]}}]})",
++      R"(data: {"candidates":[{"content":{"role":"model","parts":[{"text":"The answer."}]}}]})",
++      R"(data: {"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_time","args":{"city":"Rome"}}}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":7,"candidatesTokenCount":12}})",
++  };
++  std::string out;
++  for (const std::string_view frame : frames) {
++    out.append(frame);
++    out.append("\n\n");
++  }
++  return out;
++}
++
++}  // namespace
++
++SAID(gemini, one_answer_is_read_in_the_words_every_wire_uses) {
++  stream one{wire::gemini};
++  one.feed(answer_bytes());
++
++  EXPECT_FALSE(one.failed());
++  EXPECT_EQ(std::string(one.text()), std::string("The answer."));
++  EXPECT_EQ(std::string(one.thought()), std::string("hmm."));
++  EXPECT_TRUE(one.ended());
++  EXPECT_EQ(std::string(one.finish()), std::string("stop"));
++  EXPECT_EQ(one.cost().in, 7u);
++  EXPECT_EQ(one.cost().out, 12u);
++  EXPECT_EQ(one.calls().size(), std::size_t{1});
++  if (!one.calls().empty()) {
++    // Gemini gives a call a name and no id: the id is empty rather than
++    // invented, and what it is called and with what stands alone.
++    EXPECT_EQ(one.calls()[0].id, std::string(""));
++    EXPECT_EQ(one.calls()[0].name, std::string("get_time"));
++    EXPECT_EQ(one.calls()[0].arguments, std::string("{\"city\":\"Rome\"}"));
++  }
++
++  // Every kind of frame the answer held was said into the same queue the chat
++  // wire fills, in the order it arrived.
++  bool saw_text = false;
++  bool saw_tool = false;
++  bool saw_usage = false;
++  bool saw_ended = false;
++  for (const event &frame : one.take()) {
++    saw_text = saw_text || frame.what == event::kind::text;
++    saw_tool = saw_tool || frame.what == event::kind::tool;
++    saw_usage = saw_usage || frame.what == event::kind::usage;
++    saw_ended = saw_ended || frame.what == event::kind::ended;
++  }
++  EXPECT_TRUE(saw_text);
++  EXPECT_TRUE(saw_tool);
++  EXPECT_TRUE(saw_usage);
++  EXPECT_TRUE(saw_ended);
++}
++
++SAID(gemini, a_failure_the_wire_reports_inside_the_stream_says_why) {
++  stream one{wire::gemini};
++  one.feed(R"(data: {"error":{"code":429,"message":"quota exceeded","status":"RESOURCE_EXHAUSTED"}})"
++           "\n\n");
++  EXPECT_TRUE(one.failed());
++  EXPECT_TRUE(std::string(one.why()).find("quota exceeded") != std::string::npos);
++}
++
++SAID(gemini, a_body_is_written_the_way_generateContent_reads_it) {
++  const endpoint one{.base = "https://generativelanguage.googleapis.com/v1beta",
++                     .key = "test-key",
++                     .model = "gemini-2.5-flash",
++                     .told = "Answer shortly."};
++  const std::vector<turn> turns{
++      {.who = role::user, .text = "Two eggs?"},
++      {.who = role::assistant,
++       .text = "Then scramble.",
++       .calls = {pchat::provider::tool_call{
++           .id = "call_1", .name = "get_time", .arguments = R"({"city":"Rome"})"}}},
++      {.who = role::tool, .own = "call_1", .text = "noon"},
++      {.who = role::user, .text = "Thanks."},
++  };
++  const wanted says{.stream = true,
++                    .thinking = true,
++                    .temperature = 0.5,
++                    .tools = {pchat::provider::offered{
++                        "get_time", "Say what time it is",
++                        {{"city", "The city the time is for"}}}}};
++  const std::string body = pchat::provider::gemini_body_of(one, turns, says);
++
++  auto whole = pchat::json::read(body);
++  EXPECT_TRUE(static_cast<bool>(whole));
++  if (!whole)
++    return;
++  const auto *root = &*whole;
++
++  // What it is told stands as an instruction of its own, not as a turn.
++  const auto *told = pchat::json::said(root, "systemInstruction");
++  EXPECT_TRUE(told != nullptr);
++  if (told) {
++    const auto *parts = pchat::json::said(pchat::json::said(told, "parts"), 0);
++    EXPECT_TRUE(parts != nullptr);
++    if (parts)
++      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(parts, "text")).value_or("")),
++                std::string("Answer shortly."));
++  }
++
++  // Every turn as contents: what a person wrote, what the model answered with
++  // its call beside its text, the answer to that call, and the last word.
++  const auto *contents = pchat::json::said(root, "contents");
++  EXPECT_TRUE(contents != nullptr);
++  if (contents) {
++    const auto *first = pchat::json::said(contents, 0);
++    EXPECT_TRUE(first != nullptr);
++    if (first) {
++      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(first, "role")).value_or("")), std::string("user"));
++      const auto *first_part = pchat::json::said(pchat::json::said(first, "parts"), 0);
++      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(first_part, "text")).value_or("")),
++                std::string("Two eggs?"));
++    }
++
++    const auto *second = pchat::json::said(contents, 1);
++    EXPECT_TRUE(second != nullptr);
++    if (second) {
++      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(second, "role")).value_or("")), std::string("model"));
++      const auto *called = pchat::json::said(pchat::json::said(pchat::json::said(second, "parts"), 1), "functionCall");
++      EXPECT_TRUE(called != nullptr);
++      if (called)
++        EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(called, "name")).value_or("")),
++                  std::string("get_time"));
++    }
++
++    // The answer to the call goes back as a user's part, against the name the
++    // call went out under and not the id only this tree keeps.
++    const auto *third = pchat::json::said(contents, 2);
++    EXPECT_TRUE(third != nullptr);
++    if (third) {
++      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(third, "role")).value_or("")), std::string("user"));
++      const auto *answered = pchat::json::said(pchat::json::said(pchat::json::said(third, "parts"), 0), "functionResponse");
++      EXPECT_TRUE(answered != nullptr);
++      if (answered) {
++        EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(answered, "name")).value_or("")),
++                  std::string("get_time"));
++        const auto *response = pchat::json::said(answered, "response");
++        EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(response, "result")).value_or("")),
++                  std::string("noon"));
++      }
++    }
++    EXPECT_TRUE(pchat::json::said(contents, 3) != nullptr);
++  }
++
++  // The choices an answer is made by under one config, and thinking as a
++  // budget of tokens: thousands when the reader asked for it.
++  const auto *config = pchat::json::said(root, "generationConfig");
++  EXPECT_TRUE(config != nullptr);
++  if (config) {
++    const auto *heat = pchat::json::said(config, "temperature");
++    EXPECT_TRUE(heat != nullptr);
++    if (heat)
++      EXPECT_EQ(*pchat::json::number_of(*heat), 0.5);
++    const auto *thinking = pchat::json::said(config, "thinkingConfig");
++    EXPECT_TRUE(thinking != nullptr);
++    if (thinking)
++      EXPECT_EQ(*pchat::json::number_of(*pchat::json::said(thinking, "thinkingBudget")), 8192.0);
++  }
++
++  // A tool as this wire reads it: one declaration, one question.
++  const auto *tools = pchat::json::said(root, "tools");
++  EXPECT_TRUE(tools != nullptr);
++  if (tools) {
++    const auto *decl = pchat::json::said(pchat::json::said(pchat::json::said(tools, 0), "functionDeclarations"), 0);
++    EXPECT_TRUE(decl != nullptr);
++    if (decl) {
++      EXPECT_EQ(std::string(pchat::json::text_of(*pchat::json::said(decl, "name")).value_or("")),
++                std::string("get_time"));
++      const auto *takes = pchat::json::said(pchat::json::said(pchat::json::said(decl, "parameters"), "properties"), "city");
++      EXPECT_TRUE(takes != nullptr);
++    }
++  }
++}
++
++int main() { return pchat::tests::run(); }

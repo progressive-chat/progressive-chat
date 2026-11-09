@@ -1,0 +1,515 @@
+diff --git a/design-doc.md b/design-doc.md
+index 682408d6..22af5bd7 100644
+--- a/design-doc.md
++++ b/design-doc.md
+@@ -110,10 +110,13 @@ in the panel is a plus:
+   beside it says the same count in words again: what one conversation has used
+   of one window is said once on the screen and not once for every model that
+   answers in it.
+-* **Three dots after the circle** open one menu, and in it: **thinking**,
+-  switched on and off, with **how hard it is asked to think** said beside it
+-  (`max`); **web search**, switched on and off; **compact context**, which is a
+-  grey press and nothing else while the chat is empty; and **Advanced**.
++* **Three dots after the circle** open one menu above the card, and in it:
++  **thinking**, switched on and off, with what it stands at said beside it;
++  **how hard it thinks**, one press round the four it keeps to and back again
++  at the least of them; and **Advanced**, which is the large settings. Two of
++  the menu's four are not drawn yet: **web search** and **compact context**,
++  neither of them answered by anything here, and neither of them drawn as a
++  row that would do nothing.
+ * **Advanced** opens the **large settings**: the **context window size**, the
+   **temperature**, the **maximum output tokens**, the **top p**, the
+   **frequency penalty** and the **presence penalty** — the same five the
+diff --git a/src/app/requests.cc b/src/app/requests.cc
+index cc273208..c32bcf4e 100644
+--- a/src/app/requests.cc
++++ b/src/app/requests.cc
+@@ -111,6 +111,19 @@ struct set_generation {
+   asking_what field = asking_what::temperature;
+   double value = 0.0;
+ };
++// The three dots beside the answerer's circle, opened or closed: the menu of
++// what the next answer is asked with (design-doc.md, "The foot"). It is this
++// card's own, and stands over nothing else in the window.
++struct toggle_thinking {};
++// Thinking before an answer, and how hard it is to think: the first two of
++// the things a three-dot menu says (design-doc.md, "The editor's row"), read
++// into what every wire is asked for from then on.
++struct set_thinking {
++  bool on = false;
++};
++struct set_effort {
++  effort how = effort::some;
++};
+ // One of the tools this program owns, switched: on, and a model is told it
+ // may ask for it; off, and no answer this program writes mentions it.
+ struct set_tool {
+@@ -135,7 +148,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
+                              close_system_prompt, set_system_prompt,
+                              toggle_more, open_design, close_design,
+                              pick_seed, set_amoled, set_font_scale, pick_theme,
+-                              set_generation, set_tool,
++                              set_generation, set_thinking, set_effort, set_tool,
++                             toggle_thinking,
+                               set_answerer, copy_text>;
+ 
+ class requests {
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index 1e28d781..e02c947d 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -60,6 +60,10 @@ class screens {
+                 drawer_ = false;
+             },
+             [&](const send_message &asking) {
++              // What the next answer is asked with is asked before the
++              // message is sent, and so the three dots are put away with
++              // it rather than left open over what is coming.
++              thinking_menu_ = false;
+               const logic::sent_message said = logic::send(
+                   logic::sending_request{
+                       asking.chat, asking.text, {}, std::nullopt},
+@@ -127,7 +131,10 @@ class screens {
+             [&](const delete_answer &asking) { cut_away(asking.said); },
+             [&](const set_query &asking) { query_ = asking.text; },
+             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+-            [&](const open_settings &) { settings_ = true; },
++            [&](const open_settings &) {
++              settings_ = true;
++              thinking_menu_ = false;
++            },
+             [&](const close_settings &) { settings_ = false; },
+             [&](const fork_conversation &asking) {
+               conversation *said = nullptr;
+@@ -225,6 +232,12 @@ class screens {
+             // pressed for, kept inside the lines it is said to have
+             // (pchat.config, `asking`).
+             [&](const set_generation &asking) { how(asking.field, asking.value); },
++            // Thinking switched, and how hard it is to think: carried into the
++            // asking every answer made from now on is written with, and so
++            // into every body sent for one.
++            [&](const toggle_thinking &) { thinking_menu_ = !thinking_menu_; },
++            [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
++            [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
+             // A tool switched: one of the three this program owns, and what
+             // it is switched to.
+             [&](const set_tool &asking) {
+@@ -258,8 +271,8 @@ class screens {
+       take(one);
+     read_what_arrived();
+     scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
+-                        design_, system_, more_, drawer_, width_, height_,
+-                        &asked_);
++                        design_, system_, more_, drawer_, thinking_menu_,
++                        width_, height_, &asked_);
+   }
+ 
+   [[nodiscard]] chats_root &root() noexcept { return root_; }
+@@ -564,6 +577,10 @@ class screens {
+   // Whether what stands behind the three dots is out: put away again by one
+   // press of anything it holds, or of the dots themselves.
+   bool more_ = false;
++  // Whether the three dots beside the circle are open: said to the window
++  // and to nothing else, because it is the composer's own menu and not a
++  // page.
++  bool thinking_menu_ = false;
+   moment said_count_ = 1;
+   std::size_t chat_count_ = 0;
+ 
+diff --git a/src/config.cc b/src/config.cc
+index 49b0dd71..5cc8a662 100644
+--- a/src/config.cc
++++ b/src/config.cc
+@@ -59,6 +59,33 @@ inline constexpr std::size_t tools_owned = 3u;
+ // Said once here and written as each family names it by pchat.provider.
+ enum class effort { least, some, most, all };
+ 
++// What each of the four is called where a person reads it, and not where a
++// wire takes it: the row that says where thinking stands.
++[[nodiscard]] inline std::string_view said_how(effort one) {
++  switch (one) {
++  case effort::least:
++    return "a little";
++  case effort::some:
++    return "some";
++  case effort::most:
++    return "much";
++  case effort::all:
++    break;
++  }
++  return "all it has";
++}
++
++// One step either way round the four, stopped at either end: what a press on
++// either side of that row asks for.
++[[nodiscard]] constexpr effort stepped_of(effort one, int by) {
++  const int at = static_cast<int>(one) + by;
++  if (at <= static_cast<int>(effort::least))
++    return effort::least;
++  if (at >= static_cast<int>(effort::all))
++    return effort::all;
++  return static_cast<effort>(at);
++}
++
+ [[nodiscard]] inline std::string_view said_by(effort one) {
+   switch (one) {
+   case effort::least:
+@@ -166,6 +193,20 @@ struct asking_range {
+   return out;
+ }
+ 
++// The same, with whether a model thinks at all and how hard: what the three
++// dots above an answer say (design-doc.md, "The editor's row"), and what
++// every body written after it is then asked with (pchat.provider).
++[[nodiscard]] constexpr asking set_of(const asking &one, bool thinking) {
++  asking out = one;
++  out.thinking = thinking;
++  return out;
++}
++[[nodiscard]] constexpr asking set_of(const asking &one, effort how_hard) {
++  asking out = one;
++  out.how_hard = how_hard;
++  return out;
++}
++
+ // The same, with one of them moved: what a row's press either side of one
+ // asks for, kept inside the lines that one has.
+ [[nodiscard]] constexpr asking set_of(const asking &one, asking_what field,
+diff --git a/src/ui/composer.cc b/src/ui/composer.cc
+index d3ac7c17..7f2f25d3 100644
+--- a/src/ui/composer.cc
++++ b/src/ui/composer.cc
+@@ -53,12 +53,126 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
+   return out;
+ }
+ 
++// The three dots beside the answerer's circle, and the one menu they open:
++// what the next answer is asked with, said where it is asked about and not
++// on a page of its own. Thinking, switched, and beside it how hard it is
++// asked to think; and Advanced, which is the large settings said whole
++// (design-doc.md, "The foot"). What this program does not answer yet --
++// looking something up on the web, making what has been said shorter --
++// stands in this menu when it answers it, and not as a row that does
++// nothing.
++inline constexpr float thinking_menu_width = 232.0f;
++inline constexpr float thinking_menu_row = 34.0f;
++inline constexpr float thinking_menu_rows = 3.0f;
++
++struct thinking_menu : scene::Node {
++  nodes::Box<> fPlate{0u};
++  ask_box fThinkingPlate{};
++  nodes::Text fThinkingName{"Thinking", 13.0f, 0u};
++  nodes::Text fThinkingNow{"", 13.0f, 0u};
++  ask_box fHardPlate{};
++  nodes::Text fHardName{"How hard it thinks", 13.0f, 0u};
++  nodes::Text fHardNow{"", 13.0f, 0u};
++  ask_box fAdvancedPlate{};
++  nodes::Text fAdvancedName{"Advanced", 13.0f, 0u};
++
++  thinking_menu() {
++    this->apply({.anchor = scene::anchor::kTopRight,
++                 .origin = scene::anchor::kBottomRight,
++                 .x = -(edge + 13.0f),
++                 .y = -6.0f,
++                 .relativeSize = scene::axes::kNone,
++                 .width = thinking_menu_width,
++                 .height = thinking_menu_rows * thinking_menu_row + 12.0f,
++                 .cornerRadius = card_radius,
++                 .visible = false});
++    fPlate.apply({.fill = true});
++    // Three rows, one above the next, and each of them the whole width of
++    // the menu: what a press is said of is the row it stands in.
++    const float wide = thinking_menu_width - 16.0f;
++    fThinkingPlate.apply(row_spec(8.0f, wide));
++    fHardPlate.apply(row_spec(8.0f + thinking_menu_row, wide));
++    fAdvancedPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
++    fThinkingName.apply(name_spec(8.0f));
++    fThinkingNow.apply(value_spec(8.0f));
++    fHardName.apply(name_spec(8.0f + thinking_menu_row));
++    fHardNow.apply(value_spec(8.0f + thinking_menu_row));
++    fAdvancedName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
++  }
++
++  void again(app::requests *sink, const paints &look, const asking &how,
++             bool open) {
++    this->setVisible(open);
++    if (!open)
++      return;
++    fPlate.setColour(look.card);
++    fThinkingPlate.again(sink, app::set_thinking{!how.thinking}, look.raised);
++    fThinkingName.setColour(look.text);
++    fThinkingNow.setText(how.thinking ? "on" : "off");
++    fThinkingNow.setColour(look.dim);
++    // Round the four and back again at the top: how hard is said beside the
++    // row it stands in, and a press on either walks it on one.
++    const effort next = how.how_hard == effort::all ? effort::least
++                                                    : stepped_of(how.how_hard, 1);
++    fHardPlate.again(sink, app::set_effort{next}, look.raised);
++    fHardName.setColour(look.text);
++    fHardNow.setText(std::string(said_how(how.how_hard)));
++    fHardNow.setColour(look.dim);
++    fAdvancedPlate.again(sink, app::open_settings{}, look.raised);
++    fAdvancedName.setColour(look.text);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fThinkingPlate);
++    f(fThinkingName);
++    f(fThinkingNow);
++    f(fHardPlate);
++    f(fHardName);
++    f(fHardNow);
++    f(fAdvancedPlate);
++    f(fAdvancedName);
++  }
++
++private:
++  [[nodiscard]] static scene::Spec row_spec(float y, float wide) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kTopLeft,
++            .x = 8.0f,
++            .y = y,
++            .relativeSize = scene::axes::kNone,
++            .width = wide,
++            .height = thinking_menu_row - 4.0f,
++            .cornerRadius = 10.0f};
++  }
++  // What a row is called, on its left.
++  [[nodiscard]] static scene::Spec name_spec(float y) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kCentreLeft,
++            .x = 20.0f,
++            .y = y + 15.0f,
++            .autoSize = scene::axes::kBoth};
++  }
++  // What it stands at, on its right.
++  [[nodiscard]] static scene::Spec value_spec(float y) {
++    return {.anchor = scene::anchor::kTopRight,
++            .origin = scene::anchor::kCentreRight,
++            .x = -20.0f,
++            .y = y + 15.0f,
++            .autoSize = scene::axes::kBoth};
++  }
++};
++
+ struct composer : scene::Node {
+   nodes::Box<> fCard{0u};
+   // What answers here, and how much of its window this chat has taken: said
+   // over the field every time, not only when it is asked about.
+   nodes::Text fModel{"", 12.0f, 0u, true};
+   nodes::Icon fGauge{shape::info(), 0u};
++  // Three dots after the circle, and what they open above the card.
++  ask_box fDots{};
++  nodes::Icon fDotsMark{shape::more(), 0u};
++  thinking_menu fMenu{};
+   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
+   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
+                                           message_given{fSink}};
+@@ -83,12 +197,29 @@ struct composer : scene::Node {
+                   .x = 18.0f,
+                   .y = 22.0f,
+                   .autoSize = scene::axes::kBoth});
++    // The circle, and three dots after it: the two of them are what the
++    // card says over the field and never take away, whichever room it is
++    // drawn in, so the circle stands where it left room for the dots.
+     fGauge.apply({.width = 18.0f,
+                   .height = 18.0f,
+                   .anchor = scene::anchor::kTopRight,
+                   .origin = scene::anchor::kCentre,
+-                  .x = -(edge + 18.0f),
++                  .x = -(edge + 50.0f),
+                   .y = 22.0f});
++    fDots.apply({.anchor = scene::anchor::kTopRight,
++                 .origin = scene::anchor::kTopRight,
++                 .x = -edge,
++                 .y = 9.0f,
++                 .relativeSize = scene::axes::kNone,
++                 .width = 26.0f,
++                 .height = 26.0f,
++                 .cornerRadius = 13.0f});
++    fDotsMark.apply({.width = 18.0f,
++                     .height = 18.0f,
++                     .anchor = scene::anchor::kTopRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -(edge + 13.0f),
++                     .y = 22.0f});
+     fField.apply(
+         {.anchor = scene::anchor::kTopLeft,
+          .x = 16.0f,
+@@ -125,8 +256,8 @@ struct composer : scene::Node {
+                      .y = 45.0f + send_size / 2.0f});
+   }
+ 
+-  void again(const paints &look, const conversation &chat,
+-             app::requests *asked) {
++  void again(const paints &look, const conversation &chat, const asking &how,
++             app::requests *asked, bool menu_open) {
+     fSink->asked = asked;
+     fSink->chat = chat.id;
+     fCard.setColour(look.card);
+@@ -143,6 +274,10 @@ struct composer : scene::Node {
+     fModel.setColour(look.primary);
+     fGauge.setShape(context_ring(used, look.outline, look.primary));
+     fGauge.setColour(look.primary);
++    // The dots, and the menu they keep open or shut.
++    fDots.again(asked, app::toggle_thinking{}, look.search_bar);
++    fDotsMark.setColour(look.text);
++    fMenu.again(asked, look, how, menu_open);
+   }
+ 
+   void clear() { fField.setText(""); }
+@@ -151,6 +286,9 @@ struct composer : scene::Node {
+     f(fCard);
+     f(fModel);
+     f(fGauge);
++    f(fDots);
++    f(fDotsMark);
++    f(fMenu);
+     f(fField);
+     f(fClip);
+     f(fFace);
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index 5cb977f1..94cb9ef1 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -287,6 +287,75 @@ struct knob_row : scene::Node {
+   }
+ };
+ 
++// How hard a model thinks before it answers, as a row: what it stands at
++// now, and a press either side of that moving it one step round the four
++// (pchat.config). Neither press says more than the step it was pressed for.
++struct effort_row : scene::Node {
++  nodes::Box<> fPlate{0u};
++  nodes::Text fName{"How hard it thinks", 15.0f, 0u};
++  nodes::Text fValue{"", 15.0f, 0u};
++  ask_box fLess{};
++  nodes::Text fLessMark{"\u2013", 16.0f, 0u, true};
++  ask_box fMore{};
++  nodes::Text fMoreMark{"+", 16.0f, 0u, true};
++
++  effort_row() {
++    this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
++    fPlate.apply({.fill = true});
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = 16.0f,
++                 .autoSize = scene::axes::kBoth});
++    fValue.apply({.anchor = scene::anchor::kCentreRight,
++                  .origin = scene::anchor::kCentreRight,
++                  .x = -118.0f,
++                  .autoSize = scene::axes::kBoth});
++    fLess.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -60.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fLessMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -80.0f,
++                     .autoSize = scene::axes::kBoth});
++    fMore.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -14.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -34.0f,
++                     .autoSize = scene::axes::kBoth});
++  }
++
++  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
++             effort now) {
++    this->apply(spec);
++    fPlate.setColour(look.field);
++    fName.setColour(look.text);
++    fValue.setText(std::string(said_how(now)));
++    fValue.setColour(look.dim);
++    fLess.again(sink, app::set_effort{stepped_of(now, -1)}, look.raised);
++    fMore.again(sink, app::set_effort{stepped_of(now, 1)}, look.raised);
++    fLessMark.setColour(look.text);
++    fMoreMark.setColour(look.text);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fName);
++    f(fValue);
++    f(fLess);
++    f(fLessMark);
++    f(fMore);
++    f(fMoreMark);
++  }
++};
++
+ // What the card holds: the seeds, the switches, and what else is said in
+ // the page. Of its own node, and not drawn straight into the page, so that
+ // what scrolls is these and not the card they are said in -- a page that
+@@ -371,6 +440,10 @@ struct settings_rows : scene::Node {
+   switch_row fLight;
+   // Generation, drawn: one row for each of the five an answer is asked with.
+   std::array<knob_row, asking_offered.size()> fKnobs;
++  // Thinking, drawn: that it is wanted at all, and how hard, under the name
++  // the page had left standing for the answerer's own generation.
++  switch_row fThinking;
++  effort_row fEffort;
+   // The tools, drawn: a switch to each of the three, whether it is offered
+   // to a model or not.
+   std::array<switch_row, tool_names.size()> fTools;
+@@ -412,6 +485,8 @@ struct settings_rows : scene::Node {
+     // it, and each of these says it is drawn when it is.
+     for (knob_row &one : fKnobs)
+       one.setVisible(false);
++    fThinking.setVisible(false);
++    fEffort.setVisible(false);
+     for (switch_row &one : fTools)
+       one.setVisible(false);
+     for (switch_row &one : fAnswerers)
+@@ -535,6 +610,21 @@ struct settings_rows : scene::Node {
+                                      const asking &how, float row_width,
+                                      float base) {
+     float at = base;
++    const auto row_at = [row_width](float y) {
++      return scene::Spec{.anchor = scene::anchor::kTopLeft,
++                         .x = 16.0f,
++                         .y = y,
++                         .relativeSize = scene::axes::kNone,
++                         .width = row_width,
++                         .height = settings_row_height,
++                         .cornerRadius = 14.0f,
++                         .visible = true};
++    };
++    fThinking.again(asked, row_at(at), look, "Think before answering",
++                    how.thinking, app::set_thinking{!how.thinking});
++    at += settings_row_stride;
++    fEffort.again(asked, row_at(at), look, how.how_hard);
++    at += settings_row_stride;
+     for (std::size_t one = 0u; one < asking_offered.size(); ++one) {
+       const asking_choice &said = asking_offered[one];
+       fKnobs[one].again(asked,
+diff --git a/src/ui/window.cc b/src/ui/window.cc
+index 484b1543..a4855369 100644
+--- a/src/ui/window.cc
++++ b/src/ui/window.cc
+@@ -69,7 +69,7 @@ struct app_window : scene::Node {
+              const asking &how, const std::string &query, bool dark,
+              bool settings_open,
+              bool design_open, bool prompt_open, bool more_open,
+-             bool drawer_open, float width,
++             bool drawer_open, bool thinking_open, float width,
+              float height,
+              app::requests *asked) {
+     // The conversation the window has open, as it is named: none of them,
+@@ -184,7 +184,7 @@ struct app_window : scene::Node {
+                      .height = composer_height + 2.0f * edge,
+                      .visible = in_chat});
+     if (open_chat)
+-      fComposer.again(look, *open_chat, asked);
++      fComposer.again(look, *open_chat, how, asked, thinking_open);
+     // The settings page, over everything, when it is opened.
+     if (settings_open)
+       fSettings.again(asked, look, shown, how, answering, dark, width,

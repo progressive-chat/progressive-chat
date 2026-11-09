@@ -1,0 +1,22 @@
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index baf5122..be4daab 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -606,10 +606,14 @@ struct settings_rows : scene::Node {
+     fArchiveText.setText("An archive of everything");
+     fArchiveText.setColour(look.text);
+     fArchiveText.apply({.maxWidth = std::max(0.0f, row_width - 32.0f)});
+-    fArchiveText.apply({.anchor = scene::anchor::kCentreLeft,
+-                        .origin = scene::anchor::kCentreLeft,
++    // Placed the way a group's heading is placed -- anchor to the top left and
++    // only then where it stands. A kCentreLeft here put the centre of the whole
++    // column into the sum as well, and the words were laid out past the column
++    // and drawn nowhere (skiff's anchoredBox adds the anchor point to x and y,
++    // it does not let them stand in for it).
++    fArchiveText.apply({.anchor = scene::anchor::kTopLeft,
+                         .x = 32.0f,
+-                        .y = at + settings_row_height / 2.0f,
++                        .y = at + (settings_row_height - 19.0f) / 2.0f,
+                         .visible = true});
+     at += settings_row_stride;
+     return at;

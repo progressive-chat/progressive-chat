@@ -1,0 +1,93 @@
+{
+ "renamed": {
+  "1": [
+   [
+    "2026-11-06T09:26:15Z",
+    "thinking asked for, and how hard",
+    "[WIP] Agora C++ Core. Mega-PR +566k loc"
+   ],
+   [
+    "2026-11-06T09:33:37Z",
+    "[WIP] Agora C++ Core. Mega-PR +566k loc",
+    "[WIP] Agora C++ Core + misc. Mega-PR +566k loc"
+   ],
+   [
+    "2026-11-06T09:34:43Z",
+    "[WIP] Agora C++ Core + misc. Mega-PR +566k loc",
+    "[Large WIP] Agora C++ Core + misc."
+   ],
+   [
+    "2026-11-06T12:19:48Z",
+    "[Large WIP] Agora C++ Core + misc.",
+    "Add thinking toggle and effort level to settings"
+   ],
+   [
+    "2026-11-06T21:58:04Z",
+    "Add thinking toggle and effort level to settings",
+    "thinking asked for, and how hard, in the settings"
+   ]
+  ],
+  "2": [
+   [
+    "2026-11-06T12:19:50Z",
+    "every file that is ours says the license it is under",
+    "Add SPDX license lines and exempt golden traces from the license check"
+   ]
+  ],
+  "3": [
+   [
+    "2026-11-06T12:19:53Z",
+    "every call an answer asked for is said before it",
+    "Show the names of the tool calls in the fold above an answer"
+   ],
+   [
+    "2026-11-06T21:58:06Z",
+    "Show the names of the tool calls in the fold above an answer",
+    "the names of the tool calls stand said in the fold"
+   ]
+  ],
+  "4": [
+   [
+    "2026-11-06T12:19:56Z",
+    "three dots after the circle, and the menu they open",
+    "Add the three-dot button and its menu to the composer"
+   ],
+   [
+    "2026-11-06T21:58:09Z",
+    "Add the three-dot button and its menu to the composer",
+    "the three dots after the circle, and the menu they open"
+   ]
+  ],
+  "5": [
+   [
+    "2026-11-06T12:19:59Z",
+    "how a press is answered, written down",
+    "Document how a press becomes a request and reaches the next frame"
+   ],
+   [
+    "2026-11-06T21:58:11Z",
+    "Document how a press becomes a request and reaches the next frame",
+    "how a press is answered, written down from the request to the next frame"
+   ]
+  ],
+  "6": [
+   [
+    "2026-11-06T12:20:02Z",
+    "what is being written is kept until it is sent",
+    "Wire per-conversation drafts into the composer"
+   ],
+   [
+    "2026-11-06T21:58:14Z",
+    "Wire per-conversation drafts into the composer",
+    "what is being written is kept until it is sent: the drafts, wired"
+   ]
+  ],
+  "17": [
+   [
+    "2026-11-07T16:14:27Z",
+    "a probe that presses the rooms, the chip and the settings plate",
+    "a room pressed by its row, and the info chip under an answer"
+   ]
+  ]
+ }
+}

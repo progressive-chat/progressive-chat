@@ -1,0 +1,971 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1b1fab0b..86994b7e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -224,6 +224,7 @@ target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
+         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
+         src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc
++        src/logic/compacted.cc
+           src/tokens.cc)
+ target_compile_features(pchat_core PUBLIC cxx_std_26)
+ target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
+diff --git a/design-doc.md b/design-doc.md
+index 682408d6..22af5bd7 100644
+--- a/design-doc.md
++++ b/design-doc.md
+@@ -110,10 +110,13 @@ in the panel is a plus:
+   beside it says the same count in words again: what one conversation has used
+   of one window is said once on the screen and not once for every model that
+   answers in it.
+-* **Three dots after the circle** open one menu, and in it: **thinking**,
+-  switched on and off, with **how hard it is asked to think** said beside it
+-  (`max`); **web search**, switched on and off; **compact context**, which is a
+-  grey press and nothing else while the chat is empty; and **Advanced**.
++* **Three dots after the circle** open one menu above the card, and in it:
++  **thinking**, switched on and off, with what it stands at said beside it;
++  **how hard it thinks**, one press round the four it keeps to and back again
++  at the least of them; and **Advanced**, which is the large settings. Two of
++  the menu's four are not drawn yet: **web search** and **compact context**,
++  neither of them answered by anything here, and neither of them drawn as a
++  row that would do nothing.
+ * **Advanced** opens the **large settings**: the **context window size**, the
+   **temperature**, the **maximum output tokens**, the **top p**, the
+   **frequency penalty** and the **presence penalty** — the same five the
+diff --git a/src/app/requests.cc b/src/app/requests.cc
+index cc273208..a0355759 100644
+--- a/src/app/requests.cc
++++ b/src/app/requests.cc
+@@ -73,6 +73,20 @@ struct share_conversation {
+ // and one to put it away again.
+ // What every answerer in a conversation is told: opened to be read, written
+ // into the conversation as it is typed, and put away again.
++// A long conversation asked to be given short: what every answer but the
++// last thought is kept back out of what a wire is given from now on
++// (pchat.logic.compacted). One way only -- asking twice keeps nothing more
++// back than asking once did.
++// Switched for one conversation: what answers in it may look something up
++// as it answers. The looking up is the wire's own, and nothing here searches
++// anything -- only what the asking says about searching.
++struct set_web_search {
++  conversation_id chat;
++  bool now = false;
++};
++struct compact_context {
++  conversation_id chat;
++};
+ struct open_system_prompt {
+   conversation_id chat;
+ };
+@@ -111,6 +125,19 @@ struct set_generation {
+   asking_what field = asking_what::temperature;
+   double value = 0.0;
+ };
++// The three dots beside the answerer's circle, opened or closed: the menu of
++// what the next answer is asked with (design-doc.md, "The foot"). It is this
++// card's own, and stands over nothing else in the window.
++struct toggle_thinking {};
++// Thinking before an answer, and how hard it is to think: the first two of
++// the things a three-dot menu says (design-doc.md, "The editor's row"), read
++// into what every wire is asked for from then on.
++struct set_thinking {
++  bool on = false;
++};
++struct set_effort {
++  effort how = effort::some;
++};
+ // One of the tools this program owns, switched: on, and a model is told it
+ // may ask for it; off, and no answer this program writes mentions it.
+ struct set_tool {
+@@ -135,7 +162,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
+                              close_system_prompt, set_system_prompt,
+                              toggle_more, open_design, close_design,
+                              pick_seed, set_amoled, set_font_scale, pick_theme,
+-                              set_generation, set_tool,
++                              set_generation, set_thinking, set_effort, set_tool,
++                             toggle_thinking,
+                               set_answerer, copy_text>;
+ 
+ class requests {
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index 1e28d781..427e0157 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -24,6 +24,7 @@ import pchat.tools;
+ import pchat.app.requests;
+ import pchat.app.sample;
+ import pchat.logic.composer;
++import pchat.logic.compacted;
+ import pchat.logic.lists;
+ 
+ namespace scene = skiff::scene;
+@@ -60,6 +61,10 @@ class screens {
+                 drawer_ = false;
+             },
+             [&](const send_message &asking) {
++              // What the next answer is asked with is asked before the
++              // message is sent, and so the three dots are put away with
++              // it rather than left open over what is coming.
++              thinking_menu_ = false;
+               const logic::sent_message said = logic::send(
+                   logic::sending_request{
+                       asking.chat, asking.text, {}, std::nullopt},
+@@ -127,7 +132,23 @@ class screens {
+             [&](const delete_answer &asking) { cut_away(asking.said); },
+             [&](const set_query &asking) { query_ = asking.text; },
+             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+-            [&](const open_settings &) { settings_ = true; },
++            // Switched for this conversation and no other: every asking
++            // written for it from now on says whether it may search.
++            [&](const set_web_search &asking) {
++              for (conversation &one : root_.conversations)
++                if (one.id == asking.chat) one.search_the_web = asking.now;
++            },
++            // Given short from now on: what is said in it is no shorter for
++            // it, only what a wire is given of it.
++            [&](const compact_context &asking) {
++              for (conversation &one : root_.conversations)
++                if (one.id == asking.chat) one.given_short = true;
++              thinking_menu_ = false;
++            },
++            [&](const open_settings &) {
++              settings_ = true;
++              thinking_menu_ = false;
++            },
+             [&](const close_settings &) { settings_ = false; },
+             [&](const fork_conversation &asking) {
+               conversation *said = nullptr;
+@@ -225,6 +246,12 @@ class screens {
+             // pressed for, kept inside the lines it is said to have
+             // (pchat.config, `asking`).
+             [&](const set_generation &asking) { how(asking.field, asking.value); },
++            // Thinking switched, and how hard it is to think: carried into the
++            // asking every answer made from now on is written with, and so
++            // into every body sent for one.
++            [&](const toggle_thinking &) { thinking_menu_ = !thinking_menu_; },
++            [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
++            [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
+             // A tool switched: one of the three this program owns, and what
+             // it is switched to.
+             [&](const set_tool &asking) {
+@@ -257,9 +284,18 @@ class screens {
+     for (const request &one : asked_.drain())
+       take(one);
+     read_what_arrived();
+-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
+-                        design_, system_, more_, drawer_, width_, height_,
+-                        &asked_);
++    // Whether what a wire is given of this conversation can be given shorter:
++    // what every answer but the last thought, and nothing where it has been
++    // asked to be given short of it already.
++    const bool to_compact =
++        root_.opened &&
++        std::ranges::none_of(root_.conversations, [&](const conversation &one) {
++          return one.id == *root_.opened && one.given_short;
++        }) &&
++        logic::anything_to_compact_of(root_.messages, *root_.opened);
++    scene_.root().again(look_, root_, shown_, how_, query_, to_compact, dark_,
++                        settings_, design_, system_, more_, drawer_,
++                        thinking_menu_, width_, height_, &asked_);
+   }
+ 
+   [[nodiscard]] chats_root &root() noexcept { return root_; }
+@@ -322,13 +358,30 @@ class screens {
+     const provider::endpoint at{.base = opened_.base,
+                                 .model = ending_of(chat),
+                                 .told = told_of(chat)};
+-    // Not const: a view over messages asked of more than once is read more
+-    // than once, and reading it again is not a thing a const view of it says
+-    // yes to.
+-    auto turns = root_.messages |
+-                       std::views::filter([&chat](const message &one) {
+-                         return one.chat == chat;
+-                       });
++    // Whether this conversation has been asked to be given short: said of it
++    // once by the three dots' own row, and of no other.
++    // Whether what answers here may look something up: said of the
++    // conversation, and carried into the asking written below.
++    const bool may_search = [&] {
++      const auto asked = std::ranges::find(root_.conversations, chat,
++                                          [](const conversation &one) {
++                                            return one.id;
++                                          });
++      return asked != std::end(root_.conversations) && asked->search_the_web;
++    }();
++    const bool kept_back = [&] {
++      const auto asked = std::ranges::find(root_.conversations, chat,
++                                          [](const conversation &one) {
++                                            return one.id;
++                                          });
++      return asked != std::end(root_.conversations) && asked->given_short;
++    }();
++    // This conversation's own messages, as a wire is to be given them: whole,
++    // or with what every answer but the last thought kept back where it has
++    // been asked to be given short.
++    std::vector<message> turns =
++        kept_back ? logic::compacted_of(root_.messages, chat).said
++                    : logic::said_in(root_.messages, chat);
+     // What is ours to answer goes in the asking, so a model knows it may stop
+     // and ask; and it is kept here, because answering those calls later is
+     // this program's and nobody else's.
+@@ -345,6 +398,7 @@ class screens {
+                                               turns,
+                                               4,
+                                               provider::wanted{
++                                                  .search = may_search,
+                                                   .tools = mine.offered()}},
+                       .carried = std::move(carried),
+                       .mine = std::move(mine),
+@@ -564,6 +618,10 @@ class screens {
+   // Whether what stands behind the three dots is out: put away again by one
+   // press of anything it holds, or of the dots themselves.
+   bool more_ = false;
++  // Whether the three dots beside the circle are open: said to the window
++  // and to nothing else, because it is the composer's own menu and not a
++  // page.
++  bool thinking_menu_ = false;
+   moment said_count_ = 1;
+   std::size_t chat_count_ = 0;
+ 
+diff --git a/src/config.cc b/src/config.cc
+index 49b0dd71..5cc8a662 100644
+--- a/src/config.cc
++++ b/src/config.cc
+@@ -59,6 +59,33 @@ inline constexpr std::size_t tools_owned = 3u;
+ // Said once here and written as each family names it by pchat.provider.
+ enum class effort { least, some, most, all };
+ 
++// What each of the four is called where a person reads it, and not where a
++// wire takes it: the row that says where thinking stands.
++[[nodiscard]] inline std::string_view said_how(effort one) {
++  switch (one) {
++  case effort::least:
++    return "a little";
++  case effort::some:
++    return "some";
++  case effort::most:
++    return "much";
++  case effort::all:
++    break;
++  }
++  return "all it has";
++}
++
++// One step either way round the four, stopped at either end: what a press on
++// either side of that row asks for.
++[[nodiscard]] constexpr effort stepped_of(effort one, int by) {
++  const int at = static_cast<int>(one) + by;
++  if (at <= static_cast<int>(effort::least))
++    return effort::least;
++  if (at >= static_cast<int>(effort::all))
++    return effort::all;
++  return static_cast<effort>(at);
++}
++
+ [[nodiscard]] inline std::string_view said_by(effort one) {
+   switch (one) {
+   case effort::least:
+@@ -166,6 +193,20 @@ struct asking_range {
+   return out;
+ }
+ 
++// The same, with whether a model thinks at all and how hard: what the three
++// dots above an answer say (design-doc.md, "The editor's row"), and what
++// every body written after it is then asked with (pchat.provider).
++[[nodiscard]] constexpr asking set_of(const asking &one, bool thinking) {
++  asking out = one;
++  out.thinking = thinking;
++  return out;
++}
++[[nodiscard]] constexpr asking set_of(const asking &one, effort how_hard) {
++  asking out = one;
++  out.how_hard = how_hard;
++  return out;
++}
++
+ // The same, with one of them moved: what a row's press either side of one
+ // asks for, kept inside the lines that one has.
+ [[nodiscard]] constexpr asking set_of(const asking &one, asking_what field,
+diff --git a/src/core.cc b/src/core.cc
+index 496d9221..597e6a94 100644
+--- a/src/core.cc
++++ b/src/core.cc
+@@ -76,6 +76,14 @@ struct conversation {
+   // conversation's own words, and, where it has none, what every answer is
+   // given wherever nothing else has been said.
+   std::string told;
++  // Whether what is thought before every answer but the last is kept back
++  // from what a wire is given: asked once by the three dots' own row, and
++  // said of this conversation and no other (pchat.logic.compacted).
++  bool given_short = false;
++  // Whether what answers here may look something up as it answers: asked of
++  // the wire when the asking is written, and the looking up itself not this
++  // program's own to do.
++  bool search_the_web = false;
+   std::uint32_t tokens = 0;
+   std::uint32_t window = 0;
+   float context_used = 0.0f;
+diff --git a/src/logic/compacted.cc b/src/logic/compacted.cc
+new file mode 100644
+index 00000000..b92ca78d
+--- /dev/null
++++ b/src/logic/compacted.cc
+@@ -0,0 +1,68 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.logic.compacted -- What a long conversation is given short of.
++//
++// Nothing that answers reads what a model wrote to itself: an answer's
++// thinking is given again to be answered, and again after that one, so a
++// conversation of forty answers asks for all forty of them every time -- and
++// what every one of them thought is the longest thing in it. What is thought
++// before every answer but the last is kept back from what a wire is given:
++// the answer being answered has its own thinking given still, because what
++// it thought is what it is answering about.
++//
++// What a reader can open is not what is taken away. This is only what a wire
++// is given, and the fold above each answer says its thinking whole either
++// way; a compacted conversation is not one anybody can tell was compacted,
++// except that answering it is cheaper.
++export module pchat.logic.compacted;
++
++import std;
++import pchat.core;
++
++export namespace pchat::logic {
++
++// One conversation's own messages, in the order they were said.
++[[nodiscard]] std::vector<message> said_in(std::span<const message> all,
++                                           const conversation_id &chat) {
++  std::vector<message> said;
++  for (const message &one : all)
++    if (one.chat == chat) said.push_back(one);
++  return said;
++}
++
++// What a wire is to be given of one conversation: every answer's thinking
++// taken out of it but the last answer's, together with how many answers lost
++// theirs -- which is how much of the conversation was being asked for again
++// and again for nothing.
++struct compacted {
++  std::vector<message> said;
++  std::size_t answers = 0;
++};
++
++[[nodiscard]] compacted compacted_of(std::span<const message> all,
++                                     const conversation_id &chat) {
++  compacted out{.said = said_in(all, chat)};
++  // Every answer but the last one said in it: what the last thought is given,
++  // and what came before it is not. A thought that had nothing said of it
++  // keeps nothing taken away, and is not counted either.
++  for (std::size_t at = 0; at + 1 < out.said.size(); ++at) {
++    if (!out.said[at].before || out.said[at].before->said.empty()) continue;
++    out.said[at].before->said.clear();
++    ++out.answers;
++  }
++  return out;
++}
++
++// Whether keeping it back would keep anything back at all: fewer than two
++// messages said, or nothing thought before any of them, and there is nothing
++// to compact -- which is what stands the row grey (src/ui/composer.cc).
++[[nodiscard]] bool anything_to_compact_of(std::span<const message> all,
++                                          const conversation_id &chat) {
++  const std::vector<message> said = said_in(all, chat);
++  if (said.size() < 2)
++    return false;
++  return std::ranges::any_of(
++      std::span(said).first(said.size() - 1),
++      [](const message &one) { return one.before && !one.before->said.empty(); });
++}
++
++}  // namespace pchat::logic
+diff --git a/src/provider.cc b/src/provider.cc
+index 975c7237..84287c30 100644
+--- a/src/provider.cc
++++ b/src/provider.cc
+@@ -189,6 +189,10 @@ struct wanted {
+   // answers and never asked to.
+   bool thinking = false;
+   std::optional<effort> how_hard;
++  // Whether what answers may look things up on the web as it answers: asked
++  // of the wire, whose own searching it is and whose own words come back in
++  // the answer. Nothing here searches anything, and nothing here is told to.
++  bool search = false;
+   std::vector<offered> tools;
+   std::optional<double> temperature;
+   std::optional<double> top_p;
+@@ -374,6 +378,15 @@ template <std::ranges::forward_range Turns>
+   // no choice in it, and without this there would be nothing in it to read.
+   if (wants.stream)
+     out.name("stream_options").thing().name("include_usage").truth(true).shut();
++  // Allowed to search, where the asking says so: what a wire is told once
++  // and for every answer after it, and nothing written where it was not
++  // asked for -- a wire that has no search of its own is told nothing of one.
++  if (wants.search)
++    out.name("web_search_options")
++        .thing()
++        .name("search_context_size")
++        .text("medium")
++        .shut();
+   if (!wants.tools.empty()) {
+     out.name("tools").list();
+     for (const offered &one_tool : wants.tools) {
+diff --git a/src/ui/base.cc b/src/ui/base.cc
+index 8d6afea7..03af18dd 100644
+--- a/src/ui/base.cc
++++ b/src/ui/base.cc
+@@ -51,20 +51,26 @@ struct ask_box : scene::Node {
+   nodes::Box<> fPlate{0u};
+   app::requests *asked = nullptr;
+   app::request one{app::toggle_drawer{}};
++  // Whether a press of it has anything to say: what nothing answers yet
++  // stands grey and asks nobody, rather than standing as it did and saying
++  // nothing (src/ui/composer.cc, the compact row).
++  bool answers = true;
+ 
+   ask_box() { fPlate.apply({.fill = true}); }
+ 
+   [[nodiscard]] bool acceptsInput() const { return true; }
+   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+   [[nodiscard]] bool onClick(float, float) {
+-    if (asked)
++    if (asked && answers)
+       asked->ask(one);
+     return true;
+   }
+ 
+-  void again(app::requests *sink, app::request asking, scene::Colour colour) {
++  void again(app::requests *sink, app::request asking, scene::Colour colour,
++             bool answers = true) {
+     asked = sink;
+     one = std::move(asking);
++    this->answers = answers;
+     fPlate.setColour(colour);
+   }
+ 
+diff --git a/src/ui/composer.cc b/src/ui/composer.cc
+index d3ac7c17..81b906e2 100644
+--- a/src/ui/composer.cc
++++ b/src/ui/composer.cc
+@@ -53,12 +53,160 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
+   return out;
+ }
+ 
++// The three dots beside the answerer's circle, and the one menu they open:
++// what the next answer is asked with, said where it is asked about and not
++// on a page of its own. Thinking, switched, and beside it how hard it is
++// asked to think; and Advanced, which is the large settings said whole
++// (design-doc.md, "The foot"). What this program does not answer yet --
++// looking something up on the web, making what has been said shorter --
++// stands in this menu when it answers it, and not as a row that does
++// nothing.
++inline constexpr float thinking_menu_width = 232.0f;
++inline constexpr float thinking_menu_row = 34.0f;
++inline constexpr float thinking_menu_rows = 5.0f;
++
++struct thinking_menu : scene::Node {
++  nodes::Box<> fPlate{0u};
++  ask_box fThinkingPlate{};
++  nodes::Text fThinkingName{"Thinking", 13.0f, 0u};
++  nodes::Text fThinkingNow{"", 13.0f, 0u};
++  ask_box fHardPlate{};
++  nodes::Text fHardName{"How hard it thinks", 13.0f, 0u};
++  nodes::Text fHardNow{"", 13.0f, 0u};
++  ask_box fAdvancedPlate{};
++  nodes::Text fAdvancedName{"Advanced", 13.0f, 0u};
++  ask_box fSearchPlate{};
++  nodes::Text fSearchName{"Search the web", 13.0f, 0u};
++  nodes::Text fSearchNow{"", 13.0f, 0u};
++  ask_box fCompactPlate{};
++  nodes::Text fCompactName{"Compact context", 13.0f, 0u};
++  nodes::Text fCompactNow{"", 13.0f, 0u};
++
++  thinking_menu() {
++    this->apply({.anchor = scene::anchor::kTopRight,
++                 .origin = scene::anchor::kBottomRight,
++                 .x = -(edge + 13.0f),
++                 .y = -6.0f,
++                 .relativeSize = scene::axes::kNone,
++                 .width = thinking_menu_width,
++                 .height = thinking_menu_rows * thinking_menu_row + 12.0f,
++                 .cornerRadius = card_radius,
++                 .visible = false});
++    fPlate.apply({.fill = true});
++    // Three rows, one above the next, and each of them the whole width of
++    // the menu: what a press is said of is the row it stands in.
++    const float wide = thinking_menu_width - 16.0f;
++    fThinkingPlate.apply(row_spec(8.0f, wide));
++    fHardPlate.apply(row_spec(8.0f + thinking_menu_row, wide));
++    fSearchPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
++    fCompactPlate.apply(row_spec(8.0f + 3.0f * thinking_menu_row, wide));
++    fAdvancedPlate.apply(row_spec(8.0f + 4.0f * thinking_menu_row, wide));
++    fThinkingName.apply(name_spec(8.0f));
++    fThinkingNow.apply(value_spec(8.0f));
++    fHardName.apply(name_spec(8.0f + thinking_menu_row));
++    fHardNow.apply(value_spec(8.0f + thinking_menu_row));
++    fSearchName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
++    fSearchNow.apply(value_spec(8.0f + 2.0f * thinking_menu_row));
++    fCompactName.apply(name_spec(8.0f + 3.0f * thinking_menu_row));
++    fCompactNow.apply(value_spec(8.0f + 3.0f * thinking_menu_row));
++    fAdvancedName.apply(name_spec(8.0f + 4.0f * thinking_menu_row));
++  }
++
++  void again(app::requests *sink, const paints &look, const asking &how,
++             const conversation &chat, bool to_compact, bool open) {
++    this->setVisible(open);
++    if (!open)
++      return;
++    fPlate.setColour(look.card);
++    fThinkingPlate.again(sink, app::set_thinking{!how.thinking}, look.raised);
++    fThinkingName.setColour(look.text);
++    fThinkingNow.setText(how.thinking ? "on" : "off");
++    fThinkingNow.setColour(look.dim);
++    // Round the four and back again at the top: how hard is said beside the
++    // row it stands in, and a press on either walks it on one.
++    const effort next = how.how_hard == effort::all ? effort::least
++                                                    : stepped_of(how.how_hard, 1);
++    fHardPlate.again(sink, app::set_effort{next}, look.raised);
++    fHardName.setColour(look.text);
++    fHardNow.setText(std::string(said_how(how.how_hard)));
++    fHardNow.setColour(look.dim);
++    // Allowed to look things up as it answers: the searching itself is the
++    // wire's own, and every asking written for this conversation says
++    // whether it may (src/provider.cc, web_search_options).
++    fSearchPlate.again(sink, app::set_web_search{chat.id, !chat.search_the_web},
++                       look.raised);
++    fSearchName.setColour(look.text);
++    fSearchNow.setText(chat.search_the_web ? "on" : "off");
++    fSearchNow.setColour(look.dim);
++    // Given short of what every answer but the last thought: one way only,
++    // and grey where there is nothing left to keep back -- a conversation of
++    // nothing but questions has no thinking in it to give less of.
++    fCompactPlate.again(sink, app::compact_context{chat.id},
++                        to_compact ? look.raised : look.card, to_compact);
++    fCompactName.setColour(to_compact ? look.text : look.faint);
++    fCompactNow.setText(chat.given_short ? "given short" : "");
++    fCompactNow.setColour(look.dim);
++    fAdvancedPlate.again(sink, app::open_settings{}, look.raised);
++    fAdvancedName.setColour(look.text);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fThinkingPlate);
++    f(fThinkingName);
++    f(fThinkingNow);
++    f(fHardPlate);
++    f(fHardName);
++    f(fHardNow);
++    f(fSearchPlate);
++    f(fSearchName);
++    f(fSearchNow);
++    f(fCompactPlate);
++    f(fCompactName);
++    f(fCompactNow);
++    f(fAdvancedPlate);
++    f(fAdvancedName);
++  }
++
++private:
++  [[nodiscard]] static scene::Spec row_spec(float y, float wide) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kTopLeft,
++            .x = 8.0f,
++            .y = y,
++            .relativeSize = scene::axes::kNone,
++            .width = wide,
++            .height = thinking_menu_row - 4.0f,
++            .cornerRadius = 10.0f};
++  }
++  // What a row is called, on its left.
++  [[nodiscard]] static scene::Spec name_spec(float y) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kCentreLeft,
++            .x = 20.0f,
++            .y = y + 15.0f,
++            .autoSize = scene::axes::kBoth};
++  }
++  // What it stands at, on its right.
++  [[nodiscard]] static scene::Spec value_spec(float y) {
++    return {.anchor = scene::anchor::kTopRight,
++            .origin = scene::anchor::kCentreRight,
++            .x = -20.0f,
++            .y = y + 15.0f,
++            .autoSize = scene::axes::kBoth};
++  }
++};
++
+ struct composer : scene::Node {
+   nodes::Box<> fCard{0u};
+   // What answers here, and how much of its window this chat has taken: said
+   // over the field every time, not only when it is asked about.
+   nodes::Text fModel{"", 12.0f, 0u, true};
+   nodes::Icon fGauge{shape::info(), 0u};
++  // Three dots after the circle, and what they open above the card.
++  ask_box fDots{};
++  nodes::Icon fDotsMark{shape::more(), 0u};
++  thinking_menu fMenu{};
+   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
+   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
+                                           message_given{fSink}};
+@@ -83,12 +231,29 @@ struct composer : scene::Node {
+                   .x = 18.0f,
+                   .y = 22.0f,
+                   .autoSize = scene::axes::kBoth});
++    // The circle, and three dots after it: the two of them are what the
++    // card says over the field and never take away, whichever room it is
++    // drawn in, so the circle stands where it left room for the dots.
+     fGauge.apply({.width = 18.0f,
+                   .height = 18.0f,
+                   .anchor = scene::anchor::kTopRight,
+                   .origin = scene::anchor::kCentre,
+-                  .x = -(edge + 18.0f),
++                  .x = -(edge + 50.0f),
+                   .y = 22.0f});
++    fDots.apply({.anchor = scene::anchor::kTopRight,
++                 .origin = scene::anchor::kTopRight,
++                 .x = -edge,
++                 .y = 9.0f,
++                 .relativeSize = scene::axes::kNone,
++                 .width = 26.0f,
++                 .height = 26.0f,
++                 .cornerRadius = 13.0f});
++    fDotsMark.apply({.width = 18.0f,
++                     .height = 18.0f,
++                     .anchor = scene::anchor::kTopRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -(edge + 13.0f),
++                     .y = 22.0f});
+     fField.apply(
+         {.anchor = scene::anchor::kTopLeft,
+          .x = 16.0f,
+@@ -125,8 +290,8 @@ struct composer : scene::Node {
+                      .y = 45.0f + send_size / 2.0f});
+   }
+ 
+-  void again(const paints &look, const conversation &chat,
+-             app::requests *asked) {
++  void again(const paints &look, const conversation &chat, const asking &how,
++             bool to_compact, app::requests *asked, bool menu_open) {
+     fSink->asked = asked;
+     fSink->chat = chat.id;
+     fCard.setColour(look.card);
+@@ -143,6 +308,10 @@ struct composer : scene::Node {
+     fModel.setColour(look.primary);
+     fGauge.setShape(context_ring(used, look.outline, look.primary));
+     fGauge.setColour(look.primary);
++    // The dots, and the menu they keep open or shut.
++    fDots.again(asked, app::toggle_thinking{}, look.search_bar);
++    fDotsMark.setColour(look.text);
++    fMenu.again(asked, look, how, chat, to_compact, menu_open);
+   }
+ 
+   void clear() { fField.setText(""); }
+@@ -151,6 +320,9 @@ struct composer : scene::Node {
+     f(fCard);
+     f(fModel);
+     f(fGauge);
++    f(fDots);
++    f(fDotsMark);
++    f(fMenu);
+     f(fField);
+     f(fClip);
+     f(fFace);
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index 5cb977f1..94cb9ef1 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -287,6 +287,75 @@ struct knob_row : scene::Node {
+   }
+ };
+ 
++// How hard a model thinks before it answers, as a row: what it stands at
++// now, and a press either side of that moving it one step round the four
++// (pchat.config). Neither press says more than the step it was pressed for.
++struct effort_row : scene::Node {
++  nodes::Box<> fPlate{0u};
++  nodes::Text fName{"How hard it thinks", 15.0f, 0u};
++  nodes::Text fValue{"", 15.0f, 0u};
++  ask_box fLess{};
++  nodes::Text fLessMark{"\u2013", 16.0f, 0u, true};
++  ask_box fMore{};
++  nodes::Text fMoreMark{"+", 16.0f, 0u, true};
++
++  effort_row() {
++    this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
++    fPlate.apply({.fill = true});
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = 16.0f,
++                 .autoSize = scene::axes::kBoth});
++    fValue.apply({.anchor = scene::anchor::kCentreRight,
++                  .origin = scene::anchor::kCentreRight,
++                  .x = -118.0f,
++                  .autoSize = scene::axes::kBoth});
++    fLess.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -60.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fLessMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -80.0f,
++                     .autoSize = scene::axes::kBoth});
++    fMore.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -14.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -34.0f,
++                     .autoSize = scene::axes::kBoth});
++  }
++
++  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
++             effort now) {
++    this->apply(spec);
++    fPlate.setColour(look.field);
++    fName.setColour(look.text);
++    fValue.setText(std::string(said_how(now)));
++    fValue.setColour(look.dim);
++    fLess.again(sink, app::set_effort{stepped_of(now, -1)}, look.raised);
++    fMore.again(sink, app::set_effort{stepped_of(now, 1)}, look.raised);
++    fLessMark.setColour(look.text);
++    fMoreMark.setColour(look.text);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fName);
++    f(fValue);
++    f(fLess);
++    f(fLessMark);
++    f(fMore);
++    f(fMoreMark);
++  }
++};
++
+ // What the card holds: the seeds, the switches, and what else is said in
+ // the page. Of its own node, and not drawn straight into the page, so that
+ // what scrolls is these and not the card they are said in -- a page that
+@@ -371,6 +440,10 @@ struct settings_rows : scene::Node {
+   switch_row fLight;
+   // Generation, drawn: one row for each of the five an answer is asked with.
+   std::array<knob_row, asking_offered.size()> fKnobs;
++  // Thinking, drawn: that it is wanted at all, and how hard, under the name
++  // the page had left standing for the answerer's own generation.
++  switch_row fThinking;
++  effort_row fEffort;
+   // The tools, drawn: a switch to each of the three, whether it is offered
+   // to a model or not.
+   std::array<switch_row, tool_names.size()> fTools;
+@@ -412,6 +485,8 @@ struct settings_rows : scene::Node {
+     // it, and each of these says it is drawn when it is.
+     for (knob_row &one : fKnobs)
+       one.setVisible(false);
++    fThinking.setVisible(false);
++    fEffort.setVisible(false);
+     for (switch_row &one : fTools)
+       one.setVisible(false);
+     for (switch_row &one : fAnswerers)
+@@ -535,6 +610,21 @@ struct settings_rows : scene::Node {
+                                      const asking &how, float row_width,
+                                      float base) {
+     float at = base;
++    const auto row_at = [row_width](float y) {
++      return scene::Spec{.anchor = scene::anchor::kTopLeft,
++                         .x = 16.0f,
++                         .y = y,
++                         .relativeSize = scene::axes::kNone,
++                         .width = row_width,
++                         .height = settings_row_height,
++                         .cornerRadius = 14.0f,
++                         .visible = true};
++    };
++    fThinking.again(asked, row_at(at), look, "Think before answering",
++                    how.thinking, app::set_thinking{!how.thinking});
++    at += settings_row_stride;
++    fEffort.again(asked, row_at(at), look, how.how_hard);
++    at += settings_row_stride;
+     for (std::size_t one = 0u; one < asking_offered.size(); ++one) {
+       const asking_choice &said = asking_offered[one];
+       fKnobs[one].again(asked,
+diff --git a/src/ui/window.cc b/src/ui/window.cc
+index 484b1543..ed388d1e 100644
+--- a/src/ui/window.cc
++++ b/src/ui/window.cc
+@@ -66,10 +66,10 @@ struct app_window : scene::Node {
+ 
+   // Everything drawn again from the model, for this size of window.
+   void again(const paints &look, const chats_root &root, const looks &shown,
+-             const asking &how, const std::string &query, bool dark,
+-             bool settings_open,
++             const asking &how, const std::string &query, bool to_compact,
++             bool dark, bool settings_open,
+              bool design_open, bool prompt_open, bool more_open,
+-             bool drawer_open, float width,
++             bool drawer_open, bool thinking_open, float width,
+              float height,
+              app::requests *asked) {
+     // The conversation the window has open, as it is named: none of them,
+@@ -184,7 +184,7 @@ struct app_window : scene::Node {
+                      .height = composer_height + 2.0f * edge,
+                      .visible = in_chat});
+     if (open_chat)
+-      fComposer.again(look, *open_chat, asked);
++      fComposer.again(look, *open_chat, how, to_compact, asked, thinking_open);
+     // The settings page, over everything, when it is opened.
+     if (settings_open)
+       fSettings.again(asked, look, shown, how, answering, dark, width,
+diff --git a/test/logic_test.cc b/test/logic_test.cc
+index 6b458e6d..93b719e8 100644
+--- a/test/logic_test.cc
++++ b/test/logic_test.cc
+@@ -9,6 +9,7 @@ import pchat.core;
+ import pchat.logic.lists;
+ import pchat.logic.search;
+ import pchat.logic.composer;
++import pchat.logic.compacted;
+ import pchat.logic.formatting;
+ import pchat.logic.doc;
+ 
+@@ -131,3 +132,107 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
+   EXPECT_TRUE(titled);
+   EXPECT_TRUE(listed);
+ }
++
++SAID(logic, one_conversation_is_read_out_of_all_of_them) {
++  const message in_general{.id = message_id{"m-1"},
++                           .chat = conversation_id{"general"},
++                           .author = "Reader",
++                           .outgoing = true,
++                           .text = "asked",
++                           .sent = 1};
++  const message in_random{.id = message_id{"m-9"},
++                          .chat = conversation_id{"random"},
++                          .author = "Reader",
++                          .outgoing = true,
++                          .text = "asked elsewhere",
++                          .sent = 2};
++  const std::vector<message> all{in_general, in_random};
++  const std::vector<message> said =
++      logic::said_in(all, conversation_id{"general"});
++  EXPECT_EQ(said.size(), 1u);
++  EXPECT_EQ(said.front().id.value, std::string("m-1"));
++  EXPECT_TRUE(logic::said_in(all, conversation_id{"nowhere"}).empty());
++}
++
++SAID(logic, a_compacted_conversation_gives_what_every_answer_thought_away) {
++  // Two answers thought before them; the second of them is the last thing
++  // said in the conversation, and so it is the one whose thinking is given
++  // still -- what it thought is what is being answered about.
++  const std::vector<message> all{
++      {.id = message_id{"m-1"},
++       .chat = conversation_id{"general"},
++       .author = "Reader",
++       .outgoing = true,
++       .text = "asked once",
++       .sent = 1},
++      {.id = message_id{"m-2"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered once",
++       .sent = 2,
++       .before = thought{.said = "thought all the way through it"}},
++      {.id = message_id{"m-3"},
++       .chat = conversation_id{"general"},
++       .author = "Reader",
++       .outgoing = true,
++       .text = "asked twice",
++       .sent = 3},
++      {.id = message_id{"m-4"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered twice",
++       .sent = 4,
++       .before = thought{.said = "thought again"}}};
++  const logic::compacted given =
++      logic::compacted_of(all, conversation_id{"general"});
++  EXPECT_EQ(given.said.size(), 4u);
++  // One answer lost what it thought, and it says so.
++  EXPECT_EQ(given.answers, 1u);
++  EXPECT_TRUE(given.said[1].before->said.empty());
++  // Nothing else did: no thinking in the questions, and the last answer
++  // keeps every word it wrote to itself. What took it time and how many
++  // calls it made are said of it still -- only the words are given away.
++  EXPECT_FALSE(given.said[0].before.has_value());
++  EXPECT_FALSE(given.said[2].before.has_value());
++  EXPECT_EQ(given.said[3].before->said, std::string("thought again"));
++  EXPECT_TRUE(logic::anything_to_compact_of(all, conversation_id{"general"}));
++}
++
++SAID(logic, nothing_is_compacted_where_there_is_nothing_thought) {
++  // One message said, and then another: neither thought anything before it,
++  // and there is nothing a wire is asked twice for.
++  const std::vector<message> one{
++      {.id = message_id{"m-1"},
++       .chat = conversation_id{"general"},
++       .author = "Reader",
++       .outgoing = true,
++       .text = "asked",
++       .sent = 1},
++      {.id = message_id{"m-2"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered",
++       .sent = 2}};
++  EXPECT_FALSE(
++      logic::anything_to_compact_of(one, conversation_id{"general"}));
++  EXPECT_EQ(logic::compacted_of(one, conversation_id{"general"}).answers, 0u);
++  // One message said on its own: nothing before it and nothing after it.
++  const std::vector<message> alone{one.front()};
++  EXPECT_FALSE(
++      logic::anything_to_compact_of(alone, conversation_id{"general"}));
++  // The only answer that thought is the last thing said: nothing to keep
++  // back, for nothing is given more than once yet.
++  const std::vector<message> last_thought{
++      one.front(),
++      {.id = message_id{"m-2"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered",
++       .sent = 2,
++       .before = thought{.said = "thought about this one"}}};
++  EXPECT_FALSE(
++      logic::anything_to_compact_of(last_thought, conversation_id{"general"}));
++  EXPECT_EQ(
++      logic::compacted_of(last_thought, conversation_id{"general"}).answers,
++      0u);
++}
+diff --git a/test/provider_test.cc b/test/provider_test.cc
+index ec1103a2..2ec9fb4f 100644
+--- a/test/provider_test.cc
++++ b/test/provider_test.cc
+@@ -282,4 +282,24 @@ SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
+   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
+ }
+ 
++// Looking something up as it answers, which is the wire's own to do: written
++// in the asking where it was asked for, and nowhere where it was not.
++SAID(provider, a_search_is_asked_for_where_it_is_asked_for) {
++  const std::vector<provider::turn> no_turns;
++  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
++  const provider::wanted yes{.search = true};
++  const provider::wanted no{};
++  EXPECT_TRUE(provider::body_of(openai, no_turns, yes).find(
++                  "\"web_search_options\":{\"search_context_size\":\"medium\"}") !=
++              std::string::npos);
++  EXPECT_TRUE(provider::body_of(openai, no_turns, no).find("search") ==
++              std::string::npos);
++  // Asked for a model that has no search of its own all the same: how much
++  // of what it reads is kept beside the answer is what is being said here,
++  // and not which wire is being spoken to.
++  const provider::endpoint relay{.base = "https://openrouter.ai/api/v1", .model = "o4-mini"};
++  EXPECT_TRUE(provider::body_of(relay, no_turns, yes).find("web_search_options") !=
++              std::string::npos);
++}
++
+ int main() { return pchat::tests::run(); }

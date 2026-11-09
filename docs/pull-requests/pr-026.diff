@@ -1,0 +1,258 @@
+diff --git a/src/provider/http/CMakeLists.txt b/src/provider/http/CMakeLists.txt
+new file mode 100644
+index 0000000..ea3f6f2
+--- /dev/null
++++ b/src/provider/http/CMakeLists.txt
+@@ -0,0 +1,6 @@
++# SPDX-License-Identifier: AGPL-3.0-only
++# The http policy's own parts: what a client is built with and what this
++# program refuses to send over a wire that is not encrypted, compiled as
++# classic code and reached from the composed modules through the one header in
++# this folder (see cmake/providers.cmake).
++target_sources(pchat_provider PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/wire.cpp)
+diff --git a/src/provider/http/wire.cpp b/src/provider/http/wire.cpp
+new file mode 100644
+index 0000000..31c14b6
+--- /dev/null
++++ b/src/provider/http/wire.cpp
+@@ -0,0 +1,38 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// The http policy's own parts: the port's client policy and its cleartext
++// guard, reached only from this file, so that its headers stay out of module
++// units as they do everywhere else in this program (src/tokens_worth.cpp, the
++// same rule).
++#include "wire.h"
++
++#include "agora/core/http_policy.hpp"
++
++namespace pchat::provider {
++
++http_policy client_policy() {
++  const agora::core::http_policy::ClientPolicy one =
++      agora::core::http_policy::client_policy();
++  return http_policy{.connect_seconds = one.connect_timeout_seconds,
++                     .read_seconds = one.read_timeout_seconds,
++                     .write_seconds = one.write_timeout_seconds,
++                     .retry_on_connection_failure = one.retry_on_connection_failure,
++                     .follow_redirects = one.follow_redirects,
++                     .follow_ssl_redirects = one.follow_ssl_redirects};
++}
++
++bool cleartext_is_safe(
++    std::string_view url,
++    const std::vector<std::pair<std::string, std::string>> &headers) {
++  try {
++    agora::core::http_policy::guard_cleartext_credentials(url, headers);
++    return true;
++  } catch (const std::exception &) {
++    return false;
++  }
++}
++
++bool local_host(std::string_view host) {
++  return agora::core::http_policy::is_local_host(host);
++}
++
++}  // namespace pchat::provider
+diff --git a/src/provider/http/wire.h b/src/provider/http/wire.h
+new file mode 100644
+index 0000000..25d1e1e
+--- /dev/null
++++ b/src/provider/http/wire.h
+@@ -0,0 +1,52 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// The HTTP client's own policy, said across the one line a module unit and a
++// classic translation unit may share: the ceilings a carrying is built with,
++// whether one that could not connect is worth asking again, what this program
++// refuses to send in the clear, and which hosts it counts as this machine's
++// own. The port's policy stands behind this file (ports/agora-core,
++// http_policy); its headers stay on the classic side entirely -- the same rule
++// the anthropic and gemini folders keep in their wire.h.
++#ifndef PCHAT_PROVIDER_HTTP_WIRE_H
++#define PCHAT_PROVIDER_HTTP_WIRE_H
++
++#include <cstdint>
++#include <string>
++#include <string_view>
++#include <utility>
++#include <vector>
++
++namespace pchat::provider {
++
++// What one HTTP client is built with: the ceilings the Kotlin app gives its
++// OkHttp (30 seconds to connect, five minutes to be answered, 30 to finish
++// saying), whether a carrying that could not connect is asked again rather
++// than failed at once, and whether a redirect is followed where it leads.
++struct http_policy {
++  std::int64_t connect_seconds = 0;
++  std::int64_t read_seconds = 0;
++  std::int64_t write_seconds = 0;
++  bool retry_on_connection_failure = false;
++  bool follow_redirects = false;
++  bool follow_ssl_redirects = false;
++};
++
++// What this build's client is built with: the port's own client_policy(), in
++// the words this side keeps its own in.
++[[nodiscard]] http_policy client_policy();
++
++// Whether a body carrying `headers` may go to `url` as it stands: false where
++// an API credential would cross plain http:// to a host that is not one of
++// this machine's own. The port fails closed with an exception where this
++// program has none to throw at, and this says no where the port throws.
++[[nodiscard]] bool cleartext_is_safe(
++    std::string_view url,
++    const std::vector<std::pair<std::string, std::string>> &headers);
++
++// Whether a host is one this machine itself answers on: loopback, the LAN
++// ranges, Tailscale's own, bare hostnames, and the neighbourhood names a home
++// router gives out (.local, .lan, .home, .internal).
++[[nodiscard]] bool local_host(std::string_view host);
++
++}  // namespace pchat::provider
++
++#endif  // PCHAT_PROVIDER_HTTP_WIRE_H
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index baf5122..b0a4a49 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -508,8 +508,11 @@ struct settings_rows : scene::Node {
+     for (auto &group : *fItems)
+       for (item_name &one : group) {
+         one.name.setText(std::string{});
+-        one.name.apply({.anchor = scene::anchor::kCentreLeft,
+-                        .origin = scene::anchor::kCentreLeft,
++        // The same corner the frame above it places it by: an origin left at
++        // kCentreLeft here would hang on from the making of the window, and
++        // half the row's centre would keep being added to where it stands.
++        one.name.apply({.anchor = scene::anchor::kTopLeft,
++                        .origin = scene::anchor::kTopLeft,
+                         .x = 32.0f,
+                         .visible = false});
+       }
+@@ -606,10 +609,14 @@ struct settings_rows : scene::Node {
+     fArchiveText.setText("An archive of everything");
+     fArchiveText.setColour(look.text);
+     fArchiveText.apply({.maxWidth = std::max(0.0f, row_width - 32.0f)});
+-    fArchiveText.apply({.anchor = scene::anchor::kCentreLeft,
+-                        .origin = scene::anchor::kCentreLeft,
++    // Placed the way a group's heading is placed -- anchor to the top left and
++    // only then where it stands. A kCentreLeft here put the centre of the whole
++    // column into the sum as well, and the words were laid out past the column
++    // and drawn nowhere (skiff's anchoredBox adds the anchor point to x and y,
++    // it does not let them stand in for it).
++    fArchiveText.apply({.anchor = scene::anchor::kTopLeft,
+                         .x = 32.0f,
+-                        .y = at + settings_row_height / 2.0f,
++                        .y = at + (settings_row_height - 19.0f) / 2.0f,
+                         .visible = true});
+     at += settings_row_stride;
+     return at;
+@@ -852,10 +859,14 @@ struct settings_rows : scene::Node {
+                       .height = row_height,
+                       .relativeSize = scene::axes::kNone,
+                       .cornerRadius = row.cornerRadius});
+-    fRead.apply({.anchor = scene::anchor::kCentreLeft,
+-                 .origin = scene::anchor::kCentreLeft,
++    // Where the design stands, and what it says in the plate: anchored the way
++    // a heading of this page is anchored -- a kCentreLeft with the row's own
++    // y here would add the centre of the whole column to it and lay the words
++    // out past the column, where nothing draws them (the archive's label stood
++    // the same way; src/ui/settings.cc, say_about).
++    fRead.apply({.anchor = scene::anchor::kTopLeft,
+                  .x = 32.0f,
+-                 .y = top + read_at + row_height / 2.0f});
++                 .y = top + read_at + (row_height - 19.0f) / 2.0f});
+     // Where the rest of the page begins: under the row that offers the
+     // design, and the room left between it and the next group.
+     return top + read_at + settings_row_height + settings_group_gap;
+@@ -894,10 +905,13 @@ struct settings_rows : scene::Node {
+         item.name.setText(std::string(named.items[one]));
+         item.name.setColour(look.text);
+         item.name.apply({.maxWidth = std::max(0.0f, breadth - 52.0f)});
+-        item.name.apply({.anchor = scene::anchor::kCentreLeft,
+-                         .origin = scene::anchor::kCentreLeft,
++        // Top left, as the group's own heading stands: an item asked for its
++        // centre here was given the column's centre along with its row's and
++        // was laid out past the column, where no item of this page has ever
++        // been drawn (the sum skiff's anchoredBox makes -- see say_about).
++        item.name.apply({.anchor = scene::anchor::kTopLeft,
+                          .x = 32.0f,
+-                         .y = at + settings_row_height / 2.0f,
++                         .y = at + (settings_row_height - 19.0f) / 2.0f,
+                          .visible = true});
+         at += settings_row_stride;
+         // Under one of its items a group says more than its name: what it
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 2e9fb48..7cc7063 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -34,6 +34,7 @@ pchat_test(provider_run pchat_provider)
+ pchat_test(provider_loop pchat_provider)
+ pchat_test(provider_anthropic pchat_provider)
+ pchat_test(provider_gemini pchat_provider)
++pchat_test(provider_http pchat_provider)
+ pchat_test(tools pchat_tools)
+ pchat_test(tokens pchat_core pchat_json)
+ pchat_test(prgrssv pchat_core pchat_json)
+diff --git a/test/provider_http_test.cc b/test/provider_http_test.cc
+new file mode 100644
+index 0000000..dd28d3b
+--- /dev/null
++++ b/test/provider_http_test.cc
+@@ -0,0 +1,55 @@
++module;
++#include "tests.h"
++#include "provider/http/wire.h"
++export module pchat.test.provider_http;
++// SPDX-License-Identifier: AGPL-3.0-only
++// The http policy the folder keeps: the ceilings a client is built with, what
++// this program will not send in the clear, and which hosts count as this
++// machine's own -- said through wire.h, with the port's own headers kept on the
++// classic side of it.
++import std;
++
++using namespace pchat;
++
++SAID(http, the_client_is_built_with_the_port_s_ceilings) {
++  const provider::http_policy one = provider::client_policy();
++  EXPECT_EQ(one.connect_seconds, 30);
++  EXPECT_EQ(one.read_seconds, 300);
++  EXPECT_EQ(one.write_seconds, 30);
++  EXPECT_TRUE(one.retry_on_connection_failure);
++  EXPECT_TRUE(one.follow_redirects);
++  EXPECT_TRUE(one.follow_ssl_redirects);
++}
++
++SAID(http, a_credential_may_not_cross_in_the_clear) {
++  const std::vector<std::pair<std::string, std::string>> key{
++      {"x-api-key", "secret"}};
++  const std::vector<std::pair<std::string, std::string>> bearer{
++      {"authorization", "Bearer secret"}};
++  // Encrypted, or nothing of a credential in the asking: both go.
++  EXPECT_TRUE(provider::cleartext_is_safe("https://api.example/v1", key));
++  EXPECT_TRUE(provider::cleartext_is_safe("http://api.example/v1", {}));
++  // A credential over plain http:// to a host that is not this machine's:
++  // refused, whichever of the four names the wire puts it under.
++  EXPECT_FALSE(provider::cleartext_is_safe("http://api.example/v1", key));
++  EXPECT_FALSE(provider::cleartext_is_safe("http://api.example/v1", bearer));
++  // The same refusal does not reach this machine's own hosts: a key for a
++  // model running at home is how this program is meant to speak to it.
++  EXPECT_TRUE(provider::cleartext_is_safe("http://127.0.0.1:11434/v1", key));
++  EXPECT_TRUE(provider::cleartext_is_safe("http://ollama.local/v1", key));
++}
++
++SAID(http, which_hosts_this_machine_counts_as_home) {
++  EXPECT_TRUE(provider::local_host("localhost"));
++  EXPECT_TRUE(provider::local_host("printer.local"));
++  EXPECT_TRUE(provider::local_host("box.lan"));
++  EXPECT_TRUE(provider::local_host("nas"));       // a bare LAN name
++  EXPECT_TRUE(provider::local_host("192.168.1.7"));
++  EXPECT_TRUE(provider::local_host("10.0.0.5"));
++  EXPECT_TRUE(provider::local_host("127.0.0.1"));
++  EXPECT_TRUE(provider::local_host("100.64.0.9"));  // Tailscale's own range
++  EXPECT_FALSE(provider::local_host("api.example"));
++  EXPECT_FALSE(provider::local_host("1.1.1.1"));
++}
++
++int main() { return pchat::tests::run(); }

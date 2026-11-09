@@ -1,0 +1,2366 @@
+diff --git a/.github/workflows/probe.yml b/.github/workflows/probe.yml
+index eb1403a7..18a92d0a 100644
+--- a/.github/workflows/probe.yml
++++ b/.github/workflows/probe.yml
+@@ -4,6 +4,14 @@ name: probe
+ # Only ever asked for by hand: what the deployed page paints is not what a
+ # push changes, and a browser takes its minutes here for nothing if every
+ # push pays them.
++#
++# Asked for on any ref, though, and not only on main: the second job below
++# builds the page the ref itself makes and asks it everything the deployed
++# one is asked, so that what has not been deployed yet -- every pull
++# request, in other words -- is answered about what it paints rather than
++# about what its code seems to say. Which pull request that is, is said by
++# the request itself: [probe] in its title asks for it, and a title without
++# it leaves every push paying nothing for a browser nobody asked to see it.
+ on:
+   workflow_dispatch:
+     inputs:
+@@ -15,12 +23,114 @@ on:
+         description: 'A probe script, in place of the one in the tree'
+         required: false
+         default: ''
++  # What asks for the page of the push itself to be probed is the request's
++  # own title, said below: nothing is paid for here until a pull request asks.
++  pull_request:
+ 
+ permissions:
+   contents: read
+ 
+ jobs:
++  pushed:
++    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.title, '[probe]') }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 60
++    steps:
++      - uses: actions/checkout@v5
++      - uses: ./.github/actions/desktop-setup
++      - uses: ./.github/actions/web-setup
++      # The same three steps the web workflow builds the deployed page with,
++      # said again here: what is asked about below is this ref's own page and
++      # not a page somebody put somewhere (../web.yml).
++      - name: Where the standard library's modules are
++        run: |
++          set -euo pipefail
++          json="$(em++ -print-file-name=libc++.modules.json 2>/dev/null || true)"
++          if [ ! -f "$json" ]; then
++            json="$(find "$HOME/.cache/pchat-emsdk/upstream/emscripten/cache/sysroot" \
++              -name 'libc++.modules.json' -print -quit 2>/dev/null || true)"
++          fi
++          if [ ! -f "$json" ]; then
++            echo "::error::no libc++.modules.json came with this SDK"
++            exit 1
++          fi
++          echo "found $json"
++          echo "PCHAT_MODULES_JSON=$json" >> "$GITHUB_ENV"
++      - name: Configure
++        run: |
++          emcmake cmake -S . -B build-web -G Ninja \
++            -DCMAKE_BUILD_TYPE=Debug \
++            -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" \
++            -DCMAKE_C_FLAGS_DEBUG="-Os -g0" \
++            -DCMAKE_C_FLAGS="-pthread -msimd128" \
++            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fexceptions -pthread -msimd128" \
++            -DCMAKE_CXX_STDLIB_MODULES_JSON="$PCHAT_MODULES_JSON" \
++            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$HOME/.cache/pchat-emsdk/upstream/bin/clang-scan-deps" \
++            -DPCHAT_TESTS=OFF
++      - name: Build
++        run: cmake --build build-web --target progressive-chat -- -k 0
++      - name: Serve it, as a host serves a page
++        run: |
++          set -euo pipefail
++          cd build-web/web
++          # Left standing behind every step after this one: the same runner,
++          # and the same process tree, is what all of them are said to.
++          nohup python3 -m http.server 8123 --bind 127.0.0.1 > served.log 2>&1 &
++          for try in $(seq 1 30); do
++            curl -sf -o /dev/null http://127.0.0.1:8123/index.html && break
++            sleep 1
++          done
++          curl -sf -o /dev/null -w 'the page answers with %{http_code}\n' \
++            http://127.0.0.1:8123/index.html
++      - uses: actions/setup-node@v4
++        with:
++          node-version: '24'
++      - name: A browser that can be driven
++        run: |
++          npm init -y
++          # Said of a version and not "the newest": a playwright is put out
++          # before the core it is said on top of, and a probe that cannot be
++          # installed is no probe at all -- this one is moved on by hand when
++          # the next is settled.
++          npm install playwright@1.64.1
++          npx playwright install --with-deps chromium
++      - name: What to say to the page, when it is said by hand
++        if: ${{ github.event.inputs.script != '' }}
++        run: printf '%s' "${{ github.event.inputs.script }}" > said_by_hand.mjs
++      # Three probes, asked in this order: a whole script written out here,
++      # one this very tree keeps of its own say (tools/probe_by_hand.mjs),
++      # and the tester's -- the last of them asked of everything else.
++      - name: Which probe is asked
++        run: |
++          set -euo pipefail
++          if [ -f said_by_hand.mjs ]; then
++            probe=said_by_hand.mjs
++          elif [ -f tools/probe_by_hand.mjs ]; then
++            probe=tools/probe_by_hand.mjs
++          else
++            probe=tools/probe_painted.mjs
++          fi
++          echo "asked of the page: $probe"
++          echo "PCHAT_PROBE=$probe" >> "$GITHUB_ENV"
++      - name: Shoot the page this ref built
++        env:
++          # What the probe asks, in place of the page everybody else sees:
++          # this ref's own, off the host it was served onto above.
++          PCHAT_PAGE: http://127.0.0.1:8123/index.html
++        run: node "$PCHAT_PROBE"
++      - uses: actions/upload-artifact@v4
++        with:
++          name: painted-here
++          # Every shot of the page, whatever the probe that made it named
++          # them: a probe driven by hand names them as it likes.
++          path: |
++            *.png
++          if-no-files-found: error
++
+   painted:
++    # What everybody already sees, and nothing to do with a push: a change is
++    # not what this page is made of until it has landed.
++    if: ${{ github.event_name == 'workflow_dispatch' }}
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     steps:
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1b1fab0b..86994b7e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -224,6 +224,7 @@ target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
+         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
+         src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc
++        src/logic/compacted.cc
+           src/tokens.cc)
+ target_compile_features(pchat_core PUBLIC cxx_std_26)
+ target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
+diff --git a/README.md b/README.md
+index 3f47cccb..b081ef30 100644
+--- a/README.md
++++ b/README.md
+@@ -97,6 +97,8 @@ src/provider/run.cc      one answer whole: why it is over, the message it leaves
+ src/provider/loop.cc     one question asked again with what its tools answered
+ src/tools.cc             what this program answers itself, and nothing else
+ src/platform/carry.cc    what hands a body over, per platform: a page's fetch
++src/platform/chosen.cc   what asks this machine for a file, and takes it back
++                         out of it whole: a page's own input, today
+ src/ui.cc, src/ui/*.cc   the window: every screen, drawn with skiff
+ ```
+ 
+diff --git a/design-doc.md b/design-doc.md
+index 682408d6..f2fa1103 100644
+--- a/design-doc.md
++++ b/design-doc.md
+@@ -22,15 +22,21 @@ begins a new chat, and beside it **how many tokens this chat is** (for example
+ put together. Nothing else is in the top. No search of its own: the drawer
+ searches.
+ 
+-### What the top holds that is not drawn yet
++### What the top holds
+ 
+-Everything below this line is said because it is wanted, and none of it stands
+-in the program today.
++Everything below this line is said because it is wanted, and all of it stands
++in the program today (`src/ui/top_bar.cc`), in that order across the edge: the
++pill that opens the drawer at the left, the conversation's name in the middle,
++and at the right what answers in it, what the whole conversation has been
++worth, and the presses that say something else can be begun in it.
+ 
+ * **The models that answer this conversation** stand on the top edge of the
+   main panel, one bubble each: the name in a bubble is **what the model is
+-  called**, and pressing the bubble is how you say which model this is and read
+-  which it has been. What it has used of its window is **not** said again in
++  called**. Which models answer in this conversation is said under
++  **Services → Models** in the settings, and nowhere else: bubbles are read
++  out of that, and say nothing back into it. Four of them are said at most,
++  and the count beside them belongs to the conversation and not to any one of
++  them. What it has used of its window is **not** said again in
+   every bubble — one conversation's share of one window is said once, beside
+   the editor below (**The editor's row**), where every model that answers in it
+   would otherwise say the same count three times over.
+@@ -41,10 +47,12 @@ in the program today.
+ * **Fork conversation** and **share** stand in the top as well: the one takes
+   this conversation as a new one written from here on apart, the other gives it
+   out.
+-* **Where the screen is narrow**, four of these go behind **three dots** beside
+-  the plus and come out of it: **search**, **system prompt**, **fork
+-  conversation**, **share**. Wide, they stand as themselves; narrow, they are
+-  one press deep.
++* **Where the screen is narrow**, three of them go behind **three dots**
++  beside the plus and come out of it: **system prompt**, **fork conversation**,
++  **share**. Wide, they stand as themselves; narrow, they are one press deep.
++  Search is not among them, for it is what the drawer keeps: what is typed
++  there is looked for in every conversation, and the drawer stands beside the
++  messages wherever there is room for both.
+ 
+ The foot is the editor. It always says **which model it will send to**, even
+ before anything has been written, and beside that a **circle that shows how full
+@@ -100,7 +108,16 @@ in the panel is a plus:
+   and nowhere else.
+ * **A plus at the editor's left, before the model's name**, attaches something
+   to what you are writing. Pressed, it says four things: **photo or media from
+-  the camera**, **photos from the gallery**, **videos**, **files**.
++  the camera**, **photos from the gallery**, **videos**, **files**. What is
++  chosen is kept with the next message and named under it in the room, named
++  once more above the card until it is sent -- one pill for each, and pressed
++  to take it back out, for what was wrongly chosen is not sent for want of
++  somewhere to put it back -- and sent with it: a file that is words is given
++  to the wire within the turn, after the words written beside it; a picture
++  and a moving picture are kept and given to nothing yet, for giving one is
++  its own asking and no wire here answers it. Of the four, what this machine
++  cannot answer stands grey and asks for nothing: no desk takes a photo now
++  (`src/platform/chosen.cc`, `can`).
+ * **The model's name** stands next, as **the model itself is called** and,
+   after it in brackets, **which provider it is asked through**:
+   `DeepSeek V4.1 Flash (ds)`. The id a wire is given — `deepseek-v4-1-flash` —
+@@ -110,10 +127,16 @@ in the panel is a plus:
+   beside it says the same count in words again: what one conversation has used
+   of one window is said once on the screen and not once for every model that
+   answers in it.
+-* **Three dots after the circle** open one menu, and in it: **thinking**,
+-  switched on and off, with **how hard it is asked to think** said beside it
+-  (`max`); **web search**, switched on and off; **compact context**, which is a
+-  grey press and nothing else while the chat is empty; and **Advanced**.
++* **Three dots after the circle** open one menu above the card, and in it:
++  **thinking**, switched on and off, with what it stands at said beside it;
++  **how hard it thinks**, one press round the four it keeps to and back again
++  at the least of them; **web search**, switched on and off for this one
++  conversation and nothing else, which asks nothing of this program itself --
++  whether one may search is said to the wire with the asking, and the looking
++  up is the wire's own --; **compact context**, which from now on gives the
++  wire a shorter telling of this conversation than it gave a moment ago
++  (pchat.logic.compacted); and **Advanced**, which is the large settings. All
++  four are drawn, and every one of them asks something that answers it.
+ * **Advanced** opens the **large settings**: the **context window size**, the
+   **temperature**, the **maximum output tokens**, the **top p**, the
+   **frequency penalty** and the **presence penalty** — the same five the
+diff --git a/src/app/requests.cc b/src/app/requests.cc
+index cc273208..eaecd1b6 100644
+--- a/src/app/requests.cc
++++ b/src/app/requests.cc
+@@ -73,6 +73,20 @@ struct share_conversation {
+ // and one to put it away again.
+ // What every answerer in a conversation is told: opened to be read, written
+ // into the conversation as it is typed, and put away again.
++// A long conversation asked to be given short: what every answer but the
++// last thought is kept back out of what a wire is given from now on
++// (pchat.logic.compacted). One way only -- asking twice keeps nothing more
++// back than asking once did.
++// Switched for one conversation: what answers in it may look something up
++// as it answers. The looking up is the wire's own, and nothing here searches
++// anything -- only what the asking says about searching.
++struct set_web_search {
++  conversation_id chat;
++  bool now = false;
++};
++struct compact_context {
++  conversation_id chat;
++};
+ struct open_system_prompt {
+   conversation_id chat;
+ };
+@@ -111,6 +125,34 @@ struct set_generation {
+   asking_what field = asking_what::temperature;
+   double value = 0.0;
+ };
++// The three dots beside the answerer's circle, opened or closed: the menu of
++// what the next answer is asked with (design-doc.md, "The foot"). It is this
++// card's own, and stands over nothing else in the window.
++struct toggle_thinking {};
++// The paperclip beside the field, opened or shut: the four things a reader
++// may choose between to say with the next message (design-doc.md, "The
++// editor's row"). It is the card's own, and stands over nothing else.
++struct open_attach {};
++// One of the four asked for: the machine this runs on is asked for files of
++// that kind, and what it answers with is taken back out of it
++// (pchat.platform.chosen). Nothing here chooses anything itself.
++struct pick_files {
++  chooses what = chooses::files;
++};
++// One of the files waiting to be said with the next message, taken back out
++// of it: which one, as it stands in the line above the card.
++struct drop_file {
++  std::size_t which = 0;
++};
++// Thinking before an answer, and how hard it is to think: the first two of
++// the things a three-dot menu says (design-doc.md, "The editor's row"), read
++// into what every wire is asked for from then on.
++struct set_thinking {
++  bool on = false;
++};
++struct set_effort {
++  effort how = effort::some;
++};
+ // One of the tools this program owns, switched: on, and a model is told it
+ // may ask for it; off, and no answer this program writes mentions it.
+ struct set_tool {
+@@ -135,7 +177,10 @@ using request = spl::variant<open_conversation, send_message, new_chat,
+                              close_system_prompt, set_system_prompt,
+                              toggle_more, open_design, close_design,
+                              pick_seed, set_amoled, set_font_scale, pick_theme,
+-                              set_generation, set_tool,
++                              set_generation, set_thinking, set_effort, set_tool,
++                             toggle_thinking,
++                             compact_context, set_web_search,
++                             open_attach, pick_files, drop_file,
+                               set_answerer, copy_text>;
+ 
+ class requests {
+diff --git a/src/app/screens.cc b/src/app/screens.cc
+index 1e28d781..107013c6 100644
+--- a/src/app/screens.cc
++++ b/src/app/screens.cc
+@@ -19,11 +19,13 @@ import pchat.ui;
+ import pchat.provider;
+ import pchat.provider.run;
+ import pchat.platform.carry;
++import pchat.platform.chosen;
+ import pchat.provider.loop;
+ import pchat.tools;
+ import pchat.app.requests;
+ import pchat.app.sample;
+ import pchat.logic.composer;
++import pchat.logic.compacted;
+ import pchat.logic.lists;
+ 
+ namespace scene = skiff::scene;
+@@ -60,9 +62,17 @@ class screens {
+                 drawer_ = false;
+             },
+             [&](const send_message &asking) {
++              // What the next answer is asked with is asked before the
++              // message is sent, and so the three dots are put away with
++              // it rather than left open over what is coming.
++              thinking_menu_ = false;
++              // What was chosen since, said with the message it was chosen
++              // for and with nothing else: a picture of what is in front of
++              // the camera goes with the words written beside it or without
++              // any, and never into the chat after it.
+               const logic::sent_message said = logic::send(
+-                  logic::sending_request{
+-                      asking.chat, asking.text, {}, std::nullopt},
++                  logic::sending_request{asking.chat, asking.text,
++                                         held_of(asking.chat), std::nullopt},
+                   "Reader", static_cast<moment>(said_count_++));
+               root_.messages.push_back(said.said);
+               recount(asking.chat);
+@@ -127,7 +137,23 @@ class screens {
+             [&](const delete_answer &asking) { cut_away(asking.said); },
+             [&](const set_query &asking) { query_ = asking.text; },
+             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+-            [&](const open_settings &) { settings_ = true; },
++            // Switched for this conversation and no other: every asking
++            // written for it from now on says whether it may search.
++            [&](const set_web_search &asking) {
++              for (conversation &one : root_.conversations)
++                if (one.id == asking.chat) one.search_the_web = asking.now;
++            },
++            // Given short from now on: what is said in it is no shorter for
++            // it, only what a wire is given of it.
++            [&](const compact_context &asking) {
++              for (conversation &one : root_.conversations)
++                if (one.id == asking.chat) one.given_short = true;
++              thinking_menu_ = false;
++            },
++            [&](const open_settings &) {
++              settings_ = true;
++              thinking_menu_ = false;
++            },
+             [&](const close_settings &) { settings_ = false; },
+             [&](const fork_conversation &asking) {
+               conversation *said = nullptr;
+@@ -225,6 +251,27 @@ class screens {
+             // pressed for, kept inside the lines it is said to have
+             // (pchat.config, `asking`).
+             [&](const set_generation &asking) { how(asking.field, asking.value); },
++            // Thinking switched, and how hard it is to think: carried into the
++            // asking every answer made from now on is written with, and so
++            // into every body sent for one.
++            [&](const toggle_thinking &) { thinking_menu_ = !thinking_menu_; },
++            // The paperclip opened or shut, and one of the four asked for:
++            // where this machine chooses nothing, no paperclip is drawn to
++            // press, so nothing here is asked by a row that answers nothing.
++            [&](const open_attach &) { attach_menu_ = !attach_menu_; },
++            [&](const pick_files &asking) {
++              attach_menu_ = false;
++              chosen_.ask(asking.what);
++            },
++            // Taken back out before it is said: what the pill above the card
++            // that named it was pressed for.
++            [&](const drop_file &asking) {
++              if (asking.which < held_.size())
++                held_.erase(held_.begin() + static_cast<std::ptrdiff_t>(
++                                                asking.which));
++            },
++            [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
++            [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
+             // A tool switched: one of the three this program owns, and what
+             // it is switched to.
+             [&](const set_tool &asking) {
+@@ -257,9 +304,30 @@ class screens {
+     for (const request &one : asked_.drain())
+       take(one);
+     read_what_arrived();
+-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
+-                        design_, system_, more_, drawer_, width_, height_,
+-                        &asked_);
++    // What was chosen since the last frame, kept for the conversation it was
++    // chosen in and for no other: said with the next message said in it.
++    for (attachment &one : chosen_.take()) {
++      if (!root_.opened)
++        continue;
++      if (held_for_ != *root_.opened) {
++        held_.clear();
++        held_for_ = *root_.opened;
++      }
++      held_.push_back(std::move(one));
++    }
++    // Whether what a wire is given of this conversation can be given shorter:
++    // what every answer but the last thought, and nothing where it has been
++    // asked to be given short of it already.
++    const bool to_compact =
++        root_.opened &&
++        std::ranges::none_of(root_.conversations, [&](const conversation &one) {
++          return one.id == *root_.opened && one.given_short;
++        }) &&
++        logic::anything_to_compact_of(root_.messages, *root_.opened);
++    scene_.root().again(look_, root_, shown_, how_, query_, to_compact,
++                        chosen_.any(), held_, dark_, settings_, design_,
++                        system_, more_, drawer_, thinking_menu_, attach_menu_,
++                        width_, height_, &asked_);
+   }
+ 
+   [[nodiscard]] chats_root &root() noexcept { return root_; }
+@@ -310,6 +378,14 @@ class screens {
+   };
+   std::optional<answer_coming> answering_;
+ 
++  // What was chosen for this conversation and not said yet: given away whole
++  // to the one message that asks for it, and to nothing said after it.
++  [[nodiscard]] std::vector<attachment> held_of(const conversation_id &chat) {
++    if (held_for_ != chat)
++      return {};
++    return std::exchange(held_, {});
++  }
++
+   // Asked of a model, where anything here can carry the asking. Today nothing
+   // can anywhere but a page -- that is what `carrying::any` says -- and where
+   // nothing can, nothing is asked and no answer comes, as it was before.
+@@ -322,13 +398,30 @@ class screens {
+     const provider::endpoint at{.base = opened_.base,
+                                 .model = ending_of(chat),
+                                 .told = told_of(chat)};
+-    // Not const: a view over messages asked of more than once is read more
+-    // than once, and reading it again is not a thing a const view of it says
+-    // yes to.
+-    auto turns = root_.messages |
+-                       std::views::filter([&chat](const message &one) {
+-                         return one.chat == chat;
+-                       });
++    // Whether this conversation has been asked to be given short: said of it
++    // once by the three dots' own row, and of no other.
++    // Whether what answers here may look something up: said of the
++    // conversation, and carried into the asking written below.
++    const bool may_search = [&] {
++      const auto asked = std::ranges::find(root_.conversations, chat,
++                                          [](const conversation &one) {
++                                            return one.id;
++                                          });
++      return asked != std::end(root_.conversations) && asked->search_the_web;
++    }();
++    const bool kept_back = [&] {
++      const auto asked = std::ranges::find(root_.conversations, chat,
++                                          [](const conversation &one) {
++                                            return one.id;
++                                          });
++      return asked != std::end(root_.conversations) && asked->given_short;
++    }();
++    // This conversation's own messages, as a wire is to be given them: whole,
++    // or with what every answer but the last thought kept back where it has
++    // been asked to be given short.
++    std::vector<message> turns =
++        kept_back ? logic::compacted_of(root_.messages, chat).said
++                    : logic::said_in(root_.messages, chat);
+     // What is ours to answer goes in the asking, so a model knows it may stop
+     // and ask; and it is kept here, because answering those calls later is
+     // this program's and nobody else's.
+@@ -345,6 +438,7 @@ class screens {
+                                               turns,
+                                               4,
+                                               provider::wanted{
++                                                  .search = may_search,
+                                                   .tools = mine.offered()}},
+                       .carried = std::move(carried),
+                       .mine = std::move(mine),
+@@ -564,6 +658,16 @@ class screens {
+   // Whether what stands behind the three dots is out: put away again by one
+   // press of anything it holds, or of the dots themselves.
+   bool more_ = false;
++  // Whether the three dots beside the circle are open: said to the window
++  // and to nothing else, because it is the composer's own menu and not a
++  // page.
++  bool thinking_menu_ = false;
++  bool attach_menu_ = false;
++  // What this machine chooses files with, and what it has chosen for the
++  // conversation it is being written in since the last message was sent.
++  platform::choosing chosen_;
++  std::vector<attachment> held_;
++  conversation_id held_for_;
+   moment said_count_ = 1;
+   std::size_t chat_count_ = 0;
+ 
+diff --git a/src/config.cc b/src/config.cc
+index 49b0dd71..5cc8a662 100644
+--- a/src/config.cc
++++ b/src/config.cc
+@@ -59,6 +59,33 @@ inline constexpr std::size_t tools_owned = 3u;
+ // Said once here and written as each family names it by pchat.provider.
+ enum class effort { least, some, most, all };
+ 
++// What each of the four is called where a person reads it, and not where a
++// wire takes it: the row that says where thinking stands.
++[[nodiscard]] inline std::string_view said_how(effort one) {
++  switch (one) {
++  case effort::least:
++    return "a little";
++  case effort::some:
++    return "some";
++  case effort::most:
++    return "much";
++  case effort::all:
++    break;
++  }
++  return "all it has";
++}
++
++// One step either way round the four, stopped at either end: what a press on
++// either side of that row asks for.
++[[nodiscard]] constexpr effort stepped_of(effort one, int by) {
++  const int at = static_cast<int>(one) + by;
++  if (at <= static_cast<int>(effort::least))
++    return effort::least;
++  if (at >= static_cast<int>(effort::all))
++    return effort::all;
++  return static_cast<effort>(at);
++}
++
+ [[nodiscard]] inline std::string_view said_by(effort one) {
+   switch (one) {
+   case effort::least:
+@@ -166,6 +193,20 @@ struct asking_range {
+   return out;
+ }
+ 
++// The same, with whether a model thinks at all and how hard: what the three
++// dots above an answer say (design-doc.md, "The editor's row"), and what
++// every body written after it is then asked with (pchat.provider).
++[[nodiscard]] constexpr asking set_of(const asking &one, bool thinking) {
++  asking out = one;
++  out.thinking = thinking;
++  return out;
++}
++[[nodiscard]] constexpr asking set_of(const asking &one, effort how_hard) {
++  asking out = one;
++  out.how_hard = how_hard;
++  return out;
++}
++
+ // The same, with one of them moved: what a row's press either side of one
+ // asks for, kept inside the lines that one has.
+ [[nodiscard]] constexpr asking set_of(const asking &one, asking_what field,
+diff --git a/src/core.cc b/src/core.cc
+index 496d9221..4e9d0cbc 100644
+--- a/src/core.cc
++++ b/src/core.cc
+@@ -79,6 +79,17 @@ struct conversation {
+   std::uint32_t tokens = 0;
+   std::uint32_t window = 0;
+   float context_used = 0.0f;
++  // Two things asked of a whole conversation and said of no other, both of
++  // them standing last so that what says this struct whole -- said in order,
++  // in src/app/sample.cc -- keeps saying what it said before either existed.
++  // Whether what is thought before every answer but the last is kept back
++  // from what a wire is given: asked once by the three dots' own row
++  // (pchat.logic.compacted).
++  bool given_short = false;
++  // Whether what answers here may look something up as it answers: asked of
++  // the wire when the asking is written, and the looking up itself not this
++  // program's own to do.
++  bool search_the_web = false;
+   // Which model writes here when nothing else has been said: the first of
+   // them, and nothing where there is none.
+   [[nodiscard]] std::string leading_model() const {
+@@ -103,6 +114,25 @@ struct thought {
+   friend bool operator==(const thought &, const thought &) = default;
+ };
+ 
++// What was chosen on the machine and said with a message: its name as the
++// machine called it, what kind of thing the machine says it is, and its bytes
++// whole. Kept with the message they were said in and read nowhere else: what
++// a wire is given of them is given when this program asks with them, and not
++// before.
++struct attachment {
++  std::string name;
++  std::string kind;
++  std::vector<std::byte> bytes;
++  friend bool operator==(const attachment &, const attachment &) = default;
++};
++
++// The four things a reader chooses between at the paperclip: what a camera
++// takes now, what the machine keeps of pictures already taken, what it keeps
++// of moving ones, and the rest of its files (design-doc.md, "The editor's
++// row"). Said here and not in pchat.platform.chosen, because what the four
++// of them are is not a platform's to decide.
++enum class chooses { camera, pictures, moving, files };
++
+ // A message: one thing said in one conversation, by somebody or by its
+ // reader. Which of the two decides where it is drawn.
+ struct message {
+@@ -120,6 +150,11 @@ struct message {
+   // What this one is worth, in tokens: read out of a protocol where it says,
+   // counted out of its words where it does not.
+   std::uint32_t tokens = 0;
++  // What was chosen to be said with it, kept with it. Standing last, as the
++  // other things added after this struct was first said do: what says a
++  // message whole field after field -- in src/app/sample.cc -- keeps saying
++  // what it said before any of them existed.
++  std::vector<attachment> kept;
+   friend bool operator==(const message &, const message &) = default;
+ };
+ 
+diff --git a/src/logic/compacted.cc b/src/logic/compacted.cc
+new file mode 100644
+index 00000000..b92ca78d
+--- /dev/null
++++ b/src/logic/compacted.cc
+@@ -0,0 +1,68 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.logic.compacted -- What a long conversation is given short of.
++//
++// Nothing that answers reads what a model wrote to itself: an answer's
++// thinking is given again to be answered, and again after that one, so a
++// conversation of forty answers asks for all forty of them every time -- and
++// what every one of them thought is the longest thing in it. What is thought
++// before every answer but the last is kept back from what a wire is given:
++// the answer being answered has its own thinking given still, because what
++// it thought is what it is answering about.
++//
++// What a reader can open is not what is taken away. This is only what a wire
++// is given, and the fold above each answer says its thinking whole either
++// way; a compacted conversation is not one anybody can tell was compacted,
++// except that answering it is cheaper.
++export module pchat.logic.compacted;
++
++import std;
++import pchat.core;
++
++export namespace pchat::logic {
++
++// One conversation's own messages, in the order they were said.
++[[nodiscard]] std::vector<message> said_in(std::span<const message> all,
++                                           const conversation_id &chat) {
++  std::vector<message> said;
++  for (const message &one : all)
++    if (one.chat == chat) said.push_back(one);
++  return said;
++}
++
++// What a wire is to be given of one conversation: every answer's thinking
++// taken out of it but the last answer's, together with how many answers lost
++// theirs -- which is how much of the conversation was being asked for again
++// and again for nothing.
++struct compacted {
++  std::vector<message> said;
++  std::size_t answers = 0;
++};
++
++[[nodiscard]] compacted compacted_of(std::span<const message> all,
++                                     const conversation_id &chat) {
++  compacted out{.said = said_in(all, chat)};
++  // Every answer but the last one said in it: what the last thought is given,
++  // and what came before it is not. A thought that had nothing said of it
++  // keeps nothing taken away, and is not counted either.
++  for (std::size_t at = 0; at + 1 < out.said.size(); ++at) {
++    if (!out.said[at].before || out.said[at].before->said.empty()) continue;
++    out.said[at].before->said.clear();
++    ++out.answers;
++  }
++  return out;
++}
++
++// Whether keeping it back would keep anything back at all: fewer than two
++// messages said, or nothing thought before any of them, and there is nothing
++// to compact -- which is what stands the row grey (src/ui/composer.cc).
++[[nodiscard]] bool anything_to_compact_of(std::span<const message> all,
++                                          const conversation_id &chat) {
++  const std::vector<message> said = said_in(all, chat);
++  if (said.size() < 2)
++    return false;
++  return std::ranges::any_of(
++      std::span(said).first(said.size() - 1),
++      [](const message &one) { return one.before && !one.before->said.empty(); });
++}
++
++}  // namespace pchat::logic
+diff --git a/src/logic/composer.cc b/src/logic/composer.cc
+index 8542e7b5..7619488e 100644
+--- a/src/logic/composer.cc
++++ b/src/logic/composer.cc
+@@ -6,6 +6,7 @@ export module pchat.logic.composer;
+ 
+ import std;
+ import pchat.core;
++import pchat.core;
+ import pchat.tokens;
+ 
+ export namespace pchat::logic {
+@@ -14,7 +15,11 @@ export namespace pchat::logic {
+ // and whether it has been opened out to the whole window.
+ struct composer_state {
+   std::string text;
+-  std::vector<std::string> attachments;
++  // What the reader chose to say with the next message, kept beside what was
++  // written: named, said to be of some kind, and whole (pchat.core,
++  // `attachment`). Enough to send on its own -- what is chosen can be said
++  // without a word written beside it.
++  std::vector<attachment> attachments;
+   std::optional<message_id> replies_to;
+   bool expanded = false;
+   friend bool operator==(const composer_state&, const composer_state&) = default;
+@@ -33,7 +38,7 @@ struct composer_state {
+ struct sending_request {
+   conversation_id chat;
+   std::string text;
+-  std::vector<std::string> attachments;
++  std::vector<attachment> attachments;
+   std::optional<message_id> replies_to;
+ };
+ 
+@@ -56,7 +61,8 @@ struct sent_message {
+                .text = std::move(asking.text),
+                .sent = when,
+                .state = delivery::sending,
+-               .replies_to = std::move(asking.replies_to)};
++               .replies_to = std::move(asking.replies_to),
++               .kept = std::move(asking.attachments)};
+     // What the reader asked for, worth what Agora's counter says it is worth,
+     // counted where it is written rather than at some later projection.
+     said.tokens = static_cast<std::uint32_t>(pchat::tokens::of(said.text));
+diff --git a/src/platform/chosen.cc b/src/platform/chosen.cc
+new file mode 100644
+index 00000000..96f1bada
+--- /dev/null
++++ b/src/platform/chosen.cc
+@@ -0,0 +1,149 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// pchat.platform.chosen -- One file asked of the machine this program is
++// running on, and its bytes taken back out of it.
++//
++// Nothing here knows what a file is for: one of four things is asked for --
++// a picture taken now, a picture already kept, a moving picture, or any file
++// -- and what the machine hands over comes back named, said to be of some
++// kind, and whole.
++//
++// Every machine but the page answers with this file, through the one dialog
++// SDL opens for all of them: a desk's own, a phone's own, and whichever else
++// SDL has been given. The page answers with chosen_web.cc, which is the one
++// that asks through its own document. Nothing above either knows which of the
++// two it is speaking to, and nothing above either says #if about a machine.
++//
++// One of the four is answered by neither: nothing here takes a picture now,
++// and `can()` says so, which is why the row that asks for one stands grey
++// wherever this file is the one answering.
++module;
++#include <SDL3/SDL.h>
++
++export module pchat.platform.chosen;
++
++import std;
++import pchat.core;
++
++export namespace pchat::platform {
++
++namespace chosen_detail {
++
++// The name a file is called by the reader, which is the last thing in the
++// path the machine hands over and not the path itself.
++[[nodiscard]] inline std::string name_of(std::string_view path) {
++  const std::size_t at = path.find_last_of("/\\");
++  return at == std::string_view::npos ? std::string(path)
++                                      : std::string(path.substr(at + 1));
++}
++
++// What kind of thing a file says it is, as a wire would have it named: read
++// out of the name the machine called it, for a desk says no kind of its own
++// beside the name, and what a page says instead is said there.
++[[nodiscard]] inline std::string kind_of(std::string_view name) {
++  if (name.ends_with(".png"))
++    return "image/png";
++  if (name.ends_with(".jpg") || name.ends_with(".jpeg"))
++    return "image/jpeg";
++  if (name.ends_with(".gif"))
++    return "image/gif";
++  if (name.ends_with(".webp"))
++    return "image/webp";
++  if (name.ends_with(".mp4"))
++    return "video/mp4";
++  if (name.ends_with(".webm"))
++    return "video/webm";
++  if (name.ends_with(".txt") || name.ends_with(".log"))
++    return "text/plain";
++  if (name.ends_with(".md"))
++    return "text/markdown";
++  if (name.ends_with(".csv"))
++    return "text/csv";
++  if (name.ends_with(".json"))
++    return "application/json";
++  return std::string{};
++}
++
++// One file read whole out of where the machine keeps it.
++[[nodiscard]] inline attachment read_whole(std::string_view path) {
++  std::ifstream in{std::string(path), std::ios::binary};
++  attachment out{.name = name_of(path)};
++  out.kind = kind_of(out.name);
++  const std::vector<char> whole{std::istreambuf_iterator<char>{in},
++                                std::istreambuf_iterator<char>{}};
++  out.bytes.resize(whole.size());
++  if (!whole.empty())
++    std::memcpy(out.bytes.data(), whole.data(), whole.size());
++  return out;
++}
++
++// What a dialog is asked to show of one of the four: one line named after it,
++// and the shapes of file it says yes to. Kept in the one that asked, for the
++// dialog is answered after the asking, not during it.
++[[nodiscard]] inline std::vector<SDL_DialogFileFilter> filters_of(
++    chooses what) {
++  if (what == chooses::pictures)
++    return {SDL_DialogFileFilter{"Pictures", "png;jpg;jpeg;gif;webp"}};
++  if (what == chooses::moving)
++    return {SDL_DialogFileFilter{"Videos", "mp4;webm;mov;mkv"}};
++  return {SDL_DialogFileFilter{"All files", "*"}};
++}
++
++}  // namespace chosen_detail
++
++class choosing {
++public:
++  // Whether this machine hands files over at all: everything SDL opens a
++  // dialog on does, and where SDL has none to open -- a phone, today -- the
++  // asking is answered with no names at all.
++  [[nodiscard]] bool any() const { return true; }
++
++  // Which of the four this machine answers: every file it keeps, and no
++  // picture taken now, for nothing here opens a camera.
++  [[nodiscard]] static bool can(chooses what) {
++    return what != chooses::camera;
++  }
++
++  // Asked to choose, and not waited for: the dialog is the machine's own to
++  // answer in its own time, and `take()` is asked again every frame until it
++  // does.
++  void ask(chooses what) {
++    if (!can(what))
++      return;
++    filters_ = chosen_detail::filters_of(what);
++    SDL_ShowOpenFileDialog(&choosing::took, this, nullptr, filters_.data(),
++                           static_cast<int>(filters_.size()), nullptr, true);
++  }
++
++  // What has been chosen since the last time this was asked: nothing is lost
++  // by asking more than once, and what chose nothing says nothing.
++  [[nodiscard]] std::vector<attachment> take() {
++    std::lock_guard<std::mutex> held{lock_};
++    return std::exchange(waiting_, {});
++  }
++
++private:
++  // Answered with every name the dialog was given, or with nothing at all
++  // where the reader asked it for none: read where the machine keeps them,
++  // and put where `take()` will find them.
++  static void SDLCALL took(void *self, const char *const *names, int) {
++    if (!names)
++      return;
++    std::vector<attachment> read;
++    for (const char *const *at = names; *at != nullptr; ++at)
++      read.push_back(chosen_detail::read_whole(*at));
++    choosing &here = *static_cast<choosing *>(self);
++    std::lock_guard<std::mutex> held{here.lock_};
++    for (attachment &one : read)
++      here.waiting_.push_back(std::move(one));
++  }
++
++  // What was asked of the last dialog, kept alive until it answers: the
++  // asking gives SDL nothing but a pointer into them.
++  std::vector<SDL_DialogFileFilter> filters_;
++  // What was chosen and not yet taken: read by the frame, written by
++  // whatever thread a dialog answers on.
++  std::vector<attachment> waiting_;
++  std::mutex lock_;
++};
++
++}  // namespace pchat::platform
+diff --git a/src/platform/chosen_web.cc b/src/platform/chosen_web.cc
+new file mode 100644
+index 00000000..188a1f7b
+--- /dev/null
++++ b/src/platform/chosen_web.cc
+@@ -0,0 +1,124 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// The page's own way of choosing a file, standing in for src/platform/chosen.cc
++// wherever this is built for the browser: an input put in the page's document,
++// pressed, and read out of again whole.
++//
++// Nothing above this knows how the asking happened. What chose something
++// leaves it where the common file's `take()` would find it: one block of the
++// three lengths that follow it and the three things they say -- the name, the
++// kind, and the bytes -- which `take()` reads once and gives back.
++module;
++#include <cstdlib>
++#include <emscripten/emscripten.h>
++
++export module pchat.platform.chosen;
++
++import std;
++import pchat.core;
++
++export namespace pchat::platform {
++
++// What the page is holding for us between the moment a file was chosen and
++// the moment this is asked for it: laid out as three lengths and then the
++// name, the kind and the bytes, at 12 and after it.
++namespace chosen_detail {
++
++// One waiting file read out of the block `take()` was handed, and the block
++// given back, for it was asked for on the C++ side of this and is that side's
++// to give away.
++[[nodiscard]] inline std::optional<attachment> read_out(std::byte *at) {
++  std::uint32_t name_len = 0;
++  std::uint32_t kind_len = 0;
++  std::uint32_t bytes_len = 0;
++  std::memcpy(&name_len, at, 4);
++  std::memcpy(&kind_len, at + 4, 4);
++  std::memcpy(&bytes_len, at + 8, 4);
++  attachment out;
++  out.name.assign(reinterpret_cast<const char *>(at + 12), name_len);
++  out.kind.assign(reinterpret_cast<const char *>(at + 13 + name_len), kind_len);
++  const std::byte *from = at + 14 + name_len + kind_len;
++  out.bytes.assign(from, from + bytes_len);
++  return out;
++}
++
++}  // namespace chosen_detail
++
++class choosing {
++public:
++  // Which of the four this machine answers: a page answers all of them, for
++  // the input below takes a picture with a camera too, where there is one on
++  // what it is running on.
++  [[nodiscard]] static bool can(chooses) { return true; }
++
++  // Whether this machine hands files over at all: a page hands them over
++  // through the input below, and every other platform answers here with its
++  // own file of this module, which is the one that says it cannot.
++  [[nodiscard]] bool any() const { return true; }
++
++  // Asked to choose, and not waited for: what the machine's own window for
++  // choosing answers with comes whenever the reader has finished with it,
++  // and `take()` is asked again every frame until it does.
++  void ask(chooses what) {
++    EM_ASM(
++        {
++          // Which of the four was pressed: a camera takes a picture now, of
++          // what is in front of it; the gallery and the moving pictures take
++          // what the machine already keeps; and files takes anything at all.
++          const input = document.createElement('input');
++          input.type = 'file';
++          input.multiple = true;
++          if ($0 === 0) {
++            input.accept = 'image/*';
++            input.capture = 'environment';
++          } else if ($0 === 1) {
++            input.accept = 'image/*';
++          } else if ($0 === 2) {
++            input.accept = 'video/*';
++          }
++          input.style.display = 'none';
++          document.body.appendChild(input);
++          input.addEventListener('change', async () => {
++            if (!globalThis.__pchat_chosen) globalThis.__pchat_chosen = [];
++            for (const file of input.files) {
++              const read = await file.arrayBuffer();
++              globalThis.__pchat_chosen.push(
++                  {name: file.name, kind: file.type,
++                   bytes: new Uint8Array(read)});
++            }
++            document.body.removeChild(input);
++          });
++          input.click();
++        },
++        static_cast<int>(what));
++  }
++
++  // What has been chosen since the last time this was asked: nothing is lost
++  // by asking more than once, and what chose nothing says nothing.
++  [[nodiscard]] std::vector<attachment> take() {
++    std::vector<attachment> out;
++    for (;;) {
++      std::byte *at = static_cast<std::byte *>(EM_ASM_PTR({
++        const waiting = globalThis.__pchat_chosen;
++        if (!waiting || waiting.length === 0) return 0;
++        const one = waiting.shift();
++        const name_len = lengthBytesUTF8(one.name);
++        const kind_len = lengthBytesUTF8(one.kind);
++        const bytes_len = one.bytes.length;
++        const at = _malloc(14 + name_len + kind_len + bytes_len);
++        HEAPU32[at >> 2] = name_len;
++        HEAPU32[(at + 4) >> 2] = kind_len;
++        HEAPU32[(at + 8) >> 2] = bytes_len;
++        stringToUTF8(one.name, at + 12, name_len + 1);
++        stringToUTF8(one.kind, at + 13 + name_len, kind_len + 1);
++        HEAPU8.set(one.bytes, at + 14 + name_len + kind_len);
++        return at;
++      }));
++      if (!at)
++        return out;
++      out.push_back(*chosen_detail::read_out(at));
++      ::free(at);
++    }
++  }
++};
++
++}  // namespace pchat::platform
+diff --git a/src/provider.cc b/src/provider.cc
+index 975c7237..1d8ba82d 100644
+--- a/src/provider.cc
++++ b/src/provider.cc
+@@ -143,6 +143,41 @@ headers_of(const endpoint &one) {
+ 
+ // ---- the turns of a conversation -----------------------------------------
+ 
++// Whether what was chosen is words: what the machine said the file's kind is
++// says so, or the name it called it does where the machine told us nothing.
++[[nodiscard]] inline bool says_words(const attachment &one) {
++  if (one.kind.starts_with("text/"))
++    return true;
++  return one.name.ends_with(".txt") || one.name.ends_with(".md") ||
++         one.name.ends_with(".csv") || one.name.ends_with(".json") ||
++         one.name.ends_with(".log") || one.name.ends_with(".yml") ||
++         one.name.ends_with(".yaml");
++}
++
++// How much of one file is worth giving: the whole of it up to this many
++// bytes, and only this much of it where there is more, because what is asked
++// of a wire is paid for by the word.
++inline constexpr std::size_t file_words_at_most = 256 * 1024;
++
++// What one message says to a wire: its own words, and after them what each
++// file chosen for it says where the file is words -- named as it was chosen,
++// and said whole. What is not words -- a picture, a moving picture -- is kept
++// with the message and given to nothing yet: giving a file that says nothing
++// is its own asking, and no wire here answers it.
++[[nodiscard]] inline std::string said_to_a_wire(const message &one) {
++  if (one.kept.empty())
++    return one.text;
++  std::string said = one.text;
++  for (const attachment &file : one.kept) {
++    if (!says_words(file))
++      continue;
++    said += "\n\nWhat " + file.name + " says:\n";
++    said.append(reinterpret_cast<const char *>(file.bytes.data()),
++                std::min(file.bytes.size(), file_words_at_most));
++  }
++  return said;
++}
++
+ // What the model keeps of one conversation, as turns a wire is given: what
+ // the reader wrote asked, and what the model answered, in the order it was
+ // said and nothing of what the screens know about either. Any range that
+@@ -154,7 +189,7 @@ template <std::ranges::forward_range Said>
+   return std::ranges::to<std::vector<turn>>(
+       said | std::views::transform([](const message &one) {
+         return turn{.who = one.outgoing ? role::user : role::assistant,
+-                    .text = one.text,
++                    .text = said_to_a_wire(one),
+                     .thought = one.before ? one.before->said : std::string()};
+       }));
+ }
+@@ -189,6 +224,10 @@ struct wanted {
+   // answers and never asked to.
+   bool thinking = false;
+   std::optional<effort> how_hard;
++  // Whether what answers may look things up on the web as it answers: asked
++  // of the wire, whose own searching it is and whose own words come back in
++  // the answer. Nothing here searches anything, and nothing here is told to.
++  bool search = false;
+   std::vector<offered> tools;
+   std::optional<double> temperature;
+   std::optional<double> top_p;
+@@ -374,6 +413,15 @@ template <std::ranges::forward_range Turns>
+   // no choice in it, and without this there would be nothing in it to read.
+   if (wants.stream)
+     out.name("stream_options").thing().name("include_usage").truth(true).shut();
++  // Allowed to search, where the asking says so: what a wire is told once
++  // and for every answer after it, and nothing written where it was not
++  // asked for -- a wire that has no search of its own is told nothing of one.
++  if (wants.search)
++    out.name("web_search_options")
++        .thing()
++        .name("search_context_size")
++        .text("medium")
++        .shut();
+   if (!wants.tools.empty()) {
+     out.name("tools").list();
+     for (const offered &one_tool : wants.tools) {
+diff --git a/src/ui/base.cc b/src/ui/base.cc
+index 8d6afea7..03af18dd 100644
+--- a/src/ui/base.cc
++++ b/src/ui/base.cc
+@@ -51,20 +51,26 @@ struct ask_box : scene::Node {
+   nodes::Box<> fPlate{0u};
+   app::requests *asked = nullptr;
+   app::request one{app::toggle_drawer{}};
++  // Whether a press of it has anything to say: what nothing answers yet
++  // stands grey and asks nobody, rather than standing as it did and saying
++  // nothing (src/ui/composer.cc, the compact row).
++  bool answers = true;
+ 
+   ask_box() { fPlate.apply({.fill = true}); }
+ 
+   [[nodiscard]] bool acceptsInput() const { return true; }
+   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+   [[nodiscard]] bool onClick(float, float) {
+-    if (asked)
++    if (asked && answers)
+       asked->ask(one);
+     return true;
+   }
+ 
+-  void again(app::requests *sink, app::request asking, scene::Colour colour) {
++  void again(app::requests *sink, app::request asking, scene::Colour colour,
++             bool answers = true) {
+     asked = sink;
+     one = std::move(asking);
++    this->answers = answers;
+     fPlate.setColour(colour);
+   }
+ 
+diff --git a/src/ui/composer.cc b/src/ui/composer.cc
+index d3ac7c17..598343fc 100644
+--- a/src/ui/composer.cc
++++ b/src/ui/composer.cc
+@@ -13,6 +13,7 @@ import skiff.widgets.textarea;
+ import pchat.core;
+ import pchat.config;
+ import pchat.app.requests;
++import pchat.platform.chosen;
+ import :theme;
+ import :base;
+ import :icons;
+@@ -53,15 +54,355 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
+   return out;
+ }
+ 
++// The three dots beside the answerer's circle, and the one menu they open:
++// what the next answer is asked with, said where it is asked about and not
++// on a page of its own. Thinking, switched, and beside it how hard it is
++// asked to think; and Advanced, which is the large settings said whole
++// (design-doc.md, "The foot"). What this program does not answer yet --
++// looking something up on the web, making what has been said shorter --
++// stands in this menu when it answers it, and not as a row that does
++// nothing.
++inline constexpr float thinking_menu_width = 232.0f;
++inline constexpr float thinking_menu_row = 34.0f;
++inline constexpr float thinking_menu_rows = 5.0f;
++
++struct thinking_menu : scene::Node {
++  nodes::Box<> fPlate{0u};
++  ask_box fThinkingPlate{};
++  nodes::Text fThinkingName{"Thinking", 13.0f, 0u};
++  nodes::Text fThinkingNow{"", 13.0f, 0u};
++  ask_box fHardPlate{};
++  nodes::Text fHardName{"How hard it thinks", 13.0f, 0u};
++  nodes::Text fHardNow{"", 13.0f, 0u};
++  ask_box fAdvancedPlate{};
++  nodes::Text fAdvancedName{"Advanced", 13.0f, 0u};
++  ask_box fSearchPlate{};
++  nodes::Text fSearchName{"Search the web", 13.0f, 0u};
++  nodes::Text fSearchNow{"", 13.0f, 0u};
++  ask_box fCompactPlate{};
++  nodes::Text fCompactName{"Compact context", 13.0f, 0u};
++  nodes::Text fCompactNow{"", 13.0f, 0u};
++
++  thinking_menu() {
++    this->apply({.anchor = scene::anchor::kTopRight,
++                 .origin = scene::anchor::kBottomRight,
++                 .x = -(edge + 13.0f),
++                 .y = -6.0f,
++                 .relativeSize = scene::axes::kNone,
++                 .width = thinking_menu_width,
++                 .height = thinking_menu_rows * thinking_menu_row + 12.0f,
++                 .cornerRadius = card_radius,
++                 .visible = false});
++    fPlate.apply({.fill = true});
++    // Three rows, one above the next, and each of them the whole width of
++    // the menu: what a press is said of is the row it stands in.
++    const float wide = thinking_menu_width - 16.0f;
++    fThinkingPlate.apply(row_spec(8.0f, wide));
++    fHardPlate.apply(row_spec(8.0f + thinking_menu_row, wide));
++    fSearchPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
++    fCompactPlate.apply(row_spec(8.0f + 3.0f * thinking_menu_row, wide));
++    fAdvancedPlate.apply(row_spec(8.0f + 4.0f * thinking_menu_row, wide));
++    fThinkingName.apply(name_spec(8.0f));
++    fThinkingNow.apply(value_spec(8.0f));
++    fHardName.apply(name_spec(8.0f + thinking_menu_row));
++    fHardNow.apply(value_spec(8.0f + thinking_menu_row));
++    fSearchName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
++    fSearchNow.apply(value_spec(8.0f + 2.0f * thinking_menu_row));
++    fCompactName.apply(name_spec(8.0f + 3.0f * thinking_menu_row));
++    fCompactNow.apply(value_spec(8.0f + 3.0f * thinking_menu_row));
++    fAdvancedName.apply(name_spec(8.0f + 4.0f * thinking_menu_row));
++  }
++
++  void again(app::requests *sink, const paints &look, const asking &how,
++             const conversation &chat, bool to_compact, bool open) {
++    this->setVisible(open);
++    if (!open)
++      return;
++    fPlate.setColour(look.card);
++    fThinkingPlate.again(sink, app::set_thinking{!how.thinking}, look.raised);
++    fThinkingName.setColour(look.text);
++    fThinkingNow.setText(how.thinking ? "on" : "off");
++    fThinkingNow.setColour(look.dim);
++    // Round the four and back again at the top: how hard is said beside the
++    // row it stands in, and a press on either walks it on one.
++    const effort next = how.how_hard == effort::all ? effort::least
++                                                    : stepped_of(how.how_hard, 1);
++    fHardPlate.again(sink, app::set_effort{next}, look.raised);
++    fHardName.setColour(look.text);
++    fHardNow.setText(std::string(said_how(how.how_hard)));
++    fHardNow.setColour(look.dim);
++    // Allowed to look things up as it answers: the searching itself is the
++    // wire's own, and every asking written for this conversation says
++    // whether it may (src/provider.cc, web_search_options).
++    fSearchPlate.again(sink, app::set_web_search{chat.id, !chat.search_the_web},
++                       look.raised);
++    fSearchName.setColour(look.text);
++    fSearchNow.setText(chat.search_the_web ? "on" : "off");
++    fSearchNow.setColour(look.dim);
++    // Given short of what every answer but the last thought: one way only,
++    // and grey where there is nothing left to keep back -- a conversation of
++    // nothing but questions has no thinking in it to give less of.
++    fCompactPlate.again(sink, app::compact_context{chat.id},
++                        to_compact ? look.raised : look.card, to_compact);
++    fCompactName.setColour(to_compact ? look.text : look.faint);
++    fCompactNow.setText(chat.given_short ? "given short" : "");
++    fCompactNow.setColour(look.dim);
++    fAdvancedPlate.again(sink, app::open_settings{}, look.raised);
++    fAdvancedName.setColour(look.text);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fThinkingPlate);
++    f(fThinkingName);
++    f(fThinkingNow);
++    f(fHardPlate);
++    f(fHardName);
++    f(fHardNow);
++    f(fSearchPlate);
++    f(fSearchName);
++    f(fSearchNow);
++    f(fCompactPlate);
++    f(fCompactName);
++    f(fCompactNow);
++    f(fAdvancedPlate);
++    f(fAdvancedName);
++  }
++
++private:
++  [[nodiscard]] static scene::Spec row_spec(float y, float wide) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kTopLeft,
++            .x = 8.0f,
++            .y = y,
++            .relativeSize = scene::axes::kNone,
++            .width = wide,
++            .height = thinking_menu_row - 4.0f,
++            .cornerRadius = 10.0f};
++  }
++  // What a row is called, on its left.
++  [[nodiscard]] static scene::Spec name_spec(float y) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kCentreLeft,
++            .x = 20.0f,
++            .y = y + 15.0f,
++            .autoSize = scene::axes::kBoth};
++  }
++  // What it stands at, on its right.
++  [[nodiscard]] static scene::Spec value_spec(float y) {
++    return {.anchor = scene::anchor::kTopRight,
++            .origin = scene::anchor::kCentreRight,
++            .x = -20.0f,
++            .y = y + 15.0f,
++            .autoSize = scene::axes::kBoth};
++  }
++};
++
++// The four things a paperclip chooses between, and the menu it opens above
++// the card to say them: what a camera takes now, what the machine keeps of
++// pictures taken before, what it keeps of moving ones, and every other file
++// it has. One press each, and each of them asking for one of the four.
++inline constexpr float attach_menu_width = 176.0f;
++inline constexpr float attach_menu_row = 34.0f;
++inline constexpr float attach_menu_rows = 4.0f;
++
++struct attach_menu : scene::Node {
++  nodes::Box<> fPlate{0u};
++  ask_box fCameraPlate{};
++  nodes::Text fCameraName{"Camera", 13.0f, 0u};
++  ask_box fPicturesPlate{};
++  nodes::Text fPicturesName{"Gallery", 13.0f, 0u};
++  ask_box fMovingPlate{};
++  nodes::Text fMovingName{"Videos", 13.0f, 0u};
++  ask_box fFilesPlate{};
++  nodes::Text fFilesName{"Files", 13.0f, 0u};
++
++  attach_menu() {
++    this->apply({.anchor = scene::anchor::kTopLeft,
++                 .origin = scene::anchor::kBottomLeft,
++                 .x = 8.0f,
++                 .y = -12.0f,
++                 .relativeSize = scene::axes::kNone,
++                 .width = attach_menu_width,
++                 .height = attach_menu_rows * attach_menu_row + 12.0f,
++                 .cornerRadius = card_radius,
++                 .visible = false});
++    fPlate.apply({.fill = true});
++    const float wide = attach_menu_width - 16.0f;
++    fCameraPlate.apply(row_spec(8.0f, wide));
++    fPicturesPlate.apply(row_spec(8.0f + attach_menu_row, wide));
++    fMovingPlate.apply(row_spec(8.0f + 2.0f * attach_menu_row, wide));
++    fFilesPlate.apply(row_spec(8.0f + 3.0f * attach_menu_row, wide));
++    fCameraName.apply(name_spec(8.0f));
++    fPicturesName.apply(name_spec(8.0f + attach_menu_row));
++    fMovingName.apply(name_spec(8.0f + 2.0f * attach_menu_row));
++    fFilesName.apply(name_spec(8.0f + 3.0f * attach_menu_row));
++  }
++
++  void again(app::requests *sink, const paints &look, bool open) {
++    this->setVisible(open);
++    if (!open)
++      return;
++    fPlate.setColour(look.card);
++    // Where this machine cannot answer one of the four, that row stands grey
++    // and asks for nothing: what no desk can take a picture of is not said to
++    // answer in its place (src/platform/chosen.cc, `can`).
++    bool can[4] = {false, false, false, false};
++    for (const chooses one : {chooses::camera, chooses::pictures,
++                              chooses::moving, chooses::files})
++      can[static_cast<int>(one)] = platform::choosing::can(one);
++    fCameraPlate.again(sink, app::pick_files{chooses::camera},
++                       can[0] ? look.raised : look.card, can[0]);
++    fCameraName.setColour(can[0] ? look.text : look.faint);
++    fPicturesPlate.again(sink, app::pick_files{chooses::pictures},
++                         can[1] ? look.raised : look.card, can[1]);
++    fPicturesName.setColour(can[1] ? look.text : look.faint);
++    fMovingPlate.again(sink, app::pick_files{chooses::moving},
++                       can[2] ? look.raised : look.card, can[2]);
++    fMovingName.setColour(can[2] ? look.text : look.faint);
++    fFilesPlate.again(sink, app::pick_files{chooses::files},
++                      can[3] ? look.raised : look.card, can[3]);
++    fFilesName.setColour(can[3] ? look.text : look.faint);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fCameraPlate);
++    f(fCameraName);
++    f(fPicturesPlate);
++    f(fPicturesName);
++    f(fMovingPlate);
++    f(fMovingName);
++    f(fFilesPlate);
++    f(fFilesName);
++  }
++
++private:
++  [[nodiscard]] static scene::Spec row_spec(float y, float wide) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kTopLeft,
++            .x = 8.0f,
++            .y = y,
++            .relativeSize = scene::axes::kNone,
++            .width = wide,
++            .height = attach_menu_row - 4.0f,
++            .cornerRadius = 10.0f};
++  }
++  // What a row is called.
++  [[nodiscard]] static scene::Spec name_spec(float y) {
++    return {.anchor = scene::anchor::kTopLeft,
++            .origin = scene::anchor::kCentreLeft,
++            .x = 20.0f,
++            .y = y + 15.0f,
++            .autoSize = scene::axes::kBoth};
++  }
++};
++
++// One file waiting to be said with the next message, said by its name and
++// pressed to take it back out of them: what is wrongly chosen is not sent for
++// want of somewhere to put it back.
++inline constexpr float held_row_width = 168.0f;
++inline constexpr float held_row_height = 26.0f;
++inline constexpr std::size_t held_at_most = 4;
++
++struct held_row : scene::Node {
++  ask_box fPlate{};
++  nodes::Text fName{"", 12.0f, 0u};
++
++  held_row() {
++    this->apply({.relativeSize = scene::axes::kNone,
++                 .width = held_row_width,
++                 .height = held_row_height,
++                 .cornerRadius = held_row_height / 2.0f});
++    fPlate.apply({.fill = true});
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = 12.0f,
++                 .autoSize = scene::axes::kBoth,
++                 .maxWidth = held_row_width - 24.0f});
++  }
++
++  void again(app::requests *sink, const paints &look, std::size_t which,
++             std::string_view name) {
++    this->setVisible(true);
++    fPlate.again(sink, app::drop_file{which}, look.card);
++    fName.setText(std::string(name));
++    fName.setColour(look.text);
++  }
++
++  void blank() {
++    this->setVisible(false);
++    fName.setText("");
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fName);
++  }
++};
++
++// Every file waiting to be said with the next message, one pill above another
++// over the card and above it: four of them said at a time, however many wait
++// behind them, for taking one out opens the room the next one is said in.
++struct held_files : scene::Node {
++  std::vector<std::unique_ptr<held_row>> fRows;
++
++  void again(app::requests *sink, const paints &look,
++             std::span<const attachment> held) {
++    const std::size_t shown = std::min(held.size(), held_at_most);
++    for (std::size_t at = 0; at < shown; ++at)
++      row_at(at).again(sink, look, at, held[at].name);
++    // What is left of them where fewer wait than waited here before.
++    for (std::size_t at = shown; at < fRows.size(); ++at)
++      fRows[at]->blank();
++  }
++
++  void forEachChild(auto &&f) {
++    for (auto &row : fRows)
++      f(*row);
++  }
++
++private:
++  [[nodiscard]] held_row &row_at(std::size_t place) {
++    while (fRows.size() <= place)
++      fRows.push_back(std::make_unique<held_row>());
++    held_row &row = *fRows[place];
++    row.apply({.anchor = scene::anchor::kTopLeft,
++               .relativeSize = scene::axes::kNone,
++               .width = held_row_width,
++               .height = held_row_height,
++               .x = 8.0f,
++               .y = -(6.0f + static_cast<float>(place) *
++                                 (held_row_height + 4.0f))});
++    return row;
++  }
++};
++
+ struct composer : scene::Node {
+   nodes::Box<> fCard{0u};
+   // What answers here, and how much of its window this chat has taken: said
+   // over the field every time, not only when it is asked about.
+   nodes::Text fModel{"", 12.0f, 0u, true};
+   nodes::Icon fGauge{shape::info(), 0u};
++  // Three dots after the circle, and what they open above the card.
++  ask_box fDots{};
++  nodes::Icon fDotsMark{shape::more(), 0u};
++  thinking_menu fMenu{};
+   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
+   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
+                                           message_given{fSink}};
++  // A plus at the editor's left, before the model's name, which is where the
++  // four things it chooses between are said (design-doc.md, "The editor's
++  // row"); the menu it opens above the card; and, above everything, what has
++  // been chosen and is waiting to be said with the next message.
++  ask_box fPlusPlate{};
++  nodes::Icon fAttach{shape::plus(), 0u};
++  attach_menu fAttachMenu{};
++  held_files fHeld{};
++  // A clip beside the face, pressed for the same four things the plus is:
++  // the one the design asks for on the left, and the one every machine's own
++  // keyboard row has kept on the right.
++  ask_box fClipPlate{};
+   nodes::Icon fClip{shape::clip(), 0u};
+   nodes::Icon fFace{shape::smile(), 0u};
+   nodes::Box<> fSendPlate{0u};
+@@ -80,15 +421,32 @@ struct composer : scene::Node {
+     fCard.apply({.fill = true, .cornerRadius = card_radius});
+     fModel.apply({.anchor = scene::anchor::kTopLeft,
+                   .origin = scene::anchor::kCentreLeft,
+-                  .x = 18.0f,
++                  .x = 44.0f,
+                   .y = 22.0f,
+                   .autoSize = scene::axes::kBoth});
++    // The circle, and three dots after it: the two of them are what the
++    // card says over the field and never take away, whichever room it is
++    // drawn in, so the circle stands where it left room for the dots.
+     fGauge.apply({.width = 18.0f,
+                   .height = 18.0f,
+                   .anchor = scene::anchor::kTopRight,
+                   .origin = scene::anchor::kCentre,
+-                  .x = -(edge + 18.0f),
++                  .x = -(edge + 50.0f),
+                   .y = 22.0f});
++    fDots.apply({.anchor = scene::anchor::kTopRight,
++                 .origin = scene::anchor::kTopRight,
++                 .x = -edge,
++                 .y = 9.0f,
++                 .relativeSize = scene::axes::kNone,
++                 .width = 26.0f,
++                 .height = 26.0f,
++                 .cornerRadius = 13.0f});
++    fDotsMark.apply({.width = 18.0f,
++                     .height = 18.0f,
++                     .anchor = scene::anchor::kTopRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -(edge + 13.0f),
++                     .y = 22.0f});
+     fField.apply(
+         {.anchor = scene::anchor::kTopLeft,
+          .x = 16.0f,
+@@ -98,6 +456,28 @@ struct composer : scene::Node {
+          .margin = scene::Margin{0.0f, edge + send_size + 62.0f, 0.0f, 16.0f},
+          .cornerRadius = 16.0f,
+          .padding = scene::Margin::horizontal(16.0f)});
++    fPlusPlate.apply({.anchor = scene::anchor::kTopLeft,
++                      .origin = scene::anchor::kCentre,
++                      .x = 26.0f,
++                      .y = 22.0f,
++                      .relativeSize = scene::axes::kNone,
++                      .width = 30.0f,
++                      .height = 30.0f,
++                      .cornerRadius = 15.0f});
++    fAttach.apply({.width = 20.0f,
++                   .height = 20.0f,
++                   .anchor = scene::anchor::kTopLeft,
++                   .origin = scene::anchor::kCentre,
++                   .x = 26.0f,
++                   .y = 22.0f});
++    fClipPlate.apply({.anchor = scene::anchor::kTopRight,
++                      .origin = scene::anchor::kCentre,
++                      .x = -(edge + send_size + 44.0f),
++                      .y = 68.0f,
++                      .relativeSize = scene::axes::kNone,
++                      .width = 28.0f,
++                      .height = 28.0f,
++                      .cornerRadius = 14.0f});
+     fClip.apply({.width = 22.0f,
+                  .height = 22.0f,
+                  .anchor = scene::anchor::kTopRight,
+@@ -125,11 +505,17 @@ struct composer : scene::Node {
+                      .y = 45.0f + send_size / 2.0f});
+   }
+ 
+-  void again(const paints &look, const conversation &chat,
+-             app::requests *asked) {
++  void again(const paints &look, const conversation &chat, const asking &how,
++             bool to_compact, bool can_choose, std::span<const attachment> held,
++             app::requests *asked, bool menu_open, bool attach_open) {
+     fSink->asked = asked;
+     fSink->chat = chat.id;
+     fCard.setColour(look.card);
++    // Where this machine hands nothing over, neither of the two is drawn: a
++    // clip that cannot attach is a stub.
++    fClipPlate.setVisible(can_choose);
++    fClip.setVisible(can_choose);
++    fClipPlate.again(asked, app::open_attach{}, look.card);
+     fClip.setColour(look.faint);
+     fFace.setColour(look.faint);
+     fSendPlate.setColour(look.primary);
+@@ -143,6 +529,26 @@ struct composer : scene::Node {
+     fModel.setColour(look.primary);
+     fGauge.setShape(context_ring(used, look.outline, look.primary));
+     fGauge.setColour(look.primary);
++    // Where this machine can choose nothing, the plus is not drawn at all:
++    // what cannot be pressed is not stood there to be pressed.
++    fPlusPlate.setVisible(can_choose);
++    fAttach.setVisible(can_choose);
++    if (can_choose) {
++      fPlusPlate.again(asked, app::open_attach{}, look.search_bar);
++      fAttach.setColour(look.faint);
++    }
++    // The four things it chooses between, open above the card where it was
++    // pressed and nowhere else: shut with it too, wherever nothing chooses.
++    fAttachMenu.again(asked, look, can_choose && attach_open);
++    // What is waiting to be said with the next message: one pill a file, or
++    // nothing at all where nothing waits. Said for nothing while the four
++    // they are chosen from stand open over them.
++    fHeld.again(asked, look, can_choose && !attach_open ? held :
++                                 std::span<const attachment>{});
++    // The dots, and the menu they keep open or shut.
++    fDots.again(asked, app::toggle_thinking{}, look.search_bar);
++    fDotsMark.setColour(look.text);
++    fMenu.again(asked, look, how, chat, to_compact, menu_open);
+   }
+ 
+   void clear() { fField.setText(""); }
+@@ -151,7 +557,15 @@ struct composer : scene::Node {
+     f(fCard);
+     f(fModel);
+     f(fGauge);
++    f(fDots);
++    f(fDotsMark);
++    f(fMenu);
+     f(fField);
++    f(fPlusPlate);
++    f(fAttach);
++    f(fAttachMenu);
++    f(fHeld);
++    f(fClipPlate);
+     f(fClip);
+     f(fFace);
+     f(fSendPlate);
+diff --git a/src/ui/message_list.cc b/src/ui/message_list.cc
+index d535bfc7..466bb3b4 100644
+--- a/src/ui/message_list.cc
++++ b/src/ui/message_list.cc
+@@ -64,6 +64,9 @@ inline constexpr std::size_t foot_count = 6;
+ // to, and no wider than three quarters of the room.
+ struct bubble : nodes::Stack {
+   nodes::Text fBody{"", 15.0f, 0u};
++  // What was said with this message: one line of the names of the files that
++  // were chosen for it, or nothing at all where nothing was.
++  nodes::Text fKept{"", 12.0f, 0u};
+   nodes::Text fTime{"", 11.0f, 0u};
+ 
+   bubble() {
+@@ -78,6 +81,7 @@ struct bubble : nodes::Stack {
+                                           bubble_pad_y, bubble_pad_x}});
+     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
+     fBody.apply({.autoSize = scene::axes::kBoth});
++    fKept.apply({.autoSize = scene::axes::kBoth, .maxWidth = 240.0f});
+     fTime.apply(
+         {.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
+   }
+@@ -85,11 +89,12 @@ struct bubble : nodes::Stack {
+   void blank() {
+     this->setVisible(false);
+     fBody.setText("");
++    fKept.setText("");
+     fTime.setText("");
+   }
+ 
+   void again(const paints &look, std::string_view said, std::string_view when,
+-             float widest) {
++             float widest, std::span<const attachment> kept = {}) {
+     this->setVisible(true);
+     // Two ways at once that this one is the reader's: it stands on the right,
+     // and the corner of it on that side, at its foot, is squarer than the
+@@ -106,12 +111,27 @@ struct bubble : nodes::Stack {
+     fBody.setFontSize(look.size);
+     fBody.apply({.autoSize = scene::axes::kBoth,
+                  .maxWidth = widest - 2.0f * bubble_pad_x});
++    // What was said with it, under its words: every name of it in one line,
++    // and no line at all where it was said with nothing.
++    std::string names;
++    for (const attachment &one : kept) {
++      if (!names.empty())
++        names += ", ";
++      names += one.name;
++    }
++    fKept.setVisible(!kept.empty());
++    fKept.setText(names);
++    fKept.setColour(look.on_sent & 0xd0ffffffu);
++    fKept.setFontSize(look.size - 2.0f);
++    fKept.apply({.autoSize = scene::axes::kBoth,
++                 .maxWidth = widest - 2.0f * bubble_pad_x});
+     fTime.setText(std::string(when));
+     fTime.setColour(look.on_sent & 0xb0ffffffu);
+   }
+ 
+   void forEachChild(auto &&f) {
+     f(fBody);
++    f(fKept);
+     f(fTime);
+   }
+ };
+@@ -320,7 +340,7 @@ struct reader_row : nodes::Stack {
+         {.fillX = true,
+          .autoSize = scene::axes::kY,
+          .margin = scene::Margin{head ? run_gap : 0.0f, 0.0f, 0.0f, 0.0f}});
+-    fBubble.again(look, said.text, clock_of(said.sent), widest);
++    fBubble.again(look, said.text, clock_of(said.sent), widest, said.kept);
+   }
+ 
+   void forEachChild(auto &&f) { f(fBubble); }
+diff --git a/src/ui/settings.cc b/src/ui/settings.cc
+index 5cb977f1..94cb9ef1 100644
+--- a/src/ui/settings.cc
++++ b/src/ui/settings.cc
+@@ -287,6 +287,75 @@ struct knob_row : scene::Node {
+   }
+ };
+ 
++// How hard a model thinks before it answers, as a row: what it stands at
++// now, and a press either side of that moving it one step round the four
++// (pchat.config). Neither press says more than the step it was pressed for.
++struct effort_row : scene::Node {
++  nodes::Box<> fPlate{0u};
++  nodes::Text fName{"How hard it thinks", 15.0f, 0u};
++  nodes::Text fValue{"", 15.0f, 0u};
++  ask_box fLess{};
++  nodes::Text fLessMark{"\u2013", 16.0f, 0u, true};
++  ask_box fMore{};
++  nodes::Text fMoreMark{"+", 16.0f, 0u, true};
++
++  effort_row() {
++    this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
++    fPlate.apply({.fill = true});
++    fName.apply({.anchor = scene::anchor::kCentreLeft,
++                 .origin = scene::anchor::kCentreLeft,
++                 .x = 16.0f,
++                 .autoSize = scene::axes::kBoth});
++    fValue.apply({.anchor = scene::anchor::kCentreRight,
++                  .origin = scene::anchor::kCentreRight,
++                  .x = -118.0f,
++                  .autoSize = scene::axes::kBoth});
++    fLess.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -60.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fLessMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -80.0f,
++                     .autoSize = scene::axes::kBoth});
++    fMore.apply({.anchor = scene::anchor::kCentreRight,
++                 .origin = scene::anchor::kCentreRight,
++                 .x = -14.0f,
++                 .width = 40.0f,
++                 .height = 30.0f,
++                 .cornerRadius = 10.0f});
++    fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
++                     .origin = scene::anchor::kCentre,
++                     .x = -34.0f,
++                     .autoSize = scene::axes::kBoth});
++  }
++
++  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
++             effort now) {
++    this->apply(spec);
++    fPlate.setColour(look.field);
++    fName.setColour(look.text);
++    fValue.setText(std::string(said_how(now)));
++    fValue.setColour(look.dim);
++    fLess.again(sink, app::set_effort{stepped_of(now, -1)}, look.raised);
++    fMore.again(sink, app::set_effort{stepped_of(now, 1)}, look.raised);
++    fLessMark.setColour(look.text);
++    fMoreMark.setColour(look.text);
++  }
++
++  void forEachChild(auto &&f) {
++    f(fPlate);
++    f(fName);
++    f(fValue);
++    f(fLess);
++    f(fLessMark);
++    f(fMore);
++    f(fMoreMark);
++  }
++};
++
+ // What the card holds: the seeds, the switches, and what else is said in
+ // the page. Of its own node, and not drawn straight into the page, so that
+ // what scrolls is these and not the card they are said in -- a page that
+@@ -371,6 +440,10 @@ struct settings_rows : scene::Node {
+   switch_row fLight;
+   // Generation, drawn: one row for each of the five an answer is asked with.
+   std::array<knob_row, asking_offered.size()> fKnobs;
++  // Thinking, drawn: that it is wanted at all, and how hard, under the name
++  // the page had left standing for the answerer's own generation.
++  switch_row fThinking;
++  effort_row fEffort;
+   // The tools, drawn: a switch to each of the three, whether it is offered
+   // to a model or not.
+   std::array<switch_row, tool_names.size()> fTools;
+@@ -412,6 +485,8 @@ struct settings_rows : scene::Node {
+     // it, and each of these says it is drawn when it is.
+     for (knob_row &one : fKnobs)
+       one.setVisible(false);
++    fThinking.setVisible(false);
++    fEffort.setVisible(false);
+     for (switch_row &one : fTools)
+       one.setVisible(false);
+     for (switch_row &one : fAnswerers)
+@@ -535,6 +610,21 @@ struct settings_rows : scene::Node {
+                                      const asking &how, float row_width,
+                                      float base) {
+     float at = base;
++    const auto row_at = [row_width](float y) {
++      return scene::Spec{.anchor = scene::anchor::kTopLeft,
++                         .x = 16.0f,
++                         .y = y,
++                         .relativeSize = scene::axes::kNone,
++                         .width = row_width,
++                         .height = settings_row_height,
++                         .cornerRadius = 14.0f,
++                         .visible = true};
++    };
++    fThinking.again(asked, row_at(at), look, "Think before answering",
++                    how.thinking, app::set_thinking{!how.thinking});
++    at += settings_row_stride;
++    fEffort.again(asked, row_at(at), look, how.how_hard);
++    at += settings_row_stride;
+     for (std::size_t one = 0u; one < asking_offered.size(); ++one) {
+       const asking_choice &said = asking_offered[one];
+       fKnobs[one].again(asked,
+diff --git a/src/ui/window.cc b/src/ui/window.cc
+index 484b1543..96cac181 100644
+--- a/src/ui/window.cc
++++ b/src/ui/window.cc
+@@ -66,11 +66,12 @@ struct app_window : scene::Node {
+ 
+   // Everything drawn again from the model, for this size of window.
+   void again(const paints &look, const chats_root &root, const looks &shown,
+-             const asking &how, const std::string &query, bool dark,
++             const asking &how, const std::string &query, bool to_compact,
++             bool can_choose, std::span<const attachment> held, bool dark,
+              bool settings_open,
+              bool design_open, bool prompt_open, bool more_open,
+-             bool drawer_open, float width,
+-             float height,
++             bool drawer_open, bool thinking_open, bool attach_open,
++             float width, float height,
+              app::requests *asked) {
+     // The conversation the window has open, as it is named: none of them,
+     // where none is open.
+@@ -184,7 +185,8 @@ struct app_window : scene::Node {
+                      .height = composer_height + 2.0f * edge,
+                      .visible = in_chat});
+     if (open_chat)
+-      fComposer.again(look, *open_chat, asked);
++      fComposer.again(look, *open_chat, how, to_compact, can_choose, held,
++                      asked, thinking_open, attach_open);
+     // The settings page, over everything, when it is opened.
+     if (settings_open)
+       fSettings.again(asked, look, shown, how, answering, dark, width,
+diff --git a/test/logic_test.cc b/test/logic_test.cc
+index 6b458e6d..8b56a3c7 100644
+--- a/test/logic_test.cc
++++ b/test/logic_test.cc
+@@ -9,6 +9,7 @@ import pchat.core;
+ import pchat.logic.lists;
+ import pchat.logic.search;
+ import pchat.logic.composer;
++import pchat.logic.compacted;
+ import pchat.logic.formatting;
+ import pchat.logic.doc;
+ 
+@@ -61,6 +62,22 @@ SAID(logic, sending_makes_one_message_and_an_empty_field) {
+   EXPECT_FALSE(logic::can_send(logic::composer_state{.text = "  \n"}));
+ }
+ 
++SAID(logic, what_was_chosen_is_said_with_the_message_and_kept_with_it) {
++  const logic::sent_message said = logic::send(
++      logic::sending_request{conversation_id{"general"}, "hello",
++                             {attachment{.name = "notes.txt",
++                                         .kind = "text/plain",
++                                         .bytes = {std::byte{'a'}}}},
++                             std::nullopt},
++      "Reader", 7);
++  EXPECT_EQ(said.said.kept.size(), 1u);
++  EXPECT_EQ(said.said.kept.front().name, std::string("notes.txt"));
++  // What is chosen can be sent on its own: nothing written beside it, and
++  // still one message made of what was said.
++  EXPECT_TRUE(logic::can_send(logic::composer_state{
++      .text = "", .attachments = {attachment{.name = "photo.png"}}}));
++}
++
+ SAID(logic, marks_make_runs_of_style) {
+   const std::string said = "**bold** and `code`";
+   const std::vector<logic::run> runs = logic::runs_of(said);
+@@ -131,3 +148,107 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
+   EXPECT_TRUE(titled);
+   EXPECT_TRUE(listed);
+ }
++
++SAID(logic, one_conversation_is_read_out_of_all_of_them) {
++  const message in_general{.id = message_id{"m-1"},
++                           .chat = conversation_id{"general"},
++                           .author = "Reader",
++                           .outgoing = true,
++                           .text = "asked",
++                           .sent = 1};
++  const message in_random{.id = message_id{"m-9"},
++                          .chat = conversation_id{"random"},
++                          .author = "Reader",
++                          .outgoing = true,
++                          .text = "asked elsewhere",
++                          .sent = 2};
++  const std::vector<message> all{in_general, in_random};
++  const std::vector<message> said =
++      logic::said_in(all, conversation_id{"general"});
++  EXPECT_EQ(said.size(), 1u);
++  EXPECT_EQ(said.front().id.value, std::string("m-1"));
++  EXPECT_TRUE(logic::said_in(all, conversation_id{"nowhere"}).empty());
++}
++
++SAID(logic, a_compacted_conversation_gives_what_every_answer_thought_away) {
++  // Two answers thought before them; the second of them is the last thing
++  // said in the conversation, and so it is the one whose thinking is given
++  // still -- what it thought is what is being answered about.
++  const std::vector<message> all{
++      {.id = message_id{"m-1"},
++       .chat = conversation_id{"general"},
++       .author = "Reader",
++       .outgoing = true,
++       .text = "asked once",
++       .sent = 1},
++      {.id = message_id{"m-2"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered once",
++       .sent = 2,
++       .before = thought{.said = "thought all the way through it"}},
++      {.id = message_id{"m-3"},
++       .chat = conversation_id{"general"},
++       .author = "Reader",
++       .outgoing = true,
++       .text = "asked twice",
++       .sent = 3},
++      {.id = message_id{"m-4"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered twice",
++       .sent = 4,
++       .before = thought{.said = "thought again"}}};
++  const logic::compacted given =
++      logic::compacted_of(all, conversation_id{"general"});
++  EXPECT_EQ(given.said.size(), 4u);
++  // One answer lost what it thought, and it says so.
++  EXPECT_EQ(given.answers, 1u);
++  EXPECT_TRUE(given.said[1].before->said.empty());
++  // Nothing else did: no thinking in the questions, and the last answer
++  // keeps every word it wrote to itself. What took it time and how many
++  // calls it made are said of it still -- only the words are given away.
++  EXPECT_FALSE(given.said[0].before.has_value());
++  EXPECT_FALSE(given.said[2].before.has_value());
++  EXPECT_EQ(given.said[3].before->said, std::string("thought again"));
++  EXPECT_TRUE(logic::anything_to_compact_of(all, conversation_id{"general"}));
++}
++
++SAID(logic, nothing_is_compacted_where_there_is_nothing_thought) {
++  // One message said, and then another: neither thought anything before it,
++  // and there is nothing a wire is asked twice for.
++  const std::vector<message> one{
++      {.id = message_id{"m-1"},
++       .chat = conversation_id{"general"},
++       .author = "Reader",
++       .outgoing = true,
++       .text = "asked",
++       .sent = 1},
++      {.id = message_id{"m-2"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered",
++       .sent = 2}};
++  EXPECT_FALSE(
++      logic::anything_to_compact_of(one, conversation_id{"general"}));
++  EXPECT_EQ(logic::compacted_of(one, conversation_id{"general"}).answers, 0u);
++  // One message said on its own: nothing before it and nothing after it.
++  const std::vector<message> alone{one.front()};
++  EXPECT_FALSE(
++      logic::anything_to_compact_of(alone, conversation_id{"general"}));
++  // The only answer that thought is the last thing said: nothing to keep
++  // back, for nothing is given more than once yet.
++  const std::vector<message> last_thought{
++      one.front(),
++      {.id = message_id{"m-2"},
++       .chat = conversation_id{"general"},
++       .author = "kimi",
++       .text = "answered",
++       .sent = 2,
++       .before = thought{.said = "thought about this one"}}};
++  EXPECT_FALSE(
++      logic::anything_to_compact_of(last_thought, conversation_id{"general"}));
++  EXPECT_EQ(
++      logic::compacted_of(last_thought, conversation_id{"general"}).answers,
++      0u);
++}
+diff --git a/test/provider_test.cc b/test/provider_test.cc
+index ec1103a2..a9252e91 100644
+--- a/test/provider_test.cc
++++ b/test/provider_test.cc
+@@ -132,6 +132,36 @@ SAID(provider, what_the_model_keeps_is_turns_on_a_wire) {
+   EXPECT_EQ(turns[1].thought, std::string("> looked\n"));
+ }
+ 
++SAID(provider, a_file_that_is_words_is_given_to_the_wire_with_the_message) {
++  message said{.id = message_id{"1"}, .text = "What does this say", .outgoing = true};
++  said.kept.push_back(attachment{
++      .name = "notes.txt", .kind = "text/plain",
++      .bytes = {std::byte{'a'}, std::byte{'b'}, std::byte{'c'}}});
++  const provider::turn turn = provider::turns_of(
++      std::vector<message>{said}).front();
++  EXPECT_EQ(turn.text,
++            std::string("What does this say\n\nWhat notes.txt says:\nabc"));
++}
++
++SAID(provider, a_file_that_is_not_words_is_kept_and_given_to_nothing) {
++  message said{.id = message_id{"1"}, .text = "Look here", .outgoing = true};
++  said.kept.push_back(attachment{.name = "photo.png",
++                                 .kind = "image/png",
++                                 .bytes = {std::byte{0x89}, std::byte{'P'}}});
++  const provider::turn turn = provider::turns_of(
++      std::vector<message>{said}).front();
++  EXPECT_EQ(turn.text, std::string("Look here"));
++}
++
++SAID(provider, a_file_says_its_kind_where_its_kind_says_nothing) {
++  message said{.id = message_id{"1"}, .text = "Read it", .outgoing = true};
++  said.kept.push_back(attachment{
++      .name = "main.cc", .bytes = {std::byte{'/'}, std::byte{'/'}}});
++  const provider::turn turn = provider::turns_of(
++      std::vector<message>{said}).front();
++  EXPECT_EQ(turn.text, std::string("Read it"));
++}
++
+ SAID(provider, a_stream_is_read_whole) {
+   provider::stream one;
+   one.feed(one_stream);
+@@ -282,4 +312,24 @@ SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
+   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
+ }
+ 
++// Looking something up as it answers, which is the wire's own to do: written
++// in the asking where it was asked for, and nowhere where it was not.
++SAID(provider, a_search_is_asked_for_where_it_is_asked_for) {
++  const std::vector<provider::turn> no_turns;
++  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
++  const provider::wanted yes{.search = true};
++  const provider::wanted no{};
++  EXPECT_TRUE(provider::body_of(openai, no_turns, yes).find(
++                  "\"web_search_options\":{\"search_context_size\":\"medium\"}") !=
++              std::string::npos);
++  EXPECT_TRUE(provider::body_of(openai, no_turns, no).find("search") ==
++              std::string::npos);
++  // Asked for a model that has no search of its own all the same: how much
++  // of what it reads is kept beside the answer is what is being said here,
++  // and not which wire is being spoken to.
++  const provider::endpoint relay{.base = "https://openrouter.ai/api/v1", .model = "o4-mini"};
++  EXPECT_TRUE(provider::body_of(relay, no_turns, yes).find("web_search_options") !=
++              std::string::npos);
++}
++
+ int main() { return pchat::tests::run(); }
+diff --git a/tools/probe_by_hand.mjs b/tools/probe_by_hand.mjs
+new file mode 100644
+index 00000000..74a24297
+--- /dev/null
++++ b/tools/probe_by_hand.mjs
+@@ -0,0 +1,273 @@
++// SPDX-License-Identifier: AGPL-3.0-only
++// One question asked of the things drawn in this tree that no probe has ever
++// pressed: the plus at the editor's left and the three dots beside it, the
++// fold above an answer, and what a press of Copy keeps for the machine. Asked
++// beside them, because they are asked of the same page: whether the page even
++// starts, in each of the sizes and of the threads a tester's browser has said
++// it could not be asked in.
++//
++// Everything is said where it stands, so nothing here needs to know where a
++// thing is: the mirror skiff keeps in the page says every line as an element
++// of its own, and what is pressed is the middle of the smallest one that says
++// what is looked for. Two places are said outright, because they hold an icon
++// and no words: the plus and the three dots, whose middles were read out of
++// the page once and have not moved.
++//
++// Run instead of tools/probe_painted.mjs where a tree keeps it (.github/
++// workflows/probe.yml), and kept only while one of these has never been read
++// back by anybody.
++import { chromium } from 'playwright';
++
++const url = process.env.PCHAT_PAGE ?? 'https://maurerant.github.io/progressive-chat/';
++
++const read = async page =>
++  page.evaluate(() => {
++    const host = document.getElementById('skiff');
++    return (host?.innerText ?? host?.textContent ?? '').replace(/\s+/g, ' ').slice(0, 6000);
++  });
++
++// What the mirror says, and where it says each of them: the place of every
++// element that holds words of its own, read back beside them.
++const lines = async page =>
++  page.evaluate(() => {
++    const host = document.getElementById('skiff');
++    if (!host) return [];
++    return Array.from(host.querySelectorAll('*'))
++        .map((one) => {
++          const r = one.getBoundingClientRect();
++          return {
++            said: (one.textContent ?? '').replace(/\s+/g, ' ').trim(),
++            x: Math.round(r.x + r.width / 2),
++            y: Math.round(r.y + r.height / 2),
++            wide: Math.round(r.width),
++            tall: Math.round(r.height),
++            // Kept in the mirror though it is folded away: a line nothing is
++            // showing is not one a press can be aimed at.
++            shown: one.checkVisibility
++                ? one.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
++                : true,
++          };
++        })
++        .filter((one) => one.said.length > 0 && one.wide > 0 && one.tall > 0 && one.shown)
++        .slice(0, 400);
++  });
++
++// Every place a line that says it could be pressed at, smallest first: what
++// is looked for is said once by the line itself and again by everything
++// holding it, so several of them are said of the same words.
++const places_saying = async (page, wants) => {
++  const every = await lines(page);
++  return every
++      .filter((one) => one.said.includes(wants))
++      .sort((a, b) => a.wide * a.tall - b.wide * b.tall)
++      .slice(0, 5);
++};
++
++// Pressed in the middle of the smallest thing that says it.
++const press = async (page, wants) => {
++  const said = await places_saying(page, wants);
++  if (said.length === 0) return null;
++  const at = said[0];
++  await page.mouse.click(at.x, at.y);
++  await page.waitForTimeout(900);
++  console.log(`pressed "${wants}" at ${at.x},${at.y} (${at.wide}x${at.tall})`);
++  return at;
++};
++
++// Pressed until something else is said, one place after another: a line keeps
++// what a press is for inside a row of its own, and which of them the press
++// belongs to -- the words, the row, the whole card -- is not said anywhere but
++// by pressing them.
++const press_until = async (page, wants, came) => {
++  const said = await places_saying(page, wants);
++  if (said.length === 0) {
++    console.log(`nothing anywhere said "${wants}"`);
++    return null;
++  }
++  for (const at of said) {
++    await page.mouse.click(at.x, at.y);
++    await page.waitForTimeout(900);
++    console.log(`pressed "${wants}" at ${at.x},${at.y} (${at.wide}x${at.tall})`);
++    const after = await came();
++    if (after) return { at, after };
++    // Taken back where it was, for the next place is asked of the page as it
++    // was before anything was pressed at all.
++    await page.mouse.click(at.x, at.y);
++    await page.waitForTimeout(500);
++  }
++  return null;
++};
++
++// Whether it starts at all, asked of one kind of browser at a time: how wide
++// the room is, whether the browser says it is a phone, and whether the worker
++// that isolates the client is kept. Narrow and alone together is the one that
++// has never answered yes, and nobody has said which of the three stops it.
++const starts = async (browser, name, viewport, phone, alone) => {
++  const context = await browser.newContext({
++    viewport,
++    deviceScaleFactor: 1,
++    isMobile: phone,
++    hasTouch: phone,
++    ...(alone ? { serviceWorkers: 'block' } : {}),
++  });
++  const page = await context.newPage();
++  page.on('console', message =>
++    console.log(`console[${name}] ${message.type()}: ${String(message.text()).slice(0, 300)}`));
++  page.on('pageerror', error => console.log(`pageerror[${name}]: ${String(error).slice(0, 400)}`));
++  await page.goto(url, { waitUntil: 'load' });
++  let started = 'no -- still saying it is starting';
++  try {
++    await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 120000 });
++    started = 'yes';
++  } catch {
++    // Said as it is said by every probe before it.
++  }
++  await page.waitForTimeout(4000);
++  const said = await page.evaluate(() => {
++    const host = document.getElementById('skiff');
++    return {
++      nodes: host ? host.querySelectorAll('*').length : 0,
++      text: (host?.innerText ?? host?.textContent ?? '').replace(/\s+/g, ' ').slice(0, 400),
++    };
++  });
++  console.log(`started[${name}]: ${started} -- ${said.nodes} nodes -- ${said.text}`);
++  await page.screenshot({ path: `started-${name}.png` }).catch(() => {});
++  await context.close().catch(() => {});
++};
++
++const browser = await chromium.launch({
++  args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
++});
++
++for (const [name, viewport, phone, alone] of [
++  ['narrow-and-alone', { width: 390, height: 844 }, true, true],
++  ['narrow-and-a-phone-only', { width: 390, height: 844 }, true, false],
++  ['narrow-and-alone-only', { width: 390, height: 844 }, false, true],
++  ['narrow-and-neither', { width: 390, height: 844 }, false, false],
++  ['half-of-a-room-and-alone', { width: 700, height: 900 }, true, true],
++])
++  await starts(browser, name, viewport, phone, alone);
++
++const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
++await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(url).origin });
++const page = await context.newPage();
++page.on('pageerror', error => console.log(`pageerror: ${String(error).slice(0, 400)}`));
++await page.goto(url, { waitUntil: 'load' });
++await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 180000 });
++await page.waitForTimeout(6000);
++
++// The two that hold nothing but an icon.
++const places = [
++  ["the plus at the editor's left", 398, 815, 'Camera'],
++  ['the three dots beside the field', 1255, 815, 'Advanced'],
++];
++for (const [name, x, y, wants] of places) {
++  await page.mouse.click(x, y);
++  await page.waitForTimeout(900);
++  const said = await read(page);
++  console.log(
++    `${name}: pressed at ${x},${y} -- ` +
++      `${said.includes(wants) ? `${wants} came out of it` : `nothing of ${wants} came`}`);
++  if (!said.includes(wants)) continue;
++  await page.screenshot({ path: `pressed-${name.replace(/[^a-z]+/g, '-')}.png` });
++  await page.mouse.click(x, y);
++  await page.waitForTimeout(900);
++  const shut = await read(page);
++  console.log(`${name}: put away again -- ${shut.includes(wants) ? 'still said' : 'said no more'}`);
++}
++
++// The fold above the first answer: pressed open, what it wrote to itself is
++// read back whole, and pressed again it is folded away again.
++//
++// Read out of the mirror and not of the page as one text: what the scene has
++// put away keeps its words in the mirror, so a page read as one text says
++// them whether they are showing or not, and a fold would look open before
++// anything was pressed at it.
++const greentext = 'three reads of the pantry';
++const shown_text = async (page) => (await lines(page)).map((one) => one.said).join(' ');
++// What came out of nothing: the words the page shows that it did not show a
++// moment ago.
++const came_of = (was, now) => {
++  let at = 0;
++  while (at < was.length && at < now.length && was[at] === now[at]) at++;
++  let to = 0;
++  while (to < was.length - at && to < now.length - at &&
++         was[was.length - 1 - to] === now[now.length - 1 - to])
++    to++;
++  return now.slice(at, now.length - to);
++};
++const before = await shown_text(page);
++const opened = await press_until(page, 'Thought for', async () => {
++  const open = await shown_text(page);
++  const came = came_of(before, open);
++  if (came.length <= 8) return null;
++  console.log(`came out of pressing the fold: ${came.slice(0, 1200)}`);
++  return open;
++});
++if (opened) {
++  console.log(
++    `the fold pressed open at ${opened.at.x},${opened.at.y}: ` +
++      `${opened.after.includes(greentext) ? 'what it thought is said' : 'it is open, and what it said was other than expected'}`);
++  await page.screenshot({ path: 'pressed-fold.png' });
++  await page.mouse.click(opened.at.x, opened.at.y);
++  await page.waitForTimeout(900);
++  const shut = await shown_text(page);
++  console.log(`the fold pressed again: ${came_of(opened.after, shut).length === 0 && shut.length < opened.after.length ? 'folded away again' : 'still open'}`);
++} else {
++  console.log('the fold pressed open: no press anywhere opened it');
++}
++
++// That this browser's clipboard can be written and read at all, asked before
++// the program is asked to write to it: a probe that is given no leave to read
++// it would say of every program that its copy does nothing.
++const held = await page.evaluate(async () => {
++  try {
++    await navigator.clipboard.writeText('written by the probe itself');
++    return await navigator.clipboard.readText();
++  } catch (gone) {
++    return `this browser lets nothing be read back: ${gone}`;
++  }
++});
++console.log(`the clipboard read by the probe itself: ${JSON.stringify(String(held).slice(0, 200))}`);
++await page.evaluate(async () => {
++  try {
++    await navigator.clipboard.writeText('');
++  } catch (gone) {
++    // Left as it was: the next line is the first thing written since.
++  }
++});
++
++// What a press of Copy keeps for the machine itself, read out of the host.
++const kept_text = async () => {
++  await page.waitForTimeout(1200);
++  const kept = await page.evaluate(async () => {
++    try {
++      return await navigator.clipboard.readText();
++    } catch (gone) {
++      return '';
++    }
++  });
++  return kept.length > 0 ? kept : null;
++};
++const copied = await press_until(page, 'Copy', kept_text);
++console.log(
++  `what the host's clipboard keeps: ` +
++    `${copied ? JSON.stringify(String(copied.after).slice(0, 400)) : 'nothing at all, whichever Copy was pressed'}`);
++
++// Whether a press inside the room reaches anything at all. The two asked of
++// it above -- the fold, and Copy under an answer -- both came back with
++// nothing said and nothing kept, and which they are, two things that do
++// nothing of their own or one room no press reaches into, is said by neither
++// of them alone. So: one of the six pressed where only an answer stands, and
++// what it did read as what is no longer said in the room.
++const spoken = await shown_text(page);
++const rubbed = await press_until(page, 'Delete', async () => {
++  const now = await shown_text(page);
++  return now.length < spoken.length - 40 ? now : null;
++});
++console.log(
++  `a press inside the room: ` +
++    `${rubbed ? 'it reaches what stands there, and one answer is gone' : 'nothing of the room is reached by a press at all'}`);
++
++await context.close();
++await browser.close();
