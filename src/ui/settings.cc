@@ -29,6 +29,12 @@ inline constexpr double large_type = 1.25;
 // How many groups the page has, and how many items any one of them may say.
 inline constexpr std::size_t max_settings_groups = 10u;
 inline constexpr std::size_t max_settings_items = 7u;
+// How many model rows the page draws at once: the answerers offered, what
+// the chosen door may answer as, and whatever the open chat holds. As many
+// as stand here is this many -- and where a chat holds more models than
+// that, it keeps every one of them all the same, the rows being what is
+// offered and not what a chat may hold.
+inline constexpr std::size_t max_model_rows = 16u;
 
 // The seeds offered, and the name each is known by.
 struct seed_choice {
@@ -444,22 +450,24 @@ struct test_row : scene::Node {
   }
 };
 
-// What the field of the providers writes into: the door itself, through the
-// program between frames -- the key is asked of no server, it is put where
-// the next asking will carry it (src/provider.cc, headers_of).
-struct key_sink {
+// What a field under the doors writes into: the door itself, through the
+// program between frames -- neither is asked of any server, each is put
+// where the next asking will carry it (src/provider.cc, headers_of, and
+// pchat.config, models_into, for the models).
+struct door_sink {
   app::requests *asked = nullptr;
-  // Whose key is in the field: the door the page has chosen, said with every
-  // edit, because a key without the door it opens is not a key of anything.
+  // Whose: the door the page has chosen, said with every edit -- a key or a
+  // list of models is not a key and not a list without the door they stand
+  // at.
   std::string id;
 };
-// Each edit of the field, whole: the key as it stands after this keystroke,
-// for the door named beside it -- into the settings, as it is typed, and not
-// when the page is put away, which would keep two copies of what is only
-// said once (the same way the prompt card writes its own words, src/ui/
-// prompt.cc).
+// Each edit of the key field, whole: the key as it stands after this
+// keystroke, for the door named beside it -- into the settings, as it is
+// typed, and not when the page is put away, which would keep two copies of
+// what is only said once (the same way the prompt card writes its own
+// words, src/ui/prompt.cc).
 struct key_told {
-  std::shared_ptr<key_sink> sink;
+  std::shared_ptr<door_sink> sink;
   // Nothing to give back to the scene: what is typed is asked of the
   // program as it is typed, and there is nothing left to say about the press.
   using Answer = void;
@@ -467,6 +475,19 @@ struct key_told {
   Answer operator()(std::string_view text) const {
     if (sink && sink->asked)
       sink->asked->ask(app::set_door_key{sink->id, std::string(text)});
+  }
+};
+// Each edit of the models field, whole: what that field holds for the door
+// named beside it, ids apart (pchat.config, models_said reads them so) --
+// written into the door as it is typed, offered in a chat's models like any
+// other, and never taken into a conversation by the typing itself.
+struct model_told {
+  std::shared_ptr<door_sink> sink;
+  using Answer = void;
+  static constexpr bool kEveryEdit = true;
+  Answer operator()(std::string_view text) const {
+    if (sink && sink->asked)
+      sink->asked->ask(app::set_door_models{sink->id, std::string(text)});
   }
 };
 
@@ -511,9 +532,10 @@ struct settings_rows : scene::Node {
   // name it is said for -- Multimodal, Network and Memory & Data took their
   // two, two and three.
   std::array<switch_row, switch_names.size()> fSwitches;
-  // The answerers, drawn: a switch to each of them, whether it answers in
-  // the conversation the window has open or not.
-  std::array<switch_row, answerers_offered.size()> fAnswerers;
+  // The models, drawn: a switch to each that stands here to be switched --
+  // the answerers offered as ever, what the chosen door may answer as, and
+  // whatever the open chat holds (say_answerers builds that list).
+  std::array<switch_row, max_model_rows> fAnswerers;
   // The doors, drawn: a switch to each, saying which one the next asking is
   // spoken through -- one at a time, which is what the rows show of
   // themselves by which one stands switched on.
@@ -522,13 +544,22 @@ struct settings_rows : scene::Node {
   // is typed (key_told), and read back from the door for what is drawn --
   // made once with the page, so that what is typed is never written back
   // over itself by the frame after it.
-  std::shared_ptr<key_sink> fKeySink = std::make_shared<key_sink>();
+  std::shared_ptr<door_sink> fKeySink = std::make_shared<door_sink>();
   skiff::widgets::TextArea<key_told> fKey{skiff::widgets::Theme{},
                                           std::string("The key for it"),
                                           key_told{fKeySink}};
-  // Which door's key the field is showing: another door chosen puts its own
-  // into the field, and the same one leaves what is being typed alone.
+  // What models the chosen door may answer as, typed: ids apart, whole into
+  // the door with every keystroke -- and what stands here read back from the
+  // door, so that the program never keeps two copies of what is only said
+  // once.
+  std::shared_ptr<door_sink> fModelsSink = std::make_shared<door_sink>();
+  skiff::widgets::TextArea<model_told> fModels{
+      skiff::widgets::Theme{}, std::string("Models at this door, apart"),
+      model_told{fModelsSink}};
+  // Which door's fields are showing: another door chosen puts its own into
+  // them, and the same one leaves what is being typed alone.
   std::string fKeyDoor;
+  std::string fModelsDoor;
   // Notifications, drawn: one press that asks for a test notification.
   test_row fTest;
   // About, drawn: what this build is, what it is under, and where its
@@ -590,6 +621,10 @@ struct settings_rows : scene::Node {
     fKey.setSingleLine(true);
     fKey.setMasked(true);
     fKey.setVisible(false);
+    // The models field the same, not masked: a model id is a name and not a
+    // secret, and one line of it is all an id ever is.
+    fModels.setSingleLine(true);
+    fModels.setVisible(false);
     for (about_row &one : fAbout)
       one.blank();
     fTest.blank();
@@ -600,15 +635,31 @@ struct settings_rows : scene::Node {
     fTimes.fName.setText("How long ago in a row");
   }
 
-  // The answerers offered (pchat.config), as a row each: which of them
-  // answers in the conversation this window has open, and a press on one of
-  // them putting it in or taking it back out of it.
+  // The models to switch, as a row each: which of them answer in the
+  // conversation this window has open, and a press on one of them putting it
+  // in or taking it back out of it. What stands here is the answerers
+  // offered, whatever the chosen door may answer as, and whatever the open
+  // chat already holds -- so that a model written into a chat through a door
+  // stays switchable even where its door no longer names it, and one taken
+  // off the door is not taken out of the chat by anybody else.
   [[nodiscard]] float say_answerers(app::requests *asked, const paints &look,
                                     std::span<const std::string> answerers,
-                                    float row_width, float base) {
+                                    const door &where, float row_width,
+                                    float base) {
+    std::vector<std::string> offered;
+    offered.reserve(answerers_offered.size() + answerers.size());
+    for (const answerer_choice &one : answerers_offered)
+      offered.emplace_back(one.name);
+    for (const std::string &one : models_of(where, where.provider))
+      if (std::ranges::find(offered, one) == offered.end())
+        offered.push_back(one);
+    for (const std::string &one : answerers)
+      if (std::ranges::find(offered, one) == offered.end())
+        offered.push_back(one);
     float at = base;
-    for (std::size_t one = 0u; one < answerers_offered.size(); ++one) {
-      const std::string_view name = answerers_offered[one].name;
+    for (std::size_t one = 0u; one < offered.size() && one < max_model_rows;
+         ++one) {
+      const std::string &name = offered[one];
       const bool in = answers_in(answerers, name);
       fAnswerers[one].again(asked,
                             {.anchor = scene::anchor::kTopLeft,
@@ -620,8 +671,7 @@ struct settings_rows : scene::Node {
                              .cornerRadius = 14.0f,
                              .visible = true},
                             look, name, in,
-                            app::set_answerer{.name = std::string(name),
-                                              .wanted = !in});
+                            app::set_answerer{.name = name, .wanted = !in});
       at += settings_row_stride;
     }
     return at;
@@ -680,6 +730,27 @@ struct settings_rows : scene::Node {
                 .padding = scene::Margin::horizontal(16.0f),
                 .visible = true});
     fKey.apply({.background = look.field});
+    at += settings_row_stride;
+    // And what this door may answer as, in the field under the key: not
+    // masked -- a model id is a name and not a secret -- and written whole
+    // into the door as it is typed, ids apart (pchat.config, models_said).
+    fModelsSink->asked = asked;
+    fModelsSink->id = where.provider;
+    fModels.setTheme(theme);
+    if (fModelsDoor != where.provider) {
+      fModelsDoor = where.provider;
+      fModels.setText(said_models(models_of(where, where.provider)));
+    }
+    fModels.apply({.anchor = scene::anchor::kTopLeft,
+                   .x = 16.0f,
+                   .y = at,
+                   .relativeSize = scene::axes::kNone,
+                   .width = row_width,
+                   .height = 40.0f,
+                   .cornerRadius = 20.0f,
+                   .padding = scene::Margin::horizontal(16.0f),
+                   .visible = true});
+    fModels.apply({.background = look.field});
     at += settings_row_stride;
     return at;
   }
@@ -762,7 +833,7 @@ struct settings_rows : scene::Node {
     case group_rows::switches:
       return say_switches(asked, look, how, row_width, base, from, said);
     case group_rows::answerers:
-      return say_answerers(asked, look, answerers, row_width, base);
+      return say_answerers(asked, look, answerers, where, row_width, base);
     case group_rows::notified:
       return say_notified(asked, look, row_width, base);
     case group_rows::about:
@@ -1087,6 +1158,7 @@ struct settings_rows : scene::Node {
     for (switch_row &one : fDoors)
       f(one);
     f(fKey);
+    f(fModels);
     f(fTest);
     f(fReadPlate);
     f(fRead);

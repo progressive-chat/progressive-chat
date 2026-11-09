@@ -188,6 +188,14 @@ struct set_door_key {
   std::string id;
   std::string key;
 };
+// What one of the doors may answer as, whole as the field holds it: ids
+// apart, for the door named beside it -- into the settings with that door,
+// and offered in a chat's models beside the answerers known by name. Typed
+// into the field it changes no chat: a chat takes a model by its row.
+struct set_door_models {
+  std::string id;
+  std::string typed;
+};
 // The archive of everything this program holds, written into one .prgrssv file
 // where the machine keeps files: asked for on the settings page's About, and
 // answered with a save dialog of the machine's own -- the chosen path comes
@@ -213,7 +221,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 send_test_notification,
                                 set_generation, set_tool, set_switch,
                               set_answerer, pick_door, set_door_key,
-                              copy_text, save_archive>;
+                              set_door_models, copy_text, save_archive>;
 
 class requests {
 public:

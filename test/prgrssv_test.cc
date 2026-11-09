@@ -307,8 +307,10 @@ SAID(prgrssv, the_door_a_run_asked_through_comes_back_with_the_next_one) {
   chats_root root;
   const pchat::door where{
       .provider = "anthropic",
-      .keys = {pchat::door_key{.provider = "anthropic",
-                               .key = "sk-kept-whole"}}};
+      .holds = {pchat::door_hold{
+          .provider = "anthropic",
+          .key = "sk-kept-whole",
+          .models = {"claude-3-5-haiku-20241022", "claude-sonnet-4-5"}}}};
   const std::string bytes =
       prgrssv::archive_of(root, default_looks, default_asking, where);
 
@@ -321,10 +323,12 @@ SAID(prgrssv, the_door_a_run_asked_through_comes_back_with_the_next_one) {
   EXPECT_TRUE(settings.has_value());
   if (settings) {
     EXPECT_EQ(text_at(*settings, "door/provider"), std::string("anthropic"));
-    EXPECT_EQ(text_at(*settings, "door/keys/0/provider"),
+    EXPECT_EQ(text_at(*settings, "door/holds/0/provider"),
               std::string("anthropic"));
-    EXPECT_EQ(text_at(*settings, "door/keys/0/key"),
+    EXPECT_EQ(text_at(*settings, "door/holds/0/key"),
               std::string("sk-kept-whole"));
+    EXPECT_EQ(text_at(*settings, "door/holds/0/models/0"),
+              std::string("claude-3-5-haiku-20241022"));
   }
 
   // And back whole for the run that reads this file at its start: the door
@@ -334,6 +338,10 @@ SAID(prgrssv, the_door_a_run_asked_through_comes_back_with_the_next_one) {
   EXPECT_EQ(back.where.provider, std::string("anthropic"));
   EXPECT_EQ(pchat::key_of(back.where, "anthropic"),
             std::string("sk-kept-whole"));
+  const std::vector<std::string> kept_models =
+      pchat::models_of(back.where, "anthropic");
+  EXPECT_EQ(kept_models.size(), 2u);
+  EXPECT_EQ(kept_models[1], std::string("claude-sonnet-4-5"));
 
   // A save asked to be handed around is given no key at all: which door was
   // chosen is still said -- it is a setting like any other -- but what opens
@@ -344,8 +352,9 @@ SAID(prgrssv, the_door_a_run_asked_through_comes_back_with_the_next_one) {
       pchat::prgrssv::restore_of(given_away);
   EXPECT_TRUE(elsewhere.ok());
   EXPECT_EQ(elsewhere.where.provider, std::string("page"));
-  EXPECT_TRUE(elsewhere.where.keys.empty());
+  EXPECT_TRUE(elsewhere.where.holds.empty());
   EXPECT_EQ(pchat::key_of(elsewhere.where, "anthropic"), std::string{});
+  EXPECT_TRUE(pchat::models_of(elsewhere.where, "anthropic").empty());
 }
 
 int main() { return pchat::tests::run(); }

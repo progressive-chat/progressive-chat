@@ -346,44 +346,127 @@ inline constexpr std::array<provider_choice, 11> providers_offered{{
   return providers_offered[0];
 }
 
-// What opens one of those doors: kept beside the door that is chosen, one
-// entry per door ever given a key, so that choosing another door does not
-// throw this one's away -- a reader who keeps two providers keeps both, and
-// a door nobody ever typed a key for has none, which is how this page's
-// server stands (whose key it is, is that server's own to know) and how a
-// model run at home stands (it asks for no key).
-struct door_key {
+// One door as the reader keeps it: what opens it, and what it may answer
+// as -- one entry per door ever used, so that choosing another door keeps
+// this one whole. An entry left with nothing in it is not kept at all: a
+// door that opens nothing and asks for nothing of its own (this page's
+// server, a model run at home) stands with no entry, as it did before any
+// entry was here.
+struct door_hold {
   std::string provider;
   std::string key;
+  // What this door answers as: ids named as their providers name them,
+  // offered in a chat beside the answerers this program knows by name --
+  // and asked of this door whole, with no lookup anywhere of what a name is
+  // called: a model nobody here has heard of gets the room every answer has
+  // been given so far (window_of, below).
+  std::vector<std::string> models;
 };
 
-// Which door the next asking is spoken through, and what opens each of the
-// doors ever offered: kept with the rest of the settings, so that a run after
-// this one asks through the same door with the same key as this one did.
+// Which door the next asking is spoken through, and what is kept of every
+// door ever used: with the rest of the settings, so that a run after this
+// one asks through the same door, with the same key and the same models
+// standing at it, as this one did.
 struct door {
   std::string provider = std::string(providers_offered[0].id);
-  std::vector<door_key> keys;
+  std::vector<door_hold> holds;
 };
 
 // Which key opens one of them: nothing where none was ever typed for it.
 [[nodiscard]] inline std::string key_of(const door &where,
                                         std::string_view id) {
-  for (const door_key &one : where.keys)
+  for (const door_hold &one : where.holds)
     if (one.provider == id)
       return one.key;
   return std::string{};
 }
 
+// What one of them may answer as: nothing where nothing was ever written
+// for it.
+[[nodiscard]] inline std::vector<std::string> models_of(const door &where,
+                                                        std::string_view id) {
+  for (const door_hold &one : where.holds)
+    if (one.provider == id)
+      return one.models;
+  return std::vector<std::string>{};
+}
+
+// What stands empty and is not kept as a door at all: an entry goes away
+// only once both halves of it are gone -- what opens it, and what it
+// answers as.
+[[nodiscard]] inline bool holds_nothing(const door_hold &one) {
+  return one.key.empty() && one.models.empty();
+}
+
 // The key of one door put where it stands: typed over, it goes over the old
-// one; typed empty, its entry goes away altogether -- what is kept is what
-// opens a door, and never what once did.
+// one; typed empty, it goes where nothing else of that door stands either --
+// and not before, because the models written for the same door are in that
+// entry still.
 inline void key_into(door &where, std::string_view id, std::string key) {
-  std::erase_if(where.keys, [&id](const door_key &one) {
-    return one.provider == id;
-  });
-  if (!key.empty())
-    where.keys.push_back(
-        door_key{.provider = std::string(id), .key = std::move(key)});
+  const auto at = std::ranges::find(where.holds, id, &door_hold::provider);
+  if (at == where.holds.end()) {
+    if (key.empty())
+      return;
+    where.holds.push_back(
+        door_hold{.provider = std::string(id), .key = std::move(key)});
+  } else {
+    at->key = std::move(key);
+  }
+  std::erase_if(where.holds, holds_nothing);
+}
+
+// What one door may answer as, written whole the way the field says it: its
+// entry keeps it, and an entry left with neither a key nor models goes where
+// an entry with nothing in it goes.
+inline void models_into(door &where, std::string_view id,
+                        std::vector<std::string> models) {
+  const auto at = std::ranges::find(where.holds, id, &door_hold::provider);
+  if (at == where.holds.end()) {
+    if (models.empty())
+      return;
+    where.holds.push_back(door_hold{.provider = std::string(id),
+                                    .models = std::move(models)});
+  } else {
+    at->models = std::move(models);
+  }
+  std::erase_if(where.holds, holds_nothing);
+}
+
+// What a door may answer as, as the field says it: ids apart, the way a
+// reader writes them -- and read back the same way. Nothing between them is
+// kept: what stands whole between two separators is one id, an id being a
+// name and not a phrase, and the same id written twice is asked for once.
+[[nodiscard]] inline std::string said_models(
+    const std::vector<std::string> &models) {
+  std::string out;
+  for (const std::string &one : models) {
+    if (!out.empty())
+      out += ", ";
+    out += one;
+  }
+  return out;
+}
+[[nodiscard]] inline std::vector<std::string> models_said(
+    std::string_view said) {
+  std::vector<std::string> out;
+  std::size_t from = 0u;
+  while (true) {
+    const std::size_t comma = said.find(',', from);
+    const std::string_view piece = said.substr(
+        from, comma == std::string_view::npos ? said.size() - from
+                                              : comma - from);
+    const std::size_t first = piece.find_first_not_of(' ');
+    if (first != std::string_view::npos) {
+      const std::size_t last = piece.find_last_not_of(' ');
+      std::string id(piece.substr(first, last - first + 1u));
+      if (std::ranges::find(out, id) == out.end())
+        out.push_back(std::move(id));
+    }
+    if (comma == std::string_view::npos)
+      break;
+    from = comma + 1u;
+  }
+  return out;
 }
 
 // Whether one of them answers in a chat, by its name: a chat keeps the ones

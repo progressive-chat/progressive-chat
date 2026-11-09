@@ -402,14 +402,18 @@ inline constexpr std::int64_t version = 1;
   // is where it is read back from -- see archive_of's note on the default.
   settings.name("door").thing();
   settings.name("provider").text(where.provider);
-  settings.name("keys").list();
-  for (const door_key &one : where.keys) {
+  settings.name("holds").list();
+  for (const door_hold &one : where.holds) {
     settings.thing();
     settings.name("provider").text(one.provider);
     settings.name("key").text(one.key);
-    settings.shut();
+    settings.name("models").list();
+    for (const std::string &model : one.models)
+      settings.text(model);
+    settings.shut();  // models
+    settings.shut();  // hold
   }
-  settings.shut();  // keys
+  settings.shut();  // holds
   settings.shut();  // door
   settings.shut();  // looks-and-asking
   files.push_back(stored{"settings.json", settings.take()});
@@ -426,9 +430,9 @@ struct restored {
   looks shown;
   asking how;
   // What it asked through, back too: the door its settings named, and what
-  // opens every door it ever kept a key for -- each key read back the whole
-  // way it was written, which is only ever into this machine's own keeping
-  // (see archive_of).
+  // was kept of every door it ever used -- each key and each list of models
+  // read back the whole way they were written, which is only ever into this
+  // machine's own keeping (see archive_of).
   door where;
   std::string trouble;
   [[nodiscard]] bool ok() const { return trouble.empty(); }
@@ -609,21 +613,30 @@ struct restored {
     // back is always a door that stands here.
     out.where.provider =
         std::string(provider_by(text_in(*where, "provider")).id);
-    // And what opens each door it kept a key for: whole as each was written,
-    // under the door it opens -- a key for a door nobody offers anymore
-    // stands aside as one for this page's server, and opens nothing until a
-    // door of that name is chosen again.
-    if (const json::value *keys = json::said(*where, "keys"))
+    // And what was kept of every door it ever used: whole as each was
+    // written, under the door it belongs to -- what opens it and what it
+    // answers as. A key for a door nobody offers anymore stands aside as
+    // one for this page's server, and opens nothing until a door of that
+    // name is chosen again.
+    if (const json::value *holds = json::said(*where, "holds"))
       for (std::size_t at = 0u;; ++at) {
-        const json::value *one = json::item_of(*keys, at);
+        const json::value *one = json::item_of(*holds, at);
         if (one == nullptr)
           break;
         const std::string id = text_in(*one, "provider");
         if (id.empty())
           continue;
-        out.where.keys.push_back(
-            door_key{.provider = std::string(provider_by(id).id),
-                     .key = text_in(*one, "key")});
+        door_hold kept{.provider = std::string(provider_by(id).id),
+                       .key = text_in(*one, "key")};
+        if (const json::value *models = json::said(*one, "models"))
+          for (std::size_t nth = 0u;; ++nth) {
+            const json::value *model = json::item_of(*models, nth);
+            if (model == nullptr)
+              break;
+            if (const auto said_model = json::text_of(*model))
+              kept.models.push_back(std::string(*said_model));
+          }
+        out.where.holds.push_back(std::move(kept));
       }
   }
   return out;

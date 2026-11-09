@@ -351,6 +351,14 @@ public:
             [&](const set_door_key &asking) {
               key_into(where_, asking.id, asking.key);
             },
+            // What one of the doors may answer as, whole as it was written:
+            // ids apart, for the door the field stands at -- kept with that
+            // door, and offered in a chat's models beside the answerers
+            // known by name. Typing one here changes no chat; a chat takes
+            // a model by its row (set_answerer, above).
+            [&](const set_door_models &asking) {
+              models_into(where_, asking.id, models_said(asking.typed));
+            },
             // The archive asked for: which files are kept where is the
             // machine's own to say, and all this says is the name the file
             // goes under -- the bytes are written when a path comes back

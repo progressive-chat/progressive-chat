@@ -137,7 +137,7 @@ SAID(config, every_door_says_where_it_stands_and_whose_words_are_there) {
   // nothing that opens it.
   const door held;
   EXPECT_EQ(held.provider, std::string("page"));
-  EXPECT_TRUE(held.keys.empty());
+  EXPECT_TRUE(held.holds.empty());
 
   // What opens a door: typed for one, kept for that one alone, and gone
   // when it is typed away -- a door with nothing typed for it is asked of
@@ -152,6 +152,41 @@ SAID(config, every_door_says_where_it_stands_and_whose_words_are_there) {
   key_into(typing, "ollama", "");
   EXPECT_EQ(key_of(typing, "ollama"), std::string{});
   EXPECT_EQ(key_of(typing, "openai"), std::string("sk-second-door"));
+}
+
+SAID(config, what_a_door_may_answer_as_is_written_apart_and_read_back) {
+  // As the field writes them: ids apart, nothing between them kept, and the
+  // same id asked for once however often it is written.
+  const auto listed = models_said(
+      " deepseek-chat , deepseek-reasoner ,, qwen-max ,deepseek-chat");
+  EXPECT_EQ(listed.size(), 3u);
+  EXPECT_EQ(listed[0], std::string("deepseek-chat"));
+  EXPECT_EQ(listed[1], std::string("deepseek-reasoner"));
+  EXPECT_EQ(listed[2], std::string("qwen-max"));
+  EXPECT_EQ(said_models(listed),
+            std::string("deepseek-chat, deepseek-reasoner, qwen-max"));
+  // Nothing written: nothing kept, and nothing standing where it would be.
+  EXPECT_TRUE(models_said("").empty());
+  EXPECT_TRUE(models_said("  , , ").empty());
+  EXPECT_EQ(said_models({}), std::string{});
+
+  // Through the door itself: kept for the door it was written for and for
+  // that one alone, and put away with its entry only once neither half of it
+  // -- the key nor the models -- stands.
+  door typing;
+  models_into(typing, "deepseek", models_said("deepseek-chat"));
+  EXPECT_EQ(models_of(typing, "deepseek").size(), 1u);
+  EXPECT_EQ(models_of(typing, "openai").size(), 0u);
+  key_into(typing, "deepseek", "sk-here");
+  EXPECT_EQ(key_of(typing, "deepseek"), std::string("sk-here"));
+  // The key taken away leaves the models standing: only both gone together
+  // put the entry away.
+  key_into(typing, "deepseek", "");
+  EXPECT_EQ(key_of(typing, "deepseek"), std::string{});
+  EXPECT_EQ(models_of(typing, "deepseek").size(), 1u);
+  models_into(typing, "deepseek", {});
+  EXPECT_TRUE(models_of(typing, "deepseek").empty());
+  EXPECT_TRUE(typing.holds.empty());
 }
 
 int main() { return pchat::tests::run(); }
