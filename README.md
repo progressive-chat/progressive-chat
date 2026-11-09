@@ -67,6 +67,12 @@ It (this readme section's workdays summaries) is written by hand. Nothing
 writes here that is not that hand, and no paragraph of it is written by a
 model, an agent or a script on its own.
 
+### 2026-11-09
+
+Started organizing the builds on the releases page. Brought the site up and
+did some cosmetics of the project. The code got closer to the first useful use
+of the program. Since yesterday: +2,750 lines of code, +8 commits.
+
 ### 2026-11-08
 
 The GitHub repository has been created with the code that exists at this point.
