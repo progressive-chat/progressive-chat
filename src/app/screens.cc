@@ -359,6 +359,21 @@ public:
             [&](const set_door_models &asking) {
               models_into(where_, asking.id, models_said(asking.typed));
             },
+            // The compact asked for by hand: this chat's older stretch
+            // summarised into a capsule, originals where they stand. Asked
+            // of a chat that has said nothing, there is nothing to hand
+            // over, and nothing is asked.
+            [&](const compact_context &) {
+              if (!root_.opened)
+                return;
+              const conversation_id chat = *root_.opened;
+              const bool said_anything = std::ranges::any_of(
+                  root_.messages,
+                  [&chat](const message &one) { return one.chat == chat; });
+              if (!said_anything)
+                return;
+              begin_ask(chat, std::string(compact_told), true);
+            },
             // The archive asked for: which files are kept where is the
             // machine's own to say, and all this says is the name the file
             // goes under -- the bytes are written when a path comes back
@@ -486,6 +501,17 @@ private:
   // can anywhere but a page -- that is what `carrying::any` says -- and where
   // nothing can, nothing is asked and no answer comes, as it was before.
   void ask_a_model(const conversation_id &chat) {
+    begin_ask(chat, told_of(chat), false);
+  }
+
+  // One asking begun, whatever it is asked for: an answer to what was sent,
+  // or a compact of what was said (compact_context, below) -- told what this
+  // one is told, written into a message that is one thing or the other, and
+  // carrying every control a normal answer is asked with: door, numbers,
+  // thinking and tools alike (docs/en/context.md says the same of a manual
+  // compact there).
+  void begin_ask(const conversation_id &chat, std::string told,
+                 bool capsule) {
     if (answering_)
       return;
     platform::carrying carried;
@@ -501,22 +527,27 @@ private:
         .base = !there.base.empty() ? std::string(there.base) : opened_.base,
         .key = key_of(where_, where_.provider),
         .model = ending_of(chat),
-        .told = told_of(chat),
+        .told = std::move(told),
         .family = std::string(there.alias)};
-    // The conversation whole, as both halves of the asking read it: the tools
-    // are given every message of it, because a tool asked about this
-    // conversation is asked about all of it, and the wire is given what fits
-    // the window its answerer has -- said below over these same messages, and
-    // leaving every one of them where it is.
-    const std::vector<message> said =
+    // The conversation whole, as the tools read it: every message of it,
+    // because a tool asked about this conversation is asked about all of it
+    // -- a compacted stretch is in the chat as it always was, capsule or
+    // not, and searching it finds it there.
+    const std::vector<message> of_chat =
         root_.messages |
         std::views::filter(
             [&chat](const message &one) { return one.chat == chat; }) |
         std::ranges::to<std::vector<message>>();
+    // What goes out on the wire: the last compact capsule and everything
+    // said after it (core, wire_view) -- what stood before a capsule was
+    // summarised into it, and only the wire sees the handoff. The compact
+    // itself is asked over this same view, which is what makes its capsule a
+    // summary of exactly what would have gone out without it.
+    const std::vector<message> said = wire_view(of_chat);
     // What is ours to answer goes in the asking, so a model knows it may stop
     // and ask; and it is kept here, because answering those calls later is
     // this program's and nobody else's.
-    tools::owned mine{said, now_ms()};
+    tools::owned mine{of_chat, now_ms()};
     // How the reader has asked for it to answer, whole: the five numbers, the
     // thinking and how hard, and the tools that were left on -- both halves
     // said in one place (src/tools.cc, `wanted_of`), where before this the
@@ -548,15 +579,20 @@ private:
                       .carried = std::move(carried),
                       .mine = std::move(mine),
                       .began = now_ms()});
-    // The answer as a message before anything of it has come: written into as
-    // it arrives, and kept whole when nothing more is.
+    // The answer as a message before anything of it has come: written into
+    // as it arrives, and kept whole when nothing more is. A compact's own
+    // message is named for what it is instead of for who would have said
+    // it, and marked -- everything that reads messages afterwards, the wire
+    // above all, then knows what it holds.
     carry(coming);
-    root_.messages.push_back(message{.id = coming.said,
-                                     .chat = chat,
-                                     .author = ending_of(chat),
-                                     .outgoing = false,
-                                     .sent = coming.began,
-                                     .state = delivery::writing});
+    root_.messages.push_back(
+        message{.id = coming.said,
+                .chat = chat,
+                .author = capsule ? "Compact" : ending_of(chat),
+                .outgoing = false,
+                .sent = coming.began,
+                .state = delivery::writing,
+                .capsule = capsule});
   }
 
   // One round of the asking given to whatever carries it here.
@@ -599,11 +635,19 @@ private:
     }
     const moment ended = now_ms();
     if (message *there = found(one.said)) {
+      // What the message was before an answer stood whole in its place: a
+      // compact's capsule stays a capsule and stays called by what it is --
+      // an answer is written into its message and decides nothing about
+      // which message that is.
+      const bool capsule = there->capsule;
+      const std::string author =
+          capsule ? std::string("Compact") : ending_of(one.chat);
       *there = one.going.answer_of(provider::put_in{.id = one.said,
                                                     .chat = one.chat,
-                                                    .author = ending_of(one.chat),
+                                                    .author = author,
                                                     .sent = ended,
                                                     .took_ms = ended - one.began});
+      there->capsule = capsule;
       // Those calls are the thought's to keep, once there is a thought: what
       // it wrote to itself is read beside them.
       if (there->before)
@@ -709,10 +753,17 @@ private:
         one = &each;
     if (!one)
       return;
-    std::uint32_t spent = 0;
+    // What the next asking would carry, counted: the chat keeps everything
+    // it ever had, but what it has spent of its window is what the wire
+    // would send -- a compacted stretch stands in its capsule's tokens now,
+    // and the circle over the field says so (core, wire_view).
+    std::vector<message> of_chat;
     for (const message &each : root_.messages)
       if (each.chat == chat)
-        spent += each.tokens;
+        of_chat.push_back(each);
+    std::uint32_t spent = 0;
+    for (const message &each : wire_view(of_chat))
+      spent += each.tokens;
     one->tokens = spent;
     one->context_used =
         one->window == 0

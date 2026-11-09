@@ -203,6 +203,13 @@ template <std::ranges::forward_range Said>
 [[nodiscard]] std::vector<turn> turns_of(Said &&said) {
   std::vector<turn> out;
   for (const message &one : said) {
+    // A compact capsule goes out as what it is: what one stretch of this
+    // chat hands to whoever answers in it next -- read where a wire keeps
+    // what is told, and not as words either side said aloud.
+    if (one.capsule) {
+      out.push_back(turn{.who = role::system, .text = one.text});
+      continue;
+    }
     if (one.outgoing) {
       out.push_back(turn{.who = role::user, .text = one.text});
       continue;

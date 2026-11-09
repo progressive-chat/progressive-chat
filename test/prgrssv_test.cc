@@ -357,4 +357,57 @@ SAID(prgrssv, the_door_a_run_asked_through_comes_back_with_the_next_one) {
   EXPECT_TRUE(pchat::models_of(elsewhere.where, "anthropic").empty());
 }
 
+SAID(prgrssv, a_compact_capsule_comes_back_as_one) {
+  chats_root root;
+  root.conversations.push_back(
+      conversation{.id = conversation_id{"kitchen"},
+                   .title = "The kitchen",
+                   .last_activity = 3});
+  root.messages.push_back(message{.id = message_id{"1"},
+                                  .chat = conversation_id{"kitchen"},
+                                  .author = "Reader",
+                                  .outgoing = true,
+                                  .text = "Is there bread?"});
+  root.messages.push_back(message{.id = message_id{"c"},
+                                  .chat = conversation_id{"kitchen"},
+                                  .author = "Compact",
+                                  .text = "The reader asked about bread.",
+                                  .state = delivery::sent,
+                                  .capsule = true});
+  const std::string bytes =
+      prgrssv::archive_of(root, default_looks, default_asking);
+
+  // As it stands in the file: a capsule says so, and a message that is not
+  // one says nothing of it at all -- no field, rather than a field of false
+  // over every message there is.
+  std::vector<pchat::prgrssv::stored> in;
+  EXPECT_TRUE(pchat::prgrssv::unzipped(bytes, in));
+  const std::optional<json::value> room_json =
+      read_body(body_of(in, "conversations/kitchen.json"));
+  EXPECT_TRUE(room_json.has_value());
+  if (room_json) {
+    const json::value *messages = json::said(*room_json, "messages");
+    EXPECT_TRUE(messages != nullptr);
+    if (messages) {
+      const json::value *plain = json::item_of(*messages, 0);
+      const json::value *capsule_item = json::item_of(*messages, 1);
+      EXPECT_TRUE(plain != nullptr);
+      EXPECT_TRUE(capsule_item != nullptr);
+      if (plain != nullptr && capsule_item != nullptr) {
+        EXPECT_TRUE(json::said(*plain, "capsule") == nullptr);
+        EXPECT_TRUE(json::said(*capsule_item, "capsule") != nullptr);
+      }
+    }
+  }
+
+  // And back whole for the run that reads this file: the flag rides, and so
+  // does everything else about each of them.
+  const pchat::prgrssv::restored back = pchat::prgrssv::restore_of(bytes);
+  EXPECT_TRUE(back.ok());
+  EXPECT_EQ(back.root.messages.size(), 2u);
+  EXPECT_FALSE(back.root.messages[0].capsule);
+  EXPECT_TRUE(back.root.messages[1].capsule);
+  EXPECT_EQ(back.root.messages[1].author, std::string("Compact"));
+}
+
 int main() { return pchat::tests::run(); }

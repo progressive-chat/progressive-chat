@@ -34,4 +34,68 @@ SAID(core, delivery_is_ordered_as_it_is_lived) {
   EXPECT_LT(delivery::sent, delivery::seen);
 }
 
+SAID(core, the_wire_sees_a_compact_capsule_and_what_came_after_it) {
+  const conversation_id chat{"kitchen"};
+  const auto plain = [&chat](std::string_view id, std::string_view text) {
+    return message{.id = message_id{std::string(id)},
+                   .chat = chat,
+                   .text = std::string(text)};
+  };
+  const std::vector<message> said{plain("1", "first"), plain("2", "second"),
+                                  plain("3", "third")};
+  // Nothing compacted: all of it goes, as it did before any capsule stood.
+  EXPECT_EQ(wire_view(said).size(), 3u);
+
+  // A capsule where compaction left it: what stood before it was summarised
+  // into it, so the capsule and what was said after it are what is carried.
+  const message capsule{.id = message_id{"c"},
+                        .chat = chat,
+                        .author = "Compact",
+                        .text = "the sum of it",
+                        .state = delivery::sent,
+                        .capsule = true};
+  const message after = plain("4", "after it");
+  const std::vector<message> compacted{said[0], said[1], capsule, after};
+  const std::vector<message> view = wire_view(compacted);
+  EXPECT_EQ(view.size(), 2u);
+  EXPECT_TRUE(view[0].capsule);
+  EXPECT_EQ(view[0].text, std::string("the sum of it"));
+  EXPECT_EQ(view[1].id, message_id{"4"});
+
+  // Two capsules: the last one carries what even the first one held --
+  // nothing of the stretch between them stands on the wire twice.
+  const message second_capsule{.id = message_id{"c2"},
+                               .chat = chat,
+                               .author = "Compact",
+                               .text = "the newer sum",
+                               .state = delivery::sent,
+                               .capsule = true};
+  const std::vector<message> chained{said[0], capsule, after, second_capsule,
+                                     plain("5", "and after the second")};
+  const std::vector<message> chained_view = wire_view(chained);
+  EXPECT_EQ(chained_view.size(), 2u);
+  EXPECT_EQ(chained_view[0].text, std::string("the newer sum"));
+  EXPECT_EQ(chained_view[1].id, message_id{"5"});
+
+  // A capsule that failed to be written says nothing: it stands skipped,
+  // and where no capsule was ever written whole, the chat goes as it always
+  // did -- a compact that never landed is no compact.
+  const message failed_capsule{.id = message_id{"cf"},
+                               .chat = chat,
+                               .author = "Compact",
+                               .text = "half of it",
+                               .state = delivery::failed,
+                               .capsule = true};
+  const std::vector<message> broken{said[0], said[1], failed_capsule};
+  const std::vector<message> broken_view = wire_view(broken);
+  EXPECT_EQ(broken_view.size(), 2u);
+  EXPECT_FALSE(broken_view[0].capsule);
+  const std::vector<message> after_failed{said[0], capsule, after,
+                                          failed_capsule, plain("6", "later")};
+  const std::vector<message> after_failed_view = wire_view(after_failed);
+  EXPECT_EQ(after_failed_view.size(), 3u);
+  EXPECT_TRUE(after_failed_view[0].capsule);
+  EXPECT_EQ(after_failed_view[2].id, message_id{"6"});
+}
+
 int main() { return pchat::tests::run(); }

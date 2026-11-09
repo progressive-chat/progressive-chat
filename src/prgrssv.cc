@@ -337,6 +337,11 @@ inline constexpr std::int64_t version = 1;
       written.name("sent").number(one.sent);
       written.name("state").text(said_of(one.state));
       written.name("tokens").number(static_cast<std::int64_t>(one.tokens));
+      // A capsule says so, and no other message says anything of it: a field
+      // of `false` over every message in an archive would say nothing of
+      // anything (the same way replies_to stands only where it stands).
+      if (one.capsule)
+        written.name("capsule").truth(true);
       if (one.replies_to)
         written.name("replies_to").text(one.replies_to->value);
       if (one.before) {
@@ -530,6 +535,10 @@ struct restored {
         one.sent = number_in(*item, "sent");
         one.state = delivery_of(text_in(*item, "state"));
         one.tokens = static_cast<std::uint32_t>(number_in(*item, "tokens"));
+        // A capsule where the file says one, and no capsule where it says
+        // nothing: an archive from before they stood is whole without the
+        // field (truth_in reads nothing as false).
+        one.capsule = truth_in(*item, "capsule");
         if (const std::string replies = text_in(*item, "replies_to");
             !replies.empty())
           one.replies_to = message_id{replies};

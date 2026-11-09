@@ -200,6 +200,16 @@ struct set_door_models {
 // where the machine keeps files: asked for on the settings page's About, and
 // answered with a save dialog of the machine's own -- the chosen path comes
 // back through the program (pchat.app.program, save_path_chosen).
+// The compact, asked for by hand: this chat's older stretch summarised into
+// a capsule that stands where a wire reads context, the originals where they
+// stand -- of the chat the window has open, since that is the chat a row of
+// its own card is about. What it is told and how it is asked are said with
+// any answer's own controls (docs/en/context.md, "Manual Compact").
+struct compact_context {};
+// The archive of everything this program holds, written into one .prgrssv file
+// where the machine keeps files: asked for on the settings page's About, and
+// answered with a save dialog of the machine's own -- the chosen path comes
+// back through the program (pchat.app.program, save_path_chosen).
 struct save_archive {};
 
 // What is asked, as one value: spl::variant, so that every kind of it is
@@ -221,7 +231,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 send_test_notification,
                                 set_generation, set_tool, set_switch,
                               set_answerer, pick_door, set_door_key,
-                              set_door_models, copy_text, save_archive>;
+                              set_door_models, compact_context, copy_text,
+                              save_archive>;
 
 class requests {
 public:

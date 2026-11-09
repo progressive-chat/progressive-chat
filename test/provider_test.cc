@@ -680,4 +680,21 @@ SAID(provider, the_key_of_the_door_goes_out_once_where_that_wire_asks) {
   }
 }
 
+SAID(provider, a_capsule_goes_out_as_context_and_not_as_anyones_words) {
+  chats_root root;
+  root.messages.push_back(message{.id = message_id{"c"},
+                                  .text = "what was said, kept",
+                                  .state = delivery::sent,
+                                  .capsule = true});
+  root.messages.push_back(message{.id = message_id{"1"},
+                                  .text = "and this after it",
+                                  .outgoing = true});
+  const std::vector<provider::turn> turns = provider::turns_of(root.messages);
+  EXPECT_EQ(turns.size(), 2u);
+  EXPECT_EQ(turns[0].who, provider::role::system);
+  EXPECT_EQ(turns[0].text, std::string("what was said, kept"));
+  EXPECT_EQ(turns[1].who, provider::role::user);
+  EXPECT_EQ(turns[1].text, std::string("and this after it"));
+}
+
 int main() { return pchat::tests::run(); }

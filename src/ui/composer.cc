@@ -116,7 +116,7 @@ struct send_circle : scene::Node {
 // the drawer.
 inline constexpr float editor_menu_width = 208.0f;
 inline constexpr float editor_row_height = 40.0f;
-inline constexpr std::size_t editor_rows = 3u;
+inline constexpr std::size_t editor_rows = 4u;
 // How far the three dots stand from the card's right edge, and how much room
 // they leave the ring beside them for.
 inline constexpr float dots_size = 22.0f;
@@ -189,10 +189,11 @@ struct editor_row : scene::Node {
 };
 
 // What the three dots beside the card's ring hold: whether what answers in
-// this chat is asked to think, and how hard where it is, and the way into
-// the large settings for everything else a wire is told about choosing
-// words. A card of its own over the messages, put away by one press of what
-// opened it (design-doc.md, "The editor's row").
+// this chat is asked to think, how hard where it is, the compact asked for
+// by hand over what this chat has said, and the way into the large settings
+// for everything else a wire is told about choosing words. A card of its
+// own over the messages, put away by one press of what opened it
+// (design-doc.md, "The editor's row").
 //
 // Thinking and how hard are kept with everything else an answer is asked
 // for (pchat.config, `asking`) and not here: what they are said of is every
@@ -229,7 +230,14 @@ struct editor_menu : scene::Node {
     fRows[1].again(sink, look, edge + editor_row_height, "Effort",
                    said_by(how.how_hard),
                    app::set_effort{.how_hard = next_of(how.how_hard)});
-    fRows[2].again(sink, look, edge + 2.0f * editor_row_height, "Advanced", "",
+    // The compact, asked for by hand: older context summarised into a
+    // capsule with the originals where they stand -- a row beside what else
+    // an answer is asked with, because the compact goes out through the same
+    // door, the same numbers and the same wire as any answer
+    // (docs/en/context.md, "Manual Compact").
+    fRows[2].again(sink, look, edge + 2.0f * editor_row_height,
+                   "Compact context", "", app::compact_context{});
+    fRows[3].again(sink, look, edge + 3.0f * editor_row_height, "Advanced", "",
                    app::open_settings{});
   }
 
