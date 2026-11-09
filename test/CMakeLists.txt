@@ -44,9 +44,11 @@ target_include_directories(pchat-provider_http-test PRIVATE
 pchat_test(tools pchat_tools)
 pchat_test(tokens pchat_core pchat_json)
 pchat_test(prgrssv pchat_core pchat_json)
-# The archive's reading half a test reads with: the port's reader, kept on the
-# classic side the way the program keeps its writer (src/prgrssv_zip.h).
-target_sources(pchat-prgrssv-test PRIVATE prgrssv_read.cpp)
+# The archive a test opens is the program's own reader (src/prgrssv_zip.h),
+# reached over the tree's src/ the way the http folder's header is: one reader
+# in the product, and the test exercising that one.
+target_include_directories(pchat-prgrssv-test PRIVATE
+  "${PROJECT_SOURCE_DIR}/src")
 # The reference every entry of the carried vocabulary is measured against: read
 # by the tokens test once the carried vocabulary has been fed in.
 target_compile_definitions(pchat-tokens-test PRIVATE

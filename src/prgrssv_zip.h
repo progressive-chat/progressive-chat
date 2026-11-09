@@ -11,6 +11,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace pchat::prgrssv {
 
@@ -24,6 +25,11 @@ struct stored {
 // way the port's writer deflates them, so that the reader beside it -- the same
 // port's -- reads back everything written here (test/prgrssv_test.cc).
 [[nodiscard]] std::string zipped(std::span<const stored> files);
+
+// Every file out again, in the order the writer put them in: false where those
+// bytes are not an archive this port can read at all -- its reader says so by
+// throwing, and this is the one place that is caught.
+[[nodiscard]] bool unzipped(std::string_view bytes, std::vector<stored> &out);
 
 }  // namespace pchat::prgrssv
 

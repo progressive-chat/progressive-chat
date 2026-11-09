@@ -1,6 +1,6 @@
 module;
 #include "tests.h"
-#include "prgrssv_read.h"
+#include "prgrssv_zip.h"
 export module pchat.test.prgrssv;
 // SPDX-License-Identifier: AGPL-3.0-only
 // The archive the program writes: everything in it, and back out of it whole --
@@ -19,9 +19,9 @@ namespace {
 
 // What one file in an archive says, where it stands by that name: nothing
 // where the archive holds no such file.
-const std::string *body_of(const std::vector<pchat::test::zipped_entry> &in,
+const std::string *body_of(const std::vector<pchat::prgrssv::stored> &in,
                            std::string_view name) {
-  for (const pchat::test::zipped_entry &one : in)
+  for (const pchat::prgrssv::stored &one : in)
     if (one.name == name)
       return &one.body;
   return nullptr;
@@ -134,8 +134,8 @@ SAID(prgrssv, everything_held_comes_back_as_it_was) {
 
   const std::string bytes =
       prgrssv::archive_of(root, default_looks, default_asking);
-  const std::vector<pchat::test::zipped_entry> in =
-      pchat::test::read_entries(bytes);
+  std::vector<pchat::prgrssv::stored> in;
+  EXPECT_TRUE(pchat::prgrssv::unzipped(bytes, in));
 
   // Three files: the index, the one conversation, and the settings.
   EXPECT_EQ(in.size(), 3u);
@@ -212,8 +212,8 @@ SAID(prgrssv, an_empty_program_still_writes_a_whole_archive) {
   const chats_root none;
   const std::string bytes =
       prgrssv::archive_of(none, default_looks, default_asking);
-  const std::vector<pchat::test::zipped_entry> in =
-      pchat::test::read_entries(bytes);
+  std::vector<pchat::prgrssv::stored> in;
+  EXPECT_TRUE(pchat::prgrssv::unzipped(bytes, in));
 
   // The manifest and the settings hold even where there is nothing to count.
   EXPECT_EQ(in.size(), 2u);
@@ -225,6 +225,82 @@ SAID(prgrssv, an_empty_program_still_writes_a_whole_archive) {
     EXPECT_EQ(number_at(*manifest, "conversations"), 0.0);
     EXPECT_EQ(number_at(*manifest, "messages"), 0.0);
   }
+}
+
+SAID(prgrssv, everything_it_held_reads_back_where_it_was_held) {
+  chats_root root;
+  root.accounts.push_back(account{.id = account_id{"home"},
+                                  .name = "Home",
+                                  .server = "https://chat.example"});
+  conversation room{.id = conversation_id{"kitchen"},
+                    .account = account_id{"home"},
+                    .title = "What is in the kitchen",
+                    .kind = conversation_kind::direct,
+                    .last_activity = 12};
+  room.models.push_back("haiku-4");
+  room.told = "Answer briefly.";
+  room.tokens = 9;
+  room.window = 1000000;
+  room.context_used = 0.25f;
+  root.conversations.push_back(std::move(room));
+  root.opened = conversation_id{"kitchen"};
+  root.messages.push_back(message{.id = message_id{"kitchen-1"},
+                                  .chat = conversation_id{"kitchen"},
+                                  .author = "reader",
+                                  .outgoing = true,
+                                  .text = "two \"quotes\"\nand a dash",
+                                  .sent = 11,
+                                  .state = delivery::sent,
+                                  .tokens = 4});
+  root.messages.push_back(
+      message{.id = message_id{"kitchen-2"},
+              .chat = conversation_id{"kitchen"},
+              .author = "haiku-4",
+              .text = "The pantry has bread.",
+              .sent = 12,
+              .state = delivery::seen,
+              .replies_to = message_id{"kitchen-1"},
+              .before = thought{.took_ms = 420,
+                                .tool_calls = 1,
+                                .said = "thinking \"hard\"",
+                                .calls = {call_made{
+                                    .tool = "conversation_search",
+                                    .asked = "in the kitchen?",
+                                    .answered = "bread in the pantry"}}},
+              .tokens = 7});
+  looks shown = default_looks;
+  shown.preset = scheme_preset::rose;
+  shown.mode = theme_mode::light;
+  shown.font_scale = 1.25f;
+  asking how = default_asking;
+  how.thinking = false;
+  how.how_hard = effort::most;
+  how.temperature = 0.25;
+  how.max_tokens = 4096;
+  how.tools[1] = false;
+  how.switches[2] = true;
+
+  // What one run held, said into the start of the next: every file read back
+  // into the places it was held in, and nothing of the bytes left over.
+  const std::string bytes = prgrssv::archive_of(root, shown, how);
+  const prgrssv::restored back = prgrssv::restore_of(bytes);
+  EXPECT_TRUE(back.ok());
+  if (!back.ok())
+    return;
+  EXPECT_EQ(back.root, root);
+  EXPECT_EQ(back.shown, shown);
+  EXPECT_EQ(back.how, how);
+}
+
+SAID(prgrssv, bytes_that_were_never_an_archive_say_so) {
+  const prgrssv::restored back =
+      prgrssv::restore_of("these bytes are not a zip, not by any reading of them");
+  EXPECT_FALSE(back.ok());
+  EXPECT_FALSE(back.trouble.empty());
+  // And an archive of nothing at all is not one either: what the manifest says
+  // is what the rest of the file is read as.
+  const prgrssv::restored hollow = prgrssv::restore_of(prgrssv::zipped({}));
+  EXPECT_FALSE(hollow.ok());
 }
 
 int main() { return pchat::tests::run(); }

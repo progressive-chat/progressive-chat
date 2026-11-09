@@ -138,6 +138,120 @@ inline constexpr std::array<std::string_view, switches_owned> switch_names{
     "picture_to_words", "words_to_picture", "proxy",
     "own_page",         "remember",         "skills", "data_held"};
 
+
+// ---- What a file of an archive reads back as: the same words said_of wrote,
+// turned into the enums they came from, and every word, number and switch
+// taken with the default it had where a file says nothing of it.
+
+conversation_kind conversation_kind_of(std::string_view said) {
+  if (said == "direct")
+    return conversation_kind::direct;
+  if (said == "group")
+    return conversation_kind::group;
+  return conversation_kind::channel;
+}
+
+delivery delivery_of(std::string_view said) {
+  if (said == "writing")
+    return delivery::writing;
+  if (said == "sending")
+    return delivery::sending;
+  if (said == "sent")
+    return delivery::sent;
+  if (said == "failed")
+    return delivery::failed;
+  return delivery::seen;
+}
+
+theme_mode mode_of(std::string_view said) {
+  if (said == "light")
+    return theme_mode::light;
+  if (said == "dark")
+    return theme_mode::dark;
+  return theme_mode::system;
+}
+
+effort effort_of(std::string_view said) {
+  if (said == "least")
+    return effort::least;
+  if (said == "some")
+    return effort::some;
+  if (said == "most")
+    return effort::most;
+  return effort::all;
+}
+
+font_choice font_of(std::string_view said) {
+  if (said == "app")
+    return font_choice::app;
+  if (said == "system")
+    return font_choice::system;
+  return font_choice::custom;
+}
+
+scheme_preset preset_of(std::string_view said) {
+  if (said == "midnight")
+    return scheme_preset::midnight;
+  if (said == "nordic")
+    return scheme_preset::nordic;
+  if (said == "forest")
+    return scheme_preset::forest;
+  if (said == "sunset")
+    return scheme_preset::sunset;
+  if (said == "rose")
+    return scheme_preset::rose;
+  if (said == "lavender")
+    return scheme_preset::lavender;
+  if (said == "slate")
+    return scheme_preset::slate;
+  return scheme_preset::ocean;
+}
+
+scheme_style style_of(std::string_view said) {
+  if (said == "tonal_spot")
+    return scheme_style::tonal_spot;
+  if (said == "expressive")
+    return scheme_style::expressive;
+  if (said == "vibrant")
+    return scheme_style::vibrant;
+  return scheme_style::neutral;
+}
+
+// What a file holds under one name: a word, a number, or what is on -- nothing
+// where it says nothing of it, and the default the program had before this
+// archive was written beside each of them.
+[[nodiscard]] std::string text_in(const json::value &one, std::string_view name) {
+  const json::value *said = json::said(one, name);
+  if (said == nullptr)
+    return std::string{};
+  const auto got = json::text_of(*said);
+  return got ? std::string(*got) : std::string{};
+}
+
+[[nodiscard]] bool truth_in(const json::value &one, std::string_view name,
+                            bool fallback = false) {
+  const json::value *said = json::said(one, name);
+  if (said == nullptr)
+    return fallback;
+  const auto got = json::truth_of(*said);
+  return got ? *got : fallback;
+}
+
+[[nodiscard]] double decimal_in(const json::value &one, std::string_view name,
+                                double fallback = 0.0) {
+  const json::value *said = json::said(one, name);
+  if (said == nullptr)
+    return fallback;
+  const auto got = json::number_of(*said);
+  return got ? *got : fallback;
+}
+
+[[nodiscard]] std::int64_t number_in(const json::value &one, std::string_view name,
+                                     std::int64_t fallback = 0) {
+  return static_cast<std::int64_t>(
+      decimal_in(one, name, static_cast<double>(fallback)));
+}
+
 }  // namespace pchat::prgrssv
 
 export namespace pchat::prgrssv {
@@ -175,6 +289,9 @@ inline constexpr std::int64_t version = 1;
   out.name("conversations").number(
       static_cast<std::int64_t>(root.conversations.size()));
   out.name("messages").number(static_cast<std::int64_t>(root.messages.size()));
+  // Which conversation the window had open: the one file that knows it all,
+  // and the one thing a reader would otherwise have to guess.
+  out.name("opened").text(root.opened ? root.opened->value : std::string{});
   out.shut();
   files.push_back(stored{"manifest.json", out.take()});
 
@@ -276,6 +393,189 @@ inline constexpr std::int64_t version = 1;
   files.push_back(stored{"settings.json", settings.take()});
 
   return zipped(files);
+}
+
+
+// Everything an archive held, back where it is held: the conversations with
+// their messages, what the page looked like, and how an answer was asked for
+// -- and why it could not be read, whole, where it could not be.
+struct restored {
+  chats_root root;
+  looks shown;
+  asking how;
+  std::string trouble;
+  [[nodiscard]] bool ok() const { return trouble.empty(); }
+};
+
+// One archive whole -- the bytes archive_of wrote -- read back into everything
+// above: what a program held at the end of one run, said into the start of the
+// next. Not a file's business: the bytes are given, and what they were not is
+// `trouble`, empty only where every file of it was read as it was written.
+[[nodiscard]] inline restored restore_of(std::string_view bytes) {
+  restored out;
+  std::vector<stored> files;
+  if (!unzipped(bytes, files)) {
+    out.trouble = "those bytes are not an archive this program reads";
+    return out;
+  }
+  const stored *manifest = nullptr;
+  for (const stored &one : files)
+    if (one.name == "manifest.json") {
+      manifest = &one;
+      break;
+    }
+  if (manifest == nullptr) {
+    out.trouble = "the archive holds no manifest";
+    return out;
+  }
+  const auto said = json::read(manifest->body);
+  if (!said) {
+    out.trouble = "the manifest is not written in JSON";
+    return out;
+  }
+  if (text_in(*said, "format") != format) {
+    out.trouble = "the manifest does not say it is a prgrssv archive";
+    return out;
+  }
+  if (number_in(*said, "version") > version) {
+    out.trouble = "written by a later build than this one, and not read here";
+    return out;
+  }
+  if (const std::string open = text_in(*said, "opened"); !open.empty())
+    out.root.opened = conversation_id{open};
+  if (const json::value *accounts = json::said(*said, "accounts"))
+    for (std::size_t at = 0;; ++at) {
+      const json::value *one = json::item_of(*accounts, at);
+      if (one == nullptr)
+        break;
+      out.root.accounts.push_back(account{.id = account_id{text_in(*one, "id")},
+                                          .name = text_in(*one, "name"),
+                                          .server = text_in(*one, "server")});
+    }
+
+  // One conversation at a time: the drawer's own row whole, and every message
+  // in it in the order its file says it.
+  for (const stored &one : files) {
+    if (!one.name.starts_with("conversations/") || !one.name.ends_with(".json"))
+      continue;
+    const auto said_room = json::read(one.body);
+    if (!said_room) {
+      out.trouble = one.name + " is not written in JSON";
+      return out;
+    }
+    conversation room;
+    room.id = conversation_id{text_in(*said_room, "id")};
+    room.account = account_id{text_in(*said_room, "account")};
+    room.title = text_in(*said_room, "title");
+    room.kind = conversation_kind_of(text_in(*said_room, "kind"));
+    room.last_activity = number_in(*said_room, "last_activity");
+    room.unread = static_cast<std::uint32_t>(number_in(*said_room, "unread"));
+    room.pinned = truth_in(*said_room, "pinned");
+    room.muted = truth_in(*said_room, "muted");
+    if (const json::value *models = json::said(*said_room, "models"))
+      for (std::size_t at = 0;; ++at) {
+        const json::value *model = json::item_of(*models, at);
+        if (model == nullptr)
+          break;
+        if (const auto said_model = json::text_of(*model))
+          room.models.push_back(std::string(*said_model));
+      }
+    room.told = text_in(*said_room, "told");
+    room.tokens = static_cast<std::uint32_t>(number_in(*said_room, "tokens"));
+    room.window = static_cast<std::uint32_t>(number_in(*said_room, "window"));
+    room.context_used = static_cast<float>(decimal_in(*said_room, "context_used"));
+
+    if (const json::value *messages = json::said(*said_room, "messages"))
+      for (std::size_t at = 0;; ++at) {
+        const json::value *item = json::item_of(*messages, at);
+        if (item == nullptr)
+          break;
+        message one;
+        one.id = message_id{text_in(*item, "id")};
+        one.chat = room.id;
+        one.author = text_in(*item, "author");
+        one.outgoing = truth_in(*item, "outgoing");
+        one.text = text_in(*item, "text");
+        one.sent = number_in(*item, "sent");
+        one.state = delivery_of(text_in(*item, "state"));
+        one.tokens = static_cast<std::uint32_t>(number_in(*item, "tokens"));
+        if (const std::string replies = text_in(*item, "replies_to");
+            !replies.empty())
+          one.replies_to = message_id{replies};
+        if (const json::value *thought_json = json::said(*item, "thought")) {
+          thought it;
+          it.took_ms = number_in(*thought_json, "took_ms");
+          it.tool_calls =
+              static_cast<std::uint32_t>(number_in(*thought_json, "tool_calls"));
+          it.said = text_in(*thought_json, "said");
+          if (const json::value *calls = json::said(*thought_json, "calls"))
+            for (std::size_t call_at = 0;; ++call_at) {
+              const json::value *call = json::item_of(*calls, call_at);
+              if (call == nullptr)
+                break;
+              it.calls.push_back(call_made{.tool = text_in(*call, "tool"),
+                                           .asked = text_in(*call, "asked"),
+                                           .answered = text_in(*call, "answered")});
+            }
+          one.before = std::move(it);
+        }
+        out.root.messages.push_back(std::move(one));
+      }
+    out.root.conversations.push_back(std::move(room));
+  }
+
+  // Said again in the order it was said: an archive keeps a conversation to a
+  // file, and this puts their moments back into one line -- what is within one
+  // conversation keeps its own order, and the moment decides between them.
+  std::stable_sort(out.root.messages.begin(), out.root.messages.end(),
+                   [](const message &left, const message &right) {
+                     return left.sent < right.sent;
+                   });
+
+  const stored *settings = nullptr;
+  for (const stored &one : files)
+    if (one.name == "settings.json") {
+      settings = &one;
+      break;
+    }
+  if (settings == nullptr) {
+    out.trouble = "the archive holds no settings";
+    return out;
+  }
+  const auto said_settings = json::read(settings->body);
+  if (!said_settings) {
+    out.trouble = "the settings are not written in JSON";
+    return out;
+  }
+  if (const json::value *shown = json::said(*said_settings, "looks")) {
+    out.shown.preset = preset_of(text_in(*shown, "preset"));
+    out.shown.style = style_of(text_in(*shown, "style"));
+    out.shown.mode = mode_of(text_in(*shown, "mode"));
+    out.shown.amoled = truth_in(*shown, "amoled");
+    out.shown.reduce_motion = truth_in(*shown, "reduce_motion");
+    out.shown.avatars = truth_in(*shown, "avatars");
+    out.shown.row_times = truth_in(*shown, "row_times");
+    out.shown.font_scale =
+        static_cast<float>(decimal_in(*shown, "font_scale", 1.0));
+    out.shown.font = font_of(text_in(*shown, "font"));
+  }
+  if (const json::value *how = json::said(*said_settings, "asking")) {
+    out.how.thinking = truth_in(*how, "thinking", true);
+    out.how.how_hard = effort_of(text_in(*how, "how_hard"));
+    out.how.temperature = decimal_in(*how, "temperature", 0.7);
+    out.how.top_p = decimal_in(*how, "top_p", 1.0);
+    out.how.max_tokens = static_cast<std::uint32_t>(
+        number_in(*how, "max_tokens", 2048));
+    out.how.presence = decimal_in(*how, "presence");
+    out.how.often = decimal_in(*how, "often");
+    if (const json::value *tools = json::said(*how, "tools"))
+      for (std::size_t at = 0; at < tools_owned; ++at)
+        out.how.tools[at] = truth_in(*tools, tool_names[at]);
+    if (const json::value *switches = json::said(*how, "switches"))
+      for (std::size_t at = 0; at < switches_owned; ++at)
+        out.how.switches[at] = truth_in(*switches, switch_names[at]);
+  }
+  return out;
 }
 
 }  // namespace pchat::prgrssv

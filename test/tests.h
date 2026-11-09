@@ -86,6 +86,9 @@ inline int run() {
   const ::pchat::tests::registrar said_kept_##group##_##name{&said_##group##_##name, #group "." #name};                 \
   static void said_##group##_##name()
 
+// Every EXPECT says its expression twice -- once as a check and once to hold
+// its value -- so a call with a side effect (reading a file into a vector,
+// say) is stored in a name of its own before it is expected of.
 #define EXPECT_TRUE(given) ::pchat::tests::that(static_cast<bool>(given), "true: " #given, given, true)
 #define EXPECT_FALSE(given) ::pchat::tests::that(!static_cast<bool>(given), "false: " #given, given, false)
 #define EXPECT_EQ(left, right) ::pchat::tests::that((left) == (right), #left " == " #right, left, right)
