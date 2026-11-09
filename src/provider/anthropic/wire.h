@@ -49,6 +49,20 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
 // The ceiling of one model's output in the tokens Anthropic allows (agora's
 // AnthropicOutputLimits), and 32768 where no model is known to have one.
 long long pchat_anthropic_ceiling(const char *model);
+
+// What one model may be asked, of the two a reader asks for here: whether it
+// thinks before it answers -- in the words this wire takes a thinking in, a
+// type beside the budget of tokens it may think with, and nothing at all
+// where this model takes no thinking parameter -- and whether the numbers
+// that choose its words are read beside it. Both answers come out of the one
+// capability Agora keeps for a model (ports/agora-core, ModelThinkingCapability),
+// so they are said in one place and cannot disagree with each other.
+struct anthropic_thinking_cap {
+  const char *thinking;  // "enabled", "adaptive", or "" where none is taken
+  long long budget;      // tokens to think with; 0 where `thinking` says none
+  bool sampling;         // whether temperature and top_p are read at all
+};
+anthropic_thinking_cap pchat_anthropic_thinking(const char *model);
 }  // namespace pchat::provider
 
 #endif  // PCHAT_PROVIDER_ANTHROPIC_WIRE_H

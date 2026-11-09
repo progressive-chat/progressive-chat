@@ -9,6 +9,11 @@
 // data too; and it says when it has finished carrying them. Which is what
 // lets one answer be said whole by a test with no network under it, and the
 // same answer later be carried by a page's fetch, a socket, or fibers.
+module;
+// Relative to this file's own place (src/provider/), the way provider.cc's own
+// include is relative to src/: the folder's one plain header.
+#include "http/wire.h"
+
 export module pchat.provider.run;
 
 import std;
@@ -86,7 +91,18 @@ public:
       : asking_{.url = std::string(url_of(at)),
                 .headers = headers_of(at),
                 .body = body_of(at, turns, wants)},
-      coming_(wire_of(at)) {}
+      coming_(wire_of(at)) {
+    // What the port's guard refuses, this never sets out with: an API
+    // credential over plain http:// to a host that is not this machine's own,
+    // said no to by the port itself (provider/http/wire.h, the cleartext
+    // guard). Said here, at the making of the asking, so that no transport
+    // ever sees it and the screens read why it never went.
+    if (!cleartext_is_safe(asking_.url, asking_.headers))
+      stop_over(over::failed,
+                "Refusing to send API credentials over cleartext HTTP to a "
+                "non-local host. Use an https:// endpoint, or reach it over "
+                "LAN/Tailscale.");
+  }
 
   // ---- what a transport reads and is given back --------------------------
 

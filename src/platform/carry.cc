@@ -42,6 +42,7 @@ public:
         over_(gone.over_), read_(gone.read_) {
 #if defined(__EMSCRIPTEN__)
     held_ = std::exchange(gone.held_, nullptr);
+    attempts_ = std::exchange(gone.attempts_, 0);
 #endif
   }
   carrying &operator=(carrying &&gone) {
@@ -57,6 +58,7 @@ public:
       read_ = gone.read_;
 #if defined(__EMSCRIPTEN__)
       held_ = std::exchange(gone.held_, nullptr);
+      attempts_ = std::exchange(gone.attempts_, 0);
 #endif
     }
     return *this;
@@ -95,28 +97,8 @@ public:
     wrote_ = std::string(body);
     place_ = std::string(url);
     read_ = 0;
-
-    emscripten_fetch_attr_t asking;
-    emscripten_fetch_attr_init(&asking);
-    std::strcpy(asking.requestMethod, "POST");
-    asking.requestHeaders = flat_.data();
-    asking.requestData = wrote_.data();
-    asking.requestDataSize = wrote_.size();
-    // Both: the whole of it is wanted even where a browser never hands it
-    // over a piece at a time, and where it does, what answers arrives while
-    // it is read, which is what an arriving answer looks like.
-    asking.attributes =
-        EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_STREAM_DATA;
-    asking.userData = this;
-    asking.onprogress = &carrying::went_along;
-    asking.onerror = &carrying::went_wrong;
-    asking.onreadystatechange = &carrying::went_on;
-    asking.onsuccess = &carrying::went_well;
-    held_ = emscripten_fetch(&asking, place_.c_str());
-    if (!held_) {
-      trouble_ = "the page would not ask for it";
-      over_ = true;
-    }
+    attempts_ = 0;
+    fire();
 #endif
   }
 
@@ -149,6 +131,33 @@ private:
   // through a pointer to a function and not to anything of ours: each one is
   // given this object back in `userData` and says everything to it.
 #if defined(__EMSCRIPTEN__)
+  // The asking itself, built out of what begin() kept: said apart because a
+  // carrying that could not connect asks again with those very same fields
+  // rather than building them anew (went_wrong).
+  void fire() {
+    emscripten_fetch_attr_t asking;
+    emscripten_fetch_attr_init(&asking);
+    std::strcpy(asking.requestMethod, "POST");
+    asking.requestHeaders = flat_.data();
+    asking.requestData = wrote_.data();
+    asking.requestDataSize = wrote_.size();
+    // Both: the whole of it is wanted even where a browser never hands it
+    // over a piece at a time, and where it does, what answers arrives while
+    // it is read, which is what an arriving answer looks like.
+    asking.attributes =
+        EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_STREAM_DATA;
+    asking.userData = this;
+    asking.onprogress = &carrying::went_along;
+    asking.onerror = &carrying::went_wrong;
+    asking.onreadystatechange = &carrying::went_on;
+    asking.onsuccess = &carrying::went_well;
+    held_ = emscripten_fetch(&asking, place_.c_str());
+    if (!held_) {
+      trouble_ = "the page would not ask for it";
+      over_ = true;
+    }
+  }
+
   // A piece arrived, and where the piece says it arrived: take what of it has
   // not been taken yet, and nothing of it twice. A browser that hands the
   // whole body over at once instead says this too, once.
@@ -168,6 +177,19 @@ private:
   }
   static void went_wrong(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
+    // Not an answer but the connection: what a client that retries on
+    // connection failure asks again -- the port's client_policy() says to
+    // (provider/http/wire.h) -- three askings in all, and only while not one
+    // byte has come. An answer that says no is never asked again (went_on
+    // says why).
+    emscripten_fetch_close(one);
+    self.held_ = nullptr;
+    if (self.attempts_ + 1 < kAskings && self.read_ == 0) {
+      ++self.attempts_;
+      self.fire();
+      if (self.held_)
+        return;
+    }
     if (!self.trouble_)
       self.trouble_ = "the page could not ask for it";
     self.over_ = true;
@@ -211,6 +233,11 @@ private:
 
 #if defined(__EMSCRIPTEN__)
   emscripten_fetch_t *held_ = nullptr;
+  // How many askings this carrying made and lost to the connection, and the
+  // ceiling they are counted against: three in all, said here where the
+  // retry lives (went_wrong).
+  static constexpr std::uint32_t kAskings = 3;
+  std::uint32_t attempts_ = 0;
 #endif
   std::string place_;
   std::string wrote_;

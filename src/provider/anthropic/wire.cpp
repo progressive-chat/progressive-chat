@@ -11,6 +11,7 @@
 #include "agora/core/anthropic_request.hpp"
 #include "agora/core/anthropic_stream.hpp"
 #include "agora/core/stream_normalization.hpp"
+#include "agora/core/thinking_capability.hpp"
 
 namespace pchat::provider {
 namespace {
@@ -111,6 +112,30 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
 long long pchat_anthropic_ceiling(const char *model) {
   const auto ceiling = agora::core::anthropic::max_output_tokens(model != nullptr ? model : "");
   return ceiling.value_or(32768);
+}
+
+anthropic_thinking_cap pchat_anthropic_thinking(const char *model) {
+  namespace tc = agora::core::thinking_capability;
+  const tc::Capability capability =
+      tc::for_model(tc::ThinkingProviderFamily::Anthropic, model != nullptr ? model : "");
+  const bool sampling = capability.supports_sampling_params;
+  // Whether this model takes a thinking parameter at all, asked the way Agora
+  // asks it: a generation that predates extended thinking is given no
+  // parameter of it, and nothing about the answer blocks a request.
+  if (!capability.supports_effort() && !capability.supports_thinking_budget)
+    return {"", 0, sampling};
+  // A budget beside it, where this model takes one: what Agora keeps as its
+  // default when a reader has said no number of their own, kept to what this
+  // model allows -- never under 1024, which is the floor the wire itself
+  // holds an enabled thinking to.
+  if (capability.supports_thinking_budget)
+    return {"enabled", tc::clamp_budget(capability, tc::kDefaultBudgetTokens), sampling};
+  // And the adaptive form for a model that offers an effort to choose by and
+  // no budget of its own to think with: which is the form no budget may be
+  // said beside.
+  if (capability.supports_effort())
+    return {"adaptive", 0, sampling};
+  return {"enabled", tc::clamp_budget(capability, tc::kDefaultBudgetTokens), sampling};
 }
 
 }  // namespace pchat::provider

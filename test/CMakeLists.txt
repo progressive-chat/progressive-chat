@@ -31,10 +31,16 @@ pchat_test(logic pchat_core)
 pchat_test(json pchat_json)
 pchat_test(provider pchat_provider)
 pchat_test(provider_run pchat_provider)
+pchat_test(provider_budget pchat_provider)
 pchat_test(provider_loop pchat_provider)
 pchat_test(provider_anthropic pchat_provider)
 pchat_test(provider_gemini pchat_provider)
 pchat_test(provider_http pchat_provider)
+# The folder's plain header is reached over the tree's own src/: the file set
+# carries its base dirs to the modules, while a test unit includes the header
+# in its own global fragment and needs the root said plainly.
+target_include_directories(pchat-provider_http-test PRIVATE
+  "${PROJECT_SOURCE_DIR}/src")
 pchat_test(tools pchat_tools)
 pchat_test(tokens pchat_core pchat_json)
 pchat_test(prgrssv pchat_core pchat_json)

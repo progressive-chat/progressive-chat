@@ -21,6 +21,7 @@ import pchat.ui;
 import pchat.platform.notified;
 import pchat.platform.opened;
 import pchat.provider;
+import pchat.provider.budget;
 import pchat.provider.run;
 import pchat.platform.carry;
 import pchat.provider.loop;
@@ -440,17 +441,33 @@ private:
     const provider::endpoint at{.base = opened_.base,
                                 .model = ending_of(chat),
                                 .told = told_of(chat)};
-    // Not const: a view over messages asked of more than once is read more
-    // than once, and reading it again is not a thing a const view of it says
-    // yes to.
-    auto turns = root_.messages |
-                       std::views::filter([&chat](const message &one) {
-                         return one.chat == chat;
-                       });
+    // The conversation whole, as both halves of the asking read it: the tools
+    // are given every message of it, because a tool asked about this
+    // conversation is asked about all of it, and the wire is given what fits
+    // the window its answerer has -- said below over these same messages, and
+    // leaving every one of them where it is.
+    const std::vector<message> said =
+        root_.messages |
+        std::views::filter(
+            [&chat](const message &one) { return one.chat == chat; }) |
+        std::ranges::to<std::vector<message>>();
     // What is ours to answer goes in the asking, so a model knows it may stop
     // and ask; and it is kept here, because answering those calls later is
     // this program's and nobody else's.
-    tools::owned mine{turns, now_ms()};
+    tools::owned mine{said, now_ms()};
+    // How the reader has asked for it to answer, whole: the five numbers, the
+    // thinking and how hard, and the tools that were left on -- both halves
+    // said in one place (src/tools.cc, `wanted_of`), where before this the
+    // asking carried the tools alone and none of what the settings rows move.
+    const provider::wanted wants = tools::wanted_of(how_);
+    // What of the conversation fits the window its answerer has: the oldest
+    // message of it that is asked about, which is where the asking starts
+    // below. Nothing is cut from the conversation to find it out -- the
+    // messages stay whole, are drawn as they were, and are read whole by the
+    // tools -- only what is written onto the wire is decided here, which is
+    // what Agora's own preparation decides there (src/provider/budget.cc).
+    const message_id from =
+        provider::fit_from(said, at, room_of(chat), wants);
     // Put where it will stay before anything is given to it: what a platform
     // carries for is answerable at the address it was given, and a carrying
     // that is moved afterwards answers into what was left behind -- it came,
@@ -459,11 +476,13 @@ private:
         answer_coming{.chat = chat,
                       .said = message_id{chat.value + "-" +
                                          std::to_string(root_.messages.size())},
-                      .going = provider::loop{at,
-                                              turns,
-                                              4,
-                                              provider::wanted{
-                                                  .tools = mine.offered()}},
+                      .going = provider::loop{
+                          at,
+                          said | std::views::drop_while([&from](const message &one) {
+                            return one.id != from;
+                          }),
+                          4,
+                          wants},
                       .carried = std::move(carried),
                       .mine = std::move(mine),
                       .began = now_ms()});
@@ -608,6 +627,15 @@ private:
       if (one.id == chat)
         return one.told_for();
     return std::string(default_told);
+  }
+  // How much room this chat's answerer has to be asked in: what the window of
+  // the conversation says, and none where no conversation is open -- which
+  // cuts nothing of anything, because nobody has said how much room there is.
+  [[nodiscard]] std::uint32_t room_of(const conversation_id &chat) const {
+    for (const conversation &one : root_.conversations)
+      if (one.id == chat)
+        return one.window;
+    return 0;
   }
   // What this chat has spent of the room its answerer has: said again whole
   // after any message enters or leaves it, and after the window changes, so

@@ -67,6 +67,17 @@ It (this readme section's workdays summaries) is written by hand. Nothing
 writes here that is not that hand, and no paragraph of it is written by a
 model, an agent or a script on its own.
 
+### 2026-11-08
+
+The GitHub repository has been created with the code that exists at this point.
+The git repository keeps its creation date of November 3, and the whole of its
+history comes over with it. Today's work was on automating testing on Android,
+cloud-based among it, with different tasks in front of it -- for example to
+tell quickly that the application does not start on Android. Various
+functionality was also written, for example data export. Work was done on the
+documentation. From the next day on I will count the number of lines exactly,
+and of commits too, every day. This day two thousand lines were written.
+
 ### 2026-11-07
 
 The last 24h gave only a thousand of new code lines. But I fixed many things

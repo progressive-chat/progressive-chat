@@ -284,10 +284,18 @@ add_library(pchat_provider)
 # saying what it adds here (cmake/providers.cmake).
 include(cmake/providers.cmake)
 target_sources(pchat_provider PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
-  FILES src/provider.cc src/provider/stream.cc src/provider/run.cc
-        src/provider/loop.cc)
+  FILES src/provider.cc src/provider/budget.cc src/provider/stream.cc
+        src/provider/run.cc src/provider/loop.cc)
 target_compile_features(pchat_provider PUBLIC cxx_std_26)
 target_compile_options(pchat_provider PUBLIC ${pchat_std_flags})
+# The fitting itself, as a classic translation unit: where Agora's own headers
+# are at home and never in a module unit, the same as the counters (src/
+# tokens_worth.cpp) and as the wires each provider folder stands up. The tree's
+# own src/ is said plainly below it: a file set carries no include path of its
+# own, so a classic unit two folders deep reaches the counters' door the way
+# the test units do.
+target_sources(pchat_provider PRIVATE src/provider/budget.cpp)
+target_include_directories(pchat_provider PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(pchat_provider PUBLIC pchat_core pchat_json)
 
 # What a control asks the program for: said before the screens are, as they
@@ -424,9 +432,13 @@ add_subdirectory(ports/agora-core)
 if(PCHAT_TESTS)
   enable_testing()
   add_subdirectory(test)
-  # The port's own test binary joins the same ask: one `pchat-tests` build
-  # gives ctest everything this program says by test.
-  foreach(port_test agora_core_tests agora_portable_crypto_test)
+  # The port's own test binaries join the same ask: one `pchat-tests` build
+  # gives ctest everything this program says by test. Every one of them is
+  # named here, and named under a target that may not be there at all -- a
+  # port test behind a library this machine has not got is added by the port
+  # only where it is, so naming it costs nothing where it is not.
+  foreach(port_test agora_core_tests agora_portable_crypto_test
+                    agora_ssh_transport_tests)
     if(TARGET ${port_test})
       add_dependencies(pchat-tests ${port_test})
     endif()

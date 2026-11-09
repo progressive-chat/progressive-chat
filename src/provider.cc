@@ -245,9 +245,9 @@ struct wanted {
 // the turns as content blocks, what it is told as a field named `system`, and
 // the choices written in the order its own writer writes them (port
 // anthropic_request.cpp, write_request_body). What this shape has no field for
-// is not said: thinking arrives with budgets only where the asking carries them
-// through the preparation this tree does not do yet, and the penalties a chat
-// wire takes are not Anthropic's.
+// is not said: thinking is asked for in the budget this family takes it in,
+// where the model takes a thinking at all, and the penalties a chat wire takes
+// are not Anthropic's.
 template <std::ranges::forward_range Turns>
   requires std::same_as<std::ranges::range_value_t<Turns>, turn>
 [[nodiscard]] inline std::string anthropic_body_of(const endpoint &one, Turns &&turns,
@@ -297,13 +297,38 @@ template <std::ranges::forward_range Turns>
   // The ceiling the model family allows, and the asking's own count under it:
   // Anthropic reads max_tokens on every body, so one is always said.
   const long long ceiling = pchat_anthropic_ceiling(one.model.c_str());
-  const std::int64_t room =
+  // Whether this model thinks before it answers, and what it is given to
+  // think with: the reader asking for it, and this model being able to take
+  // what is asked of it. Nothing of it is said below where either is not
+  // there, which is how a wire is told no thinking without a word about it.
+  const anthropic_thinking_cap cap = pchat_anthropic_thinking(one.model.c_str());
+  const bool thinks = wants.thinking && cap.thinking[0] != '\0';
+  // Thinking is written out of the same room the answer is written in, so
+  // where it is asked for, the room is made to hold it first: the budget, and
+  // the headroom to answer in beside it, as Agora makes room before it asks
+  // (AnthropicProvider, ANSWER_HEADROOM_TOKENS), under the same ceiling.
+  constexpr std::int64_t headroom = 8192;
+  std::int64_t room =
       wants.max_tokens ? std::min<std::int64_t>(*wants.max_tokens, ceiling) : ceiling;
+  if (thinks)
+    room = std::min<std::int64_t>(std::max<std::int64_t>(room, cap.budget + headroom),
+                                  ceiling);
   out.name("max_tokens").number(room);
   out.name("stream").truth(wants.stream);
-  if (wants.temperature)
+  if (thinks) {
+    out.name("thinking").thing().name("type").text(cap.thinking);
+    if (cap.budget > 0)
+      out.name("budget_tokens").number(static_cast<std::int64_t>(cap.budget));
+    out.name("display").text("summarized").shut();
+  }
+  // The two numbers that choose its words, read where this model still reads
+  // them: sampling is taken off the generations that think (temperature not at
+  // all beside a thinking, and top_p only in the 0.95..1 that is left legal
+  // there), which is the condition Agora keeps on the same two fields.
+  if (cap.sampling && !thinks && wants.temperature)
     out.name("temperature").number(*wants.temperature);
-  if (wants.top_p)
+  if (cap.sampling && wants.top_p &&
+      (!thinks || (*wants.top_p >= 0.95 && *wants.top_p <= 1.0)))
     out.name("top_p").number(*wants.top_p);
   if (!wants.tools.empty()) {
     out.name("tools").list();

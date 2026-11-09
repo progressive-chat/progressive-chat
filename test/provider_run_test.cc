@@ -179,4 +179,38 @@ SAID(provider_run, an_answer_that_never_came_is_a_failed_message) {
   EXPECT_FALSE(said.before.has_value());
 }
 
+SAID(provider_run, a_credential_never_sets_out_in_the_clear) {
+  const std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user, .text = "Hello"}};
+  // A key, a plain-http place and a host that is not this machine's own: the
+  // port's guard refuses it, so the run is over before any transport could
+  // carry it, and why it never went is said for the screens.
+  provider::run refused{
+      provider::endpoint{.base = "http://api.example.com/v1",
+                         .key = "sk-secret",
+                         .model = "o4-mini",
+                         .told = "You are brief."},
+      turns};
+  EXPECT_TRUE(refused.done());
+  EXPECT_TRUE(refused.ended() == provider::over::failed);
+  EXPECT_TRUE(refused.trouble().has_value());
+  EXPECT_TRUE(refused.trouble()->find("cleartext") != std::string::npos);
+  // Encrypted, and a host of this machine's own: both asked of as usual.
+  provider::run encrypted{
+      provider::endpoint{.base = "https://api.openai.com/v1",
+                         .key = "sk-secret",
+                         .model = "o4-mini",
+                         .told = "You are brief."},
+      turns};
+  EXPECT_TRUE(encrypted.where() == provider::standing::ready);
+  EXPECT_TRUE(encrypted.ended() == provider::over::none);
+  provider::run at_home{
+      provider::endpoint{.base = "http://127.0.0.1:11434/v1",
+                         .key = "sk-secret",
+                         .model = "local-model",
+                         .told = "You are brief."},
+      turns};
+  EXPECT_TRUE(at_home.where() == provider::standing::ready);
+}
+
 int main() { return pchat::tests::run(); }

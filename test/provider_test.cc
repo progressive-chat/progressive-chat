@@ -282,4 +282,118 @@ SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
 }
 
+namespace {
+
+// What stands under one name in a body, or nothing where the body says
+// nothing of it -- so that a body missing a field is a check that did not
+// hold and not a read past the end of one.
+[[nodiscard]] const json::value *in(const json::value &body, std::string_view name) {
+  return json::said(&body, name);
+}
+
+// The number under one name, or -1 where there is none.
+[[nodiscard]] double number_in(const json::value &body, std::string_view name) {
+  const json::value *one = in(body, name);
+  if (one == nullptr)
+    return -1.0;
+  return json::number_of(*one).value_or(-1.0);
+}
+
+// The word under one name, or nothing where there is none.
+[[nodiscard]] std::string text_in(const json::value &body, std::string_view name) {
+  const json::value *one = in(body, name);
+  if (one == nullptr)
+    return std::string{};
+  return std::string(json::text_of(*one).value_or(""));
+}
+
+}  // namespace
+
+// What a thinking costs the body it is asked for in: a budget in the words
+// this family takes it in, room for an answer beside that budget -- and the
+// two numbers that choose the words taken off it, because this family does
+// not read them beside a thinking at all.
+SAID(provider, thinking_on_anthropic_is_a_budget_and_room_to_answer) {
+  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
+                              .model = "haiku-4"};
+  const std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user, .text = "Say go"}};
+  const asking how{.thinking = true, .temperature = 0.7, .top_p = 1.0,
+                   .max_tokens = 2048};
+  const auto body = json::read(provider::body_of(at, turns, provider::wants_of(how)));
+  EXPECT_TRUE(body.has_value());
+  if (!body.has_value())
+    return;
+  const json::value *thinking = in(*body, "thinking");
+  EXPECT_TRUE(thinking != nullptr);
+  if (thinking == nullptr)
+    return;
+  EXPECT_EQ(text_in(*thinking, "type"), std::string("enabled"));
+  const double budget = number_in(*thinking, "budget_tokens");
+  EXPECT_GE(budget, 1024.0);
+  // Anthropic reads the budget and the answer out of the same max_tokens, so
+  // the room asked for is the budget plus what is left to answer in with it.
+  EXPECT_LT(budget, number_in(*body, "max_tokens"));
+  EXPECT_TRUE(in(*body, "temperature") == nullptr);
+  EXPECT_EQ(number_in(*body, "top_p"), 1.0);
+}
+
+// And the same body where the reader asked for no thinking: nothing said of
+// it, and the two numbers back where they were.
+SAID(provider, thinking_off_anthropic_leaves_the_numbers_where_they_were) {
+  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
+                              .model = "haiku-4"};
+  const std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user, .text = "Say go"}};
+  const asking how{.thinking = false, .temperature = 0.7, .top_p = 0.8,
+                   .max_tokens = 2048};
+  const auto body = json::read(provider::body_of(at, turns, provider::wants_of(how)));
+  EXPECT_TRUE(body.has_value());
+  if (!body.has_value())
+    return;
+  EXPECT_TRUE(in(*body, "thinking") == nullptr);
+  EXPECT_EQ(number_in(*body, "temperature"), 0.7);
+  EXPECT_EQ(number_in(*body, "top_p"), 0.8);
+  EXPECT_EQ(number_in(*body, "max_tokens"), 2048.0);
+}
+
+// A top_p beside a thinking, kept only where this family still allows one:
+// 0.95 and above go out with it, and anything under that is left out rather
+// than sent to be refused.
+SAID(provider, a_top_p_beside_a_thinking_is_kept_only_in_095_and_up) {
+  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
+                              .model = "haiku-4"};
+  const std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user, .text = "Say go"}};
+  const asking borderline{.thinking = true, .top_p = 0.95};
+  const auto kept =
+      json::read(provider::body_of(at, turns, provider::wants_of(borderline)));
+  EXPECT_TRUE(kept.has_value());
+  if (kept.has_value())
+    EXPECT_EQ(number_in(*kept, "top_p"), 0.95);
+  const asking under{.thinking = true, .top_p = 0.7};
+  const auto gone =
+      json::read(provider::body_of(at, turns, provider::wants_of(under)));
+  EXPECT_TRUE(gone.has_value());
+  if (gone.has_value())
+    EXPECT_TRUE(in(*gone, "top_p") == nullptr);
+}
+
+// And a model that never thought -- a generation from before extended
+// thinking, which the capability says so about -- is given no thinking
+// parameter at all, however much the reader asked for one.
+SAID(provider, a_model_that_never_thought_is_asked_for_no_thinking) {
+  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
+                              .model = "claude-3-haiku"};
+  const std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user, .text = "Say go"}};
+  const asking how{.thinking = true, .temperature = 0.7};
+  const auto body = json::read(provider::body_of(at, turns, provider::wants_of(how)));
+  EXPECT_TRUE(body.has_value());
+  if (!body.has_value())
+    return;
+  EXPECT_TRUE(in(*body, "thinking") == nullptr);
+  EXPECT_EQ(number_in(*body, "temperature"), 0.7);
+}
+
 int main() { return pchat::tests::run(); }
