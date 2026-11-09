@@ -173,6 +173,21 @@ struct set_answerer {
   std::string name;
   bool wanted = false;
 };
+// One of the doors offered (pchat.config, providers_offered), chosen: which
+// one the next asking is spoken through -- said whole as one press of the
+// providers' rows, and kept with the settings for the runs after this one.
+struct pick_door {
+  std::string id;
+};
+// The key that opens one of the doors, whole as it is typed: which door it
+// opens said with it -- a key is not a key without the door it opens -- and
+// both into the settings, out to nobody before an asking goes through that
+// door with it, under whichever name that wire asks for a key (src/provider.
+// cc, headers_of).
+struct set_door_key {
+  std::string id;
+  std::string key;
+};
 // The archive of everything this program holds, written into one .prgrssv file
 // where the machine keeps files: asked for on the settings page's About, and
 // answered with a save dialog of the machine's own -- the chosen path comes
@@ -197,7 +212,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 set_avatars, set_row_times,
                                 send_test_notification,
                                 set_generation, set_tool, set_switch,
-                              set_answerer, copy_text, save_archive>;
+                              set_answerer, pick_door, set_door_key,
+                              copy_text, save_archive>;
 
 class requests {
 public:

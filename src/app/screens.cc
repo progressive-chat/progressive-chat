@@ -62,6 +62,7 @@ public:
           root_ = std::move(back.root);
           shown_ = back.shown;
           how_ = back.how;
+          where_ = std::move(back.where);
           look_ = ui::paints_of(colors_of(shown_, true), true);
         }
       }
@@ -73,7 +74,7 @@ public:
   // not. A run whose state could not be written is still the run it was.
   ~screens() {
     if (platform::keeps_state())
-      platform::state_write(prgrssv::archive_of(root_, shown_, how_));
+      platform::state_write(prgrssv::archive_of(root_, shown_, how_, where_));
   }
 
   [[nodiscard]] window_scene &window() noexcept { return scene_; }
@@ -335,6 +336,21 @@ public:
             [&](const set_switch &asking) {
               how_ = set_of(how_, asking.which, asking.on);
             },
+            // One of the doors chosen: which one the next asking is spoken
+            // through -- kept with the settings, so that the run after this
+            // one asks through the same, and by a word that stands among the
+            // offered ones even where a press named something else.
+            [&](const pick_door &asking) {
+              where_.provider = std::string(provider_by(asking.id).id);
+            },
+            // The key for one of them, whole as it was typed: into the door
+            // itself, where it stays with the settings, and out nowhere
+            // before an asking goes through that door with it (src/provider.
+            // cc, headers_of). Which door it opens stands with it -- a key
+            // is not a key without its door.
+            [&](const set_door_key &asking) {
+              key_into(where_, asking.id, asking.key);
+            },
             // The archive asked for: which files are kept where is the
             // machine's own to say, and all this says is the name the file
             // goes under -- the bytes are written when a path comes back
@@ -377,7 +393,7 @@ public:
     for (const std::string &place : std::exchange(scene::hostWork().links, {}))
       platform::opened::open(place);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, how_, query_, dark_,
+    scene_.root().again(look_, root_, shown_, how_, where_, query_, dark_,
                         ui::what_is_open{.settings = settings_,
                                          .design = design_,
                                          .prompt = system_,
@@ -467,9 +483,18 @@ private:
     platform::carrying carried;
     if (!carried.any())
       return;
-    const provider::endpoint at{.base = opened_.base,
-                                .model = ending_of(chat),
-                                .told = told_of(chat)};
+    // The door the reader chose, whole: where it stands -- and this page's
+    // own server where the chosen one stands nowhere, as it did before any
+    // door was offered -- what opens it for that door, and whose words are
+    // spoken there for a model no answerer here has heard of (pchat.config,
+    // providers_offered, and endpoint's `family` for the last of those).
+    const provider_choice &there = provider_by(where_.provider);
+    const provider::endpoint at{
+        .base = !there.base.empty() ? std::string(there.base) : opened_.base,
+        .key = key_of(where_, where_.provider),
+        .model = ending_of(chat),
+        .told = told_of(chat),
+        .family = std::string(there.alias)};
     // The conversation whole, as both halves of the asking read it: the tools
     // are given every message of it, because a tool asked about this
     // conversation is asked about all of it, and the wire is given what fits
@@ -729,6 +754,10 @@ private:
   chats_root root_;
   looks shown_;
   asking how_;
+  // Which door the asking goes through, and what opens each of them: said
+  // with the settings, read back at the start of the next run, and drawn by
+  // the page that chooses it (src/ui/settings.cc, say_doors).
+  door where_;
   ui::paints look_;
   requests asked_;
   // The machine's own file dialogs, where they are asked for: the program's,

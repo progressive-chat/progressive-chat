@@ -290,6 +290,102 @@ inline constexpr std::array<answerer_choice, 7> answerers_offered{{
   return std::string_view{};
 }
 
+// The doors a model may be asked through: Agora's own ten, named here the
+// way Agora names them (its port keeps the list, reserved_provider_names,
+// so that a reader coming from there finds the same words), and before them
+// the door this program asked through until any of them stood here -- this
+// page's own server, relative to the page and asked for no key of anybody's.
+//
+// A base is where each provider stands, as each publishes it: three of them
+// are also kept in Agora's port for its own purposes (kOpenAiBaseUrl and
+// embeddingBaseUrl hold OpenAI's, OpenRouter's and Ollama's), and the rest
+// are the providers' own published addresses. The alias says whose words a
+// model nobody here has heard of speaks there -- the same three the
+// answerers are told by, with openai standing for the shape most of these
+// answer in.
+struct provider_choice {
+  // What it is kept by, in the settings: one word this program says, and
+  // what every run after this one reads the door back by.
+  std::string_view id;
+  // What it is called on the screen.
+  std::string_view said;
+  // Where it stands, said whole as far as its version: empty only for this
+  // page's own server, whose address is relative to the page (screens,
+  // `opened_`).
+  std::string_view base;
+  // Whose words an unknown model speaks there: "anthropic", "gemini", or
+  // "openai" for the shape everything else answers in.
+  std::string_view alias;
+};
+inline constexpr std::array<provider_choice, 11> providers_offered{{
+    {"page", "This page's server", "", ""},
+    {"openai", "OpenAI", "https://api.openai.com/v1", "openai"},
+    {"anthropic", "Anthropic", "https://api.anthropic.com/v1", "anthropic"},
+    {"google", "Google", "https://generativelanguage.googleapis.com/v1beta",
+     "gemini"},
+    {"deepseek", "DeepSeek", "https://api.deepseek.com/v1", "openai"},
+    {"qwen", "Qwen", "https://dashscope.aliyuncs.com/compatible-mode/v1",
+     "openai"},
+    {"groq", "Groq", "https://api.groq.com/openai/v1", "openai"},
+    {"openrouter", "Open Router", "https://openrouter.ai/api/v1", "openai"},
+    {"opencode", "OpenCode Go", "https://opencode.ai/zen/go/v1", "openai"},
+    {"ollama", "Ollama", "http://localhost:11434/v1", "openai"},
+    {"local", "Local", "http://localhost:8080/v1", "openai"},
+}};
+
+// Which one of them is asked through, by what the settings kept it as: the
+// one that says so, and this page's own server where nothing does -- which
+// is also where a word from a run of an older build lands, so that a door
+// nobody offers anymore is asked of as the door this program falls back to
+// and not of nobody at all.
+[[nodiscard]] inline const provider_choice &provider_by(
+    std::string_view id) {
+  for (const provider_choice &one : providers_offered)
+    if (one.id == id)
+      return one;
+  return providers_offered[0];
+}
+
+// What opens one of those doors: kept beside the door that is chosen, one
+// entry per door ever given a key, so that choosing another door does not
+// throw this one's away -- a reader who keeps two providers keeps both, and
+// a door nobody ever typed a key for has none, which is how this page's
+// server stands (whose key it is, is that server's own to know) and how a
+// model run at home stands (it asks for no key).
+struct door_key {
+  std::string provider;
+  std::string key;
+};
+
+// Which door the next asking is spoken through, and what opens each of the
+// doors ever offered: kept with the rest of the settings, so that a run after
+// this one asks through the same door with the same key as this one did.
+struct door {
+  std::string provider = std::string(providers_offered[0].id);
+  std::vector<door_key> keys;
+};
+
+// Which key opens one of them: nothing where none was ever typed for it.
+[[nodiscard]] inline std::string key_of(const door &where,
+                                        std::string_view id) {
+  for (const door_key &one : where.keys)
+    if (one.provider == id)
+      return one.key;
+  return std::string{};
+}
+
+// The key of one door put where it stands: typed over, it goes over the old
+// one; typed empty, its entry goes away altogether -- what is kept is what
+// opens a door, and never what once did.
+inline void key_into(door &where, std::string_view id, std::string key) {
+  std::erase_if(where.keys, [&id](const door_key &one) {
+    return one.provider == id;
+  });
+  if (!key.empty())
+    where.keys.push_back(
+        door_key{.provider = std::string(id), .key = std::move(key)});
+}
+
 // Whether one of them answers in a chat, by its name: a chat keeps the ones
 // that answer in it, and nothing else says of it that it does.
 [[nodiscard]] inline bool answers_in(std::span<const std::string> models,

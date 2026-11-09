@@ -33,7 +33,8 @@ namespace nodes = skiff::nodes;
 // What of the program is open, said as one thing rather than as six rights
 // and wrongs in a row: asked for in this order, they said nothing at all in
 // it about which was which, and a call read like
-// `again(look, root, shown, how, query, true, false, false, true, false)`.
+// `again(look, root, shown, how, where, query, true, false, false, true,
+// false)`.
 // Which of them is open is the program's own reading of its own state, and
 // what the window does with it is said here, once, in words.
 struct what_is_open {
@@ -101,8 +102,8 @@ struct app_window : scene::Node {
 
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
-             const asking &how, const std::string &query, bool dark,
-             const what_is_open &open,
+             const asking &how, const door &where, const std::string &query,
+             bool dark, const what_is_open &open,
              const std::vector<std::string> &faces_lately, float width,
              float height, app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
@@ -248,7 +249,7 @@ struct app_window : scene::Node {
                   look.away);
     // The settings page, over everything, when it is opened.
     if (open.settings)
-      fSettings.again(asked, look, shown, how, answering, dark, width,
+      fSettings.again(asked, look, shown, how, where, answering, dark, width,
                       height);
     else
       fSettings.hide();

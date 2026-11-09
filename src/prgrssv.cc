@@ -264,9 +264,17 @@ inline constexpr std::int64_t version = 1;
 
 // One archive, whole: what the program holds said into the files it is kept
 // in, and those files zipped into the bytes a save is handed.
+//
+// What door it was spoken through stands in the settings with the rest of
+// them -- and which key opens that door stands there too, because this is the
+// file a run is kept in and read back from. A save asked to be handed
+// around asks for no door at all: given the default one, its settings say
+// which door was chosen and no key of anybody's, which is what makes an
+// archive safe to give away.
 [[nodiscard]] inline std::string archive_of(const chats_root &root,
                                             const looks &shown,
-                                            const asking &how) {
+                                            const asking &how,
+                                            const door &where = door{}) {
   std::vector<stored> files;
 
   // The manifest: what this archive is, whose program wrote it, who its
@@ -389,6 +397,20 @@ inline constexpr std::int64_t version = 1;
     settings.name(switch_names[at]).truth(how.switches[at]);
   settings.shut();
   settings.shut();  // asking
+  // The door the next run asks through: which of the providers stands open,
+  // and what opens it. Said where the rest of the settings are, because that
+  // is where it is read back from -- see archive_of's note on the default.
+  settings.name("door").thing();
+  settings.name("provider").text(where.provider);
+  settings.name("keys").list();
+  for (const door_key &one : where.keys) {
+    settings.thing();
+    settings.name("provider").text(one.provider);
+    settings.name("key").text(one.key);
+    settings.shut();
+  }
+  settings.shut();  // keys
+  settings.shut();  // door
   settings.shut();  // looks-and-asking
   files.push_back(stored{"settings.json", settings.take()});
 
@@ -403,6 +425,11 @@ struct restored {
   chats_root root;
   looks shown;
   asking how;
+  // What it asked through, back too: the door its settings named, and what
+  // opens every door it ever kept a key for -- each key read back the whole
+  // way it was written, which is only ever into this machine's own keeping
+  // (see archive_of).
+  door where;
   std::string trouble;
   [[nodiscard]] bool ok() const { return trouble.empty(); }
 };
@@ -574,6 +601,30 @@ struct restored {
     if (const json::value *switches = json::said(*how, "switches"))
       for (std::size_t at = 0; at < switches_owned; ++at)
         out.how.switches[at] = truth_in(*switches, switch_names[at]);
+  }
+  if (const json::value *where = json::said(*said_settings, "door")) {
+    // The door by what the settings kept it as: one this program offers, and
+    // this page's own server where what is written is none of them -- which
+    // is also where a word from an older build lands, so that what is read
+    // back is always a door that stands here.
+    out.where.provider =
+        std::string(provider_by(text_in(*where, "provider")).id);
+    // And what opens each door it kept a key for: whole as each was written,
+    // under the door it opens -- a key for a door nobody offers anymore
+    // stands aside as one for this page's server, and opens nothing until a
+    // door of that name is chosen again.
+    if (const json::value *keys = json::said(*where, "keys"))
+      for (std::size_t at = 0u;; ++at) {
+        const json::value *one = json::item_of(*keys, at);
+        if (one == nullptr)
+          break;
+        const std::string id = text_in(*one, "provider");
+        if (id.empty())
+          continue;
+        out.where.keys.push_back(
+            door_key{.provider = std::string(provider_by(id).id),
+                     .key = text_in(*one, "key")});
+      }
   }
   return out;
 }

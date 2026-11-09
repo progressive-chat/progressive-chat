@@ -88,4 +88,70 @@ SAID(config, an_answerer_is_put_in_and_taken_out_of_a_chat) {
     EXPECT_TRUE(answers_in(models_with(models, one.name, true), one.name));
 }
 
+SAID(config, every_door_says_where_it_stands_and_whose_words_are_there) {
+  // The door this program asked through before any door stood here is the
+  // first one, and stands without a base of its own: this page's server is
+  // this page's own, said relative to it, and needs no key of anybody's.
+  EXPECT_EQ(std::string(providers_offered[0].id), std::string("page"));
+  EXPECT_TRUE(providers_offered[0].base.empty());
+  EXPECT_TRUE(providers_offered[0].alias.empty());
+
+  // Every id one word of its own, and every id standing alone: no two doors
+  // are kept by the same word, or a setting could name either.
+  for (std::size_t at = 0u; at < providers_offered.size(); ++at) {
+    EXPECT_TRUE(!providers_offered[at].id.empty());
+    EXPECT_TRUE(providers_offered[at].id.find(' ') ==
+                std::string_view::npos);
+    for (std::size_t other = at + 1; other < providers_offered.size();
+         ++other)
+      EXPECT_TRUE(providers_offered[at].id != providers_offered[other].id);
+  }
+
+  // Every door away from this page stands whole, at a host spoken to over a
+  // line this program knows: an encrypted one, or this machine's own where
+  // an encrypted one would be theatre -- a model run at home has no
+  // certificate to show, and a key for it may cross in the clear (provider/
+  // http/wire.cpp, cleartext_is_safe, says the same).
+  // And whose words are spoken there: one of the three families, never
+  // nothing -- a door that said nothing would leave a model nobody here has
+  // heard of to be guessed at from how its base ends.
+  for (const provider_choice &one : providers_offered) {
+    if (!one.base.empty())
+      EXPECT_TRUE(one.base.starts_with("https://") ||
+                  one.base.starts_with("http://localhost:"));
+    if (!one.alias.empty())
+      EXPECT_TRUE(one.alias == "openai" || one.alias == "anthropic" ||
+                  one.alias == "gemini");
+  }
+
+  // The door named in the settings is the door that stands, and this page's
+  // own server where the word names none of them -- which is also where a
+  // word from a build that offered no such door lands.
+  EXPECT_EQ(std::string(provider_by("anthropic").id),
+            std::string("anthropic"));
+  EXPECT_EQ(std::string(provider_by("").id), std::string("page"));
+  EXPECT_EQ(std::string(provider_by("gone-in-a-newer-build").id),
+            std::string("page"));
+
+  // A door as it is kept until one is chosen: this page's server, and
+  // nothing that opens it.
+  const door held;
+  EXPECT_EQ(held.provider, std::string("page"));
+  EXPECT_TRUE(held.keys.empty());
+
+  // What opens a door: typed for one, kept for that one alone, and gone
+  // when it is typed away -- a door with nothing typed for it is asked of
+  // with nothing, which is all a door that needs no key ever has.
+  door typing;
+  EXPECT_EQ(key_of(typing, "ollama"), std::string{});
+  key_into(typing, "ollama", "not-needed-here");
+  EXPECT_EQ(key_of(typing, "ollama"), std::string("not-needed-here"));
+  EXPECT_EQ(key_of(typing, "openai"), std::string{});
+  key_into(typing, "openai", "sk-second-door");
+  EXPECT_EQ(key_of(typing, "ollama"), std::string("not-needed-here"));
+  key_into(typing, "ollama", "");
+  EXPECT_EQ(key_of(typing, "ollama"), std::string{});
+  EXPECT_EQ(key_of(typing, "openai"), std::string("sk-second-door"));
+}
+
 int main() { return pchat::tests::run(); }

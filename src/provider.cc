@@ -82,6 +82,12 @@ struct endpoint {
   std::string key;
   std::string model;
   std::string told;   // what the model is told about itself
+  // Whose words are spoken at this base, said by the door itself (pchat.config,
+  // providers_offered): consulted only where no answerer offered here knows
+  // the model by its name, because who a model is speaks louder than which
+  // door it was asked through. Empty where the door says nothing of it, as
+  // where no door stood here yet.
+  std::string family;
 };
 
 // Two wires wear OpenAI's shape: the chat one everyone answers and the
@@ -95,14 +101,21 @@ struct endpoint {
 enum class wire { chat, responses, anthropic, gemini };
 
 [[nodiscard]] inline wire wire_of(const endpoint &one) {
-  // Who is asked speaks before the base's ending does: Anthropic's family
-  // keeps its own wire wherever its base stands, suffixes and all.
-  if (family_of(one.model) == "anthropic")
+  // Who is asked speaks before the base's ending does: the answerer the
+  // model is known by keeps its own wire wherever its base stands, suffixes
+  // and all -- Anthropic's family above all, which no base ending says.
+  // Where the model is one nobody here has heard of, the door says whose
+  // words it speaks (endpoint's `family`, said by the door it stands for);
+  // where the door says nothing of them either, only then the base's ending
+  // has the word -- a base ending in /v1beta is OpenAI's words under a
+  // Google name, and which words the model reads is asked of the model and
+  // not of the base's suffix.
+  std::string_view family = family_of(one.model);
+  if (family.empty())
+    family = one.family;
+  if (family == "anthropic")
     return wire::anthropic;
-  // The family before the base's ending here too: a base ending in /v1beta is
-  // OpenAI's words under a Google name, and which words the model reads is
-  // asked of the model and not of the base's suffix.
-  if (family_of(one.model) == "gemini")
+  if (family == "gemini")
     return wire::gemini;
   const std::string_view base(one.base);
   if (base.ends_with("/v1beta") || base.ends_with("/responses"))

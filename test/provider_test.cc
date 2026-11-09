@@ -593,4 +593,91 @@ SAID(provider, an_asking_kept_in_plain_words_goes_out_without_arguments) {
   }
 }
 
+SAID(provider, whose_words_an_unknown_model_speaks_is_said_by_the_door) {
+  // The answerer a model is known by speaks first, whatever door it was
+  // asked through: a Claude named in a conversation still speaks its own
+  // family's words at a base that has nothing to do with them.
+  const provider::endpoint known{.base = "https://api.deepseek.com/v1",
+                                 .model = "haiku-4",
+                                 .family = "openai"};
+  EXPECT_EQ(provider::wire_of(known), provider::wire::anthropic);
+
+  // A model nobody here has heard of: the door says whose words it speaks,
+  // and they go where those words are said -- Anthropic's path at
+  // Anthropic's own base, whatever it ends in.
+  const provider::endpoint theirs{
+      .base = "https://api.anthropic.com/v1",
+      .model = "claude-3-5-haiku-20241022",
+      .family = "anthropic"};
+  EXPECT_EQ(provider::wire_of(theirs), provider::wire::anthropic);
+  EXPECT_EQ(provider::url_of(theirs),
+            std::string("https://api.anthropic.com/v1/messages"));
+
+  // Google's door the same: its own method carries the model inside it,
+  // and the door's words say so before the base's ending gets a word in.
+  const provider::endpoint gem{
+      .base = "https://generativelanguage.googleapis.com/v1beta",
+      .model = "some-new-flash",
+      .family = "gemini"};
+  EXPECT_EQ(provider::wire_of(gem), provider::wire::gemini);
+
+  // Most of these answer in OpenAI's shape, and which of its two wires is
+  // still the base's own ending to say.
+  const provider::endpoint compat{.base = "https://api.groq.com/openai/v1",
+                                  .model = "llama-3.3-70b-versatile",
+                                  .family = "openai"};
+  EXPECT_EQ(provider::wire_of(compat), provider::wire::chat);
+  EXPECT_EQ(provider::url_of(compat),
+            std::string("https://api.groq.com/openai/v1/chat/completions"));
+  const provider::endpoint both{.base = "https://their.example/v1beta",
+                                .model = "somebody-new"};
+  EXPECT_EQ(provider::wire_of(both), provider::wire::responses);
+}
+
+SAID(provider, the_key_of_the_door_goes_out_once_where_that_wire_asks) {
+  const auto has = [](const std::vector<std::pair<std::string, std::string>>
+                          &said,
+                      std::string_view name, std::string_view value) {
+    for (const auto &[key, got] : said)
+      if (key == name && got == value)
+        return true;
+    return false;
+  };
+  // OpenAI's shape: the bearer, and nothing asking for it twice.
+  const provider::endpoint openai{.base = "https://api.openai.com/v1",
+                                  .key = "sk-openai-one",
+                                  .model = "o4-mini"};
+  const auto openai_headers = provider::headers_of(openai);
+  EXPECT_TRUE(has(openai_headers, "Authorization", "Bearer sk-openai-one"));
+  EXPECT_TRUE(!has(openai_headers, "x-api-key", ""));
+
+  // Anthropic's own: its own name for the key beside the version its wire
+  // is written as.
+  const provider::endpoint anthropic{.base = "https://api.anthropic.com/v1",
+                                     .key = "sk-ant-one",
+                                     .model = "haiku-4"};
+  const auto anthropic_headers = provider::headers_of(anthropic);
+  EXPECT_TRUE(has(anthropic_headers, "x-api-key", "sk-ant-one"));
+  EXPECT_TRUE(has(anthropic_headers, "anthropic-version", "2023-06-01"));
+  EXPECT_TRUE(!has(anthropic_headers, "Authorization", ""));
+
+  // Google's: its own name, and nothing beside it.
+  const provider::endpoint google{
+      .base = "https://generativelanguage.googleapis.com/v1beta",
+      .key = "sk-goog-one",
+      .model = "gemini-2.5-flash"};
+  const auto google_headers = provider::headers_of(google);
+  EXPECT_TRUE(has(google_headers, "x-goog-api-key", "sk-goog-one"));
+  EXPECT_TRUE(!has(google_headers, "Authorization", ""));
+
+  // No key in the door: no header asking for one, whichever door stands.
+  const provider::endpoint bare{.base = "https://api.openai.com/v1",
+                                .model = "o4-mini"};
+  for (const auto &[key, got] : provider::headers_of(bare)) {
+    EXPECT_TRUE(key != "Authorization");
+    EXPECT_TRUE(key != "x-api-key");
+    EXPECT_TRUE(key != "x-goog-api-key");
+  }
+}
+
 int main() { return pchat::tests::run(); }

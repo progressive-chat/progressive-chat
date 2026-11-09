@@ -303,4 +303,49 @@ SAID(prgrssv, bytes_that_were_never_an_archive_say_so) {
   EXPECT_FALSE(hollow.ok());
 }
 
+SAID(prgrssv, the_door_a_run_asked_through_comes_back_with_the_next_one) {
+  chats_root root;
+  const pchat::door where{
+      .provider = "anthropic",
+      .keys = {pchat::door_key{.provider = "anthropic",
+                               .key = "sk-kept-whole"}}};
+  const std::string bytes =
+      prgrssv::archive_of(root, default_looks, default_asking, where);
+
+  // The door stands in the settings whole: which of them is chosen, and what
+  // opens it -- both said the way every other setting of this file is said.
+  std::vector<pchat::prgrssv::stored> in;
+  EXPECT_TRUE(pchat::prgrssv::unzipped(bytes, in));
+  const std::optional<json::value> settings =
+      read_body(body_of(in, "settings.json"));
+  EXPECT_TRUE(settings.has_value());
+  if (settings) {
+    EXPECT_EQ(text_at(*settings, "door/provider"), std::string("anthropic"));
+    EXPECT_EQ(text_at(*settings, "door/keys/0/provider"),
+              std::string("anthropic"));
+    EXPECT_EQ(text_at(*settings, "door/keys/0/key"),
+              std::string("sk-kept-whole"));
+  }
+
+  // And back whole for the run that reads this file at its start: the door
+  // as it was stood, and what opens it as it was written.
+  const pchat::prgrssv::restored back = pchat::prgrssv::restore_of(bytes);
+  EXPECT_TRUE(back.ok());
+  EXPECT_EQ(back.where.provider, std::string("anthropic"));
+  EXPECT_EQ(pchat::key_of(back.where, "anthropic"),
+            std::string("sk-kept-whole"));
+
+  // A save asked to be handed around is given no key at all: which door was
+  // chosen is still said -- it is a setting like any other -- but what opens
+  // it stands only where it was typed, and never in a file given away.
+  const std::string given_away =
+      prgrssv::archive_of(root, default_looks, default_asking);
+  const pchat::prgrssv::restored elsewhere =
+      pchat::prgrssv::restore_of(given_away);
+  EXPECT_TRUE(elsewhere.ok());
+  EXPECT_EQ(elsewhere.where.provider, std::string("page"));
+  EXPECT_TRUE(elsewhere.where.keys.empty());
+  EXPECT_EQ(pchat::key_of(elsewhere.where, "anthropic"), std::string{});
+}
+
 int main() { return pchat::tests::run(); }

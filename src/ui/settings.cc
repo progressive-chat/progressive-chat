@@ -8,6 +8,7 @@ export module pchat.ui:settings;
 import std;
 import skiff.scene;
 import skiff.nodes;
+import skiff.widgets.textarea;
 import pchat.config;
 import pchat.theme;
 import pchat.app.requests;
@@ -26,7 +27,7 @@ namespace nodes = skiff::nodes;
 inline constexpr double large_type = 1.25;
 
 // How many groups the page has, and how many items any one of them may say.
-inline constexpr std::size_t max_settings_groups = 9u;
+inline constexpr std::size_t max_settings_groups = 10u;
 inline constexpr std::size_t max_settings_items = 7u;
 
 // The seeds offered, and the name each is known by.
@@ -45,11 +46,12 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
     {scheme_preset::ocean, "Ocean"},
 }};
 
-// The nine groups the page is made of, and what each holds, said once in
+// The ten groups the page is made of, and what each holds, said once in
 // the order they are said in (design-doc.md, "The settings"). Every one of
 // them has what it is named for drawn under one of its items: Appearance,
 // under Appearance & Language; what answers in a chat, under Services;
-// Generation, under Responses; the three tools this program owns, under
+// which door that chat is spoken through, under Ask through; Generation,
+// under Responses; the three tools this program owns, under
 // Tools; a switch to each of the seven under Multimodal, Network and
 // Memory & Data; a press that asks for one notification, under
 // Notifications; and what this build is, under About.
@@ -62,7 +64,7 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
 // anything: one of these six, and never two of them, because no two of
 // them are what one place in the page is made of.
 enum class group_rows { none, appearance, generation, tools, switches,
-                        answerers, notified, about };
+                        answerers, notified, about, doors };
 
 struct settings_group {
   std::string_view name;
@@ -80,7 +82,16 @@ struct settings_group {
   std::size_t switches_said = 0u;
 };
 inline constexpr std::array<settings_group, max_settings_groups> settings_groups{{
-    {"Services", {{"Providers", "Models"}}, 2u, 1u, group_rows::answerers},
+    // What answers in a chat: which of the offered models are in the one
+    // open -- said under its own item, which is the only one this group
+    // draws under (its other item stood over nothing, and was taken away
+    // when a group that really holds the providers came to stand here).
+    {"Services", {{"Models"}}, 1u, 0u, group_rows::answerers},
+    // Which door the asking goes through: the providers themselves, one row
+    // each, and the key of the one chosen typed into the field under them --
+    // a whole door in the settings, and not something this page copies out
+    // of them (pchat.config, `door`).
+    {"Ask through", {{"Providers"}}, 1u, 0u, group_rows::doors},
     {"Responses",
      {{"System prompts", "Generation", "Context", "Title generation"}},
      4u,
@@ -433,6 +444,32 @@ struct test_row : scene::Node {
   }
 };
 
+// What the field of the providers writes into: the door itself, through the
+// program between frames -- the key is asked of no server, it is put where
+// the next asking will carry it (src/provider.cc, headers_of).
+struct key_sink {
+  app::requests *asked = nullptr;
+  // Whose key is in the field: the door the page has chosen, said with every
+  // edit, because a key without the door it opens is not a key of anything.
+  std::string id;
+};
+// Each edit of the field, whole: the key as it stands after this keystroke,
+// for the door named beside it -- into the settings, as it is typed, and not
+// when the page is put away, which would keep two copies of what is only
+// said once (the same way the prompt card writes its own words, src/ui/
+// prompt.cc).
+struct key_told {
+  std::shared_ptr<key_sink> sink;
+  // Nothing to give back to the scene: what is typed is asked of the
+  // program as it is typed, and there is nothing left to say about the press.
+  using Answer = void;
+  static constexpr bool kEveryEdit = true;
+  Answer operator()(std::string_view text) const {
+    if (sink && sink->asked)
+      sink->asked->ask(app::set_door_key{sink->id, std::string(text)});
+  }
+};
+
 struct settings_rows : scene::Node {
   // Said while the page is being looked into: the first two things said in
   // it that stand on one another, by the name each is known by in the code
@@ -477,6 +514,21 @@ struct settings_rows : scene::Node {
   // The answerers, drawn: a switch to each of them, whether it answers in
   // the conversation the window has open or not.
   std::array<switch_row, answerers_offered.size()> fAnswerers;
+  // The doors, drawn: a switch to each, saying which one the next asking is
+  // spoken through -- one at a time, which is what the rows show of
+  // themselves by which one stands switched on.
+  std::array<switch_row, providers_offered.size()> fDoors;
+  // The key of the door chosen, typed: written into the door itself as it
+  // is typed (key_told), and read back from the door for what is drawn --
+  // made once with the page, so that what is typed is never written back
+  // over itself by the frame after it.
+  std::shared_ptr<key_sink> fKeySink = std::make_shared<key_sink>();
+  skiff::widgets::TextArea<key_told> fKey{skiff::widgets::Theme{},
+                                          std::string("The key for it"),
+                                          key_told{fKeySink}};
+  // Which door's key the field is showing: another door chosen puts its own
+  // into the field, and the same one leaves what is being typed alone.
+  std::string fKeyDoor;
   // Notifications, drawn: one press that asks for a test notification.
   test_row fTest;
   // About, drawn: what this build is, what it is under, and where its
@@ -529,6 +581,15 @@ struct settings_rows : scene::Node {
       one.setVisible(false);
     for (switch_row &one : fAnswerers)
       one.setVisible(false);
+    for (switch_row &one : fDoors)
+      one.setVisible(false);
+    // The field of the providers: one line of it, and what is typed into it
+    // read as dots -- a key is typed into a password's field wherever a
+    // password is typed, and this is one. Shown as every row of this page
+    // is: hidden until the group that holds it says it.
+    fKey.setSingleLine(true);
+    fKey.setMasked(true);
+    fKey.setVisible(false);
     for (about_row &one : fAbout)
       one.blank();
     fTest.blank();
@@ -563,6 +624,63 @@ struct settings_rows : scene::Node {
                                               .wanted = !in});
       at += settings_row_stride;
     }
+    return at;
+  }
+
+  // The doors, drawn: a switch to each of them, pressed to say which one the
+  // next asking is spoken through -- one at a time, which is what standing
+  // switched on says of itself. Under them, the key of the one chosen, in a
+  // field masked as every password's field is: its words what the door
+  // holds, written into the door as they are typed (key_told) and read back
+  // from the door for what is drawn, so that the program never keeps two
+  // copies of what is only said once.
+  [[nodiscard]] float say_doors(app::requests *asked, const paints &look,
+                                const door &where, float row_width,
+                                float base) {
+    float at = base;
+    for (std::size_t one = 0u; one < providers_offered.size(); ++one) {
+      const provider_choice &said = providers_offered[one];
+      fDoors[one].again(asked,
+                        {.anchor = scene::anchor::kTopLeft,
+                         .x = 16.0f,
+                         .y = at,
+                         .relativeSize = scene::axes::kNone,
+                         .width = row_width,
+                         .height = settings_row_height,
+                         .cornerRadius = 14.0f,
+                         .visible = true},
+                        look, said.said, where.provider == said.id,
+                        app::pick_door{std::string(said.id)});
+      at += settings_row_stride;
+    }
+    // The field itself: the same colours every other field of this program
+    // is said in (the drawer's is said this way, src/ui/drawer.cc), and its
+    // words the chosen door's own -- put in only when another door is
+    // chosen, never while this one's key is being typed.
+    fKeySink->asked = asked;
+    fKeySink->id = where.provider;
+    skiff::widgets::Theme theme{};
+    theme.fSurface = look.field;
+    theme.fText = look.text;
+    theme.fTextDim = look.dim;
+    theme.fTextFaint = look.faint;
+    theme.fAccent = look.primary;
+    fKey.setTheme(theme);
+    if (fKeyDoor != where.provider) {
+      fKeyDoor = where.provider;
+      fKey.setText(key_of(where, where.provider));
+    }
+    fKey.apply({.anchor = scene::anchor::kTopLeft,
+                .x = 16.0f,
+                .y = at,
+                .relativeSize = scene::axes::kNone,
+                .width = row_width,
+                .height = 40.0f,
+                .cornerRadius = 20.0f,
+                .padding = scene::Margin::horizontal(16.0f),
+                .visible = true});
+    fKey.apply({.background = look.field});
+    at += settings_row_stride;
     return at;
   }
 
@@ -627,7 +745,7 @@ struct settings_rows : scene::Node {
   // to know of which is which.
   [[nodiscard]] float say_rows(group_rows rows, app::requests *asked,
                                const paints &look, const looks &shown,
-                               const asking &how,
+                               const asking &how, const door &where,
                                std::span<const std::string> answerers,
                                bool dark, float breadth, float row_width,
                                float base, std::size_t from,
@@ -649,6 +767,8 @@ struct settings_rows : scene::Node {
       return say_notified(asked, look, row_width, base);
     case group_rows::about:
       return say_about(asked, look, row_width, base);
+    case group_rows::doors:
+      return say_doors(asked, look, where, row_width, base);
     }
     return base;
   }
@@ -872,8 +992,9 @@ struct settings_rows : scene::Node {
     return top + read_at + settings_row_height + settings_group_gap;
   }
   void again(app::requests *asked, const paints &look, const looks &shown,
-             const asking &how, std::span<const std::string> answerers,
-             bool dark, float breadth) {
+             const asking &how, const door &where,
+             std::span<const std::string> answerers, bool dark,
+             float breadth) {
     // Where the next thing said stands: every row in here says where it
     // stands, so the page is laid out as it is read -- one group after the
     // last, and nothing left to count by hand.
@@ -917,9 +1038,9 @@ struct settings_rows : scene::Node {
         // Under one of its items a group says more than its name: what it
         // is made of, in the room the items after it would have taken.
         if (named.drawn_at == one)
-          at = say_rows(named.drawn, asked, look, shown, how, answerers, dark,
-                        breadth, row_width, at, named.switch_from,
-                        named.switches_said);
+          at = say_rows(named.drawn, asked, look, shown, how, where,
+                        answerers, dark, breadth, row_width, at,
+                        named.switch_from, named.switches_said);
       }
       at += settings_group_gap;
     }
@@ -963,6 +1084,9 @@ struct settings_rows : scene::Node {
       f(one);
     for (switch_row &one : fAnswerers)
       f(one);
+    for (switch_row &one : fDoors)
+      f(one);
+    f(fKey);
     f(fTest);
     f(fReadPlate);
     f(fRead);
@@ -1000,8 +1124,9 @@ struct settings_screen : scene::Node {
   }
 
   void again(app::requests *asked, const paints &look, const looks &shown,
-             const asking &how, std::span<const std::string> answerers,
-             bool dark, float width, float height) {
+             const asking &how, const door &where,
+             std::span<const std::string> answerers, bool dark, float width,
+             float height) {
     this->setVisible(true);
     // Opened anew, it is read from its beginning. Left alone it stood at
     // its end: the column is taller than the room, and while it was still
@@ -1038,7 +1163,7 @@ struct settings_screen : scene::Node {
                  app::close_settings{}, look.raised);
     fClose.mark_colour(look.text);
     std::get<0>(fRows.fChildren)
-        .again(asked, look, shown, how, answerers, dark,
+        .again(asked, look, shown, how, where, answerers, dark,
                breadth - 2.0f * edge);
     fRows.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
