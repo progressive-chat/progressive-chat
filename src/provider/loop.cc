@@ -87,9 +87,19 @@ public:
 
   // ---- what the screens read --------------------------------------------
 
-  // Whether it is over for good: it stopped on its own, or it could not be
-  // had. Nothing about whether it may still be asked again.
-  [[nodiscard]] bool over() const { return ended_ != provider::over::none; }
+  // Whether it is over for good: nothing more will happen of it. The wire
+  // could not be had, the reader stopped it, or the last answer ended without
+  // a question left in it -- and a question left in after as many rounds as
+  // may be asked is the end too, because there is nobody to ask it again. A
+  // question still to answer with rounds left in hand is not over: it is
+  // about to be asked again.
+  [[nodiscard]] bool over() const {
+    if (ended_ == provider::over::stopped || ended_ == provider::over::failed)
+      return true;
+    if (ended_ != provider::over::complete)
+      return false;
+    return asked_.empty() || rounds_ >= rounds_at_most_;
+  }
   [[nodiscard]] std::size_t rounds() const { return rounds_; }
   // What it asked for in the answer that came back last, whole, and empty
   // once it has been answered.

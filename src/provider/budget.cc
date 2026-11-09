@@ -30,12 +30,30 @@ export namespace pchat::provider {
                                           const endpoint &at,
                                           std::uint32_t window,
                                           const wanted &wants) {
+  // What every message is worth as it goes out: a round of asking goes out
+  // with its calls and their answers again (turns_of), so those words are
+  // against the window too -- and in the words a wire takes them in, which
+  // `call_arguments` says for the writing and for this counting both, so that
+  // what is counted here and what is written there are the same words.
+  std::vector<std::string> whole;
+  whole.reserve(said.size());
+  for (const message &one : said) {
+    std::string words(one.text);
+    if (!one.outgoing && one.before)
+      for (const call_made &call : one.before->calls) {
+        words += ' ';
+        words += call_arguments(call.asked);
+        words += ' ';
+        words += call.answered;
+      }
+    whole.push_back(std::move(words));
+  }
   std::vector<budgeted> seen;
   seen.reserve(said.size());
-  for (const message &one : said)
-    seen.push_back(budgeted{.id = one.id.value,
-                            .text = one.text,
-                            .outgoing = one.outgoing});
+  for (std::size_t at = 0; at < said.size(); ++at)
+    seen.push_back(budgeted{.id = said[at].id.value,
+                            .text = whole[at],
+                            .outgoing = said[at].outgoing});
   std::vector<budgeted_tool> kit;
   kit.reserve(wants.tools.size());
   for (const offered &one : wants.tools)

@@ -65,7 +65,7 @@ SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
   EXPECT_EQ(std::string(json::text_of(*json::said(said, "content")).value_or("")),
             std::string("You are brief."));
   EXPECT_EQ(std::string(json::text_of(*json::said(
-                              json::said(json::said(*read_back, "messages"), 2), "content"))
+                              json::said(json::said(*read_back, "messages"), 3), "content"))
                             .value_or("")),
             std::string("Say \"go\"\n"));
   EXPECT_TRUE(json::truth_of(*json::said(json::said(*read_back, "stream_options"),
@@ -394,6 +394,203 @@ SAID(provider, a_model_that_never_thought_is_asked_for_no_thinking) {
     return;
   EXPECT_TRUE(in(*body, "thinking") == nullptr);
   EXPECT_EQ(number_in(*body, "temperature"), 0.7);
+}
+
+namespace {
+
+// One conversation where an answer had stopped to ask for something on the
+// way: what the reader asked, what the model said while asking, what the call
+// answered, and the answer as it stood -- kept as this tree keeps such an
+// answer, in one message with the round behind its thought.
+[[nodiscard]] std::vector<message> a_round_of_asking() {
+  const conversation_id chat{"kitchen"};
+  std::vector<message> said;
+  said.push_back(message{.id = message_id{"kitchen-1"},
+                         .chat = chat,
+                         .text = "What was said about butter?",
+                         .outgoing = true});
+  said.push_back(message{
+      .id = message_id{"kitchen-2"},
+      .chat = chat,
+      .text = "Butter was said twice, both about keeping it cold.",
+      .before = thought{.took_ms = 40,
+                        .tool_calls = 1,
+                        .said = "> looked\n",
+                        .calls = {call_made{.tool = "look_up_in_this_conversation",
+                                            .asked = R"({"what":"butter"})",
+                                            .answered = "two said it, both about the cold"}}}});
+  return said;
+}
+
+// The place of every round of asking in a body: the assistant turn that made
+// the calls, where it is, and the id both ends of the round were given.
+[[nodiscard]] std::size_t place_of_asking(const json::value &messages,
+                                          std::string &own) {
+  for (std::size_t at = 0; at < 20; ++at) {
+    const json::value *one = json::said(&messages, at);
+    if (one == nullptr)
+      break;
+    const json::value *calls = in(*one, "tool_calls");
+    if (calls == nullptr)
+      continue;
+    const json::value *first = json::said(calls, std::size_t{0});
+    if (first == nullptr)
+      continue;
+    own = text_in(*first, "id");
+    return at;
+  }
+  return 20;
+}
+
+}  // namespace
+
+// An answer that had stopped to ask: what was asked goes back as the model
+// asked it, what the call answered goes back against it, and the answer as it
+// stood comes after -- in one id at both ends, which this program makes
+// itself, because what the wire named the calls with then was never written
+// down with the answer.
+SAID(provider, a_round_of_asking_and_answering_is_asked_of_the_wire_again) {
+  const std::vector<message> said = a_round_of_asking();
+  const std::vector<provider::turn> turns = provider::turns_of(said);
+  EXPECT_EQ(turns.size(), 4u);
+  const provider::endpoint at{.base = "https://api.openai.com/v1",
+                              .model = "o4-mini"};
+  const auto body = json::read(provider::body_of(at, turns));
+  EXPECT_TRUE(body.has_value());
+  if (!body.has_value())
+    return;
+  const json::value *messages = in(*body, "messages");
+  EXPECT_TRUE(messages != nullptr);
+  if (messages == nullptr)
+    return;
+  std::string own;
+  const std::size_t asking_at = place_of_asking(*messages, own);
+  EXPECT_EQ(asking_at, std::size_t{1});
+  EXPECT_FALSE(own.empty());
+  const json::value *asking = json::said(messages, asking_at);
+  const json::value *calls = asking ? in(*asking, "tool_calls") : nullptr;
+  const json::value *call = calls ? json::said(calls, std::size_t{0}) : nullptr;
+  EXPECT_TRUE(call != nullptr);
+  if (call != nullptr) {
+    const json::value *function = in(*call, "function");
+    EXPECT_TRUE(function != nullptr);
+    if (function != nullptr) {
+      EXPECT_EQ(text_in(*function, "name"),
+                std::string("look_up_in_this_conversation"));
+      EXPECT_EQ(text_in(*function, "arguments"), std::string(R"({"what":"butter"})"));
+    }
+    EXPECT_EQ(text_in(*call, "id"), own);
+  }
+  const json::value *answered = json::said(messages, asking_at + 1);
+  EXPECT_TRUE(answered != nullptr);
+  if (answered != nullptr) {
+    EXPECT_EQ(text_in(*answered, "role"), std::string("tool"));
+    EXPECT_EQ(text_in(*answered, "tool_call_id"), own);
+    EXPECT_EQ(text_in(*answered, "content"),
+              std::string("two said it, both about the cold"));
+  }
+  const json::value *after = json::said(messages, asking_at + 2);
+  EXPECT_TRUE(after != nullptr);
+  if (after != nullptr) {
+    EXPECT_EQ(text_in(*after, "role"), std::string("assistant"));
+    EXPECT_EQ(text_in(*after, "content"),
+              std::string("Butter was said twice, both about keeping it cold."));
+  }
+}
+
+// The same round in anthropic's own words: a tool_use block under the model,
+// the answer as a tool_result against the same id, and the answer itself as
+// the text block after them.
+SAID(provider, the_round_again_in_anthropics_own_words) {
+  const std::vector<message> said = a_round_of_asking();
+  const std::vector<provider::turn> turns = provider::turns_of(said);
+  const provider::endpoint at{.base = "https://api.anthropic.com/v1",
+                              .model = "haiku-4"};
+  const auto body = json::read(provider::body_of(at, turns));
+  EXPECT_TRUE(body.has_value());
+  if (!body.has_value())
+    return;
+  const json::value *messages = in(*body, "messages");
+  EXPECT_TRUE(messages != nullptr);
+  if (messages == nullptr)
+    return;
+  // messages[0] is the reader's; the asking is the model's turn after it.
+  const json::value *asking = json::said(messages, std::size_t{1});
+  const json::value *blocks = asking ? in(*asking, "content") : nullptr;
+  const json::value *block = blocks ? json::said(blocks, std::size_t{0}) : nullptr;
+  EXPECT_TRUE(block != nullptr);
+  if (block == nullptr)
+    return;
+  EXPECT_EQ(text_in(*block, "type"), std::string("tool_use"));
+  EXPECT_EQ(text_in(*block, "name"), std::string("look_up_in_this_conversation"));
+  const std::string own = text_in(*block, "id");
+  EXPECT_FALSE(own.empty());
+  const json::value *answered = json::said(messages, std::size_t{2});
+  const json::value *answer_blocks = answered ? in(*answered, "content") : nullptr;
+  const json::value *answer =
+      answer_blocks ? json::said(answer_blocks, std::size_t{0}) : nullptr;
+  EXPECT_TRUE(answer != nullptr);
+  if (answer != nullptr) {
+    EXPECT_EQ(text_in(*answer, "type"), std::string("tool_result"));
+    EXPECT_EQ(text_in(*answer, "tool_use_id"), own);
+    EXPECT_EQ(text_in(*answer, "content"),
+              std::string("two said it, both about the cold"));
+  }
+  const json::value *after = json::said(messages, std::size_t{3});
+  const json::value *after_blocks = after ? in(*after, "content") : nullptr;
+  const json::value *text =
+      after_blocks ? json::said(after_blocks, std::size_t{0}) : nullptr;
+  EXPECT_TRUE(text != nullptr);
+  if (text != nullptr)
+    EXPECT_EQ(text_in(*text, "text"),
+              std::string("Butter was said twice, both about keeping it cold."));
+}
+
+// What a call asked for, where the asking was written down in plain words --
+// which is how this tree's own sample keeps them: an object is what a wire
+// takes, and there is none here, so the call goes out without arguments
+// rather than with words the wire would read as JSON.
+SAID(provider, an_asking_kept_in_plain_words_goes_out_without_arguments) {
+  const conversation_id chat{"kitchen"};
+  std::vector<message> said;
+  said.push_back(message{.id = message_id{"kitchen-1"},
+                         .chat = chat,
+                         .text = "What was said about butter?",
+                         .outgoing = true});
+  said.push_back(message{
+      .id = message_id{"kitchen-2"},
+      .chat = chat,
+      .text = "Two things, both about keeping it cold.",
+      .before = thought{
+          .took_ms = 40,
+          .said = "> looked\n",
+          .calls = {call_made{.tool = "look_up_in_this_conversation",
+                              .asked = "what was said here about butter",
+                              .answered = "two said it"}}}});
+  const std::vector<provider::turn> turns = provider::turns_of(said);
+  EXPECT_EQ(turns.size(), 4u);
+  const provider::endpoint at{.base = "https://api.openai.com/v1",
+                              .model = "o4-mini"};
+  const auto body = json::read(provider::body_of(at, turns));
+  EXPECT_TRUE(body.has_value());
+  if (!body.has_value())
+    return;
+  const json::value *messages = in(*body, "messages");
+  EXPECT_TRUE(messages != nullptr);
+  if (messages == nullptr)
+    return;
+  std::string own;
+  const std::size_t asking_at = place_of_asking(*messages, own);
+  const json::value *asking = json::said(messages, asking_at);
+  const json::value *calls = asking ? in(*asking, "tool_calls") : nullptr;
+  const json::value *call = calls ? json::said(calls, std::size_t{0}) : nullptr;
+  EXPECT_TRUE(call != nullptr);
+  if (call != nullptr) {
+    const json::value *function = in(*call, "function");
+    EXPECT_TRUE(function != nullptr);
+    if (function != nullptr)
+      EXPECT_EQ(text_in(*function, "arguments"), std::string("{}"));
+  }
 }
 
 int main() { return pchat::tests::run(); }

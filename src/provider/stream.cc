@@ -247,6 +247,7 @@ private:
     }
     const auto whole = json::read(data);
     if (!whole) {
+      content_ended(); // whatever was held is said before the stream is lost
       failed_ = true;
       failure_ = "a frame that was not written in JSON, at its " +
                  std::to_string(whole.error().at) + "th character: " +
@@ -255,6 +256,7 @@ private:
       return;
     }
     if (const json::value *bad = json::said(*whole, "error")) {
+      content_ended(); // and here too: an error ends the stream for good
       failed_ = true;
       failure_ = "the wire's own error: " + std::string(text_in(bad, "message"));
       said_.push_back(event{.what = event::kind::failed, .said = failure_});
@@ -272,7 +274,11 @@ private:
     const json::value *delta = json::said(choice, "delta");
     if (delta) {
       if (const std::string_view piece = text_in(delta, "content"); !piece.empty())
-        content_said(piece);
+        // Whether the wire says which piece of the answer this is: an index
+        // beside it makes it a piece of the answer, and no index beside it
+        // leaves it open whether it was thinking that never opened a tag
+        // (content_said decides).
+        content_said(piece, json::said(choice, "index") != nullptr);
       // Thinking comes under a name of its own on every wire that has it, and
       // under another on the others.
       std::string_view piece = text_in(delta, "reasoning_content");
@@ -390,9 +396,32 @@ private:
     return std::span<const std::string_view>(shuts);
   }
 
+  // Whether a piece of content holds no tag at all: neither a whole one, nor
+  // the beginning of one waiting for the rest of it to arrive.
+  [[nodiscard]] static bool plain_in(std::string_view text) {
+    return !whole_tag_in(text, opens()) && !whole_tag_in(text, every_shut()) &&
+           begun_tag_in(text, opens()) == 0 && begun_tag_in(text, every_shut()) == 0;
+  }
+
   // One piece of what a wire called its own content: read for thinking first,
   // and only then said as the answer it is.
-  void content_said(std::string_view piece) {
+  //
+  // How much the piece is trusted is said by the wire beside it: a delta with
+  // an index is a piece of the answer and is said as it arrives, while plain
+  // words with no index are held back until a tag settles them or the stream
+  // ends -- for those may be thinking which never opened a tag at all, and
+  // only the tag that closes one (or nothing more coming at all) says which
+  // side of one they were on.
+  void content_said(std::string_view piece, bool indexed) {
+    // What was held while plain, and a piece that brings no tag with it
+    // either: those earlier words were the answer after all, said before this
+    // piece joins them -- a frame's words are their own event, so that what a
+    // wire said frame by frame is said frame by frame here too. A piece that
+    // carries a tag joins them instead, where the tag has the last word.
+    if (!held_.empty() && plain_in(held_) && plain_in(piece)) {
+      answer_said(held_);
+      held_.clear();
+    }
     held_.append(piece);
     for (;;) {
       if (thinking_) {
@@ -428,10 +457,16 @@ private:
           const std::size_t upto = held_.size() - begun;
           answer_said(held_.substr(0, upto));
           held_.erase(0, upto);
-        } else {
+        } else if (indexed || !text_.empty() || !thought_.empty()) {
           answer_said(held_);
           held_.clear();
         }
+        // And where the wire gave the piece no index and nothing of the
+        // answer has been said at all, it is held: that may be thinking which
+        // never opened a tag, and only the first tag that closes one -- or the
+        // end of the stream, in content_ended -- says which side of one those
+        // words were on. A wire that ends plainly releases them there, and so
+        // does one that fails on the way.
         return;
       }
       // Thinking that began without being opened -- everything written before

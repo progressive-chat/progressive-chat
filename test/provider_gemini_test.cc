@@ -54,9 +54,10 @@ SAID(gemini, one_answer_is_read_in_the_words_every_wire_uses) {
   EXPECT_EQ(one.cost().out, 12u);
   EXPECT_EQ(one.calls().size(), std::size_t{1});
   if (!one.calls().empty()) {
-    // Gemini gives a call a name and no id: the id is empty rather than
-    // invented, and what it is called and with what stands alone.
-    EXPECT_EQ(one.calls()[0].id, std::string(""));
+    // Gemini gives a call a name and no id of its own; what answers it comes
+    // back against is the name the router gave it, and an id empty at both
+    // ends would pair every answer with the first call instead.
+    EXPECT_FALSE(one.calls()[0].id.empty());
     EXPECT_EQ(one.calls()[0].name, std::string("get_time"));
     EXPECT_EQ(one.calls()[0].arguments, std::string("{\"city\":\"Rome\"}"));
   }

@@ -242,7 +242,8 @@ SAID(doc, hashes_counted_and_a_list_told_from_words) {
       "* a pill\n"
       "- another\n"
       "#### As small as three\n");
-  EXPECT_EQ(read.size(), 10u);
+  // Nine lines, the break after the last one not making a tenth.
+  EXPECT_EQ(read.size(), 9u);
   EXPECT_TRUE(read[0].kind == logic::doc_kind::title);
   EXPECT_EQ(read[0].said, std::string("The design of a chat"));
   EXPECT_TRUE(read[1].kind == logic::doc_kind::gap);
@@ -257,7 +258,7 @@ SAID(doc, hashes_counted_and_a_list_told_from_words) {
   EXPECT_TRUE(read[7].kind == logic::doc_kind::bullet);
   EXPECT_EQ(read[7].said, std::string("another"));
   // More hashes than three are said as small as three was.
-  EXPECT_TRUE(read[9].kind == logic::doc_kind::subheading);
+  EXPECT_TRUE(read[8].kind == logic::doc_kind::subheading);
 }
 
 SAID(doc, a_last_line_with_no_break_after_it) {

@@ -101,6 +101,17 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
   }
   for (const as::StreamEvent &event : reader.router.route(*decoded))
     frame_of(event, out);
+  // What the router kept instead of making a frame of it: a failure the
+  // provider reported inside the stream is captured rather than emitted
+  // (anthropic_stream.hpp, `stream_error`), the first one winning, and left to
+  // whoever reads it -- said here as the failure it is, and once, through the
+  // router's own word that it has been said.
+  if (reader.router.stream_error && !reader.router.reported_error) {
+    reader.router.reported_error = true;
+    out.push_back(
+        frame{.what = frame::kind::failed,
+              .said = error_text(*reader.router.stream_error)});
+  }
   if (reader.router.saw_terminal_marker() && !reader.ended_emitted) {
     reader.ended_emitted = true;
     out.push_back(frame{.what = frame::kind::ended,

@@ -71,11 +71,11 @@ SAID(tokens, the_carried_vocabulary_prices_what_the_reference_prices) {
     const std::size_t end = text.find('\n', at);
     const std::size_t length = (end == std::string::npos ? text.size() : end) - at;
     const std::string_view line(text.data() + at, length);
-    if (line.size() > 3 && line[2] == '"') {
-      const std::size_t close = line.find('"', 3);
+    if (line.size() > 2 && line[1] == '"') {
+      const std::size_t close = line.find('"', 2);
       if (close != std::string_view::npos && line.size() >= close + 4 &&
           line.compare(close, 4, "\": {") == 0) {
-        const std::string name(line.substr(3, close - 3));
+        const std::string name(line.substr(2, close - 2));
         const json::value *entry = json::said(*parsed, name);
         EXPECT_TRUE(entry != nullptr);
         if (entry != nullptr) {

@@ -20,7 +20,7 @@ namespace {
               .chat = conversation_id{"chat-1"},
               .author = "Reader",
               .outgoing = true,
-              .text = "Is it raining in Oslo?",
+              .text = "What is the weather in Oslo, is it raining?",
               .tokens = 6},
       message{.id = message_id{"2"},
               .chat = conversation_id{"chat-1"},

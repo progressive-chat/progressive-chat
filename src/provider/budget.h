@@ -33,6 +33,17 @@ struct budgeted_tool {
   std::vector<std::pair<std::string, std::string>> taken;
 };
 
+// What one call's asking is given to a wire as: an object, which is what
+// every call this program answers itself carries -- and where the asking was
+// written down without one (a sample's, an older record's), there is nothing
+// honest to send but no arguments at all. Both halves of the asking say it
+// here: the turns that are written out of it (src/provider.cc, `turns_of`)
+// and the words this fitting counts against the window.
+[[nodiscard]] inline std::string call_arguments(std::string_view asked) {
+  return (!asked.empty() && asked.front() == '{') ? std::string(asked)
+                                                  : std::string("{}");
+}
+
 // The oldest message of what was said that is worth asking about: every
 // message from it on is asked about, and none before it -- Agora's
 // limitContext, the newest protocol-complete suffix that fits the window,

@@ -9,6 +9,7 @@
 // writing at all.
 module;
 #include "provider/anthropic/wire.h"
+#include "provider/budget.h"
 
 export module pchat.provider;
 
@@ -174,15 +175,59 @@ headers_of(const endpoint &one) {
 // said and nothing of what the screens know about either. Any range that
 // holds messages is given -- a conversation's own vector, a piece of it, a
 // view over one -- and not one container of one type.
+//
+// Where an answer had stopped to ask for something on the way, its round goes
+// back the way it happened: the model's asking with the calls in it, what each
+// call answered, and only then the answer as it stood. The ids a wire named
+// those calls with were read out of the stream and never written down -- what
+// was kept is what was asked and what came back -- so the ids are made here,
+// one per call of this answer, and both ends of the round are given the same
+// one. The words an asking was recorded in are given to a wire as what a wire
+// takes: an object, or no arguments at all where it was recorded as plain
+// words (call_arguments, src/provider/budget.h, says the same for counting).
 template <std::ranges::forward_range Said>
   requires std::same_as<std::ranges::range_value_t<Said>, message>
 [[nodiscard]] std::vector<turn> turns_of(Said &&said) {
-  return std::ranges::to<std::vector<turn>>(
-      said | std::views::transform([](const message &one) {
-        return turn{.who = one.outgoing ? role::user : role::assistant,
-                    .text = one.text,
-                    .thought = one.before ? one.before->said : std::string()};
-      }));
+  std::vector<turn> out;
+  for (const message &one : said) {
+    if (one.outgoing) {
+      out.push_back(turn{.who = role::user, .text = one.text});
+      continue;
+    }
+    const std::string thought_text =
+        one.before ? one.before->said : std::string();
+    if (!one.before || one.before->calls.empty()) {
+      out.push_back(turn{.who = role::assistant,
+                         .text = one.text,
+                         .thought = thought_text});
+      continue;
+    }
+    // The asking itself, with nothing of the words before it: those are in the
+    // answer as a whole, which comes after the round, where every wire reads
+    // them. What it asked for is said here as it was said then.
+    turn asking{.who = role::assistant};
+    asking.calls.reserve(one.before->calls.size());
+    std::vector<turn> answered;
+    answered.reserve(one.before->calls.size());
+    std::size_t nth = 0;
+    for (const call_made &call : one.before->calls) {
+      const std::string own =
+          "call-" + one.id.value + "-" + std::to_string(nth++);
+      asking.calls.push_back(
+          tool_call{.id = own,
+                    .name = call.tool,
+                    .arguments = call_arguments(call.asked)});
+      answered.push_back(
+          turn{.who = role::tool, .text = call.answered, .own = own});
+    }
+    out.push_back(std::move(asking));
+    for (turn &one_answer : answered)
+      out.push_back(std::move(one_answer));
+    out.push_back(turn{.who = role::assistant,
+                       .text = one.text,
+                       .thought = thought_text});
+  }
+  return out;
 }
 
 [[nodiscard]] inline turn told_as_system(std::string_view said) {
@@ -256,7 +301,10 @@ template <std::ranges::forward_range Turns>
   out.thing();
   out.name("model").text(one.model);
   out.name("messages").list();
-  std::string system;
+  // What it is told, and what every turn said as system adds to it: one place
+  // a wire keeps those words in, and the ones the reader wrote for this
+  // conversation come in through it too (as the chat wire takes them).
+  std::string system(one.told);
   for (const turn &said : turns) {
     if (said.who == role::system) {
       if (!system.empty())
@@ -369,7 +417,9 @@ template <std::ranges::forward_range Turns>
   json::writing out;
   out.thing();
   out.name("contents").list();
-  std::string system;
+  // What it is told, standing as an instruction of its own beside whatever
+  // turns were said as system -- the same words the chat wire puts first.
+  std::string system(one.told);
   // What each call went out under, kept as it is answered: a functionResponse
   // answers by the name of the call, and a turn carries only the id of the
   // one it answers.

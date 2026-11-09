@@ -76,7 +76,10 @@ inline constexpr std::size_t doc_deepest = 3;
     }
     if (said[begun] == '*' || said[begun] == '-') {
       const std::size_t after = said.find_first_not_of(" \t", begun + 1u);
-      if (after != std::string_view::npos && after > begun) {
+      // A mark is a mark with words after it, and only after a space: a star
+      // on its own is a line of words, and `-# not a heading` is words with a
+      // dash in front of them, not a list and not a heading.
+      if (after != std::string_view::npos && after > begun + 1u) {
         out.push_back(doc_line{.kind = doc_kind::bullet,
                                .said = std::string(said.substr(after))});
         continue;

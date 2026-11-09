@@ -163,7 +163,14 @@ SAID(prgrssv, everything_held_comes_back_as_it_was) {
     EXPECT_EQ(text_at(*room_json, "title"), "What is in the kitchen");
     EXPECT_EQ(text_at(*room_json, "kind"), "direct");
     EXPECT_EQ(text_at(*room_json, "models/0"), "haiku-4");
-    EXPECT_EQ(number_at(*room_json, "messages"), 2.0);
+    // The messages stand as the list they were said in, and not as a count:
+    // two of them -- the count of them is the manifest's own, said above.
+    const json::value *messages = json::said(&*room_json, "messages");
+    EXPECT_TRUE(messages != nullptr);
+    if (messages) {
+      EXPECT_TRUE(json::item_of(*messages, 1) != nullptr);
+      EXPECT_TRUE(json::item_of(*messages, 2) == nullptr);
+    }
     EXPECT_EQ(text_at(*room_json, "messages/0/text"),
               "two \"quotes\"\nand a dash");
     EXPECT_TRUE(truth_at(*room_json, "messages/0/outgoing") == true);

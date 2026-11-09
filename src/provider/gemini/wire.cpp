@@ -46,9 +46,10 @@ std::string error_text(const sn::GenerationError &error) {
 
 // One event of the wire, in the frames this folder hands over. A tool call is
 // only said whole, the router having gathered its pieces; Gemini gives a call
-// a name and no id, and the empty id is the honest thing to hand on. What the
-// hosted calls and the citations say is display material for a screen that has
-// none here yet.
+// no id of its own, and the name the router gives it is what an answer to it
+// comes back against -- an id empty at both ends would pair every answer with
+// the first call instead. What the hosted calls and the citations say is
+// display material for a screen that has none here yet.
 void frame_of(const gs::StreamEvent &event, std::vector<gemini_frame> &out) {
   using frame = gemini_frame;
   if (const auto *text = std::get_if<sn::TextChunk>(&event)) {
@@ -118,7 +119,12 @@ std::vector<gemini_frame> gemini_step(gemini_state *state, std::string_view payl
                         .said = error_text(*reader.router.stream_error)});
     return out;
   }
-  if (reader.router.saw_done && !reader.ended_emitted) {
+  // The end of it: where the wire said the reason it stopped on, or where a
+  // relay forwarded the `[DONE]` that ends an OpenAI-shaped stream -- a
+  // Gemini of its own says it with `finishReason` on its last candidate, and
+  // `saw_done` only ever comes from the second kind.
+  if ((reader.router.saw_done || reader.router.finish_reason.has_value()) &&
+      !reader.ended_emitted) {
     reader.ended_emitted = true;
     out.push_back(frame{.what = frame::kind::ended,
                         .finish = reader.router.finish_reason.value_or("stop")});

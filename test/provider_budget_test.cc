@@ -178,4 +178,58 @@ SAID(provider_budget, where_not_one_word_is_the_readers_the_newest_is_asked_for)
   EXPECT_EQ(from, said.back().id);
 }
 
+// What a round of asking costs the window: it goes back onto the wire with
+// the answer that carried it (turns_of), so what it asked for and what came
+// back are counted here too -- against the same window, in the words a wire
+// is given them in.
+SAID(provider_budget, what_a_round_asked_and_answered_counts_against_the_window) {
+  tokens::vocabulary(tokens::o200k());
+  std::vector<message> said;
+  said.push_back(line_of(0, true, many_words(4, 0)));
+  said.push_back(line_of(1, false, many_words(4, 1)));
+  said.push_back(line_of(2, true, many_words(4, 2)));
+  std::vector<message> with_round = said;
+  with_round[1].before =
+      thought{.said = "> looked\n",
+              .calls = {call_made{.tool = "how_much_has_been_said",
+                                  .asked = R"({"what":"butter"})",
+                                  .answered = many_words(1'500, 9)}}};
+  // Whole where nothing of a round was said, and not whole where the round's
+  // own words are wider than the window: they are asked about now, so they
+  // are counted now.
+  EXPECT_EQ(provider::fit_from(said, an_endpoint(), 4'096, provider::wanted{}),
+            said.front().id);
+  EXPECT_NE(
+      provider::fit_from(with_round, an_endpoint(), 4'096, provider::wanted{}),
+      said.front().id);
+}
+
+// And only what a wire actually takes of a round: an asking written down as
+// an object goes out with its words and counts against the window, while one
+// written down in plain words goes out with no arguments at all -- so those
+// words, which no wire will ever read, are not counted against anything.
+SAID(provider_budget, only_what_a_wire_takes_of_a_round_is_counted) {
+  tokens::vocabulary(tokens::o200k());
+  const std::string words = many_words(1'500, 3);
+  auto conversation_with = [&words](const std::string &asked) {
+    std::vector<message> said;
+    said.push_back(line_of(0, true, many_words(4, 0)));
+    said.push_back(line_of(1, false, many_words(4, 1)));
+    said.back().before = thought{
+        .said = "> looked\n",
+        .calls = {call_made{.tool = "look_up_in_this_conversation",
+                            .asked = asked,
+                            .answered = "two said it, both about the cold"}}};
+    said.push_back(line_of(2, true, many_words(4, 2)));
+    return said;
+  };
+  const std::vector<message> plain = conversation_with(words);
+  const std::vector<message> object =
+      conversation_with("{\"what\":\"" + words + "\"}");
+  EXPECT_EQ(provider::fit_from(plain, an_endpoint(), 4'096, provider::wanted{}),
+            plain.front().id);
+  EXPECT_NE(provider::fit_from(object, an_endpoint(), 4'096, provider::wanted{}),
+            object.front().id);
+}
+
 int main() { return pchat::tests::run(); }

@@ -73,9 +73,17 @@ inline int run() {
 }  // namespace pchat::tests
 
 // One test, named for the group it is in and for what it says.
+//
+// The registrar is given a name of its own (not `static`) on purpose: a module
+// unit is compiled with `-x c++-module`, and a variable that nothing reads is
+// then left out of the object altogether -- and a registrar is constructed by
+// nobody, only read by the run after it. Every test of such a file vanished
+// silently and the run said `0 checks held`. An outside name has to be kept
+// (and with it, every function a registrar names), and each test file here is
+// a program of its own, so two registrars of different files never meet.
 #define SAID(group, name)                                                                                               \
   static void said_##group##_##name();                                                                                   \
-  static const ::pchat::tests::registrar said_kept_##group##_##name{&said_##group##_##name, #group "." #name};           \
+  const ::pchat::tests::registrar said_kept_##group##_##name{&said_##group##_##name, #group "." #name};                 \
   static void said_##group##_##name()
 
 #define EXPECT_TRUE(given) ::pchat::tests::that(static_cast<bool>(given), "true: " #given, given, true)
