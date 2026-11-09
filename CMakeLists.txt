@@ -335,6 +335,16 @@ if(NOT ANDROID AND NOT PCHAT_BROWSER)
   endif()
 endif()
 
+# What a run keeps of itself for the next one: a file of this machine where a
+# machine has a home to keep it beside (state_freedesktop.cpp), and nowhere at
+# all where it has not -- a page and a phone keep nothing yet, and the file
+# that says so stands in for them (state.cpp).
+if(UNIX AND NOT APPLE AND NOT ANDROID AND NOT PCHAT_BROWSER)
+  target_sources(pchat_platform PRIVATE src/platform/state_freedesktop.cpp)
+else()
+  target_sources(pchat_platform PRIVATE src/platform/state.cpp)
+endif()
+
 if(PCHAT_UI)
   pchat_find_package(skiff 0.1.0 COMPONENTS ${pchat_skiff_components} REQUIRED)
   pchat_find_package(SDL3 REQUIRED)

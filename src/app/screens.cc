@@ -4,8 +4,12 @@
 // control asked for is answered here, between frames, and the tree is filled
 // in again from the model before the frame is drawn.
 //
-// Nothing here talks to a server: what fills the model is the sample, until
-// the client is.
+// Nothing here talks to a server: what fills the model is what the last run
+// kept, where this machine keeps such things, and the sample until there is
+// one -- and after that, until the client is.
+module;
+#include "../platform/state.h"
+
 export module pchat.app.screens;
 
 import splice;
@@ -45,7 +49,32 @@ class screens {
 public:
   screens()
       : root_(sample_chats()), shown_(default_looks),
-        look_(ui::paints_of(colors_of(shown_, true), true)) {}
+        look_(ui::paints_of(colors_of(shown_, true), true)) {
+    // What the last run kept, read before the first frame is drawn: whole, in
+    // place of the sample, where this machine keeps such things -- the sample
+    // is what stands until there is something real to stand. What could not be
+    // read is what was not kept, and the sample stands there all the same.
+    if (platform::keeps_state()) {
+      const std::string kept = platform::state_read();
+      if (!kept.empty()) {
+        prgrssv::restored back = prgrssv::restore_of(kept);
+        if (back.ok()) {
+          root_ = std::move(back.root);
+          shown_ = back.shown;
+          how_ = back.how;
+          look_ = ui::paints_of(colors_of(shown_, true), true);
+        }
+      }
+    }
+  }
+
+  // What this run held, kept for the run after it: the whole archive, said
+  // where this machine keeps such things, and nowhere at all where it does
+  // not. A run whose state could not be written is still the run it was.
+  ~screens() {
+    if (platform::keeps_state())
+      platform::state_write(prgrssv::archive_of(root_, shown_, how_));
+  }
 
   [[nodiscard]] window_scene &window() noexcept { return scene_; }
 

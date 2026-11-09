@@ -49,6 +49,9 @@ pchat_test(prgrssv pchat_core pchat_json)
 # in the product, and the test exercising that one.
 target_include_directories(pchat-prgrssv-test PRIVATE
   "${PROJECT_SOURCE_DIR}/src")
+# What a machine keeps of a run: written and read back through the product's
+# own door (src/platform/state.h), into a directory of the test's own making.
+pchat_test(state pchat_platform)
 # The reference every entry of the carried vocabulary is measured against: read
 # by the tokens test once the carried vocabulary has been fed in.
 target_compile_definitions(pchat-tokens-test PRIVATE
