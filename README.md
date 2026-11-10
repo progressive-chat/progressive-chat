@@ -142,53 +142,6 @@ but the one it was built on and a machine without them says
 `libc++.so.1: cannot open shared object file` before the program says a
 word. Run it from the directory it came in.
 
-## What is known broken, and where to look first
-
-Short: nothing is known broken on the page any more, and the phone is where
-every question is. All of this has been seen, either on the deployed build
-driven by hand in a browser, or in `adb logcat` from the APK -- none of it is
-guessed at.
-
-**The page asks, is answered, and says it.** Seen whole, end to end: one
-`POST` to `/v1/chat/completions`, a stream answered back, the answer written
-into the room as it arrives, and what it thought and what it cost written
-under it (`Thought for 51 ms · 0 tool calls`, `haiku-4 31% of its window`).
-Two things were wrong until today, and neither was the transport: an asking
-was never told it was being carried, so every byte that arrived was dropped
-by the one line that decides whether a byte is taken; and the asking itself
-is a `provider::run`, which is what `test/provider_run_test.cc` feeds the
-same three frames to and reads back.
-
-**The phone starts slowly and answers nothing.** An APK is built by
-`android.yml` for `arm64-v8a` and `armeabi-v7a`. It draws, then:
-
-* it takes **about twenty seconds** before anything is drawn. Nothing in the
-  tree explains that yet: the shared object is 13 MB, the fonts are baked
-  into the binary, and there is no network to wait for;
-* it **answers no press**, and Android says it is not responding.
-
-Two answers have been ruled out since, by reading mux rather than by
-guessing -- mux draws on the same phone without either of them:
-
-* what the GPU compiled is **kept between runs** since `a0f90c8ddf0d`. Skia
-  was compiling every program it needed at every start, because nothing told
-  the window where to keep them; mux tells it, and now so does the window
-  (`src/platform/kept.cc`). A phone is slow at compiling them, and until that
-  is read off the machine it is the best candidate there is;
-* what the window itself says is **heard** since `a0f90c8ddf0d`. Both SDL and
-  skiff print to stderr -- among the rest the one line saying whether it is
-  drawn through OpenGL or in software -- and Android throws stderr away; mux
-  pipes it into logcat, and so does this now. Every question above could have
-  been answered from that line, and none of them could be before it.
-
-So: `adb logcat -d -s progressive-chat`, started twice -- the first run fills
-what is kept, and the second is the one that says anything.
-
-Where to look, when something else is wrong: everything above the transport
-is covered by tests (`test/provider_run_test.cc`, the tools and the loop), so
-the remaining questions are either in `src/platform/carry.cc`, which is what
-hands a body over per platform, or in what a host does with a frame.
-
 ## Releases
 
 New releases are published **about once a week** -- what has been built then,
