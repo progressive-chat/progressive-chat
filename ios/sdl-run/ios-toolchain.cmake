@@ -10,10 +10,10 @@ set(CMAKE_OSX_ARCHITECTURES arm64)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 26.0)
 
 # The compiler is clang 23 from apt.llvm.org.
-set(CMAKE_C_COMPILER clang-23)
-set(CMAKE_CXX_COMPILER clang++-23)
-set(CMAKE_OBJC_COMPILER clang-23)
-set(CMAKE_OBJCXX_COMPILER clang++-23)
+set(CMAKE_C_COMPILER /usr/bin/clang-23)
+set(CMAKE_CXX_COMPILER /usr/bin/clang++-23)
+set(CMAKE_OBJC_COMPILER /usr/bin/clang-23)
+set(CMAKE_OBJCXX_COMPILER /usr/bin/clang++-23)
 
 # Use lld for Mach-O linking.
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-fuse-ld=lld")
