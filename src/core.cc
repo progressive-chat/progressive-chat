@@ -58,6 +58,78 @@ struct account {
 inline constexpr std::string_view default_told =
     "You are answering in Progressive Chat, briefly and plainly.";
 
+// What a chat is named with, asked: one name, said plainly, the way a chat
+// would stand in a list of them -- what it is about and nothing around it.
+// The contract is Agora's own (docs/en/title-generation.md: a concise
+// title, asked of the reader's first message and nothing else), said here
+// the way everything of that tree's is said here.
+inline constexpr std::string_view title_told =
+    "Name this conversation. One short line, the way a chat would be named "
+    "in a list of chats: what it is about, in the reader's own words where "
+    "they have them, and nothing else -- no quotes around it, no prefix, no "
+    "full sentence, no explanation.";
+
+// What a chat is made called when nothing has named it yet: every chat is
+// made with this, and a chat still called this is one whose own name has
+// never been said -- which is the only state in which anything here offers
+// to name it (screens, begin_title).
+inline constexpr std::string_view new_chat_title = "New chat";
+
+// What a model said a chat is called, as it is called: the first line of it
+// that says anything at all, its ends cleaned of the quotes a model wraps a
+// name in, and no wider than a row of the drawer shows -- cut at a word, on
+// a whole character (a byte that continues a character is never the last
+// one kept), so that what stands is words. Empty where it said nothing
+// usable at all, and an empty answer never names anything: the caller keeps
+// the name it had.
+[[nodiscard]] inline std::string title_from(std::string_view said) {
+  std::string_view line;
+  for (std::size_t from = 0; from <= said.size();) {
+    const std::size_t nl = said.find('\n', from);
+    const std::string_view one =
+        said.substr(from, nl == std::string_view::npos ? said.size() - from
+                                                       : nl - from);
+    const std::size_t first = one.find_first_not_of(" \t\r");
+    if (first != std::string_view::npos) {
+      const std::size_t last = one.find_last_not_of(" \t\r");
+      line = one.substr(first, last - first + 1u);
+      break;
+    }
+    if (nl == std::string_view::npos)
+      break;
+    from = nl + 1u;
+  }
+  // The quotes a model wraps a name in, taken off -- one pair at a time,
+  // by what the line begins and ends with: ASCII the most, and the curly
+  // pair a model reaches for when it is being careful.
+  const struct {
+    std::string_view open;
+    std::string_view close;
+  } quoted_by[] = {{"\"", "\""}, {"'", "'"}, {"\u201c", "\u201d"}};
+  for (const auto &pair : quoted_by) {
+    if (line.size() >= pair.open.size() + pair.close.size() &&
+        line.substr(0u, pair.open.size()) == pair.open &&
+        line.substr(line.size() - pair.close.size()) == pair.close) {
+      line = line.substr(pair.open.size(),
+                         line.size() - pair.open.size() - pair.close.size());
+      break;
+    }
+  }
+  constexpr std::size_t room = 48u;
+  if (line.size() > room) {
+    std::size_t cut = room;
+    while (cut > 0u && (static_cast<unsigned char>(line[cut]) & 0xc0u) == 0x80u)
+      --cut;
+    const std::size_t space = line.rfind(' ', cut);
+    cut = space == std::string_view::npos || space == 0u ? cut : space;
+    line = line.substr(0u, cut);
+    const std::size_t last = line.find_last_not_of(' ');
+    if (last != std::string_view::npos)
+      line = line.substr(0u, last + 1u);
+  }
+  return std::string(line);
+}
+
 // What a compact is told before the conversation it is summarise is said to
 // it: a handoff for whoever answers in this chat next, in this program's own
 // words. The contract is Agora's (its BuiltInPrompts.CONTEXT_COMPACT_SYSTEM

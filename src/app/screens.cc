@@ -119,7 +119,8 @@ public:
                   made,
                   root_.accounts.empty() ? account_id{}
                                          : root_.accounts.front().id,
-                  "New chat", conversation_kind::direct, ++said_count_};
+                  std::string(new_chat_title), conversation_kind::direct,
+                  ++said_count_};
               if (root_.opened)
                 fresh.models.push_back(model_of(*root_.opened));
               // The room every answerer in it has, said by the first of them:
@@ -515,7 +516,14 @@ private:
   // a loop and what is being carried now is one round of it.
   struct answer_coming {
     conversation_id chat;
+    // What the answer is written into: a message by its id, and nothing at
+    // all where the answer names the chat instead of saying something in it
+    // (begin_title) -- nothing is made to stand in for those.
     message_id said;
+    // Whether this asking names the chat rather than answering in it: the
+    // words come back to the title (read_what_arrived), and no message of
+    // the chat is made or written for them.
+    bool into_title = false;
     provider::loop going;
     std::optional<provider::run> asked;
     platform::carrying carried;
@@ -536,6 +544,23 @@ private:
     begin_ask(chat, told_of(chat), false);
   }
 
+  // The door this window asks through, whole for whatever it asks: where it
+  // stands -- and this page's own server where the chosen one stands
+  // nowhere, as it did before any door was offered -- what opens it for that
+  // door, which model answers in this chat, and what this one asking is told
+  // (pchat.config, providers_offered; endpoint's `family` says whose words
+  // an unknown model speaks there).
+  [[nodiscard]] provider::endpoint at_of(const conversation_id &chat,
+                                         std::string told) const {
+    const provider_choice &there = provider_by(where_.provider);
+    return provider::endpoint{
+        .base = !there.base.empty() ? std::string(there.base) : opened_.base,
+        .key = key_of(where_, where_.provider),
+        .model = ending_of(chat),
+        .told = std::move(told),
+        .family = std::string(there.alias)};
+  }
+
   // One asking begun, whatever it is asked for: an answer to what was sent,
   // or a compact of what was said (compact_context, below) -- told what this
   // one is told, written into a message that is one thing or the other, and
@@ -549,18 +574,7 @@ private:
     platform::carrying carried;
     if (!carried.any())
       return;
-    // The door the reader chose, whole: where it stands -- and this page's
-    // own server where the chosen one stands nowhere, as it did before any
-    // door was offered -- what opens it for that door, and whose words are
-    // spoken there for a model no answerer here has heard of (pchat.config,
-    // providers_offered, and endpoint's `family` for the last of those).
-    const provider_choice &there = provider_by(where_.provider);
-    const provider::endpoint at{
-        .base = !there.base.empty() ? std::string(there.base) : opened_.base,
-        .key = key_of(where_, where_.provider),
-        .model = ending_of(chat),
-        .told = std::move(told),
-        .family = std::string(there.alias)};
+    const provider::endpoint at = at_of(chat, std::move(told));
     // The conversation whole, as the tools read it: every message of it,
     // because a tool asked about this conversation is asked about all of it
     // -- a compacted stretch is in the chat as it always was, capsule or
@@ -627,6 +641,56 @@ private:
                 .capsule = capsule});
   }
 
+  // The chat named, as a chat gets named: asked for with the first thing
+  // the reader said in it and nothing after it -- an assistant's replies and
+  // later messages are not what a chat is called by (docs/en/title-
+  // generation.md, read for this). Where Agora asks for it the moment the
+  // first message is saved, this program asks through one wire at a time,
+  // so it is asked when that wire is free (read_what_arrived, below):
+  // automatic either way, and the reader waits on it no more than they wait
+  // on the answer that finished in front of it.
+  void begin_title(const conversation_id &chat) {
+    if (answering_)
+      return;
+    platform::carrying carried;
+    if (!carried.any())
+      return;
+    // Still the name it was made with, and something has been said in it:
+    // a chat called anything else has been named, and a chat with nothing
+    // said has nothing to be named by.
+    bool untouched = false;
+    for (const conversation &room : root_.conversations)
+      if (room.id == chat && room.title == new_chat_title) {
+        untouched = true;
+        break;
+      }
+    if (!untouched)
+      return;
+    const message *first = nullptr;
+    for (const message &one : root_.messages)
+      if (one.chat == chat && one.outgoing) {
+        first = &one;
+        break;
+      }
+    if (first == nullptr)
+      return;
+    const provider::endpoint at = at_of(chat, std::string(title_told));
+    const provider::wanted wants = tools::wanted_of(how_);
+    const std::vector<message> one_said{*first};
+    tools::owned mine{one_said, now_ms()};
+    answer_coming &coming = answering_.emplace(answer_coming{
+        .chat = chat,
+        .said = message_id{},
+        .into_title = true,
+        .going = provider::loop{at, one_said, 4, wants},
+        .carried = std::move(carried),
+        .mine = std::move(mine),
+        .began = now_ms()});
+    carry(coming);
+    // And nothing written into the chat: these words come back to its name
+    // (read_what_arrived), not into a message of it.
+  }
+
   // One round of the asking given to whatever carries it here.
   void carry(answer_coming &one) {
     one.asked = one.going.answering();
@@ -666,7 +730,23 @@ private:
       return;   // and it is not over yet
     }
     const moment ended = now_ms();
-    if (message *there = found(one.said)) {
+    if (one.into_title) {
+      // The name, whole as the model said it and as far as a row of the
+      // drawer shows it (core, title_from): written only while the chat is
+      // still called what a new chat is made called -- a name set any other
+      // way stands, as a manual rename stands over a request still out on
+      // Agora's side (nobody here can set one yet, and when they can, this
+      // is where that promise already lives). Nothing usable said: the name
+      // it had, and the next answer asks again.
+      if (const std::string name = title_from(one.going.said());
+          !name.empty()) {
+        for (conversation &room : root_.conversations)
+          if (room.id == one.chat && room.title == new_chat_title) {
+            room.title = name;
+            break;
+          }
+      }
+    } else if (message *there = found(one.said)) {
       // What the message was before an answer stood whole in its place: a
       // compact's capsule stays a capsule and stays called by what it is --
       // an answer is written into its message and decides nothing about
@@ -686,7 +766,15 @@ private:
         there->before->calls = one.calls;
     }
     recount(one.chat);
+    const conversation_id answered_in = one.chat;
+    const bool was_naming = one.into_title;
     answering_.reset();
+    // The wire is free, and the chat that just answered may still be called
+    // what a new chat is called: its own name is asked for now -- and where
+    // the asking failed or said nothing, asked for again after the next
+    // answer, until it lands or the chat is no longer nameless.
+    if (!was_naming)
+      begin_title(answered_in);
   }
 
   // Every call it stopped to ask for, answered by whoever owns it -- here,

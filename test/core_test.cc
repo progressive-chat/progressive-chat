@@ -98,4 +98,30 @@ SAID(core, the_wire_sees_a_compact_capsule_and_what_came_after_it) {
   EXPECT_EQ(after_failed_view[2].id, message_id{"6"});
 }
 
+SAID(core, a_title_is_the_first_line_that_says_anything) {
+  // As a model says one: the first line that says anything, its own quotes
+  // taken off, and nothing of the lines after it.
+  EXPECT_EQ(title_from("The kitchen remodel\nand what it cost"),
+            std::string("The kitchen remodel"));
+  EXPECT_EQ(title_from("\n\n  Bread, then\n  more bread  \r\nsecond"),
+            std::string("Bread, then"));
+  EXPECT_EQ(title_from("\"A name in quotes\""), std::string("A name in quotes"));
+
+  // Nothing usable: nothing at all, and an empty answer names nothing.
+  EXPECT_EQ(title_from(""), std::string{});
+  EXPECT_EQ(title_from("  \n \t "), std::string{});
+
+  // Too wide for a row: cut at a word, and on a whole character -- no half
+  // of one left standing at the end.
+  const std::string long_name =
+      title_from("A very long name for a conversation that keeps going and "
+                 "going well past where any row would show it at all");
+  EXPECT_TRUE(long_name.size() <= 48u);
+  EXPECT_TRUE(long_name.find(' ') != std::string::npos);
+  EXPECT_EQ(long_name, std::string("A very long name for a conversation that keeps"));
+
+  // I imya novoj besedy — imya, a ne sluchajnaya stroka.
+  EXPECT_EQ(std::string(new_chat_title), std::string("New chat"));
+}
+
 int main() { return pchat::tests::run(); }
