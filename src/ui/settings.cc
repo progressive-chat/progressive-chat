@@ -593,9 +593,15 @@ struct settings_rows : scene::Node {
   // every label of this page is said, laid out when its row says it.
   ask_box fLoad{};
   nodes::Text fLoadText{"", 15.0f, 0u};
+  // An export of ChatGPT's read instead: a third thing the machine's picker
+  // is asked for (screens, files_arrived) -- the zip ChatGPT ships or the
+  // bare array, its conversations added beside what stands.
+  ask_box fImportGpt{};
+  nodes::Text fImportGptText{"", 15.0f, 0u};
   settings_rows() {
     fArchiveText.setElided(true);
     fLoadText.setElided(true);
+    fImportGptText.setElided(true);
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .y = 24.0f});
@@ -839,11 +845,31 @@ struct settings_rows : scene::Node {
                  .cornerRadius = 14.0f});
     fLoadText.setText("Load an archive");
     fLoadText.setColour(look.text);
+    fImportGptText.setColour(look.text);
     fLoadText.apply({.maxWidth = std::max(0.0f, row_width - 32.0f)});
     fLoadText.apply({.anchor = scene::anchor::kTopLeft,
                      .x = 32.0f,
                      .y = at + (settings_row_height - 19.0f) / 2.0f,
                      .visible = true});
+    at += settings_row_stride;
+    // And a ChatGPT export, said the same way under those: one press, the
+    // machine's picker, and what the file says added to what stands.
+    fImportGpt.again(asked, app::import_chatgpt{}, look.raised);
+    fImportGpt.apply({.anchor = scene::anchor::kTopLeft,
+                      .origin = scene::anchor::kTopLeft,
+                      .x = 16.0f,
+                      .y = at,
+                      .width = row_width,
+                      .height = settings_row_height,
+                      .relativeSize = scene::axes::kNone,
+                      .cornerRadius = 14.0f});
+    fImportGptText.setText("Import a ChatGPT export");
+    fImportGptText.setColour(look.text);
+    fImportGptText.apply({.maxWidth = std::max(0.0f, row_width - 32.0f)});
+    fImportGptText.apply({.anchor = scene::anchor::kTopLeft,
+                          .x = 32.0f,
+                          .y = at + (settings_row_height - 19.0f) / 2.0f,
+                          .visible = true});
     at += settings_row_stride;
     return at;
   }
@@ -1133,6 +1159,7 @@ struct settings_rows : scene::Node {
     fRead.setColour(look.text);
     fArchiveText.setColour(look.text);
     fLoadText.setColour(look.text);
+    fImportGptText.setColour(look.text);
     fDivider.setColour(look.outline);
     // One group after the last: its name, then what it holds.
     for (std::size_t group = 0u; group < max_settings_groups; ++group) {
@@ -1226,6 +1253,8 @@ struct settings_rows : scene::Node {
     f(fArchiveText);
     f(fLoad);
     f(fLoadText);
+    f(fImportGpt);
+    f(fImportGptText);
     for (about_row &one : fAbout)
       f(one);
   }

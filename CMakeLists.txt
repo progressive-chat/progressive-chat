@@ -257,7 +257,7 @@ endif()
 
 # The counters themselves are a classic translation unit: reached through one
 # header that imports nothing, so agora's headers stay out of module units.
-target_sources(pchat_core PRIVATE src/tokens_worth.cpp src/prgrssv_zip.cpp
+target_sources(pchat_core PRIVATE src/tokens_worth.cpp src/prgrssv_zip.cpp src/logic/gpt_import.cpp
                                   "${pchat_vocab_source}")
 # Agora's text counters, and everything they read behind them, linked into the
 # model the screens carry: the first thing this program takes from the ported

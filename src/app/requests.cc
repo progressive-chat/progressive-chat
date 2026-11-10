@@ -229,6 +229,11 @@ struct detach_files {};
 // About, beside the save, and answered with the machine's own picker of
 // files (pchat.app.program, files_given).
 struct load_archive {};
+// A ChatGPT export to read instead of what stands: one file the machine's
+// picker offers -- the zip the export ships as, or the bare JSON array --
+// read by the ported importer and added to what is already here
+// (screens, files_arrived and take_gpt).
+struct import_chatgpt {};
 
 // What is asked, as one value: spl::variant, so that every kind of it is
 // handled where it is read and a new one cannot be forgotten.
@@ -250,8 +255,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 set_generation, set_tool, set_switch,
                               set_answerer, pick_door, set_door_key,
                               set_door_models, compact_context, copy_text,
-                              save_archive, load_archive, attach_files,
-                              detach_files>;
+                              save_archive, load_archive, import_chatgpt,
+                              attach_files, detach_files>;
 
 class requests {
 public:

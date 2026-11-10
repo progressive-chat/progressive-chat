@@ -44,6 +44,7 @@ target_include_directories(pchat-provider_http-test PRIVATE
 pchat_test(tools pchat_tools)
 pchat_test(tokens pchat_core pchat_json)
 pchat_test(prgrssv pchat_core pchat_json)
+pchat_test(gpt pchat_core)
 # The archive a test opens is the program's own reader (src/prgrssv_zip.h),
 # reached over the tree's src/ the way the http folder's header is: one reader
 # in the product, and the test exercising that one.

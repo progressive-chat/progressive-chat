@@ -9,6 +9,7 @@
 // one -- and after that, until the client is.
 module;
 #include "../platform/state.h"
+#include "../logic/gpt_import.h"
 
 export module pchat.app.screens;
 
@@ -427,6 +428,14 @@ public:
             // What is attached put away whole, as one press on its names
             // below the field asks for.
             [&](const detach_files &) { attached_.clear(); },
+            // A ChatGPT export to read: the same picker, another word for
+            // what is wanted of it -- and what the file says is added to
+            // what stands, whole, conversations and messages alike.
+            [&](const import_chatgpt &) {
+              files_wanted_ = files_want::chatgpt;
+              if (dialogs_)
+                dialogs_->choose_files();
+            },
             // An answerer put into the conversation open, or taken out of
             // it: what the window then writes to is the first one left, and
             // how much room it has to answer into is that one's own.
@@ -527,10 +536,27 @@ public:
   // archive said into a message as words would be said wrong
   // (pchat.logic.composer, attachment_text_of).
   void files_arrived(const std::vector<std::string> &paths, bool dropped) {
-    const bool attaching = dropped || files_wanted_ == files_want::attach;
+    const files_want wanted = files_wanted_;
+    const bool attaching = dropped || wanted == files_want::attach;
+    const bool importing = !attaching && wanted == files_want::chatgpt;
     files_wanted_ = files_want::nothing;
     if (paths.empty())
       return;
+    if (importing) {
+      // One export, whole: read where it stands, and what it says put in
+      // beside what is already here. What it could not be read as says
+      // nothing here -- there is no word for a failure on the screen yet,
+      // and the run keeps everything it had, the same as an archive that
+      // will not open.
+      const std::optional<std::string> bytes =
+          skiff::platform::storage::read_file(paths.front());
+      if (!bytes)
+        return;
+      const logic::gpt_extracted read = logic::gpt_extract(*bytes);
+      if (read.ok)
+        take_gpt(read);
+      return;
+    }
     if (!attaching) {
       read_archive(paths.front());
       return;
@@ -547,6 +573,71 @@ public:
           logic::attachment_of(one, *bytes);
       if (attached)
         attached_.push_back(std::move(*attached));
+    }
+  }
+
+  // What an export brought, put where it stands: its conversations added
+  // beside the ones already here -- the Merge of Agora's import dialog
+  // without its Replace and without its preview (docs/en/import-export.md)
+  // -- and a file read twice adds nothing twice, for its conversations are
+  // already here under the names they came with the first time.
+  void take_gpt(const logic::gpt_extracted &read) {
+    std::vector<conversation> rooms;
+    std::vector<std::string> brought;
+    rooms.reserve(read.conversations.size());
+    brought.reserve(read.conversations.size());
+    for (const logic::gpt_conversation &one : read.conversations) {
+      const conversation_id id{"gpt-" + one.id};
+      const bool known = std::ranges::any_of(
+          root_.conversations,
+          [&id](const conversation &room) { return room.id == id; });
+      if (known)
+        continue;
+      conversation room{.id = id,
+                        .account = root_.accounts.empty()
+                                       ? account_id{}
+                                       : root_.accounts.front().id,
+                        .title = one.title.empty() ? "ChatGPT" : one.title,
+                        .kind = conversation_kind::direct,
+                        .last_activity = static_cast<moment>(one.updated)};
+      // No model came with an export of its own naming: the window every
+      // chat without a model here has, and the answerers' row is where one
+      // is chosen (services, models).
+      room.window = window_of(room.leading_model());
+      rooms.push_back(std::move(room));
+      brought.push_back(one.id);
+    }
+    // What was said in those, whole: whose each message is said by which
+    // side of the room it stands on, when it was said (milliseconds, the
+    // way the importer already counted them), and what was thought before
+    // answering where the export kept that. Messages of conversations this
+    // import did not bring are left alone: what stands has them already.
+    for (const logic::gpt_message &one : read.messages) {
+      const bool theirs =
+          std::ranges::find(brought, one.conversation) != brought.end();
+      if (!theirs)
+        continue;
+      message said{.id = message_id{"gpt-" + one.id},
+                   .chat = conversation_id{"gpt-" + one.conversation},
+                   .author = one.from_reader ? "Reader" : "ChatGPT",
+                   .outgoing = one.from_reader,
+                   .text = one.text,
+                   .sent = static_cast<moment>(one.when),
+                   .state = delivery::sent,
+                   .tokens = static_cast<std::uint32_t>(
+                       std::max(one.tokens, std::int32_t{0}))};
+      if (!one.thought.empty())
+        said.before = thought{.took_ms = one.thought_ms,
+                              .tool_calls = 0,
+                              .said = one.thought};
+      root_.messages.push_back(std::move(said));
+    }
+    root_.conversations.insert(root_.conversations.begin(), rooms.begin(),
+                               rooms.end());
+    for (const logic::gpt_conversation &one : read.conversations) {
+      const conversation_id id{"gpt-" + one.id};
+      if (std::ranges::find(brought, one.id) != brought.end())
+        recount(id);
     }
   }
 
@@ -624,7 +715,7 @@ private:
   // What the machine's own picker was last asked for: an archive whole or
   // files to attach -- one picker stands behind both, and only the asker
   // knows which was meant (load_archive, attach_files).
-  enum class files_want { nothing, archive, attach };
+  enum class files_want { nothing, archive, attach, chatgpt };
   files_want files_wanted_ = files_want::nothing;
   // Whether the question this window sent waits on a compact standing in
   // front of it: set when a send lands at the edge of the window
