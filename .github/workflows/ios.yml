@@ -123,8 +123,8 @@ jobs:
         run: |
           sysroot="$IOS_SDK_PATH"
           # Clone SDL3 fork (has iOS main callbacks) into the source tree.
-          git clone --depth 1 --branch 91c08de87b43fdecc824464fcce15499ccbc7101 \
-            https://github.com/j4niwzis/SDL ios/sdl-run/sdl3-src
+          git clone --depth 1 https://github.com/j4niwzis/SDL ios/sdl-run/sdl3-src
+          git -C ios/sdl-run/sdl3-src checkout 91c08de87b43fdecc824464fcce15499ccbc7101
           cmake -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE="$PWD/ios/sdl-run/ios-toolchain.cmake" \
             -DIOS_SDK_PATH="$sysroot" \
