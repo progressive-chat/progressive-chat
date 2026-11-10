@@ -124,4 +124,17 @@ SAID(core, a_title_is_the_first_line_that_says_anything) {
   EXPECT_EQ(std::string(new_chat_title), std::string("New chat"));
 }
 
+SAID(core, an_automatic_compact_begins_where_the_budget_is_almost_spent) {
+  // The point Agora's automatic compact starts at: 90% of the window, and
+  // no lower -- a chat under it asks as it always asked.
+  EXPECT_FALSE(overruns(1'000'000u, 0.0f));
+  EXPECT_FALSE(overruns(1'000'000u, 0.899f));
+  EXPECT_TRUE(overruns(1'000'000u, 0.9f));
+  EXPECT_TRUE(overruns(1'000'000u, 1.0f));
+  // A chat nobody gave a window overflows nothing: what fits is fit as it
+  // always was, and a zero share of no room at all is not a full one.
+  EXPECT_FALSE(overruns(0u, 0.95f));
+  EXPECT_FALSE(overruns(0u, 9.0f));
+}
+
 int main() { return pchat::tests::run(); }

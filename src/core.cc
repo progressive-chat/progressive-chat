@@ -58,6 +58,23 @@ struct account {
 inline constexpr std::string_view default_told =
     "You are answering in Progressive Chat, briefly and plainly.";
 
+// Where an automatic compact begins: at the same point Agora's does -- 90%
+// of the window's budget (its SettingsDefaults,
+// DEFAULT_CONTEXT_COMPACT_THRESHOLD_PERCENT) -- held here as the one number
+// it is until the settings page has rows for the rest of what Agora lets a
+// reader set (enabled, how many recent kept, the prompt, the model; all at
+// Agora's defaults in this program: on, nothing kept verbatim, this chat's
+// own model).
+inline constexpr float compact_at = 0.90f;
+
+// Whether the next asking of this chat would overflow the window it has: at
+// that point, and never where nothing said how much room there is -- a chat
+// nobody gave a window to is not overflowing anything, and what fits is fit
+// as it always was.
+[[nodiscard]] inline bool overruns(std::uint32_t window, float used) {
+  return window > 0u && used >= compact_at;
+}
+
 // What a chat is named with, asked: one name, said plainly, the way a chat
 // would stand in a list of them -- what it is about and nothing around it.
 // The contract is Agora's own (docs/en/title-generation.md: a concise

@@ -105,7 +105,22 @@ public:
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
               recount(asking.chat);
-              ask_a_model(asking.chat);
+              // At the edge of the window again: what would be cut from the
+              // wire to fit is older context nobody would ever see again, so
+              // it is summarised into a capsule first -- as Agora starts an
+              // automatic compact before a send would overflow (90% of the
+              // budget, its own default) -- and the question itself goes out
+              // when that lands. Below the edge, asked at once, as always;
+              // and where the compact could not even begin, the question
+              // goes out at once too.
+              if (overruns_of(asking.chat)) {
+                ask_after_compact_ = true;
+                begin_ask(asking.chat, std::string(compact_told), true);
+              }
+              if (!answering_) {
+                ask_after_compact_ = false;
+                ask_a_model(asking.chat);
+              }
               // What was written has left the field, and the card that
               // writes into it goes with it: nothing left open would write
               // into a field that has already been given away.
@@ -536,6 +551,12 @@ private:
     std::vector<call_made> calls{};
   };
   std::optional<answer_coming> answering_;
+  // Whether the question this window sent waits on a compact standing in
+  // front of it: set when a send lands at the edge of the window
+  // (send_message), and spent when the compact that stood before it finishes
+  // (read_what_arrived) -- one deep, and never two: a second send while an
+  // answer is in flight does not ask at all, as it never has.
+  bool ask_after_compact_ = false;
 
   // Asked of a model, where anything here can carry the asking. Today nothing
   // can anywhere but a page -- that is what `carrying::any` says -- and where
@@ -730,6 +751,7 @@ private:
       return;   // and it is not over yet
     }
     const moment ended = now_ms();
+    bool made_capsule = false;
     if (one.into_title) {
       // The name, whole as the model said it and as far as a row of the
       // drawer shows it (core, title_from): written only while the chat is
@@ -752,6 +774,7 @@ private:
       // an answer is written into its message and decides nothing about
       // which message that is.
       const bool capsule = there->capsule;
+      made_capsule = capsule;
       const std::string author =
           capsule ? std::string("Compact") : ending_of(one.chat);
       *there = one.going.answer_of(provider::put_in{.id = one.said,
@@ -769,12 +792,19 @@ private:
     const conversation_id answered_in = one.chat;
     const bool was_naming = one.into_title;
     answering_.reset();
-    // The wire is free, and the chat that just answered may still be called
-    // what a new chat is called: its own name is asked for now -- and where
-    // the asking failed or said nothing, asked for again after the next
-    // answer, until it lands or the chat is no longer nameless.
-    if (!was_naming)
+    // The question that waited on this compact is asked now, with the
+    // capsule standing where the old stretch stood (the wire carries both
+    // and the answer comes to what was sent before it). Where there is no
+    // such question, the wire is free and the chat that just answered may
+    // still be called what a new chat is called: its own name is asked for
+    // now -- and where that asking failed or said nothing, asked for again
+    // after the next answer, until it lands or the chat is named.
+    if (made_capsule && ask_after_compact_) {
+      ask_after_compact_ = false;
+      ask_a_model(answered_in);
+    } else if (!was_naming) {
       begin_title(answered_in);
+    }
   }
 
   // Every call it stopped to ask for, answered by whoever owns it -- here,
@@ -889,6 +919,16 @@ private:
         one->window == 0
             ? 0.0f
             : static_cast<float>(spent) / static_cast<float>(one->window);
+  }
+
+  // Whether the next asking of this chat would overflow the window it has:
+  // the chat's own share of the budget (core, overruns -- Agora's
+  // automatic-compact point), read from what recount just said of it.
+  [[nodiscard]] bool overruns_of(const conversation_id &chat) const {
+    for (const conversation &room : root_.conversations)
+      if (room.id == chat)
+        return overruns(room.window, room.context_used);
+    return false;
   }
 
   // What one said and everything before it in its chat was worth.
