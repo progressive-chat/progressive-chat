@@ -23,10 +23,10 @@ set(CMAKE_MODULE_LINKER_FLAGS_INIT "-fuse-ld=lld -Wl,-platform_version,ios-simul
 
 # Linux clang targeting iOS simulator needs --target, not -arch/-mios-simulator-version-min.
 # Override CMake's default flags for Apple targets.
-set(CMAKE_C_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH} -mios-simulator-version-min=26.0")
-set(CMAKE_CXX_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH} -mios-simulator-version-min=26.0")
-set(CMAKE_OBJC_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH} -mios-simulator-version-min=26.0")
-set(CMAKE_OBJCXX_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH} -mios-simulator-version-min=26.0")
+set(CMAKE_C_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH}")
+set(CMAKE_CXX_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH}")
+set(CMAKE_OBJC_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH}")
+set(CMAKE_OBJCXX_FLAGS_INIT "--target=arm64-apple-ios26.0-simulator -isysroot ${IOS_SDK_PATH}")
 
 # Find programs on the build machine, not the target.
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
@@ -43,4 +43,6 @@ set(_CMAKE_OSX_SYSROOT_PATH ${IOS_SDK_PATH})
 
 # Disable CMake's built-in iOS flag logic which adds -arch/-mios-simulator-version-min.
 set(CMAKE_OSX_ARCHITECTURES "")
-set(CMAKE_OSX_DEPLOYMENT_TARGET "")
+# The deployment target must be set so the SDK headers define the right
+# availability macros and the linker uses the right platform version.
+set(CMAKE_OSX_DEPLOYMENT_TARGET 26.0)
