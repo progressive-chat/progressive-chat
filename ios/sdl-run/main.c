@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-only
 
 // An SDL window on a phone's system: the smallest thing that proves the
 // windowing layer works. It opens a window, fills it, and writes a line to
@@ -49,4 +49,4 @@ int main(int argc, char *argv[]) {
   SDL_DestroyWindow(window);
   SDL_Quit();
   return 0;
-}# trigger
+}
