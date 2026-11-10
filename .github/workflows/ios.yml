@@ -93,7 +93,7 @@ jobs:
           # program will call at run time is the one in the simulator.
           clang++-23 \
             --target=arm64-apple-ios26.0-simulator \
-            -std=c++23 \
+            -std=c++23 -x objective-c++ -fobjc-arc \
             -isysroot "$sysroot" \
             -nostdinc++ -isystem "$libcxx/include/c++/v1" \
             --precompile "$libcxx/share/libc++/v1/std.cppm" \
