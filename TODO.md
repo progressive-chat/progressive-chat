@@ -225,3 +225,12 @@ build and the next.
       open, which says neither what went wrong nor that anything had: it
       says what is missing now (`web/bootstrap.js`), and
       `tools/probe_worker_blocked.mjs` reads that back at both widths.
+
+- [ ] Somewhere to be spoken to at: a **Matrix room** to talk in and an
+      **email address** to write to. Neither exists, and nothing in the
+      repository points at either -- where a reader of it would say
+      something, there is nowhere to say it yet.
+- [ ] A **Reddit post to let people know the project exists**, made by the
+      project owner when the moment is right: not written yet, and when it
+      is it should say what this readme says -- early days, far from a ready
+      app, worked on in the open every day.

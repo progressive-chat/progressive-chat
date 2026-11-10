@@ -189,6 +189,14 @@ is covered by tests (`test/provider_run_test.cc`, the tools and the loop), so
 the remaining questions are either in `src/platform/carry.cc`, which is what
 hands a body over per platform, or in what a host does with a frame.
 
+## Releases
+
+New releases are published **about once a week** -- what has been built then,
+on this repository's releases page. They are points in a running thing rather
+than versions to settle on: **the project is far from a ready app yet**, still
+the test bench the sections above describe, and what one release runs may be
+rewritten by the next.
+
 ## To build it
 
 What has to be on the machine is what mux asks for: **clang 23** with its
