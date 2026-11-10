@@ -61,12 +61,15 @@ jobs:
 
       - name: Launch it, and hear what it says
         run: |
-          xcrun simctl launch --console-pty "$udid" chat.progressive.first-run \
-            > build/launch.log 2>&1 &
+          set +e
+          xcrun simctl launch "$udid" chat.progressive.first-run 2>&1 | tee build/launch.log
           # Long enough for the first frame on a machine that boots cold.
-          sleep 10
+          sleep 8
           xcrun simctl io "$udid" screenshot build/first-run.png
-          cat build/launch.log
+          xcrun simctl spawn "$udid" log show --last 3m --style compact \
+            --predicate 'process == "first-run"' > build/system.log 2>&1
+          grep -iE "crash|exception|abort|error" build/system.log | head -40
+          ls -la "$HOME/Library/Logs/DiagnosticReports" 2>/dev/null | tail -5
           if ! grep -q "PCHAT-IOS-FIRST-RUN: the window is up" build/launch.log; then
             echo "::error::the app never said its window came up"
             exit 1
@@ -86,4 +89,5 @@ jobs:
           path: |
             build/first-run.png
             build/launch.log
+            build/system.log
           if-no-files-found: warn
