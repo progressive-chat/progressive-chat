@@ -17,18 +17,40 @@ permissions:
   contents: read
 
 # Everything is built on a machine that is not a phone and not a Mac: the
-# app is compiled and linked on Linux, against an SDK the Mac job hands it.
-# The compiler there is the project's clang 23, and the standard library is
-# asked for the phone's target, module and all. The Mac job then only puts
-# what Linux made into a simulator and asks whether it came up. What it looked
-# like is kept as a picture, because a log can say a window exists while the
-# screen stays black.
+# app is compiled and linked on Linux, against an SDK the Mac job puts in the
+# repository's cache. The compiler there is the project's clang 23, and the
+# standard library is asked for the phone's target, module and all. The Mac
+# job then only puts what Linux made into a simulator and asks whether it came
+# up. What it looked like is kept as a picture, because a log can say a window
+# exists while the screen stays black.
+#
+# The SDK is Apple's, and is not handed out from here: it goes into the cache,
+# which a workflow of this repository can restore and a passer-by cannot
+# download, and never into an artifact. osxcross and xtool ask the same of
+# their users -- an Xcode of one's own, not somebody else's copy of one.
 jobs:
   sdk:
     runs-on: macos-26
     timeout-minutes: 15
+    outputs:
+      sdk-key: ${{ steps.key.outputs.key }}
     steps:
+      - name: Name the SDK by the Xcode it comes from
+        id: key
+        run: |
+          version=$(xcodebuild -version | head -1 | tr ' ' '-')
+          echo "key=iphonesim-sdk-${version}" >> "$GITHUB_OUTPUT"
+          echo "iphonesim-sdk-${version}"
+
+      - name: Take it, if this Xcode's SDK is already kept
+        id: kept
+        uses: actions/cache/restore@v4
+        with:
+          path: sdk/iPhoneSimulator.sdk.tar.gz
+          key: ${{ steps.key.outputs.key }}
+
       - name: Take the simulator SDK out of Xcode
+        if: steps.kept.outputs.cache-hit != 'true'
         run: |
           mkdir -p sdk
           sdk=$(xcrun --sdk iphonesimulator --show-sdk-path)
@@ -44,13 +66,21 @@ jobs:
           tar -C "$(dirname "$sdk")" -czf sdk/iPhoneSimulator.sdk.tar.gz \
             "$(basename "$sdk")"
           du -sh sdk/iPhoneSimulator.sdk.tar.gz
+          # Whether Apple ships the source of the std module beside its
+          # headers is what decides if the module can be Apple's one day.
+          toolchain=$(dirname "$(dirname "$(xcrun --find clang)")")
+          if [ -f "$toolchain/usr/include/c++/v1/std.cppm" ]; then
+            echo "Apple ships std.cppm"
+          else
+            echo "Apple does not ship std.cppm"
+          fi
 
-      - name: Hand it to the build
-        uses: actions/upload-artifact@v4
+      - name: Keep it, where only this repository can take it
+        if: steps.kept.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
         with:
-          name: iphonesimulator-sdk
           path: sdk/iPhoneSimulator.sdk.tar.gz
-          retention-days: 7
+          key: ${{ steps.key.outputs.key }}
 
   build:
     needs: sdk
@@ -59,11 +89,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Take the SDK
-        uses: actions/download-artifact@v4
+      - name: Take the SDK where the sdk job kept it
+        uses: actions/cache/restore@v4
         with:
-          name: iphonesimulator-sdk
-          path: sdk
+          path: sdk/iPhoneSimulator.sdk.tar.gz
+          key: ${{ needs.sdk.outputs.sdk-key }}
+          fail-on-cache-miss: true
 
       - name: Put clang 23 and the Mach-O linker there
         run: |
