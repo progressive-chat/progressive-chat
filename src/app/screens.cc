@@ -540,11 +540,13 @@ public:
           skiff::platform::storage::read_file(one);
       if (!bytes)
         continue;
-      std::optional<std::string> text = logic::attachment_text_of(*bytes);
-      if (!text)
-        continue;
-      attached_.push_back(
-          logic::attachment{logic::file_name_of(one), std::move(*text)});
+      // One decision of one file, made where all of them are made: a
+      // picture by the bytes it starts with, words as words, and nothing at
+      // all where it is neither (pchat.logic.composer, attachment_of).
+      std::optional<logic::attachment> attached =
+          logic::attachment_of(one, *bytes);
+      if (attached)
+        attached_.push_back(std::move(*attached));
     }
   }
 

@@ -23,6 +23,10 @@ struct budgeted {
   std::string_view id;
   std::string_view text;
   bool outgoing = false;
+  // How many pictures went out with it: priced by the cost model of the
+  // model asked, one reservation each while their dimensions stand nowhere
+  // in this tree (pchat.provider/budget.cpp says which reservation that is).
+  std::uint32_t images = 0;
 };
 
 // One tool the asking offers, as the fitting prices it: the same three the

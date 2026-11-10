@@ -63,6 +63,9 @@ struct turn {
   // Which call this turn answers, where it answers one: named as the wire
   // named it, which is how what a tool said is read against what asked it.
   std::string own;
+  // What pictures went out with it, whole and base64'd already: written into
+  // each body the way that family reads a picture, and never re-encoded.
+  std::vector<image_part> images;
   friend bool operator==(const turn &, const turn &) = default;
 };
 
@@ -211,7 +214,9 @@ template <std::ranges::forward_range Said>
       continue;
     }
     if (one.outgoing) {
-      out.push_back(turn{.who = role::user, .text = one.text});
+      out.push_back(turn{.who = role::user,
+                         .text = one.text,
+                         .images = one.images});
       continue;
     }
     const std::string thought_text =
@@ -354,7 +359,21 @@ template <std::ranges::forward_range Turns>
             .name("input").raw(call.arguments.empty() ? "{}" : call.arguments)
             .shut();
     } else {
-      out.thing().name("type").text("text").name("text").text(said.text).shut();
+      // Plain words, and beside them the pictures: a block each, in the
+      // media type the file itself said, base64 as it already stands --
+      // where there are pictures but no words, no empty text block stands
+      // among them.
+      if (!said.text.empty() || said.images.empty())
+        out.thing().name("type").text("text").name("text").text(said.text).shut();
+      for (const image_part &image : said.images)
+        out.thing()
+            .name("type").text("image")
+            .name("source").thing()
+            .name("type").text("base64")
+            .name("media_type").text(image.media)
+            .name("data").text(image.data)
+            .shut()
+            .shut();
     }
     out.shut();
     out.shut();
@@ -477,6 +496,15 @@ template <std::ranges::forward_range Turns>
       }
     } else {
       out.thing().name("text").text(said.text).shut();
+      // The pictures beside the words: a part each, in the media type the
+      // file said and the bytes as they already stand.
+      for (const image_part &image : said.images)
+        out.thing()
+            .name("inline_data").thing()
+            .name("mime_type").text(image.media)
+            .name("data").text(image.data)
+            .shut()
+            .shut();
     }
     out.shut();
     out.shut();
@@ -559,7 +587,26 @@ template <std::ranges::forward_range Turns>
       out.thing().name("role").text(role_text(said.who));
       if (said.who == role::tool && !said.own.empty())
         out.name("tool_call_id").text(said.own);
-      out.name("content").text(said.text);
+      if (said.images.empty()) {
+        out.name("content").text(said.text);
+      } else {
+        // A message with a picture beside its words: content becomes the
+        // list a chat wire reads instead of one string -- the words where
+        // there are any, then each picture as the data URL every reader of
+        // this shape takes a picture in.
+        out.name("content").list();
+        if (!said.text.empty())
+          out.thing().name("type").text("text").name("text").text(said.text).shut();
+        for (const image_part &image : said.images)
+          out.thing()
+              .name("type").text("image_url")
+              .name("image_url").thing()
+              .name("url")
+              .text("data:" + image.media + ";base64," + image.data)
+              .shut()
+              .shut();
+        out.shut();
+      }
       if (!said.calls.empty()) {
         out.name("tool_calls").list();
         for (const tool_call &one : said.calls)

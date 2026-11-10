@@ -50,6 +50,16 @@ struct account {
   friend bool operator==(const account &, const account &) = default;
 };
 
+// A picture kept with the message it was attached to: its media type, said
+// by the file's own first bytes, and its bytes whole -- base64 already, the
+// way every wire here reads a picture and the way an archive stores one, so
+// that neither encodes it a second time.
+struct image_part {
+  std::string media;
+  std::string data;
+  friend bool operator==(const image_part&, const image_part&) = default;
+};
+
 // A conversation: one row of the drawer, whatever the protocol's own name
 // for it is.
 // What every answer is told before anything else is said to it, where a
@@ -249,6 +259,10 @@ struct message {
   // compact_context). Last on the message, so that every message written
   // anywhere stands exactly as it did.
   bool capsule = false;
+  // What pictures went out with it, whole: attached at the field and sent
+  // beside the words, kept through an archive the same way (pchat.prgrssv),
+  // and gone from none of them until the message itself is.
+  std::vector<image_part> images;
   friend bool operator==(const message &, const message &) = default;
 };
 

@@ -343,6 +343,20 @@ inline constexpr std::int64_t version = 1;
       // anything (the same way replies_to stands only where it stands).
       if (one.capsule)
         written.name("capsule").truth(true);
+      // What pictures went with this message, whole: base64 as it already
+      // was -- an archive stores a picture the way a wire reads one, and
+      // neither re-encodes it (a photograph makes its own message in the
+      // file, which is what an archive of everything is for).
+      if (!one.images.empty()) {
+        written.name("images").list();
+        for (const image_part &image : one.images) {
+          written.thing();
+          written.name("media").text(image.media);
+          written.name("data").text(image.data);
+          written.shut();
+        }
+        written.shut();
+      }
       if (one.replies_to)
         written.name("replies_to").text(one.replies_to->value);
       if (one.before) {
@@ -540,6 +554,17 @@ struct restored {
         // nothing: an archive from before they stood is whole without the
         // field (truth_in reads nothing as false).
         one.capsule = truth_in(*item, "capsule");
+        // And what pictures it was written with, whole as each was stored --
+        // an archive without the list is one from before they stood, and
+        // holds no picture of its own.
+        if (const json::value *images = json::said(*item, "images"))
+          for (std::size_t at = 0u;; ++at) {
+            const json::value *im = json::item_of(*images, at);
+            if (im == nullptr)
+              break;
+            one.images.push_back(image_part{text_in(*im, "media"),
+                                            text_in(*im, "data")});
+          }
         if (const std::string replies = text_in(*item, "replies_to");
             !replies.empty())
           one.replies_to = message_id{replies};

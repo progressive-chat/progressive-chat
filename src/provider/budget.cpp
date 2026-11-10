@@ -39,6 +39,13 @@ namespace prep = agora::core::prep;
     each.id.assign(one.id);
     each.text.assign(one.text);
     each.participant = one.outgoing ? prep::Participant::User : prep::Participant::Model;
+    // One word per picture, for the estimator to price: a user message's
+    // images are each worth the model's own image cost, and without
+    // dimensions anywhere in this tree that is the reservation every family
+    // falls back to -- the same 1024 a picture adds to the message's own
+    // count where it is written (pchat.logic.composer, image_window_cost).
+    for (std::uint32_t at = 0u; at < one.images; ++at)
+      each.images.push_back("image");
     out.push_back(std::move(each));
   }
   return out;

@@ -697,4 +697,105 @@ SAID(provider, a_capsule_goes_out_as_context_and_not_as_anyones_words) {
   EXPECT_EQ(turns[1].text, std::string("and this after it"));
 }
 
+SAID(provider, a_picture_goes_out_the_way_each_family_reads_one) {
+  chats_root root;
+  message said{.id = message_id{"1"},
+               .text = "look at this",
+               .outgoing = true};
+  said.images.push_back(image_part{"image/png", "aGVsbG8="});
+  root.messages.push_back(std::move(said));
+  const std::vector<provider::turn> turns = provider::turns_of(root.messages);
+  EXPECT_EQ(turns.size(), 1u);
+  EXPECT_EQ(turns[0].images.size(), 1u);
+  EXPECT_EQ(turns[0].images[0].media, std::string("image/png"));
+
+  // A chat wire: content becomes the list, the picture a data URL in it.
+  const provider::endpoint chat{.base = "https://api.openai.com/v1",
+                                .model = "o4-mini"};
+  const auto chat_json = json::read(provider::body_of(chat, turns));
+  EXPECT_TRUE(chat_json.has_value());
+  if (chat_json) {
+    const json::value *messages = json::said(*chat_json, "messages");
+    const json::value *first = messages ? json::item_of(*messages, 0) : nullptr;
+    EXPECT_TRUE(first != nullptr);
+    if (first) {
+      const json::value *content = json::said(*first, "content");
+      EXPECT_TRUE(content && json::item_of(*content, 1) != nullptr);
+      if (content && json::item_of(*content, 1)) {
+        const json::value *picture = json::item_of(*content, 1);
+        EXPECT_EQ(text_in(*picture, "type"), std::string("image_url"));
+        const json::value *url = json::said(*picture, "image_url");
+        EXPECT_TRUE(url != nullptr);
+        if (url)
+          EXPECT_EQ(text_in(*url, "url"),
+                    std::string("data:image/png;base64,aGVsbG8="));
+      }
+    }
+  }
+
+  // Anthropic's own: a block of its own name, base64 source beneath it.
+  const provider::endpoint anthropic{.base = "https://api.anthropic.com/v1",
+                                     .model = "haiku-4"};
+  const auto ant_json = json::read(provider::body_of(anthropic, turns));
+  EXPECT_TRUE(ant_json.has_value());
+  if (ant_json) {
+    const json::value *messages = json::said(*ant_json, "messages");
+    const json::value *first = messages ? json::item_of(*messages, 0) : nullptr;
+    EXPECT_TRUE(first != nullptr);
+    if (first) {
+      const json::value *content = json::said(*first, "content");
+      bool found_image = false;
+      if (content)
+        for (std::size_t at = 0u;; ++at) {
+          const json::value *block = json::item_of(*content, at);
+          if (block == nullptr)
+            break;
+          if (text_in(*block, "type") == "image") {
+            found_image = true;
+            const json::value *source = json::said(*block, "source");
+            EXPECT_TRUE(source != nullptr);
+            if (source) {
+              EXPECT_EQ(text_in(*source, "media_type"),
+                        std::string("image/png"));
+              EXPECT_EQ(text_in(*source, "data"),
+                        std::string("aGVsbG8="));
+            }
+          }
+        }
+      EXPECT_TRUE(found_image);
+    }
+  }
+
+  // Google's: inline_data in the parts of the contents.
+  const provider::endpoint gemini{
+      .base = "https://generativelanguage.googleapis.com/v1beta",
+      .model = "gemini-2.5-flash"};
+  const auto gem_json = json::read(provider::body_of(gemini, turns));
+  EXPECT_TRUE(gem_json.has_value());
+  if (gem_json) {
+    const json::value *contents = json::said(*gem_json, "contents");
+    const json::value *first = contents ? json::item_of(*contents, 0) : nullptr;
+    EXPECT_TRUE(first != nullptr);
+    if (first) {
+      const json::value *parts = json::said(*first, "parts");
+      bool found_image = false;
+      if (parts)
+        for (std::size_t at = 0u;; ++at) {
+          const json::value *part = json::item_of(*parts, at);
+          if (part == nullptr)
+            break;
+          const json::value *inline_data = json::said(*part, "inline_data");
+          if (inline_data) {
+            found_image = true;
+            EXPECT_EQ(text_in(*inline_data, "mime_type"),
+                      std::string("image/png"));
+            EXPECT_EQ(text_in(*inline_data, "data"),
+                      std::string("aGVsbG8="));
+          }
+        }
+      EXPECT_TRUE(found_image);
+    }
+  }
+}
+
 int main() { return pchat::tests::run(); }

@@ -410,4 +410,60 @@ SAID(prgrssv, a_compact_capsule_comes_back_as_one) {
   EXPECT_EQ(back.root.messages[1].author, std::string("Compact"));
 }
 
+SAID(prgrssv, a_picture_in_a_message_comes_back_whole) {
+  chats_root root;
+  root.conversations.push_back(
+      conversation{.id = conversation_id{"pics"},
+                   .title = "One picture",
+                   .last_activity = 2});
+  const std::string png("\x89PNG\r\n\x1a\n" "tail", 12);
+  message said{.id = message_id{"pics-1"},
+               .chat = conversation_id{"pics"},
+               .author = "Reader",
+               .outgoing = true,
+               .text = "[one.png]",
+               .sent = 5,
+               .state = delivery::sending};
+  said.images.push_back(image_part{"image/png", "iVBORw0KGgo="});
+  root.messages.push_back(std::move(said));
+  const std::string bytes =
+      prgrssv::archive_of(root, default_looks, default_asking);
+
+  // Whole in the file: media and bytes, under the message they went with.
+  std::vector<pchat::prgrssv::stored> in;
+  EXPECT_TRUE(pchat::prgrssv::unzipped(bytes, in));
+  const std::optional<json::value> room_json =
+      read_body(body_of(in, "conversations/pics.json"));
+  EXPECT_TRUE(room_json.has_value());
+  if (room_json) {
+    const json::value *messages = json::said(*room_json, "messages");
+    EXPECT_TRUE(messages != nullptr);
+    const json::value *first =
+        messages ? json::item_of(*messages, 0) : nullptr;
+    EXPECT_TRUE(first != nullptr);
+    if (first) {
+      const json::value *images = json::said(*first, "images");
+      EXPECT_TRUE(images != nullptr);
+      if (images) {
+        const json::value *one = json::item_of(*images, 0);
+        EXPECT_TRUE(one != nullptr);
+        if (one) {
+          EXPECT_EQ(text_at(*one, "media"), std::string("image/png"));
+          EXPECT_EQ(text_at(*one, "data"), std::string("iVBORw0KGgo="));
+        }
+      }
+    }
+  }
+
+  // And back whole for the run that reads this file.
+  const pchat::prgrssv::restored back = pchat::prgrssv::restore_of(bytes);
+  EXPECT_TRUE(back.ok());
+  EXPECT_EQ(back.root.messages.size(), 1u);
+  EXPECT_EQ(back.root.messages[0].images.size(), 1u);
+  EXPECT_EQ(back.root.messages[0].images[0].media,
+            std::string("image/png"));
+  EXPECT_EQ(back.root.messages[0].images[0].data,
+            std::string("iVBORw0KGgo="));
+}
+
 int main() { return pchat::tests::run(); }

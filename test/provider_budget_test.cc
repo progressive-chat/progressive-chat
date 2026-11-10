@@ -232,4 +232,20 @@ SAID(provider_budget, only_what_a_wire_takes_of_a_round_is_counted) {
             object.front().id);
 }
 
+SAID(provider_budget, pictures_take_the_room_they_stand_in) {
+  tokens::vocabulary(tokens::o200k());
+  const std::vector<message> said = conversation_of(60, 40);
+  const message_id bare =
+      provider::fit_from(said, an_endpoint(), 4'096, provider::wanted{});
+  // The same conversation with a picture on every message of it: what is
+  // asked about cannot start any earlier than it did without them -- each
+  // picture costs the room it stands in, as each does on Agora's side.
+  std::vector<message> dressed = said;
+  for (message &one : dressed)
+    one.images.push_back(image_part{"image/png", "aGVsbG8="});
+  const message_id with_pictures =
+      provider::fit_from(dressed, an_endpoint(), 4'096, provider::wanted{});
+  EXPECT_GE(place_of(dressed, with_pictures), place_of(said, bare));
+}
+
 int main() { return pchat::tests::run(); }

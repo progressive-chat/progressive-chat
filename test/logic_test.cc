@@ -9,6 +9,7 @@ import pchat.core;
 import pchat.logic.lists;
 import pchat.logic.search;
 import pchat.logic.composer;
+import pchat.tokens;
 import pchat.logic.formatting;
 import pchat.logic.doc;
 
@@ -285,6 +286,80 @@ SAID(logic, attachments_go_out_whole_under_their_own_names) {
   EXPECT_EQ(alone.said.text, std::string("[plan.txt]\nfirst, second"));
   EXPECT_TRUE(logic::can_send(logic::composer_state{
       .attachments = {logic::attachment{"plan.txt", "first, second"}}}));
+}
+
+SAID(logic, a_picture_is_known_by_what_it_starts_with) {
+  const std::string png("\x89PNG\r\n\x1a\n", 8);
+  EXPECT_EQ(logic::image_media_of(png + "rest").value_or(""),
+            std::string("image/png"));
+  const std::string jpeg("\xff\xd8\xff\xe0", 4);
+  EXPECT_EQ(logic::image_media_of(jpeg).value_or(""),
+            std::string("image/jpeg"));
+  EXPECT_EQ(logic::image_media_of("GIF89a...").value_or(""),
+            std::string("image/gif"));
+  const std::string webp("RIFF\x00\x00\x00\x00WEBPVP8 ", 16);
+  EXPECT_EQ(logic::image_media_of(webp).value_or(""),
+            std::string("image/webp"));
+  // Where the file is another thing entirely: no picture, and said so.
+  EXPECT_FALSE(logic::image_media_of("%PDF-1.7\n%....").has_value());
+  EXPECT_FALSE(logic::image_media_of("").has_value());
+}
+
+SAID(logic, bytes_go_out_the_way_a_wire_reads_a_picture) {
+  // RFC 4648's own vectors: three sizes of input, the padding they ask for.
+  EXPECT_EQ(logic::base64_of(""), std::string(""));
+  EXPECT_EQ(logic::base64_of("f"), std::string("Zg=="));
+  EXPECT_EQ(logic::base64_of("fo"), std::string("Zm8="));
+  EXPECT_EQ(logic::base64_of("foo"), std::string("Zm9v"));
+  EXPECT_EQ(logic::base64_of("foobar"), std::string("Zm9vYmFy"));
+}
+
+SAID(logic, one_file_decided_between_words_and_a_picture) {
+  const std::string png("\x89PNG\r\n\x1a\n" "tail", 12);
+  const auto as_picture =
+      logic::attachment_of("/home/reader/pics/one.png", png);
+  EXPECT_TRUE(as_picture.has_value());
+  EXPECT_EQ(as_picture->name, std::string("one.png"));
+  EXPECT_EQ(as_picture->media, std::string("image/png"));
+  EXPECT_EQ(as_picture->image, logic::base64_of(png));
+  EXPECT_TRUE(as_picture->text.empty());
+
+  // Words, where there are words: attached as the text of the file.
+  const auto as_words =
+      logic::attachment_of("/home/reader/notes/today.md", "bread, milk");
+  EXPECT_TRUE(as_words.has_value());
+  EXPECT_EQ(as_words->text, std::string("bread, milk"));
+  EXPECT_TRUE(as_words->image.empty());
+
+  // Nothing at all where the file is neither: a PDF, an empty file, and a
+  // picture over what one message should carry.
+  const std::string pdf("%PDF-1.7\nstream\x00\x01binary", 22);
+  EXPECT_FALSE(logic::attachment_of("/a.pdf", pdf).has_value());
+  EXPECT_FALSE(logic::attachment_of("/empty.txt", "").has_value());
+  const std::string too_big(logic::attachment_image + 1u, '\x00');
+  EXPECT_FALSE(
+      logic::attachment_of("/huge.png", too_big).has_value());
+}
+
+SAID(logic, a_picture_goes_with_the_words_and_counts_against_the_window) {
+  const std::string png("\x89PNG\r\n\x1a\n" "tail", 12);
+  const logic::sent_message said = logic::send(
+      logic::sending_request{
+          conversation_id{"general"}, "look",
+          {logic::attachment{.name = "one.png",
+                             .media = "image/png",
+                             .image = logic::base64_of(png)}},
+          std::nullopt},
+      "Reader", 9);
+  // The name stands with the words, the picture stands as it is, and the
+  // window is told what the picture costs beside what the words cost.
+  EXPECT_EQ(said.said.text, std::string("look\n\n[one.png]"));
+  EXPECT_EQ(said.said.images.size(), 1u);
+  EXPECT_EQ(said.said.images[0].media, std::string("image/png"));
+  EXPECT_EQ(said.said.images[0].data, logic::base64_of(png));
+  EXPECT_EQ(said.said.tokens,
+            static_cast<std::uint32_t>(pchat::tokens::of(said.said.text)) +
+                logic::image_window_cost);
 }
 
 int main() { return pchat::tests::run(); }

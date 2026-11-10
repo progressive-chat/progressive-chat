@@ -53,7 +53,9 @@ export namespace pchat::provider {
   for (std::size_t at = 0; at < said.size(); ++at)
     seen.push_back(budgeted{.id = said[at].id.value,
                             .text = whole[at],
-                            .outgoing = said[at].outgoing});
+                            .outgoing = said[at].outgoing,
+                            .images = static_cast<std::uint32_t>(
+                                said[at].images.size())});
   std::vector<budgeted_tool> kit;
   kit.reserve(wants.tools.size());
   for (const offered &one : wants.tools)
