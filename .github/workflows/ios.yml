@@ -110,7 +110,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: first-run-app
-          path: build
+          path: build/first-run.app
 
       - name: Sign it as the simulator asks
         run: |
