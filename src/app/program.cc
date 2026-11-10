@@ -90,6 +90,18 @@ struct program {
   // screens' to build, and this is where the path is handed over.
   void save_path_chosen(std::string path) { view.write_archive(path); }
 
+  // Where the machine said files stand to be read from: what its own picker
+  // offered after this program asked for an archive (load_archive) -- the
+  // first of them whole into the window. A drop of anything is said nothing
+  // about here: an archive is asked for on the page's own row, and what a
+  // reader drags over the room is for the room to take when it can take
+  // anything (attachments, which this does not have).
+  void files_given(std::vector<std::string> paths, bool dropped) {
+    if (dropped || paths.empty())
+      return;
+    view.read_archive(paths.front());
+  }
+
   // Between events: what was asked for, done, and what the window shows drawn
   // again from the model. The size it lays itself out by is the one the last
   // frame left it.

@@ -382,6 +382,13 @@ public:
               if (dialogs_)
                 dialogs_->choose_save_path("progressive-chat.prgrssv");
             },
+            // The archive to read, offered by the machine's own picker of
+            // files: what it answers with comes back through the program
+            // (files_given), on the same road the save's path answers on.
+            [&](const load_archive &) {
+              if (dialogs_)
+                dialogs_->choose_files();
+            },
             // An answerer put into the conversation open, or taken out of
             // it: what the window then writes to is the first one left, and
             // how much room it has to answer into is that one's own.
@@ -446,6 +453,31 @@ public:
   void write_archive(const std::string &path) {
     skiff::platform::storage::write_file(
         path, prgrssv::archive_of(root_, shown_, how_));
+  }
+
+  // Where the machine said an archive stands to be read from: whole, and
+  // what it holds replaces what this run holds -- an archive IS a program,
+  // settings and all (prgrssv, restore_of), so there is nothing to merge and
+  // nothing to ask: what it was written as is what the window shows from
+  // here on. A file that is not one of these, or cannot be read, changes
+  // nothing -- the run keeps everything it had, whole.
+  void read_archive(const std::string &path) {
+    const std::optional<std::string> bytes =
+        skiff::platform::storage::read_file(path);
+    if (!bytes)
+      return;
+    prgrssv::restored back = prgrssv::restore_of(*bytes);
+    if (!back.ok())
+      return;
+    // An answer in the air over the run being replaced is dropped with it:
+    // what it was answering is not here anymore, and half an answer written
+    // into a conversation this file does not hold is no answer to anything.
+    answering_.reset();
+    root_ = std::move(back.root);
+    shown_ = back.shown;
+    how_ = back.how;
+    where_ = std::move(back.where);
+    recolour();
   }
 
 private:

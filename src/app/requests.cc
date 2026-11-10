@@ -211,6 +211,12 @@ struct compact_context {};
 // answered with a save dialog of the machine's own -- the chosen path comes
 // back through the program (pchat.app.program, save_path_chosen).
 struct save_archive {};
+// An archive to read instead of what stands: one picked from where the
+// machine keeps files, and what it holds replaces what this run holds --
+// whole, settings and all, as it was written. Asked for on the same page's
+// About, beside the save, and answered with the machine's own picker of
+// files (pchat.app.program, files_given).
+struct load_archive {};
 
 // What is asked, as one value: spl::variant, so that every kind of it is
 // handled where it is read and a new one cannot be forgotten.
@@ -232,7 +238,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 set_generation, set_tool, set_switch,
                               set_answerer, pick_door, set_door_key,
                               set_door_models, compact_context, copy_text,
-                              save_archive>;
+                              save_archive, load_archive>;
 
 class requests {
 public:

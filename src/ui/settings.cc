@@ -577,8 +577,15 @@ struct settings_rows : scene::Node {
   // never again is laid out by nobody.
   ask_box fArchive{};
   nodes::Text fArchiveText{"", 15.0f, 0u};
+  // The archive read instead: a plate under the save's, offered the same
+  // way and answered the same way -- pressed, the machine picks a file and
+  // the program takes what it holds (load_archive, files_given). Said as
+  // every label of this page is said, laid out when its row says it.
+  ask_box fLoad{};
+  nodes::Text fLoadText{"", 15.0f, 0u};
   settings_rows() {
     fArchiveText.setElided(true);
+    fLoadText.setElided(true);
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .y = 24.0f});
@@ -807,6 +814,25 @@ struct settings_rows : scene::Node {
                         .x = 32.0f,
                         .y = at + (settings_row_height - 19.0f) / 2.0f,
                         .visible = true});
+    at += settings_row_stride;
+    // The same again for reading one: a plate under the save's with its own
+    // words over it, laid out the way every other label of this page is.
+    fLoad.again(asked, app::load_archive{}, look.raised);
+    fLoad.apply({.anchor = scene::anchor::kTopLeft,
+                 .origin = scene::anchor::kTopLeft,
+                 .x = 16.0f,
+                 .y = at,
+                 .width = row_width,
+                 .height = settings_row_height,
+                 .relativeSize = scene::axes::kNone,
+                 .cornerRadius = 14.0f});
+    fLoadText.setText("Load an archive");
+    fLoadText.setColour(look.text);
+    fLoadText.apply({.maxWidth = std::max(0.0f, row_width - 32.0f)});
+    fLoadText.apply({.anchor = scene::anchor::kTopLeft,
+                     .x = 32.0f,
+                     .y = at + (settings_row_height - 19.0f) / 2.0f,
+                     .visible = true});
     at += settings_row_stride;
     return at;
   }
@@ -1074,6 +1100,7 @@ struct settings_rows : scene::Node {
     fHeading.setColour(look.text);
     fRead.setColour(look.text);
     fArchiveText.setColour(look.text);
+    fLoadText.setColour(look.text);
     fDivider.setColour(look.outline);
     // One group after the last: its name, then what it holds.
     for (std::size_t group = 0u; group < max_settings_groups; ++group) {
@@ -1164,6 +1191,8 @@ struct settings_rows : scene::Node {
     f(fRead);
     f(fArchive);
     f(fArchiveText);
+    f(fLoad);
+    f(fLoadText);
     for (about_row &one : fAbout)
       f(one);
   }
