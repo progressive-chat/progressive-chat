@@ -3,7 +3,7 @@
 # The SDL window for the first run: built by CMake, on Linux, for the
 # simulator. The toolchain is given from the outside.
 
-cmake_minimum_required(VERSION 4.3.4)
+cmake_minimum_required(VERSION 3.31)
 project(pchat_ios_sdl LANGUAGES C CXX OBJC)
 
 # SDL3 from the project's fork (has the iOS main callbacks and NativeActivity).
