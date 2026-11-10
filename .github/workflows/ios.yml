@@ -100,18 +100,41 @@ jobs:
             -o build/std.pcm
           app=build/first-run.app
           mkdir -p "$app"
+          # The standard library's headers and the source of std are clang
+          # 23's; the target they are compiled for is a phone, not this
+          # machine, and the module is made here rather than by Xcode.
           clang++-23 \
             --target=arm64-apple-ios26.0-simulator \
-            -std=c++23 -x objective-c++ -fobjc-arc \
+            -std=c++23 \
+            -isysroot "$sysroot" \
+            -nostdinc++ -isystem "$libcxx/include/c++/v1" \
+            --precompile "$libcxx/share/libc++/v1/std.cppm" \
+            -o build/std.pcm
+          clang++-23 \
+            --target=arm64-apple-ios26.0-simulator \
+            -std=c++23 \
             -isysroot "$sysroot" \
             -nostdinc++ -isystem "$libcxx/include/c++/v1" \
             -fmodule-file=std=build/std.pcm \
+            -c ios/first-run/word.cpp -o build/word.o
+          clang-23 \
+            --target=arm64-apple-ios26.0-simulator \
+            -fobjc-arc \
+            -isysroot "$sysroot" \
             -F "$sysroot/System/Library/Frameworks" \
             -F "$sysroot/System/Library/SubFrameworks" \
             -F "$sysroot/System/Library/PrivateFrameworks" \
+            -c ios/first-run/main.m -o build/main.o
+          clang++-23 \
+            --target=arm64-apple-ios26.0-simulator \
+            -isysroot "$sysroot" \
             -fuse-ld=lld \
+            -F "$sysroot/System/Library/Frameworks" \
+            -F "$sysroot/System/Library/SubFrameworks" \
+            -F "$sysroot/System/Library/PrivateFrameworks" \
             -framework UIKit -framework Foundation \
-            -o "$app/first-run" ios/first-run/main.mm
+            build/main.o build/word.o \
+            -o "$app/first-run"
           cp ios/first-run/Info.plist "$app/Info.plist"
           file "$app/first-run"
 
