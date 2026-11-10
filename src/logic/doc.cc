@@ -92,6 +92,6 @@ inline constexpr std::size_t doc_deepest = 3;
 
 // The design itself, as this build was made with it: what stands at the top
 // of the tree, said in the room as well.
-[[nodiscard]] inline std::string_view the_design() { return design_doc; }
+[[nodiscard]] inline std::string_view design_text() { return design_doc; }
 
 } // namespace pchat::logic

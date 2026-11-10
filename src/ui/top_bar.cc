@@ -358,7 +358,7 @@ struct top_bar : scene::Node {
            .height = answerer_bubble_height,
            .cornerRadius = answerer_bubble_height / 2.0f,
            .visible = true},
-          said_as_a_model(chat->models[at]));
+          model_label(chat->models[at]));
     }
     // What this whole conversation has been worth, said once beside them and
     // not again in each bubble: what the bar named before there was a bubble

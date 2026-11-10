@@ -219,7 +219,7 @@ struct switch_row : scene::Node {
 // What one of them is said as in the page: whole tokens where it counts
 // tokens, and elsewhere two places of decimals, which is as near as any of
 // them is ever set.
-[[nodiscard]] inline std::string said_value(asking_what field, double value) {
+[[nodiscard]] inline std::string value_label(asking_what field, double value) {
   return field == asking_what::max_tokens ? std::format("{:.0f}", value)
                                           : std::format("{:.2f}", value);
 }
@@ -324,15 +324,15 @@ struct knob_row : scene::Node {
     fName.setColour(look.text);
     if (spec.width)
       fName.apply({.maxWidth = std::max(0.0f, *spec.width - knob_room)});
-    fValue.setText(said_value(field, value));
+    fValue.setText(value_label(field, value));
     fValue.setColour(look.dim);
     fLess.again(sink,
                 app::set_generation{field,
-                                    kept_asking(field, value - there.step)},
+                                    clamped_value(field, value - there.step)},
                 look.raised);
     fMore.again(sink,
                 app::set_generation{field,
-                                    kept_asking(field, value + there.step)},
+                                    clamped_value(field, value + there.step)},
                 look.raised);
     fLessMark.setColour(look.text);
     fMoreMark.setColour(look.text);
@@ -483,7 +483,7 @@ struct key_told {
   }
 };
 // Each edit of the models field, whole: what that field holds for the door
-// named beside it, ids apart (pchat.config, models_said reads them so) --
+// named beside it, ids apart (pchat.config, text_to_models reads them so) --
 // written into the door as it is typed, offered in a chat's models like any
 // other, and never taken into a conversation by the typing itself.
 struct model_told {
@@ -751,13 +751,13 @@ struct settings_rows : scene::Node {
     at += settings_row_stride;
     // And what this door may answer as, in the field under the key: not
     // masked -- a model id is a name and not a secret -- and written whole
-    // into the door as it is typed, ids apart (pchat.config, models_said).
+    // into the door as it is typed, ids apart (pchat.config, text_to_models).
     fModelsSink->asked = asked;
     fModelsSink->id = where.provider;
     fModels.setTheme(theme);
     if (fModelsDoor != where.provider) {
       fModelsDoor = where.provider;
-      fModels.setText(said_models(models_of(where, where.provider)));
+      fModels.setText(models_to_text(models_of(where, where.provider)));
     }
     fModels.apply({.anchor = scene::anchor::kTopLeft,
                    .x = 16.0f,

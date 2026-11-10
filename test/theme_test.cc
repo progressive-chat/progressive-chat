@@ -25,7 +25,7 @@ SAID(theme, every_preset_gives_a_scheme) {
 
 SAID(theme, amoled_blacks_out_the_background) {
   const color_scheme dark = scheme_for(default_preset, default_style, true);
-  const color_scheme amoled = with_amoled(dark, true, true);
+  const color_scheme amoled = amoled_scheme(dark, true, true);
   EXPECT_NE(dark.background, 0u);
   EXPECT_EQ(amoled.background & 0x00ffffffu, 0u);
   EXPECT_NE(amoled.primary, 0u);
@@ -41,9 +41,9 @@ SAID(theme, looks_give_colours_for_the_mode) {
 SAID(theme, what_an_answer_is_asked_with_keeps_inside_its_lines) {
   EXPECT_EQ(value_of(default_asking, asking_what::temperature), 0.7);
   EXPECT_EQ(value_of(default_asking, asking_what::max_tokens), 2048.0);
-  // Too hot to stand, and below nothing at all: both kept by `kept_asking`.
-  EXPECT_EQ(kept_asking(asking_what::temperature, 9.0), 2.0);
-  EXPECT_EQ(kept_asking(asking_what::top_p, -1.0), 0.0);
+  // Too hot to stand, and below nothing at all: both kept by `clamped_value`.
+  EXPECT_EQ(clamped_value(asking_what::temperature, 9.0), 2.0);
+  EXPECT_EQ(clamped_value(asking_what::top_p, -1.0), 0.0);
   // One press either side of one moves it by that one's own step, and stops
   // where it stops.
   asking one = default_asking;
@@ -167,24 +167,24 @@ SAID(config, every_door_says_where_it_stands_and_whose_words_are_there) {
 SAID(config, what_a_door_may_answer_as_is_written_apart_and_read_back) {
   // As the field writes them: ids apart, nothing between them kept, and the
   // same id asked for once however often it is written.
-  const auto listed = models_said(
+  const auto listed = text_to_models(
       " deepseek-chat , deepseek-reasoner ,, qwen-max ,deepseek-chat");
   EXPECT_EQ(listed.size(), 3u);
   EXPECT_EQ(listed[0], std::string("deepseek-chat"));
   EXPECT_EQ(listed[1], std::string("deepseek-reasoner"));
   EXPECT_EQ(listed[2], std::string("qwen-max"));
-  EXPECT_EQ(said_models(listed),
+  EXPECT_EQ(models_to_text(listed),
             std::string("deepseek-chat, deepseek-reasoner, qwen-max"));
   // Nothing written: nothing kept, and nothing standing where it would be.
-  EXPECT_TRUE(models_said("").empty());
-  EXPECT_TRUE(models_said("  , , ").empty());
-  EXPECT_EQ(said_models({}), std::string{});
+  EXPECT_TRUE(text_to_models("").empty());
+  EXPECT_TRUE(text_to_models("  , , ").empty());
+  EXPECT_EQ(models_to_text({}), std::string{});
 
   // Through the door itself: kept for the door it was written for and for
   // that one alone, and put away with its entry only once neither half of it
   // -- the key nor the models -- stands.
   door typing;
-  models_into(typing, "deepseek", models_said("deepseek-chat"));
+  models_into(typing, "deepseek", text_to_models("deepseek-chat"));
   EXPECT_EQ(models_of(typing, "deepseek").size(), 1u);
   EXPECT_EQ(models_of(typing, "openai").size(), 0u);
   key_into(typing, "deepseek", "sk-here");

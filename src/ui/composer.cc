@@ -233,12 +233,12 @@ struct editor_menu : scene::Node {
     // Thinking, and how hard it is asked to think said beside it: the word
     // for nothing at all where it is not asked to think in the first place.
     fRows[0].again(sink, look, edge, "Thinking",
-                   how.thinking ? said_by(how.how_hard) : "off",
+                   how.thinking ? effort_label(how.how_hard) : "off",
                    app::set_thinking{.on = !how.thinking});
     // And the same again on its own row, for saying it is one press away
     // from being another: each press asks for the next of the four.
     fRows[1].again(sink, look, edge + editor_row_height, "Effort",
-                   said_by(how.how_hard),
+                   effort_label(how.how_hard),
                    app::set_effort{.how_hard = next_of(how.how_hard)});
     // The compact, asked for by hand: older context summarised into a
     // capsule with the originals where they stand -- a row beside what else
@@ -349,7 +349,7 @@ struct faces_card : scene::Node {
     this->setVisible(true);
     this->apply(where);
     fCard.setColour(look.drawer);
-    const bool with_lately = !lately.empty();
+    const bool has_recent = !lately.empty();
     for (std::size_t at = 0; at < fLately.size(); ++at) {
       face_chip &one = fLately[at];
       if (at < lately.size()) {
@@ -361,7 +361,7 @@ struct faces_card : scene::Node {
     for (std::size_t at = 0; at < fChips.size(); ++at) {
       face_chip &one = fChips[at];
       this->place(one, at % face_columns,
-                  at / face_columns + (with_lately ? 1u : 0u));
+                  at / face_columns + (has_recent ? 1u : 0u));
       one.again(asked, typed, look.text, faces_offered[at]);
     }
   }
@@ -615,7 +615,7 @@ struct composer : scene::Node {
     // taken said in the primary one, from the top and clockwise.
     const float used = std::clamp(chat.context_used, 0.0f, 1.0f);
     const std::string model = chat.leading_model();
-    fModel.setText(said_as_a_model(model));
+    fModel.setText(model_label(model));
     fModel.setColour(look.primary);
     fGauge.setShape(context_ring(used, look.outline, look.primary));
     fGauge.setColour(look.primary);

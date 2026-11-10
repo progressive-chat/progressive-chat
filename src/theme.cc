@@ -214,7 +214,7 @@ constexpr color_scheme scheme_for(scheme_preset preset, scheme_style style = def
 // AMOLED: the deepest black there is, or the brightest white. A screen that
 // is switched off pixel by pixel draws nothing where its surface is, so the
 // surfaces stop being surfaces and become the background.
-constexpr color_scheme with_amoled(color_scheme scheme, bool dark, bool enabled) {
+constexpr color_scheme amoled_scheme(color_scheme scheme, bool dark, bool enabled) {
   const argb deepest = dark ? 0xFF000000 : 0xFFFFFFFF;
   if (!enabled) return scheme;
   scheme.background = deepest;

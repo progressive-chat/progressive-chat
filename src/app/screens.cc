@@ -123,12 +123,12 @@ public:
               // the way it always fit.
               if (offered_of(how_, switch_choice::auto_compact) &&
                   overruns_of(asking.chat)) {
-                ask_after_compact_ = true;
+                pending_ask_ = true;
                 begin_ask(asking.chat, std::string(compact_told), true);
               }
               if (!answering_) {
-                ask_after_compact_ = false;
-                ask_a_model(asking.chat);
+                pending_ask_ = false;
+                ask_model(asking.chat);
               }
               // What was written has left the field, and the card that
               // writes into it goes with it: nothing left open would write
@@ -169,7 +169,7 @@ public:
             // one was already here and only this line kept it out.
             [&](const regenerate_answer &asking) {
               cut_away(asking.said);
-              ask_a_model(asking.chat);
+              ask_model(asking.chat);
             },
             // Into a chat of its own: everything asked and answered up to this
             // answer, and nothing said after it.
@@ -185,7 +185,7 @@ public:
               forked.tokens = tokens_up_to(asking.chat, asking.said);
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(forked));
-              const std::size_t up_to = said_at(asking.said);
+              const std::size_t up_to = message_index(asking.said);
               for (std::size_t at = 0; at < up_to; ++at) {
                 message copy = root_.messages[at];
                 if (copy.chat != asking.chat)
@@ -382,7 +382,7 @@ public:
             // known by name. Typing one here changes no chat; a chat takes
             // a model by its row (set_answerer, above).
             [&](const set_door_models &asking) {
-              models_into(where_, asking.id, models_said(asking.typed));
+              models_into(where_, asking.id, text_to_models(asking.typed));
             },
             // The compact asked for by hand: this chat's older stretch
             // summarised into a capsule, originals where they stand. Asked
@@ -392,10 +392,10 @@ public:
               if (!root_.opened)
                 return;
               const conversation_id chat = *root_.opened;
-              const bool said_anything = std::ranges::any_of(
+              const bool has_messages = std::ranges::any_of(
                   root_.messages,
                   [&chat](const message &one) { return one.chat == chat; });
-              if (!said_anything)
+              if (!has_messages)
                 return;
               begin_ask(chat, std::string(compact_told), true);
             },
@@ -460,10 +460,10 @@ public:
     // opens then is this program's to know.
     for (const std::string &place : std::exchange(scene::hostWork().links, {}))
       platform::opened::open(place);
-    read_what_arrived();
+    poll_response();
     const std::vector<logic::attachment> &attached = attached_open_chat();
     scene_.root().again(look_, root_, shown_, how_, where_, query_, dark_,
-                        ui::what_is_open{.settings = settings_,
+                        ui::open_state{.settings = settings_,
                                          .design = design_,
                                          .prompt = system_,
                                          .more = more_,
@@ -600,7 +600,7 @@ private:
     // (begin_title) -- nothing is made to stand in for those.
     message_id said;
     // Whether this asking names the chat rather than answering in it: the
-    // words come back to the title (read_what_arrived), and no message of
+    // words come back to the title (poll_response), and no message of
     // the chat is made or written for them.
     bool into_title = false;
     provider::loop going;
@@ -627,14 +627,14 @@ private:
   // Whether the question this window sent waits on a compact standing in
   // front of it: set when a send lands at the edge of the window
   // (send_message), and spent when the compact that stood before it finishes
-  // (read_what_arrived) -- one deep, and never two: a second send while an
+  // (poll_response) -- one deep, and never two: a second send while an
   // answer is in flight does not ask at all, as it never has.
-  bool ask_after_compact_ = false;
+  bool pending_ask_ = false;
 
   // Asked of a model, where anything here can carry the asking. Today nothing
   // can anywhere but a page -- that is what `carrying::any` says -- and where
   // nothing can, nothing is asked and no answer comes, as it was before.
-  void ask_a_model(const conversation_id &chat) {
+  void ask_model(const conversation_id &chat) {
     begin_ask(chat, told_of(chat), false);
   }
 
@@ -644,7 +644,7 @@ private:
   // door, which model answers in this chat, and what this one asking is told
   // (pchat.config, providers_offered; endpoint's `family` says whose words
   // an unknown model speaks there).
-  [[nodiscard]] provider::endpoint at_of(const conversation_id &chat,
+  [[nodiscard]] provider::endpoint endpoint_of(const conversation_id &chat,
                                          std::string told) const {
     const provider_choice &there = provider_by(where_.provider);
     return provider::endpoint{
@@ -668,7 +668,7 @@ private:
     platform::carrying carried;
     if (!carried.any())
       return;
-    const provider::endpoint at = at_of(chat, std::move(told));
+    const provider::endpoint at = endpoint_of(chat, std::move(told));
     // The conversation whole, as the tools read it: every message of it,
     // because a tool asked about this conversation is asked about all of it
     // -- a compacted stretch is in the chat as it always was, capsule or
@@ -740,7 +740,7 @@ private:
   // later messages are not what a chat is called by (docs/en/title-
   // generation.md, read for this). Where Agora asks for it the moment the
   // first message is saved, this program asks through one wire at a time,
-  // so it is asked when that wire is free (read_what_arrived, below):
+  // so it is asked when that wire is free (poll_response, below):
   // automatic either way, and the reader waits on it no more than they wait
   // on the answer that finished in front of it.
   void begin_title(const conversation_id &chat) {
@@ -768,7 +768,7 @@ private:
       }
     if (first == nullptr)
       return;
-    const provider::endpoint at = at_of(chat, std::string(title_told));
+    const provider::endpoint at = endpoint_of(chat, std::string(title_told));
     const provider::wanted wants = tools::wanted_of(how_);
     const std::vector<message> one_said{*first};
     tools::owned mine{one_said, now_ms()};
@@ -782,7 +782,7 @@ private:
         .began = now_ms()});
     carry(coming);
     // And nothing written into the chat: these words come back to its name
-    // (read_what_arrived), not into a message of it.
+    // (poll_response), not into a message of it.
   }
 
   // One round of the asking given to whatever carries it here.
@@ -802,7 +802,7 @@ private:
   // said whole -- thought, calls, tokens and all -- in the message's place.
   // Where it stopped because it asked for something this program owns, those
   // calls are answered here and the question is asked again with them.
-  void read_what_arrived() {
+  void poll_response() {
     if (!answering_ || !answering_->asked)
       return;
     answer_coming &one = *answering_;
@@ -815,16 +815,16 @@ private:
     if (!one.carried.over())
       return;
     one.asked->carried_over(one.carried.trouble());
-    one.going.came_back(*one.asked);
+    one.going.finish_run(*one.asked);
     one.asked.reset();
-    if (!one.going.asked_for().empty() && asked_again(one)) {
+    if (!one.going.pending_calls().empty() && answer_tool_calls(one)) {
       carry(one);
       if (message *there = found(one.said))
         there->text = std::string(one.going.said());
       return;   // and it is not over yet
     }
     const moment ended = now_ms();
-    bool made_capsule = false;
+    bool capsule_written = false;
     if (one.into_title) {
       // The name, whole as the model said it and as far as a row of the
       // drawer shows it (core, title_from): written only while the chat is
@@ -847,10 +847,10 @@ private:
       // an answer is written into its message and decides nothing about
       // which message that is.
       const bool capsule = there->capsule;
-      made_capsule = capsule;
+      capsule_written = capsule;
       const std::string author =
           capsule ? std::string("Compact") : ending_of(one.chat);
-      *there = one.going.answer_of(provider::put_in{.id = one.said,
+      *there = one.going.answer_of(provider::answer_target{.id = one.said,
                                                     .chat = one.chat,
                                                     .author = author,
                                                     .sent = ended,
@@ -863,7 +863,7 @@ private:
     }
     recount(one.chat);
     const conversation_id answered_in = one.chat;
-    const bool was_naming = one.into_title;
+    const bool title_ask = one.into_title;
     answering_.reset();
     // The question that waited on this compact is asked now, with the
     // capsule standing where the old stretch stood (the wire carries both
@@ -872,10 +872,10 @@ private:
     // still be called what a new chat is called: its own name is asked for
     // now -- and where that asking failed or said nothing, asked for again
     // after the next answer, until it lands or the chat is named.
-    if (made_capsule && ask_after_compact_) {
-      ask_after_compact_ = false;
-      ask_a_model(answered_in);
-    } else if (!was_naming) {
+    if (capsule_written && pending_ask_) {
+      pending_ask_ = false;
+      ask_model(answered_in);
+    } else if (!title_ask) {
       begin_title(answered_in);
     }
   }
@@ -884,9 +884,9 @@ private:
   // now, by this program -- and the question asked again with what they said.
   // False where there is nothing left to ask, which is when the answer is put
   // where it belongs.
-  [[nodiscard]] bool asked_again(answer_coming &one) {
+  [[nodiscard]] bool answer_tool_calls(answer_coming &one) {
     std::vector<provider::call_answered> answered;
-    for (const provider::tool_call &call : one.going.asked_for()) {
+    for (const provider::tool_call &call : one.going.pending_calls()) {
       const std::string said =
           one.mine.answered(call.name, call.arguments)
               .value_or("nothing here answers that call");
@@ -920,7 +920,7 @@ private:
 
   // Where in the messages one said is -- one past its own place, so that a
   // fork copies everything said before it.
-  [[nodiscard]] std::size_t said_at(const message_id &said) const {
+  [[nodiscard]] std::size_t message_index(const message_id &said) const {
     for (std::size_t at = 0; at < root_.messages.size(); ++at)
       if (root_.messages[at].id == said)
         return at + 1;
@@ -1021,7 +1021,7 @@ private:
   // again both come down to, the one leaving the question above it to be
   // answered again.
   void cut_away(const message_id &said) {
-    const std::size_t found = said_at(said);
+    const std::size_t found = message_index(said);
     if (found == 0)
       return;
     const std::size_t at = found - 1;

@@ -39,6 +39,6 @@ int pchat_main() {
       .width = 1100,
       .height = 720,
       .software = !pchat::platform::gpu_can_be_had(),
-      .programs = pchat::platform::where_programs_are_kept()};
+      .programs = pchat::platform::programs_dir()};
   return pchat_run(one, how, kinds);
 }

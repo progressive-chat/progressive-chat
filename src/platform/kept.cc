@@ -20,7 +20,7 @@ export namespace pchat::platform {
 //
 // Where nothing can be written -- the page, whose files are not files -- it
 // is empty, and the window compiles them as it always did.
-std::string where_programs_are_kept() {
+std::string programs_dir() {
 #if defined(__EMSCRIPTEN__)
   return {};
 #else

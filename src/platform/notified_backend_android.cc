@@ -39,7 +39,7 @@ bool let_post(JNIEnv *env, jobject activity) {
 
 // Asked for it once, where it was not given yet: the system's own asking, for
 // whose answer nothing here waits.
-void ask_to_post(JNIEnv *env, jobject activity) {
+void request_permission(JNIEnv *env, jobject activity) {
   jobjectArray asked = env->NewObjectArray(
       1, env->FindClass("java/lang/String"), nullptr);
   if (!asked) return;
@@ -53,7 +53,7 @@ void ask_to_post(JNIEnv *env, jobject activity) {
                       asked, 0);
 }
 
-void make_channel(JNIEnv *env, jobject manager) {
+void create_channel(JNIEnv *env, jobject manager) {
   jclass channel_class = env->FindClass("android/app/NotificationChannel");
   if (!channel_class) return;
   jobject channel = env->NewObject(
@@ -133,7 +133,7 @@ bool say(std::string_view title, std::string_view text) {
   if (!activity) return false;
   const int sdk = SDL_GetAndroidSDKVersion();
   if (sdk >= 33 && !let_post(env, activity)) {
-    ask_to_post(env, activity);
+    request_permission(env, activity);
     return false;
   }
   jclass context = env->FindClass("android/content/Context");
@@ -143,7 +143,7 @@ bool say(std::string_view title, std::string_view text) {
                                  "(Ljava/lang/String;)Ljava/lang/Object;"),
       env->NewStringUTF("notification"));
   if (!manager) return false;
-  if (sdk >= 26) make_channel(env, manager);
+  if (sdk >= 26) create_channel(env, manager);
   jclass builder_class = env->FindClass("android/app/Notification$Builder");
   if (!builder_class) return false;
   jobject builder =
@@ -165,13 +165,13 @@ bool say(std::string_view title, std::string_view text) {
                           env->GetMethodID(builder_class, method, signature),
                           arguments...);
   };
-  constexpr const char *says_builder =
+  constexpr const char *charsequence_sig =
       "(Ljava/lang/CharSequence;)Landroid/app/Notification$Builder;";
   set("setSmallIcon", "(I)Landroid/app/Notification$Builder;",
       icon(env, activity));
-  set("setContentTitle", says_builder,
+  set("setContentTitle", charsequence_sig,
       pchat::platform::string_of(env, title));
-  set("setContentText", says_builder, pchat::platform::string_of(env, text));
+  set("setContentText", charsequence_sig, pchat::platform::string_of(env, text));
   set("setAutoCancel", "(Z)Landroid/app/Notification$Builder;", JNI_TRUE);
   // Priority and sound, which a channel says itself from Android 8 on: high,
   // shown at once, with the system's own sound.

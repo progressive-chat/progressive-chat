@@ -90,7 +90,7 @@ constexpr const char *could_not_ask = "the phone could not ask for it";
 
 // Where a thread went, and why it went there -- under the one lock the pump
 // takes, since these are what it reads.
-void went(phone_ask *one, phone_end stood, std::string why = {}) {
+void set_state(phone_ask *one, phone_end stood, std::string why = {}) {
   std::lock_guard held(one->guard);
   one->stood = stood;
   if (!why.empty())
@@ -160,7 +160,7 @@ bool phone_ask_at(phone_ask *one, std::string_view url,
         const frame in_thread;
         JNIEnv *env = in_thread.env();
         if (env == nullptr) {
-          went(one, phone_end::lost, could_not_ask);
+          set_state(one, phone_end::lost, could_not_ask);
           return;
         }
 
@@ -184,7 +184,7 @@ bool phone_ask_at(phone_ask *one, std::string_view url,
                                             "()Ljava/net/URLConnection;"))
                 : nullptr;
         if (threw(env) || connection == nullptr) {
-          went(one, phone_end::lost, could_not_ask);
+          set_state(one, phone_end::lost, could_not_ask);
           return;
         }
         jclass http_class = env->GetObjectClass(connection);
@@ -218,7 +218,7 @@ bool phone_ask_at(phone_ask *one, std::string_view url,
                                 ascii_of(env, flat[at]),
                                 ascii_of(env, flat[at + 1]));
         if (threw(env)) {
-          went(one, phone_end::lost, could_not_ask);
+          set_state(one, phone_end::lost, could_not_ask);
           return;
         }
         // Held whole in a global reference, so that phone_close may hang up
@@ -247,18 +247,18 @@ bool phone_ask_at(phone_ask *one, std::string_view url,
                                                "close", "()V"));
         }
         if (threw(env)) {
-          went(one, phone_end::lost, could_not_ask);
+          set_state(one, phone_end::lost, could_not_ask);
           return;
         }
 
         // The status, which comes before a byte of the answer is read: a
         // refusal says so here, in words, and none of its body is taken --
         // a status that says no is never read as an answer (the page says
-        // the same of itself, carry.cc, went_on).
+        // the same of itself, carry.cc, fetch_status).
         const jint code = env->CallIntMethod(
             connection, env->GetMethodID(http_class, "getResponseCode", "()I"));
         if (threw(env)) {
-          went(one, phone_end::lost, could_not_ask);
+          set_state(one, phone_end::lost, could_not_ask);
           return;
         }
         if (code >= 400) {
@@ -285,7 +285,7 @@ bool phone_ask_at(phone_ask *one, std::string_view url,
               env->ReleaseStringUTFChars(reason, said);
             }
           }
-          went(one, phone_end::refused, std::move(why));
+          set_state(one, phone_end::refused, std::move(why));
           return;
         }
 
@@ -297,7 +297,7 @@ bool phone_ask_at(phone_ask *one, std::string_view url,
             env->GetMethodID(http_class, "getInputStream",
                              "()Ljava/io/InputStream;"));
         if (threw(env) || in == nullptr) {
-          went(one, phone_end::lost, could_not_ask);
+          set_state(one, phone_end::lost, could_not_ask);
           return;
         }
         constexpr jsize room = 8192;
@@ -327,7 +327,7 @@ bool phone_ask_at(phone_ask *one, std::string_view url,
         // before it was over is no answer, whole or not -- what came stays,
         // and the carrying above decides whether to ask again (pump_phone).
         const bool interrupted = one->stopped || broke;
-        went(one, interrupted ? phone_end::lost : phone_end::answered,
+        set_state(one, interrupted ? phone_end::lost : phone_end::answered,
              interrupted ? std::string(could_not_ask) : std::string{});
         env->CallVoidMethod(connection,
                             env->GetMethodID(http_class, "disconnect", "()V"));

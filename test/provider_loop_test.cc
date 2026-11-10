@@ -75,10 +75,10 @@ SAID(provider_loop, a_question_that_asked_for_nothing_is_answered_once) {
   provider::run answering = one.answering();
   EXPECT_NE(answering.wants().body.find("What is the weather?"), std::string::npos);
   carried(answering, asked_whole);
-  one.came_back(answering);
+  one.finish_run(answering);
   EXPECT_TRUE(one.over());
   EXPECT_EQ(std::string(one.said()), std::string("It is raining."));
-  EXPECT_TRUE(one.asked_for().empty());
+  EXPECT_TRUE(one.pending_calls().empty());
   EXPECT_FALSE(one.again({}));
   EXPECT_EQ(one.rounds(), 0u);
 }
@@ -87,14 +87,14 @@ SAID(provider_loop, what_a_tool_answered_goes_back_into_the_asking) {
   provider::loop one{an_endpoint(), asked_once()};
   provider::run first = one.answering();
   carried(first, asked_a_tool);
-  one.came_back(first);
+  one.finish_run(first);
   EXPECT_FALSE(one.over());
-  EXPECT_EQ(one.asked_for().size(), 1u);
-  EXPECT_EQ(one.asked_for().front().name, std::string("weather"));
+  EXPECT_EQ(one.pending_calls().size(), 1u);
+  EXPECT_EQ(one.pending_calls().front().name, std::string("weather"));
   // Answered by the name the wire gave it.
   EXPECT_TRUE(one.again({{std::string("call_9"), std::string("rain")}}));
   EXPECT_EQ(one.rounds(), 1u);
-  EXPECT_TRUE(one.asked_for().empty());
+  EXPECT_TRUE(one.pending_calls().empty());
 
   const std::string body = one.answering().wants().body;
   // What the model said when it stopped, and the call it stopped for -- a
@@ -107,11 +107,11 @@ SAID(provider_loop, what_a_tool_answered_goes_back_into_the_asking) {
 
   provider::run second = one.answering();
   carried(second, asked_whole);
-  one.came_back(second);
+  one.finish_run(second);
   EXPECT_TRUE(one.over());
   EXPECT_FALSE(one.again({}));
   EXPECT_EQ(std::string(one.said()), std::string("One moment.\nIt is raining."));
-  const message said = one.answer_of(provider::put_in{
+  const message said = one.answer_of(provider::answer_target{
       .id = message_id{"m-2"}, .chat = conversation_id{"chat-1"},
       .author = "o4-mini", .sent = 1700000000000, .took_ms = 1500});
   EXPECT_EQ(said.text, std::string("One moment.\nIt is raining."));
@@ -125,9 +125,9 @@ SAID(provider_loop, a_call_the_wire_gave_no_name_to_is_named_here) {
   provider::loop one{an_endpoint(), asked_once()};
   provider::run first = one.answering();
   carried(first, asked_an_unnamed_tool);
-  one.came_back(first);
-  EXPECT_EQ(one.asked_for().size(), 1u);
-  const std::string own = one.asked_for().front().id;
+  one.finish_run(first);
+  EXPECT_EQ(one.pending_calls().size(), 1u);
+  const std::string own = one.pending_calls().front().id;
   EXPECT_FALSE(own.empty());
   EXPECT_TRUE(one.again({{own, std::string("rain")}}));
   EXPECT_NE(one.answering().wants().body.find(own), std::string::npos);
@@ -137,13 +137,13 @@ SAID(provider_loop, it_stops_asking_after_as_many_rounds_as_it_may) {
   provider::loop one{an_endpoint(), asked_once(), 1};
   provider::run first = one.answering();
   carried(first, asked_a_tool);
-  one.came_back(first);
+  one.finish_run(first);
   EXPECT_TRUE(one.again({{std::string("call_9"), std::string("rain")}}));
   // Asked for a tool a second time: allowed to be asked once, so no.
   provider::run second = one.answering();
   carried(second, asked_a_tool);
-  one.came_back(second);
-  EXPECT_EQ(one.asked_for().size(), 1u);
+  one.finish_run(second);
+  EXPECT_EQ(one.pending_calls().size(), 1u);
   EXPECT_FALSE(one.again({{std::string("call_9"), std::string("rain")}}));
   EXPECT_EQ(one.rounds(), 1u);
 }
@@ -153,11 +153,11 @@ SAID(provider_loop, an_answer_that_could_not_be_had_is_not_asked_again) {
   provider::run first = one.answering();
   first.carried();
   first.carried_over(std::string("the wire closed early"));
-  one.came_back(first);
+  one.finish_run(first);
   EXPECT_TRUE(one.over());
   EXPECT_FALSE(one.again({}));
   EXPECT_EQ(one.trouble().value_or(std::string()), std::string("the wire closed early"));
-  const message said = one.answer_of(provider::put_in{
+  const message said = one.answer_of(provider::answer_target{
       .id = message_id{"m-2"}, .chat = conversation_id{"chat-1"},
       .author = "o4-mini"});
   EXPECT_EQ(said.state, delivery::failed);
@@ -169,7 +169,7 @@ SAID(provider_loop, an_answer_the_reader_stopped_is_not_asked_again) {
   first.carried();
   first.arrive(asked_a_tool);
   first.stopped();
-  one.came_back(first);
+  one.finish_run(first);
   EXPECT_TRUE(one.over());
   // Stopped answers nothing more, even though it had asked for something.
   EXPECT_FALSE(one.again({{std::string("call_9"), std::string("rain")}}));

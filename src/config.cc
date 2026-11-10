@@ -46,7 +46,7 @@ constexpr bool dark_of(theme_mode mode, bool system_dark) {
 // The colours this set of looks is drawn with.
 constexpr color_scheme colors_of(const looks& shown, bool system_dark = true) {
   const bool dark = dark_of(shown.mode, system_dark);
-  return with_amoled(scheme_for(shown.preset, shown.style, dark), dark, shown.amoled);
+  return amoled_scheme(scheme_for(shown.preset, shown.style, dark), dark, shown.amoled);
 }
 
 // The tools this program owns itself (pchat.tools), said by which is which
@@ -89,7 +89,7 @@ enum class effort { least, some, most, all };
   return effort::least;
 }
 
-[[nodiscard]] inline std::string_view said_by(effort one) {
+[[nodiscard]] inline std::string_view effort_label(effort one) {
   switch (one) {
   case effort::least:
     return "low";
@@ -170,7 +170,7 @@ struct asking_range {
 
 // One of them kept inside its lines: what a row asked for, whether it asked
 // by one press or by being set.
-[[nodiscard]] constexpr double kept_asking(asking_what one, double value) {
+[[nodiscard]] constexpr double clamped_value(asking_what one, double value) {
   const asking_range there = range_of(one);
   return std::clamp(value, there.least, there.most);
 }
@@ -222,19 +222,19 @@ struct asking_range {
   asking out = one;
   switch (field) {
   case asking_what::temperature:
-    out.temperature = kept_asking(field, value);
+    out.temperature = clamped_value(field, value);
     break;
   case asking_what::top_p:
-    out.top_p = kept_asking(field, value);
+    out.top_p = clamped_value(field, value);
     break;
   case asking_what::max_tokens:
-    out.max_tokens = static_cast<std::uint32_t>(kept_asking(field, value));
+    out.max_tokens = static_cast<std::uint32_t>(clamped_value(field, value));
     break;
   case asking_what::presence:
-    out.presence = kept_asking(field, value);
+    out.presence = clamped_value(field, value);
     break;
   case asking_what::often:
-    out.often = kept_asking(field, value);
+    out.often = clamped_value(field, value);
     break;
   }
   return out;
@@ -278,7 +278,7 @@ inline constexpr std::array<answerer_choice, 7> answerers_offered{{
 // provider it is asked through after it in brackets -- `Claude Haiku 4
 // (anthropic)`. One that is offered but nameless says the id it is asked
 // through, whole, so that nothing is said of it that is not known.
-[[nodiscard]] inline std::string said_as_a_model(std::string_view name) {
+[[nodiscard]] inline std::string model_label(std::string_view name) {
   for (const answerer_choice &one : answerers_offered)
     if (one.name == name)
       return std::string(one.said) + " (" + std::string(one.alias) + ")";
@@ -399,7 +399,7 @@ struct door {
 // What stands empty and is not kept as a door at all: an entry goes away
 // only once both halves of it are gone -- what opens it, and what it
 // answers as.
-[[nodiscard]] inline bool holds_nothing(const door_hold &one) {
+[[nodiscard]] inline bool is_empty(const door_hold &one) {
   return one.key.empty() && one.models.empty();
 }
 
@@ -417,7 +417,7 @@ inline void key_into(door &where, std::string_view id, std::string key) {
   } else {
     at->key = std::move(key);
   }
-  std::erase_if(where.holds, holds_nothing);
+  std::erase_if(where.holds, is_empty);
 }
 
 // What one door may answer as, written whole the way the field says it: its
@@ -434,14 +434,14 @@ inline void models_into(door &where, std::string_view id,
   } else {
     at->models = std::move(models);
   }
-  std::erase_if(where.holds, holds_nothing);
+  std::erase_if(where.holds, is_empty);
 }
 
 // What a door may answer as, as the field says it: ids apart, the way a
 // reader writes them -- and read back the same way. Nothing between them is
 // kept: what stands whole between two separators is one id, an id being a
 // name and not a phrase, and the same id written twice is asked for once.
-[[nodiscard]] inline std::string said_models(
+[[nodiscard]] inline std::string models_to_text(
     const std::vector<std::string> &models) {
   std::string out;
   for (const std::string &one : models) {
@@ -451,7 +451,7 @@ inline void models_into(door &where, std::string_view id,
   }
   return out;
 }
-[[nodiscard]] inline std::vector<std::string> models_said(
+[[nodiscard]] inline std::vector<std::string> text_to_models(
     std::string_view said) {
   std::vector<std::string> out;
   std::size_t from = 0u;

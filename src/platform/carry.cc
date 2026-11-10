@@ -115,7 +115,7 @@ public:
     for (const std::string &one : fields_)
       flat_.push_back(one.c_str());
     flat_.push_back(nullptr);
-    fire();
+    start_fetch();
 #elif defined(PCHAT_HAVE_CURL)
     // A window asks through this machine's own curl: the same words a page
     // would give the browser, said through one line this module never opens
@@ -180,8 +180,8 @@ private:
 #if defined(__EMSCRIPTEN__)
   // The asking itself, built out of what begin() kept: said apart because a
   // carrying that could not connect asks again with those very same fields
-  // rather than building them anew (went_wrong).
-  void fire() {
+  // rather than building them anew (fetch_failed).
+  void start_fetch() {
     emscripten_fetch_attr_t asking;
     emscripten_fetch_attr_init(&asking);
     std::strcpy(asking.requestMethod, "POST");
@@ -194,10 +194,10 @@ private:
     asking.attributes =
         EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_STREAM_DATA;
     asking.userData = this;
-    asking.onprogress = &carrying::went_along;
-    asking.onerror = &carrying::went_wrong;
-    asking.onreadystatechange = &carrying::went_on;
-    asking.onsuccess = &carrying::went_well;
+    asking.onprogress = &carrying::fetch_progress;
+    asking.onerror = &carrying::fetch_failed;
+    asking.onreadystatechange = &carrying::fetch_status;
+    asking.onsuccess = &carrying::fetch_done;
     held_ = emscripten_fetch(&asking, place_.c_str());
     if (!held_) {
       trouble_ = "the page would not ask for it";
@@ -208,7 +208,7 @@ private:
   // A piece arrived, and where the piece says it arrived: take what of it has
   // not been taken yet, and nothing of it twice. A browser that hands the
   // whole body over at once instead says this too, once.
-  static void went_along(emscripten_fetch_t *one) {
+  static void fetch_progress(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
     if (!one->data || one->numBytes == 0)
       return;
@@ -222,18 +222,18 @@ private:
                          static_cast<std::size_t>(said - from));
     self.read_ = began + said;
   }
-  static void went_wrong(emscripten_fetch_t *one) {
+  static void fetch_failed(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
     // Not an answer but the connection: what a client that retries on
     // connection failure asks again -- the port's client_policy() says to
     // (provider/http/wire.h) -- three askings in all, and only while not one
-    // byte has come. An answer that says no is never asked again (went_on
+    // byte has come. An answer that says no is never asked again (fetch_status
     // says why).
     emscripten_fetch_close(one);
     self.held_ = nullptr;
     if (self.attempts_ + 1 < kAskings && self.read_ == 0) {
       ++self.attempts_;
-      self.fire();
+      self.start_fetch();
       if (self.held_)
         return;
     }
@@ -241,7 +241,7 @@ private:
       self.trouble_ = "the page could not ask for it";
     self.over_ = true;
   }
-  static void went_well(emscripten_fetch_t *one) {
+  static void fetch_done(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
     // Everything in one piece, where the browser never handed it over in
     // pieces: taken once, and not again on top of what already came.
@@ -251,7 +251,7 @@ private:
   }
   // Answered at all: a server may answer a status and a body, and what it
   // says may still be that it will not.
-  static void went_on(emscripten_fetch_t *one) {
+  static void fetch_status(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
     if (one->readyState != 4 /* done */)
       return;
@@ -287,7 +287,7 @@ private:
   // since the last take, and where the asking stands -- with the one case a
   // carrying may ask again of itself: the connection went before a byte of an
   // answer came, three askings in all, exactly as the page asks again
-  // (went_wrong).
+  // (fetch_failed).
   void pump_desktop() {
     if (desk_ == nullptr || over_)
       return;
@@ -379,7 +379,7 @@ private:
 
   // How many askings this carrying made and lost to the connection, and the
   // ceiling they are counted against: three in all, said here where the retry
-  // lives (went_wrong, pump_desktop).
+  // lives (fetch_failed, pump_desktop).
   static constexpr std::uint32_t kAskings = 3;
   std::uint32_t attempts_ = 0;
 #if defined(__EMSCRIPTEN__)

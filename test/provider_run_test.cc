@@ -149,7 +149,7 @@ SAID(provider_run, the_answer_as_the_model_keeps_it) {
   one.arrive(first_frame);
   one.arrive(rest);
   one.carried_over(std::nullopt);
-  const message said = one.answer_of(provider::put_in{
+  const message said = one.answer_of(provider::answer_target{
       .id = message_id{"m-1"},
       .chat = conversation_id{"chat-1"},
       .author = "o4-mini",
@@ -171,7 +171,7 @@ SAID(provider_run, an_answer_that_never_came_is_a_failed_message) {
   provider::run one{an_endpoint(), std::vector<provider::turn>{}};
   one.carried();
   one.carried_over(std::string("the wire closed early"));
-  const message said = one.answer_of(provider::put_in{.id = message_id{"m-2"},
+  const message said = one.answer_of(provider::answer_target{.id = message_id{"m-2"},
                                                       .chat = conversation_id{"chat-1"},
                                                       .author = "o4-mini"});
   EXPECT_EQ(said.state, delivery::failed);

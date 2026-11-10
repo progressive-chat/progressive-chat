@@ -38,7 +38,7 @@ namespace nodes = skiff::nodes;
 // false)`.
 // Which of them is open is the program's own reading of its own state, and
 // what the window does with it is said here, once, in words.
-struct what_is_open {
+struct open_state {
   bool settings = false;
   bool design = false;
   // What every answerer in the conversation open is told before anything is
@@ -53,7 +53,7 @@ struct what_is_open {
   // The drawer, come over the messages where the room is too narrow for it
   // to stand beside them.
   bool drawer = false;
-  friend bool operator==(const what_is_open &, const what_is_open &) = default;
+  friend bool operator==(const open_state &, const open_state &) = default;
 };
 
 // Everything the program shows, as one node a Scene can hold. Made with the
@@ -104,7 +104,7 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
              const asking &how, const door &where, const std::string &query,
-             bool dark, const what_is_open &open,
+             bool dark, const open_state &open,
              const std::vector<std::string> &faces_lately,
              const std::vector<logic::attachment> &attached, float width,
              float height, app::requests *asked) {

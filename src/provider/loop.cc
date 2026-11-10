@@ -46,7 +46,7 @@ public:
   // One carried answer, over: what it said kept, what it thought too, what it
   // cost added to what the rounds before it cost, and the tools it stopped to
   // ask for read out of it.
-  void came_back(const run &one) {
+  void finish_run(const run &one) {
     // What it said over every round, one under the other: it is one answer to
     // whoever asked the question, however many answers it took the model.
     if (!said_.empty() && !one.said().empty())
@@ -103,7 +103,7 @@ public:
   [[nodiscard]] std::size_t rounds() const { return rounds_; }
   // What it asked for in the answer that came back last, whole, and empty
   // once it has been answered.
-  [[nodiscard]] const std::vector<tool_call> &asked_for() const { return asked_; }
+  [[nodiscard]] const std::vector<tool_call> &pending_calls() const { return asked_; }
 
   [[nodiscard]] std::string_view said() const { return said_; }
   [[nodiscard]] std::string_view thought() const { return thinking_; }
@@ -116,7 +116,7 @@ public:
   // One message of the model's, from every round of this question: what it
   // said in all of them, what it thought, how many tools it asked for, what
   // all of it cost -- and failed where it could not be had at all.
-  [[nodiscard]] message answer_of(const put_in &into) const {
+  [[nodiscard]] message answer_of(const answer_target &into) const {
     return provider::answer_of(into, said_, thinking_, calls_, cost_,
                                ended_ == provider::over::failed);
   }

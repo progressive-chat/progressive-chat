@@ -336,7 +336,7 @@ SAID(doc, a_mark_alone_in_front_is_words) {
 }
 
 SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
-  const std::string_view design = logic::the_design();
+  const std::string_view design = logic::design_text();
   EXPECT_LT(1000u, design.size());
   EXPECT_TRUE(design.find("The design of a chat") != std::string_view::npos);
   const std::vector<logic::doc_line> read = logic::read_doc(design);

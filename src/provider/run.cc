@@ -44,7 +44,7 @@ struct asking {
 
 // Where an answer is put when it is over: the conversation it was said in,
 // whose it is written as, when it was said, and how long it took to come.
-struct put_in {
+struct answer_target {
   message_id id;
   conversation_id chat;
   std::string author;
@@ -56,7 +56,7 @@ struct put_in {
 // or one question that had to be asked again before it was answered. Whose it
 // is written as, where it was said, how long it took, and failed where nothing
 // of it came -- said once here so that it is said the same way twice.
-[[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
+[[nodiscard]] inline message answer_of(const answer_target &into, std::string_view said,
                                        std::string_view thinking,
                                        std::size_t asking, usage cost,
                                        bool failed) {
@@ -175,7 +175,7 @@ public:
   // where nothing of it came to be read. Nothing here answers for a model,
   // and nothing here is put into a conversation: where it goes is asked
   // elsewhere.
-  [[nodiscard]] message answer_of(const put_in &into) const {
+  [[nodiscard]] message answer_of(const answer_target &into) const {
     return provider::answer_of(into, said(), thought(), tool_calls(), cost(),
                                ended_ == over::failed);
   }

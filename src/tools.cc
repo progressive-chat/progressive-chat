@@ -95,9 +95,9 @@ public:
   // that -- what it answered is what a wire is given back, and what a wire
   // does with an answer it never asked for is not ours to say.
   [[nodiscard]] std::optional<std::string> answered(std::string_view name,
-                                                    std::string_view asked_for) const {
+                                                    std::string_view call_body) const {
     if (name == "look_up_in_this_conversation")
-      return looked_up(what_was_asked(asked_for, "what"));
+      return looked_up(argument_of(call_body, "what"));
     if (name == "how_much_has_been_said")
       return how_much();
     if (name == "when_this_is_being_asked")
@@ -108,9 +108,9 @@ public:
 private:
   // One string taken out of what a model sent, whatever else it sent with it:
   // a call that named it badly is answered nothing rather than wrongly.
-  [[nodiscard]] static std::string what_was_asked(std::string_view asked_for,
+  [[nodiscard]] static std::string argument_of(std::string_view call_body,
                                                   std::string_view takes) {
-    const auto read = json::read(asked_for);
+    const auto read = json::read(call_body);
     if (!read)
       return std::string();
     if (const json::value *said = json::said(*read, takes))

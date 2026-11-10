@@ -62,19 +62,19 @@ struct ask_row : scene::Node {
   app::request one{app::toggle_drawer{}};
 
   ask_row(nodes::IconShape mark, std::string name, app::request asking,
-          const scene::Spec &made, bool with_mark = true)
+          const scene::Spec &made, bool show_mark = true)
       : one(std::move(asking)) {
     fMark.setShape(std::move(mark));
     fMark.apply({.width = drawer_mark, .height = drawer_mark,
                  .anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentre,
                  .x = drawer_margin,
-                 .visible = with_mark});
+                 .visible = show_mark});
     fName.setElided(true);
     fName.setText(std::move(name));
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = with_mark ? drawer_margin + drawer_mark + gap
+                 .x = show_mark ? drawer_margin + drawer_mark + gap
                                 : drawer_margin});
     this->apply(made);
   }
@@ -115,7 +115,7 @@ struct ask_row : scene::Node {
 // opens what it names. Filled in again whenever what it says changes.
 struct conversation_row : scene::Node {
   app::requests *asked = nullptr;
-  conversation_id said_of;
+  conversation_id label_of;
   nodes::Box<> fAvatar{0u};
   nodes::Text fTitle{"", 15.0f, 0u, true};
   nodes::Text fWhen{"", 12.0f, 0u};
@@ -164,7 +164,7 @@ struct conversation_row : scene::Node {
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
   [[nodiscard]] bool onClick(float, float) {
     if (asked)
-      asked->ask(app::open_conversation{said_of});
+      asked->ask(app::open_conversation{label_of});
     return true;
   }
 
@@ -182,7 +182,7 @@ struct conversation_row : scene::Node {
              const conversation &chat, std::string_view said,
              std::string_view when, bool chosen) {
     asked = sink;
-    said_of = chat.id;
+    label_of = chat.id;
     this->setVisible(true);
     // Which row is open said by a ground under it, declared of the row and
     // painted in its own rounded box: nothing else in the panel has one, and

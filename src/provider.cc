@@ -25,7 +25,7 @@ export namespace pchat::provider {
 // Who said a turn, in the only four ways a wire allows it.
 enum class role { system, user, assistant, tool };
 
-[[nodiscard]] inline std::string_view said_by(role one) {
+[[nodiscard]] inline std::string_view role_text(role one) {
   switch (one) {
   case role::system:
     return "system";
@@ -250,7 +250,7 @@ template <std::ranges::forward_range Said>
   return out;
 }
 
-[[nodiscard]] inline turn told_as_system(std::string_view said) {
+[[nodiscard]] inline turn system_turn(std::string_view said) {
   return turn{.who = role::system, .text = std::string(said)};
 }
 
@@ -332,7 +332,7 @@ template <std::ranges::forward_range Turns>
       system += said.text;
       continue;
     }
-    out.thing().name("role").text(said_by(said.who)).name("content").list();
+    out.thing().name("role").text(role_text(said.who)).name("content").list();
     if (said.who == role::tool && !said.own.empty()) {
       // One answered call, as the wire reads it back: against the call it
       // answers, and nothing else in this message.
@@ -552,11 +552,11 @@ template <std::ranges::forward_range Turns>
     // takes one system turn, and this body is written once for one answer.
     if (!one.told.empty())
       out.thing()
-          .name("role").text(said_by(role::system))
+          .name("role").text(role_text(role::system))
           .name("content").text(one.told)
           .shut();
     for (const turn &said : turns) {
-      out.thing().name("role").text(said_by(said.who));
+      out.thing().name("role").text(role_text(said.who));
       if (said.who == role::tool && !said.own.empty())
         out.name("tool_call_id").text(said.own);
       out.name("content").text(said.text);
@@ -581,7 +581,7 @@ template <std::ranges::forward_range Turns>
   // wire reads whether it streams or not, and none of them written for a wire
   // that was told nothing about how to choose.
   if (wants.thinking && wants.how_hard) {
-    const std::string hard = std::string(said_by(*wants.how_hard));
+    const std::string hard = std::string(effort_label(*wants.how_hard));
     const std::string_view base(one.base);
     if (base.find("openrouter") != std::string::npos)
       out.name("reasoning").thing().name("effort").text(hard).shut();

@@ -27,7 +27,7 @@ import pchat.json;
 // cannot be exported at all.
 namespace pchat::prgrssv {
 
-[[nodiscard]] std::string_view said_of(conversation_kind one) {
+[[nodiscard]] std::string_view label_of(conversation_kind one) {
   switch (one) {
   case conversation_kind::direct:
     return "direct";
@@ -39,7 +39,7 @@ namespace pchat::prgrssv {
   return "channel";
 }
 
-[[nodiscard]] std::string_view said_of(delivery one) {
+[[nodiscard]] std::string_view label_of(delivery one) {
   switch (one) {
   case delivery::writing:
     return "writing";
@@ -55,7 +55,7 @@ namespace pchat::prgrssv {
   return "seen";
 }
 
-[[nodiscard]] std::string_view said_of(theme_mode one) {
+[[nodiscard]] std::string_view label_of(theme_mode one) {
   switch (one) {
   case theme_mode::light:
     return "light";
@@ -67,7 +67,7 @@ namespace pchat::prgrssv {
   return "system";
 }
 
-[[nodiscard]] std::string_view said_of(effort one) {
+[[nodiscard]] std::string_view label_of(effort one) {
   switch (one) {
   case effort::least:
     return "least";
@@ -81,7 +81,7 @@ namespace pchat::prgrssv {
   return "all";
 }
 
-[[nodiscard]] std::string_view said_of(font_choice one) {
+[[nodiscard]] std::string_view label_of(font_choice one) {
   switch (one) {
   case font_choice::app:
     return "app";
@@ -93,7 +93,7 @@ namespace pchat::prgrssv {
   return "custom";
 }
 
-[[nodiscard]] std::string_view said_of(scheme_preset one) {
+[[nodiscard]] std::string_view label_of(scheme_preset one) {
   switch (one) {
   case scheme_preset::midnight:
     return "midnight";
@@ -115,7 +115,7 @@ namespace pchat::prgrssv {
   return "ocean";
 }
 
-[[nodiscard]] std::string_view said_of(scheme_style one) {
+[[nodiscard]] std::string_view label_of(scheme_style one) {
   switch (one) {
   case scheme_style::tonal_spot:
     return "tonal_spot";
@@ -140,7 +140,7 @@ inline constexpr std::array<std::string_view, switches_owned> switch_names{
     "auto_compact"};
 
 
-// ---- What a file of an archive reads back as: the same words said_of wrote,
+// ---- What a file of an archive reads back as: the same words label_of wrote,
 // turned into the enums they came from, and every word, number and switch
 // taken with the default it had where a file says nothing of it.
 
@@ -313,7 +313,7 @@ inline constexpr std::int64_t version = 1;
     written.name("id").text(room.id.value);
     written.name("account").text(room.account.value);
     written.name("title").text(room.title);
-    written.name("kind").text(said_of(room.kind));
+    written.name("kind").text(label_of(room.kind));
     written.name("last_activity").number(room.last_activity);
     written.name("unread").number(static_cast<std::int64_t>(room.unread));
     written.name("pinned").truth(room.pinned);
@@ -336,7 +336,7 @@ inline constexpr std::int64_t version = 1;
       written.name("outgoing").truth(one.outgoing);
       written.name("text").text(one.text);
       written.name("sent").number(one.sent);
-      written.name("state").text(said_of(one.state));
+      written.name("state").text(label_of(one.state));
       written.name("tokens").number(static_cast<std::int64_t>(one.tokens));
       // A capsule says so, and no other message says anything of it: a field
       // of `false` over every message in an archive would say nothing of
@@ -376,19 +376,19 @@ inline constexpr std::int64_t version = 1;
   json::writing settings;
   settings.thing();
   settings.name("looks").thing();
-  settings.name("preset").text(said_of(shown.preset));
-  settings.name("style").text(said_of(shown.style));
-  settings.name("mode").text(said_of(shown.mode));
+  settings.name("preset").text(label_of(shown.preset));
+  settings.name("style").text(label_of(shown.style));
+  settings.name("mode").text(label_of(shown.mode));
   settings.name("amoled").truth(shown.amoled);
   settings.name("reduce_motion").truth(shown.reduce_motion);
   settings.name("avatars").truth(shown.avatars);
   settings.name("row_times").truth(shown.row_times);
   settings.name("font_scale").number(shown.font_scale);
-  settings.name("font").text(said_of(shown.font));
+  settings.name("font").text(label_of(shown.font));
   settings.shut();
   settings.name("asking").thing();
   settings.name("thinking").truth(how.thinking);
-  settings.name("how_hard").text(said_of(how.how_hard));
+  settings.name("how_hard").text(label_of(how.how_hard));
   settings.name("temperature").number(how.temperature);
   settings.name("top_p").number(how.top_p);
   settings.name("max_tokens").number(static_cast<std::int64_t>(how.max_tokens));
@@ -495,34 +495,34 @@ struct restored {
   for (const stored &one : files) {
     if (!one.name.starts_with("conversations/") || !one.name.ends_with(".json"))
       continue;
-    const auto said_room = json::read(one.body);
-    if (!said_room) {
+    const auto room_json = json::read(one.body);
+    if (!room_json) {
       out.trouble = one.name + " is not written in JSON";
       return out;
     }
     conversation room;
-    room.id = conversation_id{text_in(*said_room, "id")};
-    room.account = account_id{text_in(*said_room, "account")};
-    room.title = text_in(*said_room, "title");
-    room.kind = conversation_kind_of(text_in(*said_room, "kind"));
-    room.last_activity = number_in(*said_room, "last_activity");
-    room.unread = static_cast<std::uint32_t>(number_in(*said_room, "unread"));
-    room.pinned = truth_in(*said_room, "pinned");
-    room.muted = truth_in(*said_room, "muted");
-    if (const json::value *models = json::said(*said_room, "models"))
+    room.id = conversation_id{text_in(*room_json, "id")};
+    room.account = account_id{text_in(*room_json, "account")};
+    room.title = text_in(*room_json, "title");
+    room.kind = conversation_kind_of(text_in(*room_json, "kind"));
+    room.last_activity = number_in(*room_json, "last_activity");
+    room.unread = static_cast<std::uint32_t>(number_in(*room_json, "unread"));
+    room.pinned = truth_in(*room_json, "pinned");
+    room.muted = truth_in(*room_json, "muted");
+    if (const json::value *models = json::said(*room_json, "models"))
       for (std::size_t at = 0;; ++at) {
         const json::value *model = json::item_of(*models, at);
         if (model == nullptr)
           break;
-        if (const auto said_model = json::text_of(*model))
-          room.models.push_back(std::string(*said_model));
+        if (const auto model_text = json::text_of(*model))
+          room.models.push_back(std::string(*model_text));
       }
-    room.told = text_in(*said_room, "told");
-    room.tokens = static_cast<std::uint32_t>(number_in(*said_room, "tokens"));
-    room.window = static_cast<std::uint32_t>(number_in(*said_room, "window"));
-    room.context_used = static_cast<float>(decimal_in(*said_room, "context_used"));
+    room.told = text_in(*room_json, "told");
+    room.tokens = static_cast<std::uint32_t>(number_in(*room_json, "tokens"));
+    room.window = static_cast<std::uint32_t>(number_in(*room_json, "window"));
+    room.context_used = static_cast<float>(decimal_in(*room_json, "context_used"));
 
-    if (const json::value *messages = json::said(*said_room, "messages"))
+    if (const json::value *messages = json::said(*room_json, "messages"))
       for (std::size_t at = 0;; ++at) {
         const json::value *item = json::item_of(*messages, at);
         if (item == nullptr)
@@ -583,12 +583,12 @@ struct restored {
     out.trouble = "the archive holds no settings";
     return out;
   }
-  const auto said_settings = json::read(settings->body);
-  if (!said_settings) {
+  const auto settings_json = json::read(settings->body);
+  if (!settings_json) {
     out.trouble = "the settings are not written in JSON";
     return out;
   }
-  if (const json::value *shown = json::said(*said_settings, "looks")) {
+  if (const json::value *shown = json::said(*settings_json, "looks")) {
     out.shown.preset = preset_of(text_in(*shown, "preset"));
     out.shown.style = style_of(text_in(*shown, "style"));
     out.shown.mode = mode_of(text_in(*shown, "mode"));
@@ -600,7 +600,7 @@ struct restored {
         static_cast<float>(decimal_in(*shown, "font_scale", 1.0));
     out.shown.font = font_of(text_in(*shown, "font"));
   }
-  if (const json::value *how = json::said(*said_settings, "asking")) {
+  if (const json::value *how = json::said(*settings_json, "asking")) {
     out.how.thinking = truth_in(*how, "thinking", true);
     out.how.how_hard = effort_of(text_in(*how, "how_hard"));
     out.how.temperature = decimal_in(*how, "temperature", 0.7);
@@ -616,7 +616,7 @@ struct restored {
       for (std::size_t at = 0; at < switches_owned; ++at)
         out.how.switches[at] = truth_in(*switches, switch_names[at]);
   }
-  if (const json::value *where = json::said(*said_settings, "door")) {
+  if (const json::value *where = json::said(*settings_json, "door")) {
     // The door by what the settings kept it as: one this program offers, and
     // this page's own server where what is written is none of them -- which
     // is also where a word from an older build lands, so that what is read
@@ -643,8 +643,8 @@ struct restored {
             const json::value *model = json::item_of(*models, nth);
             if (model == nullptr)
               break;
-            if (const auto said_model = json::text_of(*model))
-              kept.models.push_back(std::string(*said_model));
+            if (const auto model_text = json::text_of(*model))
+              kept.models.push_back(std::string(*model_text));
           }
         out.where.holds.push_back(std::move(kept));
       }

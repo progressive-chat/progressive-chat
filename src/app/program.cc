@@ -73,7 +73,7 @@ struct program {
   // and a press on those words reaches no node. Kept from skiff's own
   // stand-in face, which is what all of this asks where the program's own
   // were never loaded.
-  void keep_a_face() {
+  void load_face() {
     skia::SkFont *font = skiff::paint::defaultFont();
     if (font == nullptr || font->getTypeface() != nullptr)
       return;
@@ -128,7 +128,7 @@ struct program {
                             "a frame took %d ms", static_cast<int>(took));
     }
 #endif
-    keep_a_face();
+    load_face();
     const auto &bounds = view.window().root().fState.fBounds;
     if (bounds.width() > 1.0f && bounds.height() > 1.0f)
       view.sized(bounds.width(), bounds.height());

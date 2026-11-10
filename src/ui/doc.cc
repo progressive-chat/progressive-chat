@@ -165,7 +165,7 @@ struct doc_screen : scene::Node {
                  .height = height - 24.0f,
                  .relativeSize = scene::axes::kNone,
                  .cornerRadius = 24.0f});
-    std::get<0>(fBody.fChildren).again(look, logic::read_doc(logic::the_design()),
+    std::get<0>(fBody.fChildren).again(look, logic::read_doc(logic::design_text()),
                                        breadth - 4.0f * edge);
     fBody.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,

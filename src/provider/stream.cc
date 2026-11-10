@@ -561,7 +561,7 @@ private:
     tool_call kept;
     kept.name = std::string(name);
     if (const std::size_t at = inner.find("\"arguments\""); at != std::string_view::npos)
-      kept.arguments = std::string(said_value_of(inner, inner.find(':', at) + 1));
+      kept.arguments = std::string(inner_value(inner, inner.find(':', at) + 1));
     else if (const json::value *given = json::said(&*whole, "arguments"))
       kept.arguments = json::text_of(*given).value_or(std::string_view());
     calls_.push_back(kept);
@@ -571,7 +571,7 @@ private:
   // What stands after "arguments":, whole -- as far as the brace or bracket
   // it opened, whichever that was, and no account taken of anything inside
   // a string of its own.
-  [[nodiscard]] static std::string_view said_value_of(std::string_view text,
+  [[nodiscard]] static std::string_view inner_value(std::string_view text,
                                                      std::size_t at) {
     while (at < text.size() &&
            (text[at] == ' ' || text[at] == '\t' || text[at] == '\n' || text[at] == '\r'))

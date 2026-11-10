@@ -99,7 +99,7 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
 }
 // What a sentence says after a place rather than in it: the stop at the end
 // of one, and the commas and colons a list of them is written with.
-[[nodiscard]] inline bool said_after_place(char unit) {
+[[nodiscard]] inline bool place_stop(char unit) {
   constexpr std::string_view after = ".,;:!?";
   return after.find(unit) != std::string_view::npos;
 }
@@ -180,8 +180,8 @@ quoted_at(std::string_view text, std::size_t at) {
     // called in square stops, and where it goes in round ones after them.
     // Neither pair is drawn, as no mark is.
     if (!(open & code) && text[at] == '[') {
-      if (const auto said_place = formatting_detail::link_written_at(text, at)) {
-        const auto [said, target, taken] = *said_place;
+      if (const auto link_match = formatting_detail::link_written_at(text, at)) {
+        const auto [said, target, taken] = *link_match;
         if (at > from)
           runs.push_back({.text = text.substr(from, at - from),
                           .style = open,
@@ -264,7 +264,7 @@ struct drawn {
 [[nodiscard]] inline std::vector<place> links_of(std::string_view text) {
   using formatting_detail::link_stops_at;
   using formatting_detail::place_begun_by;
-  using formatting_detail::said_after_place;
+  using formatting_detail::place_stop;
   std::vector<place> links;
   for (std::size_t at = 0; at < text.size();) {
     std::string_view begun;
@@ -280,7 +280,7 @@ struct drawn {
     }
     std::size_t to = at + begun.size();
     while (to < text.size() && !link_stops_at(text[to])) ++to;
-    while (to > at + begun.size() && said_after_place(text[to - 1])) --to;
+    while (to > at + begun.size() && place_stop(text[to - 1])) --to;
     if (to - at > begun.size()) {
       std::string target{text.substr(at, to - at)};
       // A place begun www. is https:// to the machine, said without either.
