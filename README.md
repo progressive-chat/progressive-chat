@@ -229,6 +229,30 @@ cannot say. `tools/package_web.py` puts the four and the client together into
 one directory, named by what the client is made of so that a page left open
 does not keep one that has been replaced.
 
+### How long a build takes, and what each is built as
+
+Every commit is built four ways, and GitHub times each of them. What 169 runs
+of two days took, the cache a machine already held included:
+
+| what is built                       | said for          | about how long |
+| ----------------------------------- | ----------------- | -------------- |
+| the modules, the tests, the program | check, Debug      | 8 minutes      |
+| the desktop program                 | Release           | 14 minutes     |
+| the page                            | Emscripten, Debug | 13 minutes     |
+| both APKs                           | NDK, Debug        | 22 minutes     |
+
+Debug is what each of them is asked for but the desktop, and `check.yml` puts
+`-O3 -g0` over it -- a debug build that is not waited for. The APK says why it
+keeps Debug rather than asking Release of it: a debug build left unoptimized
+asks everything the first frame needs of Skia and HarfBuzz to be done while
+the screen is still black. `RelWithDebInfo` and `MinSizeRel` are cmake's own,
+and nothing here asks for them.
+
+These are builds whose cache the machine already held. The first build of a
+machine is another thing altogether: Skia and the Android toolchain are made
+there, and the job that makes them is given five hours to do it in. Nothing
+above was timed on a machine of your own.
+
 ## License
 
 Two licenses, said file by file in every one's first line:
