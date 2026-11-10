@@ -335,6 +335,21 @@ if(NOT ANDROID AND NOT PCHAT_BROWSER)
   endif()
 endif()
 
+# What a phone asks with: the HTTP stack its own machine carries -- TLS,
+# certificates and proxies Android already has, asked of over JNI and never
+# brought into this tree (src/platform/carry_phone.cpp). Pumped from the
+# program's loop the same as anything else that carries; the thread is the
+# phone's own read, which waits on its socket where curl's does not. SDL is
+# linked for its header and for the one thing it does here: giving this
+# thread the JVM to ask (src/platform/jni_android.cc says so of whichever
+# thread asks) -- and only where the window is built, for with no window
+# there is no SDL to ask of it, and nothing carries, as it did before.
+if(ANDROID AND PCHAT_UI)
+  target_sources(pchat_platform PRIVATE src/platform/carry_phone.cpp)
+  target_compile_definitions(pchat_platform PRIVATE PCHAT_HAVE_ANDROID_HTTP=1)
+  target_link_libraries(pchat_platform PRIVATE SDL3::SDL3)
+endif()
+
 # What a run keeps of itself for the next one: a file of this machine where a
 # machine has a home to keep it beside (state_freedesktop.cpp), and nowhere at
 # all where it has not -- a page and a phone keep nothing yet, and the file

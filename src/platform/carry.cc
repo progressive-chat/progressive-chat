@@ -4,6 +4,7 @@ module;
 #include <emscripten/fetch.h>
 #endif
 #include "carry_desktop.h"
+#include "carry_phone.h"
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.platform.carry -- One body handed to the platform the program is
 // running on, and the bytes it answers with, taken back out of it.
@@ -17,12 +18,13 @@ module;
 // page has; a window carries through this machine's own curl -- the one HTTP
 // client the build already links, the ported tree having brought it in for
 // its own transport -- pumped from the program's own loop so that nothing
-// here waits on a socket (src/platform/carry_desktop.cpp). A phone carries
-// neither today, and `any()` says so of it: everything not written for a
-// platform is built with an empty carrying in it, and asking it for bytes
-// asks nobody anything. What a phone will carry with (Asio on fibers, as mux
-// carries Matrix) is written here when it is written, and nothing above
-// changes.
+// here waits on a socket (src/platform/carry_desktop.cpp); a phone carries
+// through the stack its own machine carries, asked of over JNI on a thread
+// of its own and taken back from this same loop (src/platform/carry_phone.
+// cpp) -- TLS, certificates and proxies being the machine's, and nothing of
+// them brought into this tree. What each platform says of itself is
+// `any()`; everything not written for a platform is built with an empty
+// carrying in it, and asking it for bytes asks nobody anything.
 export module pchat.platform.carry;
 
 import std;
@@ -45,7 +47,8 @@ public:
         fields_(std::move(gone.fields_)), flat_(std::move(gone.flat_)),
         arrived_(std::move(gone.arrived_)), trouble_(std::move(gone.trouble_)),
         over_(gone.over_), read_(gone.read_),
-        desk_(std::exchange(gone.desk_, nullptr)) {
+        desk_(std::exchange(gone.desk_, nullptr)),
+        ph_(std::exchange(gone.ph_, nullptr)) {
 #if defined(__EMSCRIPTEN__)
     held_ = std::exchange(gone.held_, nullptr);
     attempts_ = std::exchange(gone.attempts_, 0);
@@ -63,6 +66,7 @@ public:
       over_ = gone.over_;
       read_ = gone.read_;
       desk_ = std::exchange(gone.desk_, nullptr);
+      ph_ = std::exchange(gone.ph_, nullptr);
 #if defined(__EMSCRIPTEN__)
       held_ = std::exchange(gone.held_, nullptr);
       attempts_ = std::exchange(gone.attempts_, 0);
@@ -78,6 +82,8 @@ public:
 #if defined(__EMSCRIPTEN__)
     return true;
 #elif defined(PCHAT_HAVE_CURL)
+    return true;
+#elif defined(PCHAT_HAVE_ANDROID_HTTP)
     return true;
 #else
     return false;
@@ -123,6 +129,19 @@ public:
       trouble_ = "this machine could not ask for it";
       over_ = true;
     }
+#elif defined(PCHAT_HAVE_ANDROID_HTTP)
+    // A phone asks through the stack its own machine carries, on a thread
+    // of its own (carry_phone.cpp), and what it answers with comes back
+    // into this carrying the same way as from anything else here.
+    over_ = false;
+    arrived_.clear();
+    trouble_.reset();
+    if (!ph_)
+      ph_ = phone_open();
+    if (ph_ == nullptr || !phone_ask_at(ph_, place_, fields_, wrote_)) {
+      trouble_ = "the phone could not ask for it";
+      over_ = true;
+    }
 #endif
   }
 
@@ -137,6 +156,8 @@ public:
     }
 #elif defined(PCHAT_HAVE_CURL)
     pump_desktop();
+#elif defined(PCHAT_HAVE_ANDROID_HTTP)
+    pump_phone();
 #endif
     return std::exchange(arrived_, std::string{});
   }
@@ -256,6 +277,8 @@ private:
     held_ = nullptr;
 #elif defined(PCHAT_HAVE_CURL)
     desktop_close(&desk_);
+#elif defined(PCHAT_HAVE_ANDROID_HTTP)
+    phone_close(&ph_);
 #endif
   }
 
@@ -306,6 +329,54 @@ private:
   }
 #endif
 
+#if defined(PCHAT_HAVE_ANDROID_HTTP)
+  // The phone's own asking pumped from the program's own loop, the same as a
+  // window's: what arrived since the last take, and where it stands -- with
+  // the one case a carrying may ask again of itself, said in the same words
+  // as everywhere else here: the connection went before an answer, three
+  // askings in all.
+  void pump_phone() {
+    if (ph_ == nullptr || over_)
+      return;
+    std::string piece;
+    std::string why;
+    const phone_end stood = phone_pump(ph_, piece, why);
+    switch (stood) {
+      case phone_end::working:
+        break;
+      case phone_end::answered:
+        over_ = true;
+        break;
+      case phone_end::refused:
+        if (!trouble_)
+          trouble_ = std::move(why);
+        over_ = true;
+        break;
+      case phone_end::lost:
+        if (attempts_ + 1 < kAskings && read_ == 0) {
+          ++attempts_;
+          if (phone_ask_at(ph_, place_, fields_, wrote_))
+            break;
+        }
+        if (!trouble_)
+          trouble_ = why.empty()
+                         ? std::string("the phone could not ask for it")
+                         : why;
+        over_ = true;
+        break;
+    }
+    // A refusal's own words are not an answer and its body is never read
+    // (carry_phone.cpp says so where the status comes); everything else a
+    // wire says on the way is taken as it comes, piece by piece.
+    if (stood != phone_end::refused && !piece.empty()) {
+      read_ += piece.size();
+      arrived_ += piece;
+    }
+    if (over_)
+      phone_close(&ph_);
+  }
+#endif
+
   // How many askings this carrying made and lost to the connection, and the
   // ceiling they are counted against: three in all, said here where the retry
   // lives (went_wrong, pump_desktop).
@@ -318,6 +389,9 @@ private:
   // (carry_desktop.cpp): null everywhere it does not, and kept whole through
   // a move like everything else here.
   desktop_ask *desk_ = nullptr;
+  // The phone's own asking, where this platform is a phone (carry_phone.
+  // cpp): the same null-everywhere-and-whole-through-a-move as a window's.
+  phone_ask *ph_ = nullptr;
   std::string place_;
   std::string wrote_;
   std::vector<std::string> fields_;
