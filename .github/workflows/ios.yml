@@ -80,6 +80,9 @@ jobs:
           clang \
             -target arm64-apple-ios26.0-simulator \
             -isysroot "$sysroot" \
+            -F "$sysroot/System/Library/Frameworks" \
+            -F "$sysroot/System/Library/SubFrameworks" \
+            -F "$sysroot/System/Library/PrivateFrameworks" \
             -fobjc-arc \
             -fuse-ld=lld \
             -framework UIKit -framework Foundation \
