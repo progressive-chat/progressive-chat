@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: ios
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: read
+
+# The first run on a phone's system, asked of a machine that is not a phone:
+# the app is built here, put into a simulator, launched, and asked whether it
+# said its window came up. What it looked like is kept as a picture, because
+# a log can say a window exists while the screen stays black.
+jobs:
+  first-run:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build it for the simulator
+        run: |
+          xcodebuild -version
+          sdk=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          app=build/first-run.app
+          mkdir -p "$app"
+          xcrun --sdk iphonesimulator clang \
+            -fobjc-arc \
+            -target arm64-apple-ios26.0-simulator \
+            -isysroot "$sdk" \
+            -framework UIKit -framework Foundation \
+            -o "$app/first-run" ios/first-run/main.m
+          cp ios/first-run/Info.plist "$app/Info.plist"
+          # A simulator takes an unsigned bundle, but the system asks every
+          # Mach-O it loads for a signature, and signs an empty one over it.
+          codesign --force --sign - "$app"
+
+      - name: Boot a simulator and install it
+        run: |
+          runtime=$(xcrun simctl list runtimes -j \
+            | jq -r '[.runtimes[] | select(.isAvailable and (.identifier | contains("iOS")))] | first | .identifier')
+          device=$(xcrun simctl list devicetypes -j \
+            | jq -r '[.devicetypes[] | select(.identifier | contains("iPhone"))] | first | .identifier')
+          echo "runtime: $runtime"
+          echo "device:  $device"
+          udid=$(xcrun simctl create first-run "$device" "$runtime")
+          echo "udid:    $udid"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          xcrun simctl install "$udid" build/first-run.app
+          echo "udid=$udid" >> "$GITHUB_ENV"
+
+      - name: Launch it, and hear what it says
+        run: |
+          xcrun simctl launch --console-pty "$udid" chat.progressive.first-run \
+            > build/launch.log 2>&1 &
+          # Long enough for the first frame on a machine that boots cold.
+          sleep 10
+          xcrun simctl io "$udid" screenshot build/first-run.png
+          cat build/launch.log
+          if ! grep -q "PCHAT-IOS-FIRST-RUN: the window is up" build/launch.log; then
+            echo "::error::the app never said its window came up"
+            exit 1
+          fi
+          # A line in the log can outlive the process that wrote it: the app
+          # is asked, after the fact, whether it is still on the machine's list.
+          if ! xcrun simctl spawn "$udid" launchctl list | grep -q chat.progressive.first-run; then
+            echo "::error::the app said its window came up and then died"
+            exit 1
+          fi
+
+      - name: Keep what it looked like
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-run
+          path: |
+            build/first-run.png
+            build/launch.log
+          if-no-files-found: warn
