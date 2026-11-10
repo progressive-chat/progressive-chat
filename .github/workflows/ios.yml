@@ -30,6 +30,9 @@ jobs:
         run: |
           mkdir -p sdk
           sdk=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          # What xcrun names is a link to what the SDK is: a link is all
+          # that would be archived, and on another machine it points nowhere.
+          sdk=$(cd "$sdk" && pwd -P)
           echo "sdk: $sdk"
           du -sh "$sdk"
           # The Mac is not asked to build anything: it hands over the one
