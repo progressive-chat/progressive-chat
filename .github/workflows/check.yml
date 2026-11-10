@@ -68,3 +68,13 @@ jobs:
             echo "$missing"
             exit 1
           fi
+
+      - name: The names of Agora, counted
+        run: |
+          # How much of the ported tree stands here, counted by spelling --
+          # through what the two sides call the same thing where they call
+          # it differently (docs/agora-bridge.md). The floor is what stood
+          # when this step was written: a carried thing going missing under
+          # it fails the check, and a carried thing arriving raises it for
+          # the next hand to set.
+          python3 tools/agora_coverage.py --min 79

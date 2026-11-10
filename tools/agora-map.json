@@ -1,0 +1,1189 @@
+[
+ {
+  "file": "alpine_package_index.hpp",
+  "purpose": "FullPkgEntry: one APKINDEX record (name, version, dependency words)",
+  "entities": [
+   "FullPkgEntry",
+   "ApkIndex"
+  ]
+ },
+ {
+  "file": "alpine_package_metadata_store.hpp",
+  "purpose": "Port of app/src/fdroid/java/com/newoether/agora/sandbox/AlpinePackageMetadataStore.kt. Pure file-level metadata over the Alpine rootfs: etc/agora/base…",
+  "entities": [
+   "AlpinePackageMetadataStore"
+  ]
+ },
+ {
+  "file": "android_json.hpp",
+  "purpose": "Ports of android.util.JsonReader / android.util.JsonWriter (AOSP frameworks/base), carried verbatim by the `native-conversation-graph-source` golden s…",
+  "entities": [
+   "Exception",
+   "Source",
+   "Reader",
+   "Writer"
+  ]
+ },
+ {
+  "file": "anthropic_request.hpp",
+  "purpose": "buildToolUseBlock: safe id fallback via buildToolCallId, args parsed to an object (or {})",
+  "entities": [
+   "AnthropicCacheControl",
+   "AnthropicTool",
+   "AnthropicThinking",
+   "AnthropicOutputConfig",
+   "AnthropicImageSource",
+   "AnthropicContentPart",
+   "AnthropicMessage",
+   "AnthropicRequest",
+   "ProviderRequestInput",
+   "BuiltAnthropicRequest"
+  ]
+ },
+ {
+  "file": "anthropic_stream.hpp",
+  "purpose": "Why a payload did not decode; kotlinx distinguishes a missing field from a type rejection, which the provider's debug log carries. Both stop the loop …",
+  "entities": [
+   "Usage",
+   "StreamErrorPayload",
+   "Delta",
+   "ContentBlock",
+   "MessageInfo",
+   "AnthropicStreamEvent",
+   "DecodeFailure",
+   "TextChunk",
+   "ThoughtChunk",
+   "CitationUpdate",
+   "UsageUpdate",
+   "ToolCallUpdate",
+   "ToolCallRequest",
+   "ErrorEvent",
+   "AnthropicStreamEventRouter"
+  ]
+ },
+ {
+  "file": "ask_user_tool_provider.hpp",
+  "purpose": "AskUserController.Answer",
+  "entities": [
+   "Answer",
+   "Host",
+   "AskUserToolProvider"
+  ]
+ },
+ {
+  "file": "attachment_clone_session.hpp",
+  "purpose": "Port of data/MessageAttachmentCloneSession.kt: the copies created while a persisted message is cloned. Copies are isolated by owner key: repeated refe…",
+  "entities": [
+   "FileStore",
+   "CloneableMessage",
+   "CloneSession"
+  ]
+ },
+ {
+  "file": "automation_tool_provider.hpp",
+  "purpose": "data/local/TaskEntity as the provider reads it for TaskEntity.toJson()",
+  "entities": [
+   "TaskInfo",
+   "LoopInfo",
+   "SavedSystemPrompt",
+   "TaskSeam",
+   "LoopSeam",
+   "AutomationToolProvider"
+  ]
+ },
+ {
+  "file": "backup_media_policy.hpp",
+  "purpose": "Port of model/AttachmentMeta.kt's AttachmentStorage (serialized by @SerialName)",
+  "entities": [
+   "ToolImageAttachment",
+   "AttachmentItem",
+   "AttachmentMeta",
+   "SelectedAttachment",
+   "MessageSegment",
+   "NativeBackupMediaPolicy"
+  ]
+ },
+ {
+  "file": "bounded_wire_read.hpp",
+  "purpose": "The subset of okio's BufferedSource that the shell transport uses. The app adapter delegates to the real okio source; the host tests use a scripted by…",
+  "entities": [
+   "Source",
+   "Eof"
+  ]
+ },
+ {
+  "file": "bpe_vocabulary.hpp",
+  "purpose": "A byte-level BPE vocabulary read from the `.tiktoken` format. Port of BpeVocabulary.kt: token bytes are concatenated once and looked up through an ope…",
+  "entities": [
+   "BpeVocabulary"
+  ]
+ },
+ {
+  "file": "chat_automation_dao.hpp",
+  "purpose": "TaskEntity (data/local/ChatEntities.kt): a saved prompt + schedule",
+  "entities": [
+   "TaskEntity",
+   "LoopEntity",
+   "ChatAutomationDao"
+  ]
+ },
+ {
+  "file": "chat_dao.hpp",
+  "purpose": "ChatConversation (model/ChatMessage.kt), the navigation projection",
+  "entities": [
+   "ChatConversation",
+   "ProviderMessageReference",
+   "DrawerConversationRow",
+   "ConversationSettingsTransferEntity",
+   "ConversationSettingsImportTransferEntity",
+   "EmbeddingEntity",
+   "MessageStreamCheckpoint",
+   "RunGraphCommit",
+   "ToolRoundCommit",
+   "ExecutionMessageSummaryRow",
+   "ChatDao"
+  ]
+ },
+ {
+  "file": "chat_entities.hpp",
+  "purpose": "MessageEntity (data/local/ChatEntities.kt): no init constraints, full row shape. Shared by every DAO port that reads or writes the messages table; Roo…",
+  "entities": [
+   "MessageEntity",
+   "ChatEntity"
+  ]
+ },
+ {
+  "file": "chat_media_references_dao.hpp",
+  "purpose": "MessageAttachmentReference (data/local/ChatEntities.kt): an image/meta projection",
+  "entities": [
+   "MessageAttachmentReference",
+   "ConversationDraftAttachmentReference",
+   "ChatMediaReferencesDao"
+  ]
+ },
+ {
+  "file": "chat_provider_context_dao.hpp",
+  "purpose": "MessageContextTopology (data/local/MessageContextTopology.kt): one payload-free message row",
+  "entities": [
+   "MessageContextTopology",
+   "ConversationProviderContextState",
+   "ProviderContextTopologySnapshot",
+   "ChatProviderContextDao"
+  ]
+ },
+ {
+  "file": "chat_search_dao.hpp",
+  "purpose": "EmbeddingSearchRow (data/local/EmbeddingSearchRow.kt): the scoring projection",
+  "entities": [
+   "EmbeddingSearchRow",
+   "EmbeddingModelCount",
+   "IndexableMessage",
+   "ChatSearchDao"
+  ]
+ },
+ {
+  "file": "citations.hpp",
+  "purpose": "CitationPolicy.create",
+  "entities": [
+   "CitationAnchor",
+   "CitationRecord"
+  ]
+ },
+ {
+  "file": "claude_chat_importer.hpp",
+  "purpose": "Port of data/ClaudeChatImporter.kt: the \"import a Claude chat export\" path. The Kotlin file has three public steps: extractAndParse — pick the convers…",
+  "entities": [
+   "ClaudeAttachment",
+   "ClaudeFile",
+   "ClaudeContent",
+   "ClaudeMessage",
+   "ClaudeConversation",
+   "ClaudeConversations",
+   "ConversationSummary",
+   "ImportPreview",
+   "ImportChatEntity",
+   "ImportMessageEntity",
+   "ImportConversations",
+   "DecodeError",
+   "ExtractionFailure",
+   "Extraction"
+  ]
+ },
+ {
+  "file": "conch_handshake.hpp",
+  "purpose": "--------------------------------------------------------------------------------------------- ConchHandshake.kt - Handshake verification for Conch pro…",
+  "entities": [
+   "Handshake"
+  ]
+ },
+ {
+  "file": "conch_network.hpp",
+  "purpose": "The four properties ConchNetwork overrides on HttpClient.client, plus the pool it installs. The transport owns the actual OkHttpClient; this pins the …",
+  "entities": [
+   "Header",
+   "ClientConfig",
+   "Request",
+   "TextResponse",
+   "RawResponse",
+   "Transport"
+  ]
+ },
+ {
+  "file": "conch_sse.hpp",
+  "purpose": "Port of ConchSseParser's ConchSseResult",
+  "entities": [
+   "SseResult"
+  ]
+ },
+ {
+  "file": "context_compact.hpp",
+  "purpose": "Port of data/local/ChatContextCompactDao.kt: the atomic Context-Compact graph contract — beginning a Recompact (swapping a terminal Compact's dedicate…",
+  "entities": [
+   "RunEntity",
+   "ConversationEntry",
+   "ContextCompactDao"
+  ]
+ },
+ {
+  "file": "conversation_export_snapshot_reader.hpp",
+  "purpose": "ConversationExportSnapshotReader.MESSAGE_PAGE_SIZE",
+  "entities": [
+   "SnapshotRecord",
+   "SnapshotStore",
+   "ChatDaoSnapshotStore"
+  ]
+ },
+ {
+  "file": "conversation_runtime.hpp",
+  "purpose": "Port of model/ConversationRuntimeReducer.kt and the types it owns. The Kotlin cluster (RunState.kt, ConversationCommand.kt, RunEffect.kt, RuntimeTrans…",
+  "entities": [
+   "RuntimeRunIdentity",
+   "RunEffectIdentity",
+   "RunRecoverySnapshot",
+   "ProviderPhase",
+   "ToolPhase",
+   "RunState",
+   "Command",
+   "Effect",
+   "Transition"
+  ]
+ },
+ {
+  "file": "cron_expression.hpp",
+  "purpose": "Native port of automation/CronExpression.kt: a parsed standard 5-field cron expression `minute hour day-of-month month day-of-week`. Supported per fie…",
+  "entities": [
+   "CronExpression"
+  ]
+ },
+ {
+  "file": "crypto_primitives.hpp",
+  "purpose": "RFC 5869 Extract: PRK = HMAC(salt, IKM)",
+  "entities": [
+   "Base64Decode"
+  ]
+ },
+ {
+  "file": "curl_transport.hpp",
+  "purpose": "Configuration for the CurlTransport",
+  "entities": [
+   "CurlTransportConfig",
+   "CurlTransport"
+  ]
+ },
+ {
+  "file": "data_exporter.hpp",
+  "purpose": "Export categories, matching data/ExportCategory.kt manifest keys in declaration order",
+  "entities": [
+   "ExportResult",
+   "Platform",
+   "PromptTemplateItem",
+   "SystemPromptEntry",
+   "Inputs",
+   "ExportRequest",
+   "IOException"
+  ]
+ },
+ {
+  "file": "data_importer.hpp",
+  "purpose": "Exception thrown when cancellation is requested (mirrors Kotlin's CancellationException)",
+  "entities": [
+   "Cancellation",
+   "ImportManifest",
+   "ImportPreview",
+   "ImportResult",
+   "Platform",
+   "SettingsView",
+   "SettingsWrites",
+   "ConversationSettingsTransfer",
+   "DataImporter"
+  ]
+ },
+ {
+  "file": "database_compatibility.hpp",
+  "purpose": "classify: a missing database short-circuits before the reader (so a throwing reader still yields Missing); a read failure becomes Unreadable; otherwis…",
+  "entities": [
+   "Classification"
+  ]
+ },
+ {
+  "file": "developer_mode_unlock.hpp",
+  "purpose": "advance: alreadyEnabled wins; otherwise the stored count is coerced into [0, REQUIRED_TAPS - 1] before the increment, so stale or hostile values canno…",
+  "entities": [
+   "Result"
+  ]
+ },
+ {
+  "file": "diagnostic_redactor.hpp",
+  "purpose": "Result of a redaction operation",
+  "entities": [
+   "CapturedDiagnosticText",
+   "DiagnosticRedactor"
+  ]
+ },
+ {
+  "file": "duckduckgo.hpp",
+  "purpose": "parseResults: result-link anchors paired index-wise with their snippet cells",
+  "entities": [
+   "WebResult",
+   "SearchOutcome",
+   "PageResult"
+  ]
+ },
+ {
+  "file": "embedding_selector.hpp",
+  "purpose": "One keyset projection of an embedding row, as data/local/EmbeddingSearchRow.kt declares it",
+  "entities": [
+   "SearchRow",
+   "Candidate",
+   "Selection",
+   "BoundedSemanticEmbeddingSelector"
+  ]
+ },
+ {
+  "file": "export_extra_settings.hpp",
+  "purpose": "Port of data/ExportExtraSettings.kt::restoreLegacyFromJsonObject. This is the legacy JSON-object reader used when a backup manifest is older than vers…",
+  "entities": [
+   "ConversationSettings",
+   "SettingsStore",
+   "RestoreOptions",
+   "KotlinException",
+   "IllegalArgumentException",
+   "NumberFormatException",
+   "IllegalStateException"
+  ]
+ },
+ {
+  "file": "export_spool.hpp",
+  "purpose": "Port of data/ExportSpool.kt: the newline-delimited export spool, its layout index and the streaming reader. Format: one record per line, `TYPE \\t payl…",
+  "entities": [
+   "Slice",
+   "ConversationEntry",
+   "Index",
+   "SpoolException",
+   "SpoolWriter",
+   "SpoolReader"
+  ]
+ },
+ {
+  "file": "font_utils.hpp",
+  "purpose": "Result of reading TTF/OTF name-table metadata",
+  "entities": [
+   "FontMetadata"
+  ]
+ },
+ {
+  "file": "gemini_request.hpp",
+  "purpose": "buildGeminiFunctionResponse: a parsed object passes through, anything else wraps as {\"result\": <value>}, and a parse failure wraps the raw string",
+  "entities": [
+   "ApiThinkingConfig",
+   "ApiGenerationConfig",
+   "ApiToolConfig",
+   "GeminiFunctionDeclaration",
+   "ApiTool",
+   "ApiInlineData",
+   "GeminiFunctionCall",
+   "GeminiFunctionResponse",
+   "ApiExecutableCode",
+   "ApiCodeExecutionResult",
+   "ApiRequestPart",
+   "ApiRequestContent",
+   "ApiGenerateContentRequest",
+   "BuiltGeminiRequest"
+  ]
+ },
+ {
+  "file": "gemini_stream.hpp",
+  "purpose": "StreamTermination.carriesModelOutput for these variants",
+  "entities": [
+   "DecodeFailure",
+   "ApiError",
+   "ApiUsageMetadata",
+   "ApiResponsePart",
+   "ApiResponseContent",
+   "ApiCandidate",
+   "ApiStreamResponse",
+   "CitationUpdate",
+   "UsageUpdate",
+   "GeminiStreamRouter"
+  ]
+ },
+ {
+  "file": "generation_policies.hpp",
+  "purpose": "Port of viewmodel/GenerationPolicies.kt and viewmodel/AutomaticMessageApiProjection.kt: the rules that decide how a provider generation ends, how the …",
+  "entities": [
+   "TerminalDisposition",
+   "StreamingCheckpointGate",
+   "StreamingUiUpdateGate",
+   "ToolRoundHistoryCompactor"
+  ]
+ },
+ {
+  "file": "generation_streaming_segments.hpp",
+  "purpose": "Port of viewmodel/GenerationStreamingSegments.kt: the live segment timeline of a generation. The policy file is lifted verbatim by the golden stand (o…",
+  "entities": [
+   "ThoughtTiming",
+   "FinalSnapshot"
+  ]
+ },
+ {
+  "file": "gpt_chat_importer.hpp",
+  "purpose": "Port of data/GptChatImporter.kt: the \"import a ChatGPT export\" path. The Kotlin file has three public steps: extractAndParse — read the conversations …",
+  "entities": [
+   "GptThought",
+   "GptFinishDetails",
+   "GptMetadata",
+   "GptAuthor",
+   "GptContent",
+   "GptMessage",
+   "GptMappingNode",
+   "GptConversation",
+   "ConversationSummary",
+   "ImportPreview",
+   "DecodeError",
+   "ExtractionFailure",
+   "Extraction"
+  ]
+ },
+ {
+  "file": "http_policy.hpp",
+  "purpose": "setProxy's takeIf: a null config, blank host or port outside 1..65535 clears the proxy",
+  "entities": [
+   "ProxyConfig",
+   "ProxyDecision",
+   "ClientPolicy"
+  ]
+ },
+ {
+  "file": "image_gen_tool_provider.hpp",
+  "purpose": "ToolImageStore.persistGeneratedBytes — Android mime detection + file publication",
+  "entities": [
+   "ImageStore",
+   "HttpTransport",
+   "ImageGenToolProvider"
+  ]
+ },
+ {
+  "file": "imported_citation_projection.hpp",
+  "purpose": "Port of data/ImportedCitationProjection.kt: the citation half of the ChatGPT/Claude import transforms. The three functions are exactly what the file e…",
+  "entities": [
+   "ProjectedText"
+  ]
+ },
+ {
+  "file": "java_uri.hpp",
+  "purpose": "A parsed java.net.URI. Component strings are raw (undecoded) exactly like the JDK fields",
+  "entities": [
+   "Uri"
+  ]
+ },
+ {
+  "file": "json.hpp",
+  "purpose": "A parsed JSON value with kotlinx.serialization acceptance rules. This is the syntactic half of the pinned reference decoder (see core/tools/golden/ope…",
+  "entities": [
+   "Value",
+   "Member",
+   "Value",
+   "Member",
+   "ParseResult"
+  ]
+ },
+ {
+  "file": "legacy_run_backfill.hpp",
+  "purpose": "Kotlin `require` failures throw IllegalArgumentException; the port returns the same message in `error` instead. Run ids are deterministic UUID v3 valu…",
+  "entities": [
+   "LegacyMessageRecord",
+   "PlannedLegacyRun",
+   "PlannedMessageAssignment",
+   "LegacyRunBackfillPlan",
+   "PlanResult",
+   "SelectionResult"
+  ]
+ },
+ {
+  "file": "maintenance_debt.hpp",
+  "purpose": "Port of data/local/MaintenanceDebt.kt: the debt queue behind every background maintenance pass (orphan sweeping, run-branch repair) with its claim/com…",
+  "entities": [
+   "DebtEntry",
+   "ConversationEntry",
+   "RunEntry",
+   "MaintenanceDebtDao"
+  ]
+ },
+ {
+  "file": "malformed_tool_call.hpp",
+  "purpose": "Port of api/util/MalformedToolCall.kt: the stand-in for a tool call the model emitted in a form that cannot be executed or paired. Instead of failing …",
+  "entities": [
+   "MalformedToolCallRequest"
+  ]
+ },
+ {
+  "file": "mcp_protocol.hpp",
+  "purpose": "McpToolDescriptor.asToolDefinition plus the wire schema it attaches to the parameters",
+  "entities": [
+   "RemoteTool",
+   "ToolDefinitionProjection",
+   "ImagePayload",
+   "CallPayload",
+   "ToolsPage"
+  ]
+ },
+ {
+  "file": "mcp_tool_provider.hpp",
+  "purpose": "The McpRegistry seam (mcp/McpRegistry.kt). ToolInfo mirrors the McpToolDescriptor fields the provider reads: publicName, serverName and remote (name/d…",
+  "entities": [
+   "Registry",
+   "McpToolProvider"
+  ]
+ },
+ {
+  "file": "memory_manager.hpp",
+  "purpose": "Native port of data/MemoryManager.kt (plus its DescriptionMetadataStore). The golden stand (core/tools/golden/memory-manager) compiles the app's Kotli…",
+  "entities": [
+   "MemoryManager"
+  ]
+ },
+ {
+  "file": "memory_tool_provider.hpp",
+  "purpose": "MemoryManager's file list rows",
+  "entities": [
+   "MemoryFile",
+   "EditFileRequest",
+   "MemorySeam",
+   "MemoryToolProvider"
+  ]
+ },
+ {
+  "file": "message_persistence_guard.hpp",
+  "purpose": "Port of model/MessagePersistenceGuard.kt",
+  "entities": [
+   "PersistenceBudgetError"
+  ]
+ },
+ {
+  "file": "message_preparation.hpp",
+  "purpose": "The provider-neutral message-preparation pipeline, ported from the Kotlin app sources (api/util/{ApiMessagePreparation,ContextWindow,ContextLimiter,To…",
+  "entities": [
+   "PrepError",
+   "MessageSegment",
+   "ToolCallData",
+   "AttachmentItem",
+   "AttachmentMeta",
+   "ChatMessage",
+   "EnvelopeCost",
+   "SafetyMargin",
+   "ImageDescriptor",
+   "ContextCostModel",
+   "AnthropicModelId",
+   "PrefixedModelId",
+   "FixedContextComposition",
+   "CostModelContextEstimator",
+   "ContextRetentionSplit",
+   "LogicalContextSplit",
+   "ContextWindowUsage"
+  ]
+ },
+ {
+  "file": "message_source.hpp",
+  "purpose": "Mirrors the Participant enum extracted verbatim from model/ChatMessage.kt",
+  "entities": [
+   "AskUserItem",
+   "SubagentResult",
+   "Source"
+  ]
+ },
+ {
+  "file": "model_thinking_resolver.hpp",
+  "purpose": "Port of model/ModelId.kt: a typed `ProviderName:modelId` pair with the legacy unprefixed heuristics used by ProviderRegistry",
+  "entities": [
+   "ModelId",
+   "CustomProviderConfig"
+  ]
+ },
+ {
+  "file": "native_backup_archive.hpp",
+  "purpose": "java.io.IOException",
+  "entities": [
+   "IOException",
+   "IllegalArgumentException",
+   "OpenOptions",
+   "EntryStream",
+   "NativeBackupArchive"
+  ]
+ },
+ {
+  "file": "native_backup_secrets.hpp",
+  "purpose": "data/NativeBackupFormat.kt: NativeBackupSecrets. Maps keep insertion order like LinkedHashMap",
+  "entities": [
+   "ApiKeyEntry",
+   "ShellDeviceConfig",
+   "EmbeddingModelConfig",
+   "McpServerConfig",
+   "ShellDeviceSecrets",
+   "NativeBackupSecrets",
+   "SettingsStore",
+   "RestoreResult"
+  ]
+ },
+ {
+  "file": "native_backup_v5.hpp",
+  "purpose": "java.io.IOException — the baseline's missing-entry failure",
+  "entities": [
+   "IOException",
+   "ConversationIndexEntry",
+   "ConversationIndex",
+   "Baseline"
+  ]
+ },
+ {
+  "file": "native_conversation_graph_importer.hpp",
+  "purpose": "Port of data/NativeConversationGraphImporter.kt — the three public phases (count, header read, transactional import) over the chained conversation gra…",
+  "entities": [
+   "GraphCounts",
+   "ConversationGraphHeaders",
+   "RestoredMediaFile",
+   "RestoredMedia",
+   "ImportCallbacks",
+   "GraphStreamAdapter",
+   "NativeConversationGraphImporter"
+  ]
+ },
+ {
+  "file": "native_conversation_graph_source.hpp",
+  "purpose": "Port of data/NativeConversationGraphSource.kt — the v5 graph spool (index-driven split of conv/items/<hex-id>.json into one JSON array file per graph …",
+  "entities": [
+   "EntrySource",
+   "NativeConversationGraphSource"
+  ]
+ },
+ {
+  "file": "native_run_archive.hpp",
+  "purpose": "data/model/RuntimeIdentity.kt: the durable lifecycle of one agentic execution",
+  "entities": [
+   "ArchivedRunSnapshot",
+   "RunEntity",
+   "ArchivedMessageRunOwnership"
+  ]
+ },
+ {
+  "file": "new_chat_persist_dao.hpp",
+  "purpose": "NewChatPersistEntity (data/local/ChatEntities.kt): the id=0 singleton draft row",
+  "entities": [
+   "NewChatPersistEntity",
+   "NewChatPersistDao"
+  ]
+ },
+ {
+  "file": "ollama.hpp",
+  "purpose": "Decode failure carrier for the stream driver (the cause text is not pinned by the traces)",
+  "entities": [
+   "DecodeFailure",
+   "FunctionCall",
+   "ToolCall",
+   "OllamaMessage",
+   "OllamaChatRequest",
+   "OllamaStreamResponse",
+   "BuiltOllamaRequest",
+   "UsageUpdate",
+   "OllamaRouter"
+  ]
+ },
+ {
+  "file": "openai_request.hpp",
+  "purpose": "One failure of the request pipeline, carrying the JVM class simple name the golden traces record (`core/tools/golden/openai-request`). Only the Reques…",
+  "entities": [
+   "ProviderRequestError",
+   "OpenAiImageUrl",
+   "OpenAiContentPart",
+   "OpenAiRequestFunction",
+   "OpenAiRequestToolCall",
+   "OpenAiMessage",
+   "ToolProperty",
+   "ToolParameters",
+   "ToolFunction",
+   "ToolDefinition",
+   "OpenAiThinking",
+   "OpenAiReasoning",
+   "OpenAiPlugin",
+   "OpenAiStreamOptions",
+   "OpenAiChatRequest",
+   "MessageSegment",
+   "ToolCallData",
+   "ChatMessage",
+   "ProviderRequestInput",
+   "ProviderConfig",
+   "ModelThinkingCapability",
+   "ResolvedThinking",
+   "Base64FilePart",
+   "StreamingJsonBody",
+   "Base64FileRegistry",
+   "BuiltChatRequest"
+  ]
+ },
+ {
+  "file": "openai_responses_request.hpp",
+  "purpose": "Port of api/openai/OpenAiRequestValidator.kt: the OpenAI Responses request builder and the wire-format gate. toResponsesInput — the chat messages beco…",
+  "entities": [
+   "ResponseInputContent",
+   "ResponseInputItem",
+   "ResponseTool",
+   "ResponsesRequest",
+   "RequestFormatException"
+  ]
+ },
+ {
+  "file": "openai_stream.hpp",
+  "purpose": "One way to consume one HTTP 200 chat-completions SSE stream and report how it went, ported line for line from the pinned Kotlin reference (OpenAiChatS…",
+  "entities": [
+   "TokenUsage",
+   "ToolCall",
+   "Error",
+   "Event",
+   "Termination",
+   "ToolArgumentAccumulator",
+   "ChatStreamConsumer"
+  ]
+ },
+ {
+  "file": "portable_settings_archive.hpp",
+  "purpose": "Port of data/PortableSettingsArchive.kt: the portable settings allowlist that native backup v4+ writes into settings.json (toJsonObject) and reads bac…",
+  "entities": [
+   "CustomProviderConfig",
+   "SettingsSnapshot",
+   "SettingsSink",
+   "CustomFont",
+   "RestoreOptions",
+   "RestoreResult",
+   "IllegalArgumentException"
+  ]
+ },
+ {
+  "file": "portable_settings_reset.hpp",
+  "purpose": "Every preference the reset removes, in the Kotlin source order",
+  "entities": [
+   "PreferenceStore"
+  ]
+ },
+ {
+  "file": "provider_identity.hpp",
+  "purpose": "Port of data/CustomProviderIdentity.kt and the parts of data/CustomProviderNamePolicy.kt it depends on. The policy exists because a custom provider's …",
+  "entities": [
+   "Provider",
+   "Migration",
+   "Normalization",
+   "Sanitization"
+  ]
+ },
+ {
+  "file": "provider_support.hpp",
+  "purpose": "Parses an error body: JSON object (nested `error` preferred), primitive or free text. Returns nullopt only for a blank body",
+  "entities": [
+   "ParsedProviderHttpErrorBody",
+   "CustomProviderSanitizationResult"
+  ]
+ },
+ {
+  "file": "rag_tool_provider.hpp",
+  "purpose": "MIN_SEMANTIC_SEARCH_TEXT_LENGTH — the floor for both the page query and hydration",
+  "entities": [
+   "SearchableConversation",
+   "SearchMessage",
+   "ConversationSeam",
+   "EmbeddingSeam",
+   "RagToolProvider"
+  ]
+ },
+ {
+  "file": "regeneration_tree_repair.hpp",
+  "purpose": "LinkedHashMap / LinkedHashSet ordering is part of the migration's emitted SQL: every vector keeps Kotlin's insertion order (updates in place, deletion…",
+  "entities": [
+   "V17RunRecord",
+   "V17MessageRecord",
+   "Plan"
+  ]
+ },
+ {
+  "file": "run_branch_selection.hpp",
+  "purpose": "Port of data/local/RunBranchSelectionIntegrity.kt: validation of the durable parent-Run -> selected-child-Run projection against the Run tree. The pro…",
+  "entities": [
+   "RunRef",
+   "Selection"
+  ]
+ },
+ {
+  "file": "run_recovery.hpp",
+  "purpose": "Port of model/ChatMessage.kt's Participant enum",
+  "entities": [
+   "ToolImageAttachment",
+   "StreamingTextDelta",
+   "MessageSegment"
+  ]
+ },
+ {
+  "file": "run_ui_projection.hpp",
+  "purpose": "Port of model/MessageGenerationBoundary.kt and model/RunUiProjection.kt: the message generation boundaries (which rows belong to one generation) and t…",
+  "entities": [
+   "GenerationBoundary",
+   "MessagePresentation"
+  ]
+ },
+ {
+  "file": "runtime_recovery.hpp",
+  "purpose": "Port of data/local/ChatDaoRuntimeRecovery.kt: the @Transaction body of ChatDao.recoverConversationRuntime. One pass repairs a conversation's runtime a…",
+  "entities": [
+   "RecoveryMessage",
+   "MessageCheckpoint",
+   "ConversationSnapshot",
+   "RecoveryRun",
+   "RecoveryStore"
+  ]
+ },
+ {
+  "file": "sandbox_executor.hpp",
+  "purpose": "Result of a bounded child process run (Kotlin executeRaw mechanics)",
+  "entities": [
+   "ProcessResult"
+  ]
+ },
+ {
+  "file": "sandbox_manager.hpp",
+  "purpose": "SandboxManager.PackageInfo (P:/V:/T: of the apk installed DB)",
+  "entities": [
+   "SandboxPackageInfo",
+   "ProotSandboxManager"
+  ]
+ },
+ {
+  "file": "sandbox_path_resolver.hpp",
+  "purpose": "Physical file resolved from a virtual sandbox path, with the root and virtual prefix that produced it. Mirrors `ResolvedSandboxPath` from SandboxPathR…",
+  "entities": [
+   "ResolvedSandboxPath",
+   "SandboxPathResolver",
+   "GrepMatch"
+  ]
+ },
+ {
+  "file": "semantic_index_ledger.hpp",
+  "purpose": "SemanticIndexLedgerEntity (data/local/SemanticIndexLedger.kt), validated on construction",
+  "entities": [
+   "LedgerEntry",
+   "WorkEntry",
+   "ReconcileIndexableMessage",
+   "EmbeddingEntry",
+   "SemanticModelSnapshot",
+   "SemanticIndexDao",
+   "ConversationSurface"
+  ]
+ },
+ {
+  "file": "semantic_metadata.hpp",
+  "purpose": "SemanticSourceEntity (data/local/SemanticSourceMetadata.kt)",
+  "entities": [
+   "SemanticSourceEntity",
+   "SemanticConversationRow",
+   "SemanticMetadataDao"
+  ]
+ },
+ {
+  "file": "sha256.hpp",
+  "purpose": "Incremental SHA-256 (FIPS 180-4). Both users in the request pipeline need it streaming: tool-call ids digest one short string and attachment parts dig…",
+  "entities": [
+   "Sha256Digest"
+  ]
+ },
+ {
+  "file": "shell_client.hpp",
+  "purpose": "A transport exception as the Kotlin double throws it (the kind drives describeConch*Failure)",
+  "entities": [
+   "TransportFailure",
+   "ClientError",
+   "ConchTextResponse",
+   "ConchTransport",
+   "ShellClient"
+  ]
+ },
+ {
+  "file": "shell_crypto.hpp",
+  "purpose": "--------------------------------------------------------------------------------------------- Constants ----------------------------------------------…",
+  "entities": [
+   "KeyPair",
+   "EncryptResult",
+   "DecryptResult",
+   "SignResult",
+   "SHA256Result",
+   "DerivedKeyResult",
+   "DecodeResult"
+  ]
+ },
+ {
+  "file": "shell_durable_jobs.hpp",
+  "purpose": "Device list plus the tool-timeout budget (the GenerationContext fields the executor reads)",
+  "entities": [
+   "JobToolContext",
+   "JobAcknowledgement",
+   "ToolCallRecord",
+   "JobOutputSnapshot",
+   "JobOutputUpdate",
+   "PollFailure",
+   "JobCancelled",
+   "ConchJobOutputCursor",
+   "DurableJobBackend",
+   "DurableJobHooks",
+   "PollingParams",
+   "PollingHooks",
+   "DurableForegroundOutcome"
+  ]
+ },
+ {
+  "file": "shell_file_edit.hpp",
+  "purpose": "Kotlin ShellFileEditResult",
+  "entities": [
+   "ShellFileEditResult",
+   "Utf16Range"
+  ]
+ },
+ {
+  "file": "shell_tool_backends.hpp",
+  "purpose": "ShellClient.GrepMatch (SshClient.GrepMatch and SandboxManager.GrepMatch have the same shape)",
+  "entities": [
+   "GrepMatch",
+   "GlobOutcome",
+   "GrepOutcome",
+   "ShellDeviceConfig",
+   "SshCommandResult",
+   "HostKeyPolicy",
+   "SshTransport",
+   "SshClient",
+   "SandboxManager",
+   "BackendEvent",
+   "Backend",
+   "StreamCall",
+   "HttpStreamHandle",
+   "HttpStreamTransport",
+   "ConchBackend",
+   "SshBackend",
+   "SandboxBackend"
+  ]
+ },
+ {
+  "file": "shell_tool_provider.hpp",
+  "purpose": "com.newoether.agora.data.EmbeddingModelConfig fields GenerationContext carries",
+  "entities": [
+   "EmbeddingConfig",
+   "GenerationContext",
+   "ToolImageAttachment",
+   "ToolExecutionResult",
+   "ToolExecutionEvent",
+   "ToolPresentationMetadata",
+   "ToolProvider",
+   "BackendFactory",
+   "SandboxFactory",
+   "ToolImageStore",
+   "ShellToolProvider"
+  ]
+ },
+ {
+  "file": "shell_tools.hpp",
+  "purpose": "parseToolArgs: the JSON object as ordered key → element pairs (last duplicate value wins at the first position); a blank/malformed/non-object payload …",
+  "entities": [
+   "ShellFileReadResult",
+   "ShellDeviceConfig",
+   "ShellDefinitionsConfig"
+  ]
+ },
+ {
+  "file": "skill_manager.hpp",
+  "purpose": "Native port of data/SkillManager.kt (plus the shared data/DescriptionMetadataStore.kt). The golden stand (core/tools/golden/skill-manager) compiles th…",
+  "entities": [
+   "SkillManager"
+  ]
+ },
+ {
+  "file": "skill_tool_provider.hpp",
+  "purpose": "Kotlin execute: `executeOneShotResult(...).text`",
+  "entities": [
+   "SkillToolProvider"
+  ]
+ },
+ {
+  "file": "sql_boundary.hpp",
+  "purpose": "A Kotlin `require`/`check`/`checkNotNull` failure surfaced with the JVM exception class, because the golden drivers record `{\"error\": class, \"message\"…",
+  "entities": [
+   "KotlinError",
+   "SqlConstraintError",
+   "SqlError",
+   "SqlValue",
+   "SqlExecutor",
+   "TransactionStack"
+  ]
+ },
+ {
+  "file": "sqlite_executor.hpp",
+  "purpose": "Concrete SqlExecutor backed by sqlite3",
+  "entities": [
+   "SqliteExecutor"
+  ]
+ },
+ {
+  "file": "sqlite_platform.hpp",
+  "purpose": "A bind argument with the Kotlin runtime type preserved (SQL arg arrays box Any?)",
+  "entities": [
+   "SqlValue",
+   "QueryResult",
+   "Database",
+   "MigrationException"
+  ]
+ },
+ {
+  "file": "ssh_libssh2_transport.hpp",
+  "purpose": "Libssh2SshTransport: the JSch Session surface util/SshClient.kt drives, backed by libssh2 over a plain TCP socket. Mirrors the semantics the core expe…",
+  "entities": [
+   "Libssh2SshTransport"
+  ]
+ },
+ {
+  "file": "stream_normalization.hpp",
+  "purpose": "Citation payloads pass through the normalizer; their fields are not consumed by this module",
+  "entities": [
+   "ErrorNetwork",
+   "ErrorApi",
+   "ErrorSseParse",
+   "ErrorMalformedToolCall",
+   "ErrorIncompleteStream",
+   "ErrorOutputTruncated",
+   "ErrorTimeout",
+   "TextChunk",
+   "ThoughtChunk",
+   "ToolCallRequest",
+   "ToolCallsRequest",
+   "ErrorEvent",
+   "UsageUpdate",
+   "Retrying",
+   "ToolCallUpdate",
+   "HostedToolCallUpdate",
+   "CitationUpdate",
+   "IllegalStateError",
+   "IllegalArgumentError",
+   "IncrementalThinkingParser",
+   "ThinkingParser",
+   "StreamingThinkTagParser",
+   "StreamingTextToolCallParser",
+   "ParsedTextCall",
+   "StreamTermination",
+   "ToolArgumentAccumulator",
+   "ImplicitThinkingCloseBoundary",
+   "ProviderRetryPolicy",
+   "ProviderStreamNormalizer"
+  ]
+ },
+ {
+  "file": "streaming_json.hpp",
+  "purpose": "Mirrors the ToolKind enum extracted from ui/chat/message/ToolPresentation.kt",
+  "entities": [
+   "Entry",
+   "Node",
+   "Entry",
+   "Document",
+   "Hints"
+  ]
+ },
+ {
+  "file": "task_schedule.hpp",
+  "purpose": "Port of automation/TaskSchedule.kt's ScheduleType",
+  "entities": [
+   "TaskSchedule",
+   "Context"
+  ]
+ },
+ {
+  "file": "text_counter.hpp",
+  "purpose": "Prices one string in provider-visible tokens, before any safety margin",
+  "entities": [
+   "TextCounter",
+   "HeuristicTextCounter",
+   "BpeTextCounter"
+  ]
+ },
+ {
+  "file": "thinking_capability.hpp",
+  "purpose": "Port of the zero-import thinking-capability cluster: model/ModelThinkingCapability.kt, model/ThinkingControl.kt, model/ModelThinkingCapabilityDefaults…",
+  "entities": [
+   "Capability",
+   "ResolvedThinking"
+  ]
+ },
+ {
+  "file": "token_usage.hpp",
+  "purpose": "model/TokenUsage.kt — the full token-usage record stream events carry. Shared by the stream router modules (anthropic-stream, gemini-stream, ollama) s…",
+  "entities": [
+   "TokenUsage"
+  ]
+ },
+ {
+  "file": "tz.hpp",
+  "purpose": "A civil (wall clock) instant: the fields a calendar shows, with no offset attached",
+  "entities": [
+   "CivilTime",
+   "Zone"
+  ]
+ },
+ {
+  "file": "unicode.hpp",
+  "purpose": "Kotlin's Char.isWhitespace(): JVM whitespace, then space characters",
+  "entities": [
+   "Decoded"
+  ]
+ },
+ {
+  "file": "v18_regeneration_repair.hpp",
+  "purpose": "Prefixes from util/Constants.kt that make a message row non-ordinary",
+  "entities": [
+   "RunRecord",
+   "MessageRecord"
+  ]
+ },
+ {
+  "file": "web_search_tool_provider.hpp",
+  "purpose": "Android HtmlCompat.fromHtml(FROM_HTML_MODE_COMPACT): decodes entities and flattens the remaining markup into text (block elements become newlines). Th…",
+  "entities": [
+   "Transport",
+   "WebSearchToolProvider"
+  ]
+ },
+ {
+  "file": "zip_reader.hpp",
+  "purpose": "java.util.zip.CRC32 (CRC-32/ISO-HDLC) over the given bytes",
+  "entities": [
+   "Entry",
+   "ZipException",
+   "CentralEntry",
+   "Reader"
+  ]
+ },
+ {
+  "file": "zip_writer.hpp",
+  "purpose": "Writes a ZIP archive into memory (`java.util.zip.ZipOutputStream` on the platform side). Entries are DEFLATED (method 8) with RFC 1951 stored blocks: …",
+  "entities": [
+   "Writer"
+  ]
+ }
+]
