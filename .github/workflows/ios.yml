@@ -137,7 +137,7 @@ jobs:
           sysroot="$IOS_SDK_PATH"
           app=build/first-run.app
           mkdir -p "$app"
-          cp build/sdl/pchat-sdl "$app/first-run"
+          cp build/sdl/pchat-sdl.app/pchat-sdl "$app/first-run"
           cp ios/first-run/Info.plist "$app/Info.plist"
           file "$app/first-run"
 
