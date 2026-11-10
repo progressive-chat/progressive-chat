@@ -16,33 +16,101 @@ on:
 permissions:
   contents: read
 
-# The first run on a phone's system, asked of a machine that is not a phone:
-# the app is built here, put into a simulator, launched, and asked whether it
-# said its window came up. What it looked like is kept as a picture, because
-# a log can say a window exists while the screen stays black.
+# Everything is built on a machine that is not a phone and not a Mac: the
+# app is compiled and linked on Linux, against an SDK the Mac job hands it.
+# The Mac job then only puts what Linux made into a simulator and asks
+# whether it came up. What it looked like is kept as a picture, because a log
+# can say a window exists while the screen stays black.
 jobs:
-  first-run:
+  sdk:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - name: Take the simulator SDK out of Xcode
+        run: |
+          mkdir -p sdk
+          sdk=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          echo "sdk: $sdk"
+          du -sh "$sdk"
+          # The Mac is not asked to build anything: it hands over the one
+          # thing Linux cannot get on its own, the SDK the simulator runs
+          # against. The device SDK is not enough: its libraries name other
+          # targets, and a simulator binary linked against them is not one.
+          tar -C "$(dirname "$sdk")" -czf sdk/iPhoneSimulator.sdk.tar.gz \
+            "$(basename "$sdk")"
+          du -sh sdk/iPhoneSimulator.sdk.tar.gz
+
+      - name: Hand it to the build
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphonesimulator-sdk
+          path: sdk/iPhoneSimulator.sdk.tar.gz
+          retention-days: 7
+
+  build:
+    needs: sdk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Take the SDK
+        uses: actions/download-artifact@v4
+        with:
+          name: iphonesimulator-sdk
+          path: sdk
+
+      - name: Put clang and the Mach-O linker there
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang lld
+          clang --version
+          command -v ld64.lld || true
+
+      - name: Build it, and link it, here
+        run: |
+          tar -C sdk -xzf sdk/iPhoneSimulator.sdk.tar.gz
+          sysroot="$PWD/sdk/iPhoneSimulator.sdk"
+          app=build/first-run.app
+          mkdir -p "$app"
+          clang \
+            -target arm64-apple-ios26.0-simulator \
+            -isysroot "$sysroot" \
+            -fobjc-arc \
+            -fuse-ld=lld \
+            -framework UIKit -framework Foundation \
+            -o "$app/first-run" ios/first-run/main.m
+          cp ios/first-run/Info.plist "$app/Info.plist"
+          file "$app/first-run"
+          llvm-objdump --macho --private-headers "$app/first-run" 2>/dev/null \
+            | grep -A5 -i "LC_BUILD_VERSION\|LC_VERSION_MIN" || true
+
+      - name: Hand it to the phone's system
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-run-app
+          path: build/first-run.app
+          retention-days: 7
+
+  run:
+    needs: build
     runs-on: macos-26
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
 
-      - name: Build it for the simulator
+      - name: Take what Linux built
+        uses: actions/download-artifact@v4
+        with:
+          name: first-run-app
+          path: build
+
+      - name: Sign it as the simulator asks
         run: |
-          xcodebuild -version
-          sdk=$(xcrun --sdk iphonesimulator --show-sdk-path)
-          app=build/first-run.app
-          mkdir -p "$app"
-          xcrun --sdk iphonesimulator clang \
-            -fobjc-arc \
-            -target arm64-apple-ios26.0-simulator \
-            -isysroot "$sdk" \
-            -framework UIKit -framework Foundation \
-            -o "$app/first-run" ios/first-run/main.m
-          cp ios/first-run/Info.plist "$app/Info.plist"
           # A simulator takes an unsigned bundle, but the system asks every
           # Mach-O it loads for a signature, and signs an empty one over it.
-          codesign --force --sign - "$app"
+          codesign --force --sign - build/first-run.app
+          codesign --verify --verbose build/first-run.app || true
 
       - name: Boot a simulator and install it
         run: |
