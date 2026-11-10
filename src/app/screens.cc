@@ -113,7 +113,12 @@ public:
               // when that lands. Below the edge, asked at once, as always;
               // and where the compact could not even begin, the question
               // goes out at once too.
-              if (overruns_of(asking.chat)) {
+              // And where the reader asked for this to happen at all: the
+              // switch is what says so (Generation page), and off is as
+              // automatic as this program has ever been -- fit the window
+              // the way it always fit.
+              if (offered_of(how_, switch_choice::auto_compact) &&
+                  overruns_of(asking.chat)) {
                 ask_after_compact_ = true;
                 begin_ask(asking.chat, std::string(compact_told), true);
               }

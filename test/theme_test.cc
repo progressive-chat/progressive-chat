@@ -133,6 +133,16 @@ SAID(config, every_door_says_where_it_stands_and_whose_words_are_there) {
   EXPECT_EQ(std::string(provider_by("gone-in-a-newer-build").id),
             std::string("page"));
 
+  // The automatic compact, as every reader of a settings file meets it:
+  // on, as Agora has it on -- and off again the moment somebody says off,
+  // and kept that way.
+  EXPECT_TRUE(offered_of(default_asking, switch_choice::auto_compact));
+  const asking off =
+      set_of(default_asking, switch_choice::auto_compact, false);
+  EXPECT_FALSE(offered_of(off, switch_choice::auto_compact));
+  EXPECT_TRUE(offered_of(set_of(off, switch_choice::auto_compact, true),
+                         switch_choice::auto_compact));
+
   // A door as it is kept until one is chosen: this page's server, and
   // nothing that opens it.
   const door held;

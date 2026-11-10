@@ -244,6 +244,11 @@ inline constexpr std::array<switch_row_name, switches_owned> switch_names{{
     {switch_choice::remember, "Keep what has been said here"},
     {switch_choice::skills, "Keep what it has been taught"},
     {switch_choice::data_held, "Keep what has been given to it"},
+    // Said on the Generation page among the knobs rather than under any of
+    // the three switch groups' names (none of them is where asking how a
+    // chat is asked belongs) -- but kept with the rest here, because every
+    // one of them is said by its name when the settings are written.
+    {switch_choice::auto_compact, "Compact a chat before it overflows"},
 }};
 
 inline constexpr std::array<tool_row_name, tools_owned> tool_names{{
@@ -560,6 +565,11 @@ struct settings_rows : scene::Node {
   // them, and the same one leaves what is being typed alone.
   std::string fKeyDoor;
   std::string fModelsDoor;
+  // Automatic compact, drawn under the knobs of the Generation page: one
+  // switch of its own, standing where what an asking does is said (and not
+  // under one of the three switch groups, which is where other parts of the
+  // program have their say).
+  switch_row fAutoCompact;
   // Notifications, drawn: one press that asks for a test notification.
   test_row fTest;
   // About, drawn: what this build is, what it is under, and where its
@@ -621,6 +631,7 @@ struct settings_rows : scene::Node {
       one.setVisible(false);
     for (switch_row &one : fDoors)
       one.setVisible(false);
+    fAutoCompact.setVisible(false);
     // The field of the providers: one line of it, and what is typed into it
     // read as dots -- a key is typed into a password's field wherever a
     // password is typed, and this is one. Shown as every row of this page
@@ -962,6 +973,27 @@ struct settings_rows : scene::Node {
                         value_of(how, said.field));
       at += settings_row_stride;
     }
+    // Automatic compact, said of the whole chat as every switch is said of
+    // what it switches: on, and a send at the edge of the window asks
+    // through a capsule before the question goes out (screens,
+    // send_message); off, and it fits the way it always fit. On by default,
+    // as Agora's is (docs/en/context.md), and off in a file from before it
+    // stood (pchat.config, `asking`).
+    fAutoCompact.again(asked,
+                       {.anchor = scene::anchor::kTopLeft,
+                        .x = 16.0f,
+                        .y = at,
+                        .relativeSize = scene::axes::kNone,
+                        .width = row_width,
+                        .height = settings_row_height,
+                        .cornerRadius = 14.0f,
+                        .visible = true},
+                       look, "Compact a chat before it overflows",
+                       offered_of(how, switch_choice::auto_compact),
+                       app::set_switch{switch_choice::auto_compact,
+                                       !offered_of(how,
+                                                   switch_choice::auto_compact)});
+    at += settings_row_stride;
     return at;
   }
 
@@ -1184,6 +1216,7 @@ struct settings_rows : scene::Node {
       f(one);
     for (switch_row &one : fDoors)
       f(one);
+    f(fAutoCompact);
     f(fKey);
     f(fModels);
     f(fTest);

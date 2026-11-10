@@ -136,7 +136,8 @@ inline constexpr std::array<std::string_view, tools_owned> tool_names{
     "conversation_search", "how_much", "when_it_is"};
 inline constexpr std::array<std::string_view, switches_owned> switch_names{
     "picture_to_words", "words_to_picture", "proxy",
-    "own_page",         "remember",         "skills", "data_held"};
+    "own_page",         "remember",         "skills", "data_held",
+    "auto_compact"};
 
 
 // ---- What a file of an archive reads back as: the same words said_of wrote,

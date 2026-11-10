@@ -60,8 +60,9 @@ inline constexpr std::size_t tools_owned = 3u;
 // two that a picture is asked about, two that are how this program reaches
 // other programs, and three that it keeps afterwards.
 enum class switch_choice { picture_to_words, words_to_picture, proxy,
-                           own_page, remember, skills, data_held };
-inline constexpr std::size_t switches_owned = 7u;
+                           own_page, remember, skills, data_held,
+                           auto_compact };
+inline constexpr std::size_t switches_owned = 8u;
 
 // How an answer is asked for: what a model is told to do with its own choices
 // while it writes one, whichever wire it is asked through. Five of them, and
@@ -128,8 +129,12 @@ struct asking {
   // Whether each of the seven is offered at all: every one of them on but
   // the two that put this program where other programs can reach it, which
   // are asked for before they are given.
-  std::array<bool, switches_owned> switches{true, true, false, false, true,
-                                            true, true};
+  // Last one on as Agora has it on (docs/en/context.md: automatic compact
+  // is enabled by default) -- and off in a file written before it stood,
+  // which is what a switch with no word for it reads back as, same as any
+  // other that was added after a reader had its say.
+  std::array<bool, switches_owned> switches{true,  true, false, false,
+                                            true,  true, true,  true};
   friend bool operator==(const asking&, const asking&) = default;
 };
 
