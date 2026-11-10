@@ -85,7 +85,7 @@ jobs:
   build:
     needs: sdk
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
 
@@ -96,7 +96,7 @@ jobs:
           key: ${{ needs.sdk.outputs.sdk-key }}
           fail-on-cache-miss: true
 
-      - name: Put clang 23 and the Mach-O linker there
+      - name: Put clang 23, lld, CMake, Ninja there
         run: |
           codename="$(. /etc/os-release && echo "${UBUNTU_CODENAME:-noble}")"
           wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
@@ -105,68 +105,68 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/llvm23.list
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends \
-            clang-23 lld-23 libc++-23-dev libc++abi-23-dev
+            clang-23 lld-23 libc++-23-dev libc++abi-23-dev cmake ninja-build
           clang++-23 --version
-          # The package owns the versioned name; the name clang looks for is
-          # a link that only a system with alternatives installed makes.
+          cmake --version | head -1
           sudo ln -sf /usr/bin/ld64.lld-23 /usr/local/bin/ld64.lld
           command -v ld64.lld
 
-      - name: Build it, and link it, here
+      - name: Unpack the SDK
         run: |
           mkdir -p build
           tar -C sdk --warning=no-unknown-keyword -xzf sdk/iPhoneSimulator.sdk.tar.gz
           sysroot=$(find "$PWD/sdk" -maxdepth 1 -name 'iPhoneSimulator*.sdk' -print -quit)
           echo "sysroot: $sysroot"
-          libcxx=/usr/lib/llvm-23
-          # The headers and the source of std are clang 23's; the target they
-          # are compiled for is a phone, not this machine. The library the
-          # program will call at run time is the one in the simulator.
-          clang++-23 \
-            --target=arm64-apple-ios26.0-simulator \
-            -std=c++23 -x objective-c++ -fobjc-arc \
-            -isysroot "$sysroot" \
-            -nostdinc++ -isystem "$libcxx/include/c++/v1" \
-            --precompile "$libcxx/share/libc++/v1/std.cppm" \
-            -o build/std.pcm
+          echo "IOS_SDK_PATH=$sysroot" >> "$GITHUB_ENV"
+
+      - name: Build SDL3 and the app with CMake
+        run: |
+          sysroot="$IOS_SDK_PATH"
+          cmake -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=ios/sdl-run/ios-toolchain.cmake \
+            -DIOS_SDK_PATH="$sysroot" \
+            -B build/sdl \
+            ios/sdl-run
+          cmake --build build/sdl --target pchat-sdl -v
+
+      - name: Assemble the app bundle
+        run: |
+          sysroot="$IOS_SDK_PATH"
           app=build/first-run.app
           mkdir -p "$app"
-          # The standard library's headers and the source of std are clang
-          # 23's; the target they are compiled for is a phone, not this
-          # machine, and the module is made here rather than by Xcode.
-          clang++-23 \
-            --target=arm64-apple-ios26.0-simulator \
-            -std=c++23 \
-            -isysroot "$sysroot" \
-            -nostdinc++ -isystem "$libcxx/include/c++/v1" \
-            --precompile "$libcxx/share/libc++/v1/std.cppm" \
-            -o build/std.pcm
-          clang++-23 \
-            --target=arm64-apple-ios26.0-simulator \
-            -std=c++23 \
-            -isysroot "$sysroot" \
-            -nostdinc++ -isystem "$libcxx/include/c++/v1" \
-            -fmodule-file=std=build/std.pcm \
-            -c ios/first-run/word.cpp -o build/word.o
-          clang-23 \
-            --target=arm64-apple-ios26.0-simulator \
-            -fobjc-arc \
-            -isysroot "$sysroot" \
-            -F "$sysroot/System/Library/Frameworks" \
-            -F "$sysroot/System/Library/SubFrameworks" \
-            -F "$sysroot/System/Library/PrivateFrameworks" \
-            -c ios/first-run/main.m -o build/main.o
-          clang++-23 \
-            --target=arm64-apple-ios26.0-simulator \
-            -isysroot "$sysroot" \
-            -fuse-ld=lld \
-            -F "$sysroot/System/Library/Frameworks" \
-            -F "$sysroot/System/Library/SubFrameworks" \
-            -F "$sysroot/System/Library/PrivateFrameworks" \
-            -framework UIKit -framework Foundation \
-            build/main.o build/word.o \
-            -o "$app/first-run"
-          cp ios/first-run/Info.plist "$app/Info.plist"
+          cp build/sdl/pchat-sdl "$app/first-run"
+          cat > "$app/Info.plist" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key>
+  <string>first-run</string>
+  <key>CFBundleIdentifier</key>
+  <string>chat.progressive.first-run</string>
+  <key>CFBundleName</key>
+  <string>progressive-chat</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>UILaunchScreen</key>
+  <dict/>
+  <key>UIRequiredDeviceCapabilities</key>
+  <array>
+    <string>arm64</string>
+  </array>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+  </array>
+  <key>MinimumOSVersion</key>
+  <string>26.0</string>
+</dict>
+</plist>
+EOF
           file "$app/first-run"
 
       - name: Hand it to the phone's system
@@ -221,7 +221,7 @@ jobs:
           # the app is asked there, by name, for the line it wrote.
           xcrun simctl spawn "$udid" log show --last 3m --style compact \
             --predicate 'process == "first-run"' > build/system.log
-          if ! grep -q "PCHAT-IOS-FIRST-RUN: the window is up" build/system.log; then
+          if ! grep -q "PCHAT-IOS-SDL-FIRST-RUN: the window is up" build/system.log; then
             echo "::error::the app never said its window came up"
             tail -50 build/system.log
             exit 1
