@@ -228,6 +228,65 @@ SAID(logic, three_backticks_say_a_block_and_nothing_of_themselves) {
   EXPECT_EQ(said.said.find('`'), std::string::npos);
 }
 
+SAID(logic, a_file_read_as_text_is_read_whole_and_a_picture_is_not) {
+  // Words, read as they are: whole as far as a message should carry.
+  const auto said = logic::attachment_text_of("two lines\nof text");
+  EXPECT_TRUE(said.has_value());
+  EXPECT_EQ(said.value(), std::string("two lines\nof text"));
+
+  // A NUL in the first page: a picture, an archive, a program -- none of
+  // those is words, and none of them is attached rather than attached wrong.
+  const std::string binary("PNG\x00\x89", 5);
+  EXPECT_FALSE(logic::attachment_text_of(binary).has_value());
+
+  // Longer than a message should carry: cut at the limit, on a whole
+  // character -- no half of one standing at the end. A euro sign (three
+  // bytes) straddles the limit here, and what is kept ends before it.
+  const std::string long_file(logic::attachment_read + 40u, 'a');
+  const auto cut = logic::attachment_text_of(long_file);
+  EXPECT_TRUE(cut.has_value());
+  EXPECT_EQ(cut.value().size(), logic::attachment_read);
+  const std::string straddle(logic::attachment_read - 2u, 'a');
+  const auto cut_utf =
+      logic::attachment_text_of(straddle + "\xe2\x82\xac");
+  EXPECT_TRUE(cut_utf.has_value());
+  EXPECT_EQ(cut_utf.value().size(), logic::attachment_read - 2u);
+}
+
+SAID(logic, what_a_file_is_called_where_it_stands) {
+  EXPECT_EQ(logic::file_name_of("/home/reader/notes/today.md"),
+            std::string("today.md"));
+  EXPECT_EQ(logic::file_name_of("C:\\\\\reader\\\\notes\\\\today.md"),
+            std::string("today.md"));
+  EXPECT_EQ(logic::file_name_of("today.md"), std::string("today.md"));
+}
+
+SAID(logic, attachments_go_out_whole_under_their_own_names) {
+  // Written and attached: both parts of the message, the file whole under
+  // the name it is called by.
+  const logic::sent_message both =
+      logic::send(logic::sending_request{
+                      conversation_id{"general"}, "look at this",
+                      {logic::attachment{"today.md", "milk, bread"}},
+                      std::nullopt},
+                  "Reader", 7);
+  EXPECT_EQ(both.said.text,
+            std::string("look at this\n\n[today.md]\nmilk, bread"));
+  EXPECT_TRUE(both.said.tokens > 0u);
+
+  // Attached and nothing written: the attachment is the message -- the
+  // field may hold no words at all and still have something to give.
+  const logic::sent_message alone =
+      logic::send(logic::sending_request{
+                      conversation_id{"general"}, "",
+                      {logic::attachment{"plan.txt", "first, second"}},
+                      std::nullopt},
+                  "Reader", 8);
+  EXPECT_EQ(alone.said.text, std::string("[plan.txt]\nfirst, second"));
+  EXPECT_TRUE(logic::can_send(logic::composer_state{
+      .attachments = {logic::attachment{"plan.txt", "first, second"}}}));
+}
+
 int main() { return pchat::tests::run(); }
 
 

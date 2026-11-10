@@ -91,15 +91,11 @@ struct program {
   void save_path_chosen(std::string path) { view.write_archive(path); }
 
   // Where the machine said files stand to be read from: what its own picker
-  // offered after this program asked for an archive (load_archive) -- the
-  // first of them whole into the window. A drop of anything is said nothing
-  // about here: an archive is asked for on the page's own row, and what a
-  // reader drags over the room is for the room to take when it can take
-  // anything (attachments, which this does not have).
+  // offered, said whole to the screens -- they asked for it (load_archive or
+  // attach_files) and they know which, and a drop over the window goes there
+  // too as what a reader means by dropping a file: something to attach.
   void files_given(std::vector<std::string> paths, bool dropped) {
-    if (dropped || paths.empty())
-      return;
-    view.read_archive(paths.front());
+    view.files_arrived(paths, dropped);
   }
 
   // Between events: what was asked for, done, and what the window shows drawn

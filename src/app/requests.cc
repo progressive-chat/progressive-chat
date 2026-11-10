@@ -13,6 +13,7 @@ import std;
 import pchat.core;
 import pchat.config;
 import pchat.theme;
+import pchat.logic.composer;
 
 export namespace pchat::app {
 
@@ -22,6 +23,10 @@ struct open_conversation {
 struct send_message {
   conversation_id chat;
   std::string text;
+  // What is attached to it, whole: every file the card held, read into the
+  // message where it is sent (pchat.logic.composer, `send` folds it in under
+  // its own name) -- empty as it always was where nothing was attached.
+  std::vector<logic::attachment> attachments;
 };
 // A new chat, asked for at the top of the messages: nothing in it but the
 // one that asked.
@@ -211,6 +216,13 @@ struct compact_context {};
 // answered with a save dialog of the machine's own -- the chosen path comes
 // back through the program (pchat.app.program, save_path_chosen).
 struct save_archive {};
+// Files chosen to attach to what is being written: the machine's own picker
+// offered after the card's clip asked (screens, files_arrived), and what
+// comes back is read as text or not attached at all.
+struct attach_files {};
+// What is attached put away whole: one press on the names under the field,
+// and the card has nothing on it anymore (screens, attached_).
+struct detach_files {};
 // An archive to read instead of what stands: one picked from where the
 // machine keeps files, and what it holds replaces what this run holds --
 // whole, settings and all, as it was written. Asked for on the same page's
@@ -238,7 +250,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 set_generation, set_tool, set_switch,
                               set_answerer, pick_door, set_door_key,
                               set_door_models, compact_context, copy_text,
-                              save_archive, load_archive>;
+                              save_archive, load_archive, attach_files,
+                              detach_files>;
 
 class requests {
 public:

@@ -14,6 +14,7 @@ import skiff.scene;
 import skiff.nodes;
 import pchat.core;
 import pchat.config;
+import pchat.logic.composer;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -104,7 +105,8 @@ struct app_window : scene::Node {
   void again(const paints &look, const chats_root &root, const looks &shown,
              const asking &how, const door &where, const std::string &query,
              bool dark, const what_is_open &open,
-             const std::vector<std::string> &faces_lately, float width,
+             const std::vector<std::string> &faces_lately,
+             const std::vector<logic::attachment> &attached, float width,
              float height, app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
@@ -218,17 +220,22 @@ struct app_window : scene::Node {
              height - top_bar_height - composer_height - 2.0f * edge, 40.0f),
          .visible = true});
     // The card at the foot.
-    fComposer.apply({.anchor = scene::anchor::kBottomLeft,
-                     .origin = scene::anchor::kBottomLeft,
-                     .x = left,
-                     .y = 0.0f,
-                     .relativeSize = scene::axes::kNone,
-                     .width = column,
-                     .height = composer_height + 2.0f * edge,
-                     .visible = true});
+    fComposer.apply(
+        {.anchor = scene::anchor::kBottomLeft,
+         .origin = scene::anchor::kBottomLeft,
+         .x = left,
+         .y = 0.0f,
+         .relativeSize = scene::axes::kNone,
+         .width = column,
+         // One line deeper while something is attached: what is attached is
+         // named under the field (src/ui/composer.cc), and the card is grown
+         // here where the card's own box is said.
+         .height = composer_height + 2.0f * edge +
+                   (attached.empty() ? 0.0f : 22.0f),
+         .visible = true});
     if (open_chat)
       fComposer.again(look, *open_chat, how, asked, open.editor_menu,
-                      open.faces, faces_lately);
+                      open.faces, faces_lately, attached);
     // Any of the three cards, put away by a press on anything below them:
     // the bar's three dots first where two of them are out at once, and then
     // the one written into, on a second press of the same kind.

@@ -100,10 +100,14 @@ public:
             },
             [&](const send_message &asking) {
               const logic::sent_message said = logic::send(
-                  logic::sending_request{
-                      asking.chat, asking.text, {}, std::nullopt},
+                  logic::sending_request{asking.chat, asking.text,
+                                         asking.attachments, std::nullopt},
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
+              // What was attached went with the message whole -- the card is
+              // clear of it again before this frame is drawn, the same way
+              // the field is (the composer clears itself on `sent`).
+              attached_.clear();
               recount(asking.chat);
               // At the edge of the window again: what would be cut from the
               // wire to fit is older context nobody would ever see again, so
@@ -405,11 +409,24 @@ public:
             },
             // The archive to read, offered by the machine's own picker of
             // files: what it answers with comes back through the program
-            // (files_given), on the same road the save's path answers on.
+            // (files_given), on the same road the save's path answers on --
+            // and what is picked now is known to be wanted for this, since
+            // one picker stands behind both this and the clip below.
             [&](const load_archive &) {
+              files_wanted_ = files_want::archive;
               if (dialogs_)
                 dialogs_->choose_files();
             },
+            // Files to attach to what is being written: the same picker, a
+            // different word for what is wanted of it (files_arrived).
+            [&](const attach_files &) {
+              files_wanted_ = files_want::attach;
+              if (dialogs_)
+                dialogs_->choose_files();
+            },
+            // What is attached put away whole, as one press on its names
+            // below the field asks for.
+            [&](const detach_files &) { attached_.clear(); },
             // An answerer put into the conversation open, or taken out of
             // it: what the window then writes to is the first one left, and
             // how much room it has to answer into is that one's own.
@@ -444,6 +461,7 @@ public:
     for (const std::string &place : std::exchange(scene::hostWork().links, {}))
       platform::opened::open(place);
     read_what_arrived();
+    const std::vector<logic::attachment> &attached = attached_open_chat();
     scene_.root().again(look_, root_, shown_, how_, where_, query_, dark_,
                         ui::what_is_open{.settings = settings_,
                                          .design = design_,
@@ -452,7 +470,7 @@ public:
                                          .editor_menu = editor_menu_,
                                          .faces = faces_,
                                          .drawer = drawer_},
-                        faces_lately_, width_, height_, &asked_);
+                        faces_lately_, attached, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -499,6 +517,47 @@ public:
     how_ = back.how;
     where_ = std::move(back.where);
     recolour();
+  }
+
+  // What its own picker offered, said where it was asked for: an archive to
+  // read whole where the page asked for one (load_archive), files to attach
+  // where the card asked for them (attach_files) -- and anything dropped
+  // over the window attached too, which is what a reader means by dropping
+  // a file. What is not text to read is not attached at all: a picture or an
+  // archive said into a message as words would be said wrong
+  // (pchat.logic.composer, attachment_text_of).
+  void files_arrived(const std::vector<std::string> &paths, bool dropped) {
+    const bool attaching = dropped || files_wanted_ == files_want::attach;
+    files_wanted_ = files_want::nothing;
+    if (paths.empty())
+      return;
+    if (!attaching) {
+      read_archive(paths.front());
+      return;
+    }
+    for (const std::string &one : paths) {
+      const std::optional<std::string> bytes =
+          skiff::platform::storage::read_file(one);
+      if (!bytes)
+        continue;
+      std::optional<std::string> text = logic::attachment_text_of(*bytes);
+      if (!text)
+        continue;
+      attached_.push_back(
+          logic::attachment{logic::file_name_of(one), std::move(*text)});
+    }
+  }
+
+  // What is attached to what the window has open: kept for that conversation
+  // alone, and put away the moment another one is opened -- what is attached
+  // for one conversation is not carried into another, the same as what is
+  // typed into the field (whose own drafts say so of it).
+  [[nodiscard]] const std::vector<logic::attachment> &attached_open_chat() {
+    if (!root_.opened || attached_for_ != *root_.opened) {
+      attached_for_ = root_.opened;
+      attached_.clear();
+    }
+    return attached_;
   }
 
 private:
@@ -556,6 +615,15 @@ private:
     std::vector<call_made> calls{};
   };
   std::optional<answer_coming> answering_;
+  // What is attached to what the window has open, and which chat that was --
+  // `attached_open_chat` reads both and clears on a chat of another one.
+  std::vector<logic::attachment> attached_;
+  std::optional<conversation_id> attached_for_;
+  // What the machine's own picker was last asked for: an archive whole or
+  // files to attach -- one picker stands behind both, and only the asker
+  // knows which was meant (load_archive, attach_files).
+  enum class files_want { nothing, archive, attach };
+  files_want files_wanted_ = files_want::nothing;
   // Whether the question this window sent waits on a compact standing in
   // front of it: set when a send lands at the edge of the window
   // (send_message), and spent when the compact that stood before it finishes

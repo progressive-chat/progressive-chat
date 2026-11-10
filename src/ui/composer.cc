@@ -31,6 +31,10 @@ namespace widgets = skiff::widgets;
 struct message_sink {
   app::requests *asked = nullptr;
   conversation_id chat;
+  // What is attached to what is being written, held where the field's text
+  // is held -- the card reads it back from the program every frame
+  // (composer::again), and both ways out of the field give it away whole.
+  std::shared_ptr<std::vector<logic::attachment>> held;
   // Said once something written in the field has been sent from it, and
   // said false again as soon as the field is left empty: nothing keeps a
   // message it has already given away, and the two ways out of the field --
@@ -45,11 +49,17 @@ struct message_given {
   void operator()(std::string_view text) const {
     // Whether there is anything to send is asked of
     // `pchat.logic.composer` and not said here a second time: a field of
-    // nothing but spaces and newlines has been written in and says
-    // nothing, which is one rule said in one place.
+    // nothing but spaces and newlines with nothing attached to it has been
+    // written in and says nothing, which is one rule said in one place --
+    // and what is attached is part of that same something to give.
+    const std::vector<logic::attachment> attached =
+        sink && sink->held ? *sink->held : std::vector<logic::attachment>{};
     if (sink && sink->asked &&
-        logic::can_send(logic::composer_state{.text = std::string(text)})) {
-      sink->asked->ask(app::send_message{sink->chat, std::string(text)});
+        logic::can_send(
+            logic::composer_state{.text = std::string(text),
+                                  .attachments = attached})) {
+      sink->asked->ask(app::send_message{sink->chat, std::string(text),
+                                         attached});
       sink->sent = true;
     }
   }
@@ -374,7 +384,10 @@ struct composer : scene::Node {
   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
                                           message_given{fSink}};
-  nodes::Icon fClip{shape::clip(), 0u};
+  // The clip, pressed: what begins attaching (attach_files), standing where
+  // it stood as a plain mark before this program could read a file at all --
+  // the same press-box the dots and the face beside it are.
+  press_box fClip{shape::clip()};
   // The face beside the clip: a plate under a mark and both of them take the
   // press, for the same reason the three dots' do. Pressed, it opens the
   // card of faces above it, and pressed again, or anywhere else in the room
@@ -415,14 +428,26 @@ struct composer : scene::Node {
   // frame, and puts what is in it where the pen stands.
   faces_card fFaces{};
   std::shared_ptr<std::string> fTyped = std::make_shared<std::string>();
+  // What is attached, as the sink reads it: filled from the program's own
+  // copy every frame, given away whole when the message is.
+  std::shared_ptr<std::vector<logic::attachment>> fHeld =
+      std::make_shared<std::vector<logic::attachment>>();
+  // What is attached, named under the field: a plate with the names over it,
+  // one press putting them all away (detach_files), and hidden where nothing
+  // is attached at all -- the card around it grows by this line by way of the
+  // window (window.cc reads the same list).
+  ask_box fAttached{};
+  nodes::Text fAttachedText{"", 14.0f, 0u};
 
   composer() {
     // One line, which is what makes Enter send rather than put a line break
     // in: what is written here is said once, as a message, and what it keeps
     // of its shape is kept by the room and not by this field.
     fField.setSingleLine(true);
+    fAttachedText.setElided(true);
     fSend.field = &fField;
     fSend.sink = fSink;
+    fSink->held = fHeld;
     // Two rows in the card: over what is written, which model answers in this
     // chat and how full its window is; and under them the field itself.
     this->apply({.fillX = true,
@@ -473,8 +498,10 @@ struct composer : scene::Node {
 
   void again(const paints &look, const conversation &chat, const asking &how,
              app::requests *asked, bool menu_open, bool faces_open,
-             const std::vector<std::string> &faces_lately) {
+             const std::vector<std::string> &faces_lately,
+             const std::vector<logic::attachment> &attached) {
     fSink->asked = asked;
+    *fHeld = attached;
     // What was in the field belonged to the conversation that was open when
     // it was written, and is kept to it before another one is opened; what
     // belongs to the one being opened comes back into the field. Nothing is
@@ -498,7 +525,15 @@ struct composer : scene::Node {
       fField.setText(whole);
     }
     fCard.setColour(look.card);
-    fClip.setColour(look.faint);
+    fClip.again(asked,
+                {.width = 22.0f,
+                 .height = 22.0f,
+                 .anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kCentre,
+                 .x = -(edge + send_size + 44.0f),
+                 .y = 68.0f},
+                app::attach_files{}, look.raised);
+    fClip.mark_colour(look.faint);
     fFace.again(asked,
                 {.width = dots_size,
                  .height = dots_size,
@@ -524,8 +559,8 @@ struct composer : scene::Node {
     // Asked of `logic::can_send`, which is the same rule the field's own
     // Enter is asked of, so that the two ways out of it never disagree
     // about whether they have anything to give.
-    const bool written =
-        logic::can_send(logic::composer_state{.text = fField.plainText()});
+    const bool written = logic::can_send(
+        logic::composer_state{.text = fField.plainText(), .attachments = attached});
     fSend.again({.width = send_size,
                  .height = send_size,
                  .anchor = scene::anchor::kTopRight,
@@ -540,6 +575,40 @@ struct composer : scene::Node {
     if (fSink->sent) {
       fSink->sent = false;
       this->clear();
+    }
+    // What is attached, named under the field: every file it holds, apart,
+    // with the whole line one press away from putting them all away. Shown
+    // only while something is attached -- the box around it grows by this
+    // line where the card's own box is said (window.cc), and what the names
+    // are of is the program's to keep (screens, attached_).
+    if (!attached.empty()) {
+      fAttached.again(asked, app::detach_files{}, look.raised);
+      fAttached.apply({.anchor = scene::anchor::kTopLeft,
+                       .origin = scene::anchor::kTopLeft,
+                       .x = 16.0f,
+                       .y = 94.0f,
+                       .fillX = true,
+                       .height = 20.0f,
+                       .margin = scene::Margin{0.0f, edge + send_size + 62.0f,
+                                               0.0f, 16.0f},
+                       .cornerRadius = 10.0f});
+      std::string named;
+      for (const logic::attachment &one : attached) {
+        if (!named.empty())
+          named += ", ";
+        named += one.name;
+      }
+      fAttachedText.setText(named);
+      fAttachedText.setColour(look.text);
+      fAttachedText.apply(
+          {.maxWidth = std::max(40.0f, this->bounds().width() - 64.0f)});
+      fAttachedText.apply({.anchor = scene::anchor::kTopLeft,
+                           .x = 32.0f,
+                           .y = 97.0f,
+                           .visible = true});
+    } else {
+      fAttached.setVisible(false);
+      fAttachedText.setVisible(false);
     }
     // Which model, and the circle read by how much of it is drawn: its whole
     // ring said in the outline's colour, and as much of it as this chat has
@@ -608,6 +677,8 @@ struct composer : scene::Node {
     f(fFace);
     f(fDots);
     f(fSend);
+    f(fAttached);
+    f(fAttachedText);
     f(fMenu);
     f(fFaces);
   }
