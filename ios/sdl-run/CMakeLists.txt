@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.31)
 project(pchat_ios_sdl LANGUAGES C CXX OBJC)
 
 # SDL3 from the project's fork (has the iOS main callbacks and NativeActivity).
+include(FetchContent)
 fetchcontent_declare(sdl3
   GIT_REPOSITORY https://github.com/j4niwzis/SDL
   GIT_TAG 91c08de87b43fdecc824464fcce15499ccbc7101
