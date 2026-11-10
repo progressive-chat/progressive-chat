@@ -33,6 +33,6 @@ set(SDL_MAIN_CALLBACKS ON CACHE BOOL "" FORCE)
 # SDL3 source is cloned by the workflow into sdl3-src.
 add_subdirectory(sdl3-src)
 
-add_executable(pchat-sdl main.c)
+add_executable(pchat-sdl main.c platform_stub.c)
 target_link_libraries(pchat-sdl PRIVATE SDL3::SDL3)
 target_link_libraries(pchat-sdl PRIVATE "-framework Foundation" "-framework UIKit" "-framework CoreGraphics" "-framework QuartzCore")
