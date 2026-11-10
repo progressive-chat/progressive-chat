@@ -70,7 +70,8 @@ jobs:
       - name: Build it, and link it, here
         run: |
           tar -C sdk -xzf sdk/iPhoneSimulator.sdk.tar.gz
-          sysroot="$PWD/sdk/iPhoneSimulator.sdk"
+          sysroot=$(find "$PWD/sdk" -maxdepth 1 -name 'iPhoneSimulator*.sdk' -print -quit)
+          echo "sysroot: $sysroot"
           app=build/first-run.app
           mkdir -p "$app"
           clang \
