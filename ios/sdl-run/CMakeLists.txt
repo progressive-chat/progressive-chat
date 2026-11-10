@@ -11,7 +11,7 @@ include(FetchContent)
 fetchcontent_declare(sdl3
   GIT_REPOSITORY https://github.com/j4niwzis/SDL
   GIT_TAG 91c08de87b43fdecc824464fcce15499ccbc7101
-  SOURCE_DIR "${CMAKE_BINARY_DIR}/sdl3-src")
+)
 fetchcontent_makeavailable(sdl3)
 
 # Build SDL3 statically, no extra drivers we don't need.
