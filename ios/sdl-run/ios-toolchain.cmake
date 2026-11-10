@@ -17,9 +17,9 @@ set(CMAKE_OBJC_COMPILER /usr/bin/clang-23)
 set(CMAKE_OBJCXX_COMPILER /usr/bin/clang++-23)
 
 # Use lld for Mach-O linking.
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-fuse-ld=lld")
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-fuse-ld=lld")
-set(CMAKE_MODULE_LINKER_FLAGS_INIT "-fuse-ld=lld")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-fuse-ld=lld -Wl,-platform_version,ios-simulator,26.0,26.0")
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-fuse-ld=lld -Wl,-platform_version,ios-simulator,26.0,26.0")
+set(CMAKE_MODULE_LINKER_FLAGS_INIT "-fuse-ld=lld -Wl,-platform_version,ios-simulator,26.0,26.0")
 
 # Linux clang targeting iOS simulator needs --target, not -arch/-mios-simulator-version-min.
 # Override CMake's default flags for Apple targets.
