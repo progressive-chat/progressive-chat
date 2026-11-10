@@ -68,3 +68,18 @@ jobs:
             echo "$missing"
             exit 1
           fi
+      - name: No name written as a sentence
+        run: |
+          # A name says what a thing is, in four words at most: a sentence
+          # given to a name reads as prose, and nothing is gained by it.
+          # Only what is written here is asked about -- the names a build
+          # came with keep the shape they were given -- and what is inside
+          # a string is not a name, so strings are read as though empty.
+          long=$(git ls-files 'src/*.cc' 'src/*/*.cc' \
+            | xargs sed -E 's/"[^"]*"//g' \
+            | grep -ohE '\b[a-z_][a-z0-9_]*(_[a-z0-9]+){4,}\b' | sort -u || true)
+          if [ -n "$long" ]; then
+            echo "These names are sentences, and are to be said in four words:"
+            echo "$long"
+            exit 1
+          fi

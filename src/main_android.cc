@@ -30,7 +30,7 @@ constexpr const char *what_it_is_called = "progressive-chat";
 // What it says is the signal, why, and where -- and then the signal is
 // raised again as it would have been, so the tombstone Android writes
 // itself comes after it, with its own trace of the frames.
-extern "C" void it_says_where_it_went(int signo, siginfo_t *why, void *) {
+extern "C" void crash_says_where(int signo, siginfo_t *why, void *) {
   __android_log_print(ANDROID_LOG_ERROR, what_it_is_called,
                       "gone: signal %d, code %d, at %p", signo,
                       why ? why->si_code : 0, why ? why->si_addr : nullptr);
@@ -40,11 +40,11 @@ extern "C" void it_says_where_it_went(int signo, siginfo_t *why, void *) {
 
 // Asked for as soon as it is started, which is before anything of it can
 // go: a signal nobody asked to hear is not one that anybody is told of.
-struct it_asks_to_be_told {
-  it_asks_to_be_told() {
+struct crash_watcher {
+  crash_watcher() {
     for (int one : {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGABRT}) {
       struct sigaction how;
-      how.sa_sigaction = &it_says_where_it_went;
+      how.sa_sigaction = &crash_says_where;
       sigemptyset(&how.sa_mask);
       how.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_RESTART;
       sigaction(one, &how, nullptr);
@@ -91,7 +91,7 @@ bool said_what_arrived(void *, SDL_Event *one) {
 // How tall the stack under it is, asked of the thread itself: nothing is
 // decided by it, and everything said about it is something said by whoever
 // reads the log.
-void said_how_tall_the_stack_is() {
+void say_stack_height() {
   pthread_attr_t was;
   if (pthread_getattr_np(pthread_self(), &was) != 0) {
     __android_log_print(ANDROID_LOG_INFO, what_it_is_called,
@@ -161,7 +161,7 @@ int run(int, char **) {
   // before this ever was: nothing at all in the log is as much of an answer
   // as a line saying it began.
   __android_log_print(ANDROID_LOG_INFO, what_it_is_called, "started");
-  said_how_tall_the_stack_is();
+  say_stack_height();
   // Watched before the window is asked for, so that nothing said to it is
   // said before it is heard.
   SDL_AddEventWatch(&said_what_arrived, nullptr);

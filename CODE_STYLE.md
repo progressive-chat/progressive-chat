@@ -104,6 +104,14 @@ skiff over Skia — and this document says how that stack is used here.
   Where code works around something, the comment says what happened without
   it.
 - English everywhere: code, comments, commits, documents.
+- **A name is not a sentence.** What a function, a type or a variable is
+  called says what it is, in four words at most: `pending_calls`,
+  `anthropic_body_of`. Sentences belong in comments, in what a commit is
+  called, and in what a test is called -- nowhere else. A sentence written
+  as a name reads as prose, gains nothing by it, and cannot be read at the
+  call it is written in: `it_says_where_it_went` is a comment that was given
+  a signature. `check.yml` refuses any name of five words or more, so that
+  this is not a thing remembered but a thing built.
 - A commit message says what changed and why: a short first line, then the
   reason. The first line is read most -- in `git log`, beside a build, in a
   file's own name -- so there is a rule for how it is written.
