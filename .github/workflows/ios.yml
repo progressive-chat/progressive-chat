@@ -18,9 +18,11 @@ permissions:
 
 # Everything is built on a machine that is not a phone and not a Mac: the
 # app is compiled and linked on Linux, against an SDK the Mac job hands it.
-# The Mac job then only puts what Linux made into a simulator and asks
-# whether it came up. What it looked like is kept as a picture, because a log
-# can say a window exists while the screen stays black.
+# The compiler there is the project's clang 23, and the standard library is
+# asked for the phone's target, module and all. The Mac job then only puts
+# what Linux made into a simulator and asks whether it came up. What it looked
+# like is kept as a picture, because a log can say a window exists while the
+# screen stays black.
 jobs:
   sdk:
     runs-on: macos-26
@@ -63,34 +65,55 @@ jobs:
           name: iphonesimulator-sdk
           path: sdk
 
-      - name: Put clang and the Mach-O linker there
+      - name: Put clang 23 and the Mach-O linker there
         run: |
+          codename="$(. /etc/os-release && echo "${UBUNTU_CODENAME:-noble}")"
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
+            | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
+          echo "deb http://apt.llvm.org/${codename}/ llvm-toolchain-${codename}-23 main" \
+            | sudo tee /etc/apt/sources.list.d/llvm23.list
           sudo apt-get update -qq
-          sudo apt-get install -y -qq clang lld
-          clang --version
-          command -v ld64.lld || true
+          sudo apt-get install -y -qq --no-install-recommends \
+            clang-23 lld-23 libc++-23-dev libc++abi-23-dev
+          clang++-23 --version
+          # The package owns the versioned name; the name clang looks for is
+          # a link that only a system with alternatives installed makes.
+          sudo ln -sf /usr/bin/ld64.lld-23 /usr/local/bin/ld64.lld
+          command -v ld64.lld
 
       - name: Build it, and link it, here
         run: |
-          tar -C sdk -xzf sdk/iPhoneSimulator.sdk.tar.gz
+          mkdir -p build
+          tar -C sdk --warning=no-unknown-keyword -xzf sdk/iPhoneSimulator.sdk.tar.gz
           sysroot=$(find "$PWD/sdk" -maxdepth 1 -name 'iPhoneSimulator*.sdk' -print -quit)
           echo "sysroot: $sysroot"
+          libcxx=/usr/lib/llvm-23
+          # The headers and the source of std are clang 23's; the target they
+          # are compiled for is a phone, not this machine. The library the
+          # program will call at run time is the one in the simulator.
+          clang++-23 \
+            --target=arm64-apple-ios26.0-simulator \
+            -std=c++23 \
+            -isysroot "$sysroot" \
+            -nostdinc++ -isystem "$libcxx/include/c++/v1" \
+            --precompile "$libcxx/share/libc++/v1/std.cppm" \
+            -o build/std.pcm
           app=build/first-run.app
           mkdir -p "$app"
-          clang \
-            -target arm64-apple-ios26.0-simulator \
+          clang++-23 \
+            --target=arm64-apple-ios26.0-simulator \
+            -std=c++23 -x objective-c++ -fobjc-arc \
             -isysroot "$sysroot" \
+            -nostdinc++ -isystem "$libcxx/include/c++/v1" \
+            -fmodule-file=std=build/std.pcm \
             -F "$sysroot/System/Library/Frameworks" \
             -F "$sysroot/System/Library/SubFrameworks" \
             -F "$sysroot/System/Library/PrivateFrameworks" \
-            -fobjc-arc \
             -fuse-ld=lld \
             -framework UIKit -framework Foundation \
-            -o "$app/first-run" ios/first-run/main.m
+            -o "$app/first-run" ios/first-run/main.mm
           cp ios/first-run/Info.plist "$app/Info.plist"
           file "$app/first-run"
-          llvm-objdump --macho --private-headers "$app/first-run" 2>/dev/null \
-            | grep -A5 -i "LC_BUILD_VERSION\|LC_VERSION_MIN" || true
 
       - name: Hand it to the phone's system
         uses: actions/upload-artifact@v4
