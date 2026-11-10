@@ -6,13 +6,8 @@
 cmake_minimum_required(VERSION 3.31)
 project(pchat_ios_sdl LANGUAGES C CXX OBJC)
 
-# SDL3 from the project's fork (has the iOS main callbacks and NativeActivity).
-include(FetchContent)
-fetchcontent_declare(sdl3
-  GIT_REPOSITORY https://github.com/j4niwzis/SDL
-  GIT_TAG 91c08de87b43fdecc824464fcce15499ccbc7101
-)
-fetchcontent_makeavailable(sdl3)
+# SDL3 source is cloned by the workflow into sdl3-src.
+add_subdirectory(sdl3-src)
 
 # Build SDL3 statically, no extra drivers we don't need.
 set(SDL_SHARED OFF)
@@ -37,8 +32,6 @@ set(SDL_CLIPBOARD ON)
 # iOS needs the main callbacks from the fork.
 set(SDL_MAIN_CALLBACKS ON)
 
-add_subdirectory("${sdl3_SOURCE_DIR}" "${sdl3_BINARY_DIR}")
-
-add_executable(pchat-sdl ios/sdl-run/main.c)
+add_executable(pchat-sdl main.c)
 target_link_libraries(pchat-sdl PRIVATE SDL3::SDL3)
 target_link_libraries(pchat-sdl PRIVATE "-framework Foundation" "-framework UIKit" "-framework CoreGraphics" "-framework QuartzCore")

@@ -122,6 +122,9 @@ jobs:
       - name: Build SDL3 and the app with CMake
         run: |
           sysroot="$IOS_SDK_PATH"
+          # Clone SDL3 fork (has iOS main callbacks) into the source tree.
+          git clone --depth 1 --branch 91c08de87b43fdecc824464fcce15499ccbc7101 \
+            https://github.com/j4niwzis/SDL ios/sdl-run/sdl3-src
           cmake -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE="$PWD/ios/sdl-run/ios-toolchain.cmake" \
             -DIOS_SDK_PATH="$sysroot" \
