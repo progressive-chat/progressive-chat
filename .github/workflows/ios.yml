@@ -61,17 +61,17 @@ jobs:
 
       - name: Launch it, and hear what it says
         run: |
-          set +e
-          xcrun simctl launch "$udid" chat.progressive.first-run 2>&1 | tee build/launch.log
+          xcrun simctl launch "$udid" chat.progressive.first-run | tee build/launch.log
           # Long enough for the first frame on a machine that boots cold.
           sleep 8
           xcrun simctl io "$udid" screenshot build/first-run.png
+          # NSLog writes to the system's own log, not to the launch's stdout:
+          # the app is asked there, by name, for the line it wrote.
           xcrun simctl spawn "$udid" log show --last 3m --style compact \
-            --predicate 'process == "first-run"' > build/system.log 2>&1
-          grep -iE "crash|exception|abort|error" build/system.log | head -40
-          ls -la "$HOME/Library/Logs/DiagnosticReports" 2>/dev/null | tail -5
-          if ! grep -q "PCHAT-IOS-FIRST-RUN: the window is up" build/launch.log; then
+            --predicate 'process == "first-run"' > build/system.log
+          if ! grep -q "PCHAT-IOS-FIRST-RUN: the window is up" build/system.log; then
             echo "::error::the app never said its window came up"
+            tail -50 build/system.log
             exit 1
           fi
           # A line in the log can outlive the process that wrote it: the app
