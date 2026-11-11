@@ -53,6 +53,17 @@ So what this repository is, now, is that client in its beginning: the look of
 [Agora](https://github.com/MaurerAnton/agora) drawn again on it, and no back
 end yet. It is **not** designed for people to talk to each other in.
 
+## Platform support
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| GNU/Linux desktop | ✅ works | SDL3 + Skia, Wayland/X11 |
+| Android | ✅ works | NativeActivity, forked SDL3 |
+| Web (WASM/Emscripten) | ✅ works | skiff.web backend |
+| Windows | 🚫 not yet | no build target yet |
+| iPhone (iOS simulator) | 🧪 testing | Linux build, macOS run, SDL3 + `import std`; device not yet |
+| Samsung One UI | ❌ broken | Android works but One UI shell breaks layout/input |
+
 ## Where it stands
 
 Said again every day this has been a program, newest first: what it was on
@@ -123,6 +134,10 @@ program and found there by its `$ORIGIN`, because no distribution keeps them
 but the one it was built on and a machine without them says
 `libc++.so.1: cannot open shared object file` before the program says a
 word. Run it from the directory it came in.
+
+Everything else is indexed at [docs/README.md](docs/README.md): the docs, the
+two rules the tree is built by, one change from nothing to done, and the
+words this tree says things in.
 
 ## What is known broken, and where to look first
 

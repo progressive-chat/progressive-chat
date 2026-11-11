@@ -1,0 +1,130 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: windows-cross
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/windows-cross.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/windows-cross.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install mingw-w64, clang 23, lld
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23
+          clang-23 --version
+          x86_64-w64-mingw32-gcc --version || true
+
+      - name: Configure (Windows cross-compile)
+        run: |
+          cmake -S . -B build-windows -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/windows-toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPCHAT_GL=OFF \
+            -DPCHAT_UI=ON \
+            -DPCHAT_TESTS=OFF
+
+      - name: Build progressive-chat.exe
+        run: |
+          cmake --build build-windows --target progressive-chat -v
+
+      - name: Verify executable
+        run: |
+          file build-windows/progressive-chat.exe
+          ls -lh build-windows/progressive-chat.exe
+
+      - name: Collect DLLs
+        run: |
+          mkdir -p dist-windows
+          cp build-windows/progressive-chat.exe dist-windows/
+          # mingw runtime DLLs
+          cp /usr/x86_64-w64-mingw32/bin/libstdc++-6.dll dist-windows/ 2>/dev/null || true
+          cp /usr/x86_64-w64-mingw32/bin/libgcc_s_seh-1.dll dist-windows/ 2>/dev/null || true
+          cp /usr/x86_64-w64-mingw32/bin/libwinpthread-1.dll dist-windows/ 2>/dev/null || true
+          # SDL3.dll if built shared (should be static per config)
+          find build-windows -name "*.dll" -exec cp {} dist-windows/ \; 2>/dev/null || true
+
+      - name: Create portable zip
+        run: |
+          cd dist-windows
+          zip -r ../progressive-chat-windows.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: progressive-chat-windows
+          path: progressive-chat-windows.zip
+          retention-days: 7
+
+      - name: Wine smoke test (optional)
+        run: |
+          sudo apt-get install -y -qq wine64 xvfb
+          cd dist-windows
+          # Just check it starts and exits (no display)
+          timeout 10s xvfb-run -a wine progressive-chat.exe --help 2>&1 | head -20 || true
+          echo "Wine test completed (exit code ignored)"
+
+  # Optional: build Skia for Windows separately (heavy)
+  # skia-build:
+  #   runs-on: ubuntu-24.04
+  #   timeout-minutes: 120
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - name: Install GN, ninja, clang
+  #       run: |
+  #         sudo apt-get update -qq
+  #         sudo apt-get install -y -qq git ninja-build python3 llvm-23 lld-23
+  #     - name: Fetch Skia
+  #       run: |
+  #         git clone --depth 1 https://skia.googlesource.com/skia skia-src
+  #         cd skia-src && python3 tools/git-sync-deps
+  #     - name: Build Skia for Windows
+  #       run: |
+  #         cat > skia-src/args/win_cross.gn <<'EOF'
+  #         target_os = "win"
+  #         target_cpu = "x64"
+  #         is_clang = true
+  #         clang_base_path = "/usr/lib/llvm-23"
+  #         clang_use_chrome_plugins = false
+  #         is_debug = false
+  #         is_official_build = true
+  #         skia_use_system_expat = false
+  #         skia_use_system_icu = false
+  #         skia_use_system_libjpeg_turbo = false
+  #         skia_use_system_libpng = false
+  #         skia_use_system_libwebp = false
+  #         skia_use_system_zlib = false
+  #         skia_use_fontconfig = false
+  #         skia_use_freetype = true
+  #         skia_use_harfbuzz = true
+  #         extra_cflags = [ "--target=x86_64-pc-windows-gnu" ]
+  #         extra_ldflags = [ "-fuse-ld=lld" ]
+  #         EOF
+  #         cd skia-src
+  #         gn gen out/win_x64 --args="import(\"//args/win_cross.gn\")"
+  #         ninja -C out/win_x64
+  #     - name: Upload Skia artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: skia-windows
+  #         path: skia-src/out/win_x64/*.{lib,dll}
+  #         retention-days: 7
