@@ -5,14 +5,16 @@
 cmake_minimum_required(VERSION 4.0.0)
 project(pchat_windows_test LANGUAGES C)
 
-# SDL3 from the project's fork
 include(FetchContent)
+
+# SDL3 from the project's fork
 fetchcontent_declare(sdl3
   GIT_REPOSITORY https://github.com/j4niwzis/SDL
   GIT_TAG 91c08de87b43fdecc824464fcce15499ccbc7101
 )
 fetchcontent_makeavailable(sdl3)
 
+# Build SDL3 statically
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
 set(SDL_INSTALL OFF)
