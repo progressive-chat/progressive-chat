@@ -4338,7 +4338,7 @@ void profile_native_backup_format(const fs::path& scenarios) {
     cases.push_back(object({{"name", str("conversation_entries")},
                             {"op", str("entry")},
                             {"ids", array({str("plain"), str("conv 1"), str("a/b"),
-                                           str("\u041f\u0440\u0438\u0432\u0435\u0442"),
+                                           str("Hello"),
                                            str("\U0001F600"), str("tab\tname"), str("")})}}));
     cases.push_back(object({{"name", str("models_remote")},
                             {"op", str("models")},
@@ -4470,7 +4470,7 @@ void profile_provider_names(const fs::path& scenarios) {
     allowed("allowed_reserved_openai", "OpenAI");
     allowed("allowed_similar_to_reserved", "Googler");
     allowed("allowed_reserved_with_inner_space", "Deep  Seek");
-    allowed("allowed_unicode", "\u041f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440 \U0001F680");
+    allowed("allowed_unicode", "Provider 🚀");
 
     conflict("conflict_duplicate_case_insensitive", "Box", {"box"}, nullptr);
     conflict("conflict_duplicate_trimmed", " Box ", {"Box"}, nullptr);
@@ -5060,9 +5060,9 @@ void profile_custom_model_references(const fs::path& scenarios) {
     case_set("set_empty_old_matches_empty_element", "", str("x"), {"", "a"});
     case_set("set_new_is_empty_string", "a", str(""), {"a", "b"});
     case_set("set_duplicate_input_entries_dedupe", "x", str("y"), {"a", "a", "b"});
-    case_set("set_unicode_ids", "\u043c\u043e\u0434\u0435\u043b\u044c",
-             str("\u043c\u043e\u0434\u0435\u043b\u044c2"),
-             {"\u043c\u043e\u0434\u0435\u043b\u044c", "b"});
+    case_set("set_unicode_ids", "model",
+             str("䓂"),
+             {"model", "b"});
     case_set("set_separators_are_escaped", "a=b|c;d", str("x=y"), {"a=b|c;d", "e"});
 
     case_string("string_null_stays_null", null_value(), "a", str("b"));
@@ -5096,10 +5096,10 @@ void profile_custom_model_references(const fs::path& scenarios) {
     case_map("map_old_equals_new_blank_alias_removes", "a", str("a"), "",
              {{"a", "1"}, {"b", "2"}});
     case_map("map_newline_alias_is_escaped", "a", str("b"), "x\ny", {{"a", "1"}});
-    case_map("map_unicode_ids", "\u043c\u043e\u0434\u0435\u043b\u044c",
-             str("\u043d\u043e\u0432\u0430\u044f"),
-             "\u043f\u0441\u0435\u0432\u0434\u043e\u043d\u0438\u043c",
-             {{"\u043c\u043e\u0434\u0435\u043b\u044c", "1"}, {"b", "2"}});
+    case_map("map_unicode_ids", "model",
+             str("new"),
+             "alias",
+             {{"model", "1"}, {"b", "2"}});
 
     remove_stale(scenarios);
     for (const json::Value& item : all) {
@@ -5272,7 +5272,7 @@ void profile_loop_policy(const fs::path& scenarios) {
     normalize("normalize_keeps_inner_spaces", str(" a  b "));
     normalize("normalize_keeps_inner_newline", str("a\nb"));
     normalize("normalize_keeps_inner_tab_between_words", str(" a \t b "));
-    normalize("normalize_unicode_text", str("  \u041f\u0440\u0438\u0432\u0435\u0442  "));
+    normalize("normalize_unicode_text", str("  Hello  "));
     normalize("normalize_nbsp_only_collapses", str(nbsp));
     normalize("normalize_nbsp_is_trimmed", str(nbsp + "x" + nbsp));
     normalize("normalize_zero_width_space_is_content", str(zwsp));
@@ -8157,7 +8157,7 @@ void profile_zip_reader(const fs::path& scenarios) {
                    entry("d.txt", "plain text", "stored", nullptr)});
     write_entries("03-empty-entry", {entry("empty.json", "", "deflate", nullptr)});
     write_entries("04-utf8-name-and-content",
-                  {entry("\u0434\u0438\u0430\u043b\u043e\u0433\u0438/\u65e5\u672c\u8a9e.json",
+                  {entry("dialogs/日本語.json",
                          R"json({"title":"unicode 🙂"})json", "deflate", nullptr)});
     write_entries("05-binary-content",
                   {entry("bin.dat", std::string("\x00\x01\x02\u00ff", 5), "deflate",
@@ -8676,7 +8676,7 @@ void profile_provider_identity(const fs::path& scenarios) {
     normalize("normalize_legacy_name_carry_with_id",
               {provider("A", "conch", "id1", std::vector<std::string>{"old-a"})}, {}, {});
     normalize("normalize_unicode_name",
-              {provider("\u041f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440", "conch", "",
+              {provider("Provider", "conch", "",
                         std::nullopt)},
               {}, {uid(1)});
     normalize("normalize_name_with_special_chars",
@@ -8851,13 +8851,13 @@ void profile_run_ui_projection(const fs::path& scenarios) {
         write("16-many-branches", std::move(visible), std::move(all_messages));
     }
     write("17-unicode",
-          {message("m1", "USER", std::nullopt, "\u0432\u043e\u043f\u0440\u043e\u0441 \U0001F642",
+          {message("m1", "USER", std::nullopt, "question 🙂",
                    std::nullopt, 1, "SUCCESS"),
-           message("m2", "MODEL", std::string("m1"), "\u043e\u0442\u0432\u0435\u0442",
+           message("m2", "MODEL", std::string("m1"), "answer",
                    std::nullopt, 2, "SUCCESS")},
-          {message("m1", "USER", std::nullopt, "\u0432\u043e\u043f\u0440\u043e\u0441 \U0001F642",
+          {message("m1", "USER", std::nullopt, "question 🙂",
                    std::nullopt, 1, "SUCCESS"),
-           message("m2", "MODEL", std::string("m1"), "\u043e\u0442\u0432\u0435\u0442",
+           message("m2", "MODEL", std::string("m1"), "answer",
                    std::nullopt, 2, "SUCCESS")});
     write("18-timestamps-equal",
           {message("m1", "USER", std::nullopt, "question", std::nullopt, 5, "SUCCESS"),
@@ -9313,8 +9313,8 @@ void profile_mcp_protocol(const fs::path& scenarios) {
     scenario("name_long_server_truncation", "toolName",
              {{"serverId", str(std::string(40, 's'))}, {"remoteName", str("read")}});
     scenario("name_unicode_kept", "toolName",
-             {{"serverId", str("\u0441\u0435\u0440\u0432\u0435\u0440")},
-              {"remoteName", str("\u043f\u043e\u0438\u0441\u043a")}});
+             {{"serverId", str("server")},
+              {"remoteName", str("search")}});
     scenario("name_emoji_tool", "toolName",
              {{"serverId", str("s1")}, {"remoteName", str("a\U0001F600b")}});
     scenario("name_spaces", "toolName",
@@ -10427,10 +10427,10 @@ void profile_claude_chat_importer(const fs::path& scenarios) {
     text_scenario(
         "18-text-unicode",
         spaced(conversation_array({conversation(
-                   "u1", "\u042e\u043d\u0438\u043a\u043e\u0434 \U0001F642",
-                   "\u0441\u0432\u043e\u0434\u043a\u0430", kTs,
+                   "u1", "Unicode 🙂",
+                   "summary", kTs,
                    {message("um1", "human",
-                            "\u043f\u0440\u0438\u0432\u0435\u0442 \U0001F642", kTs,
+                            "hello 🙂", kTs,
                             std::nullopt, std::nullopt, std::nullopt, std::nullopt)},
                    kTs)}),
                false),
@@ -11907,9 +11907,9 @@ void profile_gpt_chat_importer(const fs::path& scenarios) {
                     {"n1", node("n1",
                                 message("m1", "user",
                                         {.parts = array({str(
-                                             "\u043f\u0440\u0438\u0432\u0435\u0442 \U0001F642")})}),
+                                             "hello 🙂")})}),
                                 "n0")}},
-                   "\u042e\u043d\u0438\u043a\u043e\u0434")}));
+                   "Unicode")}));
     write_text("19-text-empty-title", array({conversation("c17", simple_mapping(), "")}));
     write_text("20-text-multiple-conversations",
                array({conversation("c18", simple_mapping()),
@@ -11937,7 +11937,7 @@ void profile_gpt_chat_importer(const fs::path& scenarios) {
                                                     "multimodal_text", "code",
                                                     "execution_output", "thoughts"};
     static constexpr const char* kPartChoices[] = {"hello", "world", nullptr};
-    static constexpr const char* kTitles[] = {"", "Fuzz", "\u0424\u0430\u0437"};
+    static constexpr const char* kTitles[] = {"", "Fuzz", "Phase"};
     for (int index = 0; index < 8; ++index) {
         PythonRandom rng(7000 + static_cast<std::uint32_t>(index));
         std::vector<std::pair<std::string, json::Value>> mapping_members;
@@ -14448,11 +14448,11 @@ void profile_imported_citation_projection(const fs::path& scenarios) {
                              {"matched_text", str("two ")}})}));
     write_gpt("25-gpt-emoji-and-unicode-text",
               "emoji \U0001F642 " + cite("turn3f12") +
-                  " \u044e\u043d\u0438\u043a\u043e\u0434 \u0442\u0435\u043a\u0441\u0442",
+                  " unicode ",
               array({object({{"source_id", str("turn3f12")},
                              {"url", str("https://unicode.example")},
-                             {"title", str("\u042e\u043d\u0438\u043a\u043e\u0434")},
-                             {"matched_text", str("\u044e\u043d\u0438\u043a\u043e\u0434")}})}));
+                             {"title", str("Unicode")},
+                             {"matched_text", str("unicode")}})}));
     write_gpt("26-gpt-empty-text", "", array({}));
     write_gpt("27-gpt-int-accessor-trimmed-string", "tail ZZZ more " + cite("turn1f1"),
               array({object({{"source_id", str("turn1f1")},
