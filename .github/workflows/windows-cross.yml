@@ -58,8 +58,8 @@ jobs:
 
       - name: Configure (Windows cross-compile, minimal SDL3 test)
         run: |
-          cmake -S . -B build-windows -G Ninja \
-            -DCMAKE_TOOLCHAIN_FILE=cmake/windows-toolchain.cmake \
+          cmake -S cmake/windows-test -B build-windows -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=../cmake/windows-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=clang-23 \
             -DCMAKE_CXX_COMPILER=clang++-23
