@@ -38,8 +38,8 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23
           
-          # Install CMake 4.x from GitHub release (Kitware repo doesn't have 4.x for noble yet)
-          CMAKE_VERSION="4.0.2"
+          # Install CMake 4.3.4+ from GitHub release
+          CMAKE_VERSION="4.0.3"
           wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz" -O /tmp/cmake.tar.gz
           sudo tar -xzf /tmp/cmake.tar.gz -C /opt
           sudo ln -sf /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cmake /usr/local/bin/cmake

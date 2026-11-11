@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-cmake_minimum_required(VERSION 4.3.4 FATAL_ERROR)
+cmake_minimum_required(VERSION 4.0.0 FATAL_ERROR)
 
 # progressive-chat: Agora's look, drawn on mux's stack.
 #
