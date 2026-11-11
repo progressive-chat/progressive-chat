@@ -35,13 +35,21 @@ jobs:
             | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
           echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-23 main" \
             | sudo tee /etc/apt/sources.list.d/llvm23.list
-          # Add Kitware CMake repository for CMake 4.x
-          wget -qO- https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
-            | gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ noble main" \
-            | sudo tee /etc/apt/sources.list.d/kitware.list
           sudo apt-get update -qq
-          sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23 cmake
+          sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23
+          
+          # Install CMake 4.x from GitHub release (Kitware repo doesn't have 4.x for noble yet)
+          CMAKE_VERSION="4.0.2"
+          wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz" -O /tmp/cmake.tar.gz
+          sudo tar -xzf /tmp/cmake.tar.gz -C /opt
+          sudo ln -sf /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cmake /usr/local/bin/cmake
+          sudo ln -sf /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/ctest /usr/local/bin/ctest
+          sudo ln -sf /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cpack /usr/local/bin/cpack
+          
+          # Install mingw and clang
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23
+          
           # Verify installation
           which clang-23
           clang-23 --version
