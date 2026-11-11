@@ -56,28 +56,27 @@ jobs:
           cmake --version
           x86_64-w64-mingw32-gcc --version || true
 
-      - name: Configure (Windows cross-compile)
+      - name: Configure (Windows cross-compile, minimal SDL3 test)
         run: |
           cmake -S . -B build-windows -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE=cmake/windows-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release \
-            -DPCHAT_GL=OFF \
-            -DPCHAT_UI=ON \
-            -DPCHAT_TESTS=OFF
+            -DCMAKE_C_COMPILER=clang-23 \
+            -DCMAKE_CXX_COMPILER=clang++-23
 
-      - name: Build progressive-chat.exe
+      - name: Build minimal SDL3 test
         run: |
-          cmake --build build-windows --target progressive-chat -v
+          cmake --build build-windows --target pchat-windows-test -v
 
       - name: Verify executable
         run: |
-          file build-windows/progressive-chat.exe
-          ls -lh build-windows/progressive-chat.exe
+          file build-windows/pchat-windows-test.exe
+          ls -lh build-windows/pchat-windows-test.exe
 
       - name: Collect DLLs
         run: |
           mkdir -p dist-windows
-          cp build-windows/progressive-chat.exe dist-windows/
+          cp build-windows/pchat-windows-test.exe dist-windows/
           # mingw runtime DLLs
           cp /usr/x86_64-w64-mingw32/bin/libstdc++-6.dll dist-windows/ 2>/dev/null || true
           cp /usr/x86_64-w64-mingw32/bin/libgcc_s_seh-1.dll dist-windows/ 2>/dev/null || true
