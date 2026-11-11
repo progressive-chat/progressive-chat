@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Attach each run's build to a release, rolling to builds-part-N when the
+# current release hits GitHub's 1000-asset cap. Reusable across workflows.
+#
+# Facts it respects:
+#   - GitHub allows at most 1000 assets per release (official docs).
+#   - `gh release upload --clobber` deletes a same-name asset BEFORE uploading,
+#     so it must never be used to "make room" at the cap (422 after delete).
+#   - Unique asset names (already the project's convention:
+#     <n>_<sha>_<time>_progressive-chat-<ver>-<abi>.zip) mean --clobber only
+#     replaces a retry of the SAME build, never a different one.
+#
+# Example step (needs `permissions: contents: write` on the job):
+
+# - name: Attach build to release
+#   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#   env:
+#     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#   run: |
+#     chmod +x ci/release-upload.sh
+#     ci/release-upload.sh "builds-part-2" "builds-part" \
+#       build-android/progressive-chat-*-arm64-v8a.apk
+#
+# For the APK-autoupdate "latest" pointer, use a stable tag instead:
+#     ci/release-upload.sh "latest" "latest" \
+#       build-android/progressive-chat-*-arm64-v8a.apk
+# (the updater reads only this tag; it never scans builds-part-*.)
