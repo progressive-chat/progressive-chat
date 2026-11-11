@@ -23,30 +23,30 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install mingw-w64, clang 23, lld, CMake 4.x
+      - name: Install mingw-w64, clang 23, lld, CMake (from source, needs 4.2+)
         run: |
           sudo apt-get update -qq
-          # Add LLVM apt repository for clang 23 / lld 23
+          sudo apt-get install -y -qq git build-essential libssl-dev python3
+          
+          # Build CMake from main branch (needs 4.2+ for import std)
+          git clone --depth 1 --branch master https://github.com/Kitware/CMake.git /tmp/cmake-src
+          cd /tmp/cmake-src
+          ./bootstrap --parallel=$(nproc) --prefix=/opt/cmake-dev
+          make -j$(nproc)
+          sudo make install
+          sudo ln -sf /opt/cmake-dev/bin/cmake /usr/local/bin/cmake
+          sudo ln -sf /opt/cmake-dev/bin/ctest /usr/local/bin/ctest
+          sudo ln -sf /opt/cmake-dev/bin/cpack /usr/local/bin/cpack
+          
+          # Install mingw and clang
           wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
             | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
           echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-23 main" \
             | sudo tee /etc/apt/sources.list.d/llvm23.list
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23
-          
-          # Install CMake 4.3.4+ from GitHub release
-          CMAKE_VERSION="4.0.3"
-          wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz" -O /tmp/cmake.tar.gz
-          sudo tar -xzf /tmp/cmake.tar.gz -C /opt
-          sudo ln -sf /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cmake /usr/local/bin/cmake
-          sudo ln -sf /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/ctest /usr/local/bin/ctest
-          sudo ln -sf /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/cpack /usr/local/bin/cpack
-          
-          # Install mingw and clang
           sudo apt-get update -qq
           sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23
           
