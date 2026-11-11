@@ -33,6 +33,6 @@ set(SDL_CAMERA OFF)
 set(SDL_DIALOG OFF)
 set(SDL_CLIPBOARD ON)
 
-add_executable(pchat-windows-test cmake/windows-test/main.c)
+add_executable(pchat-windows-test main.c)
 target_link_libraries(pchat-windows-test PRIVATE SDL3::SDL3)
 target_link_libraries(pchat-windows-test PRIVATE "-lmingw32" "-lSDL3main")
