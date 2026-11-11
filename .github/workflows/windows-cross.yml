@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install mingw-w64, clang 23, lld
+      - name: Install mingw-w64, clang 23, lld, CMake 4.x
         run: |
           sudo apt-get update -qq
           # Add LLVM apt repository for clang 23 / lld 23
@@ -35,11 +35,17 @@ jobs:
             | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
           echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-23 main" \
             | sudo tee /etc/apt/sources.list.d/llvm23.list
+          # Add Kitware CMake repository for CMake 4.x
+          wget -qO- https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
+            | gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ noble main" \
+            | sudo tee /etc/apt/sources.list.d/kitware.list
           sudo apt-get update -qq
-          sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23
+          sudo apt-get install -y -qq mingw-w64 llvm-23 lld-23 clang-23 cmake
           # Verify installation
-          which clang-23 || ls -la /usr/bin/clang* /usr/lib/llvm-23/bin/ 2>/dev/null || true
+          which clang-23
           clang-23 --version
+          cmake --version
           x86_64-w64-mingw32-gcc --version || true
 
       - name: Configure (Windows cross-compile)
