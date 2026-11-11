@@ -11,10 +11,9 @@ set(CMAKE_C_COMPILER clang-23)
 set(CMAKE_CXX_COMPILER clang++-23)
 set(CMAKE_RC_COMPILER llvm-rc-23)
 
-# Target triple for Windows GNU (mingw) - use clang with mingw-compatible flags
-# -fno-builtin-cpuid avoids conflict between clang's cpuid.h and mingw's intrin.h
-set(CMAKE_C_FLAGS_INIT "--target=x86_64-pc-windows-gnu -fno-builtin-cpuid -D__GNUC__=0")
-set(CMAKE_CXX_FLAGS_INIT "--target=x86_64-pc-windows-gnu -fno-builtin-cpuid -D__GNUC__=0")
+# Target triple for Windows GNU (mingw) - prevent clang's cpuid.h from conflicting with mingw's intrin.h
+set(CMAKE_C_FLAGS_INIT "--target=x86_64-pc-windows-gnu -D__CLANG_CPUID_H=1")
+set(CMAKE_CXX_FLAGS_INIT "--target=x86_64-pc-windows-gnu -D__CLANG_CPUID_H=1")
 set(CMAKE_RC_FLAGS_INIT "--target=x86_64-pc-windows-gnu")
 
 # Linker: lld (COFF)
