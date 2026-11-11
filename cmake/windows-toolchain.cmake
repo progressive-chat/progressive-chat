@@ -28,7 +28,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-# pkg-config ne nuzhen — Windows biblioteki ne ego ispolzuyut
+# pkg-config is not needed — Windows libraries do not use it
 set(PKG_CONFIG_EXECUTABLE "/usr/bin/false")
 
 # Windows-specific: .exe suffix
@@ -36,11 +36,11 @@ set(CMAKE_EXECUTABLE_SUFFIX ".exe")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".dll")
 set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
 
-# Windows subsystem: GUI (ne konsol)
+# Windows subsystem: GUI (not console)
 set(CMAKE_EXE_LINKER_FLAGS_INIT "${CMAKE_EXE_LINKER_FLAGS_INIT} -Wl,--subsystem,windows")
 
-# Resource compiler rabotaet
+# Resource compiler works
 set(CMAKE_RC_COMPILER_WORKS 1)
 
-# Otklyuchaem pkg-config dlya Windows
+# Disable pkg-config for Windows
 set(CMAKE_FIND_PACKAGE_NAME "pkg-config" "OFF")

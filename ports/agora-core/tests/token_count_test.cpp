@@ -145,7 +145,7 @@ TEST(heuristic_shapes_match_the_kotlin_definition) {
     CHECK_EQ(std::int64_t(2), heuristic.count("a\u4E2D"));
     CHECK_EQ(std::int64_t(3), heuristic.count("!!!"));
     CHECK_EQ(std::int64_t(2), heuristic.count("a b"));
-    CHECK_EQ(std::int64_t(2), heuristic.count("\u041F\u0440"));  // P r: each non-ASCII letter costs one
+    CHECK_EQ(std::int64_t(2), heuristic.count("\u00E9\u00E8"));  // e-acute, e-grave: each non-ASCII letter costs one
 }
 
 TEST(unicode_classes_match_the_jvm) {

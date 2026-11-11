@@ -8744,26 +8744,26 @@ Let me close those four gaps.
   "MrMebelMan/spojboard-firmware|0|2026-11-03||An ESP32-based LED matrix display firmware showing real",
   "ChenWuJing/DeepGEMM-Ascend|0|2026-11-03||DeepGEMM-Ascend: clean and efficient matrix multiplicat",
   "sshcrack/rpi-rgb-led-matrix|0|2026-11-02||Controlling up to three chains of 64x64, 32x32, 16x32 o",
-  "leonidus17/mp2-lab2-matrix|0|2026-11-02||Project-template dlya of performing second practical task",
-  "Gh02t1994/mp2-lab2-matrix|0|2026-11-02||Project-template dlya of performing second practical task",
-  "kabanery228/mp2-lab2-matrix|0|2026-11-02||Project-template dlya of performing second practical task",
+  "leonidus17/mp2-lab2-matrix|0|2026-11-02||A template project for the second practical assignment",
+  "Gh02t1994/mp2-lab2-matrix|0|2026-11-02||A template project for the second practical assignment",
+  "kabanery228/mp2-lab2-matrix|0|2026-11-02||A template project for the second practical assignment",
   "DesJewel/matrix|0|2026-11-02||Step by step linear algebra calculator program for the ",
   "JAMonschke/MatrixMultiplication|0|2026-11-02||",
   "santoshmo/FBGEMM|0|2026-11-02||FB (Facebook) + GEMM (General Matrix-Matrix Multiplicat",
   "4nimii/LED_matrix|0|2026-11-02||",
   "GotFusion/DeepGEMM-Ascend|0|2026-11-02||DeepGEMM-Ascend: clean and efficient matrix multiplicat",
   "kkolur76/FBGEMM|0|2026-11-02||FB (Facebook) + GEMM (General Matrix-Matrix Multiplicat",
-  "k-tayaya/mp2-lab2-matrix|0|2026-11-02||Project-template dlya of performing second practical task",
-  "RIParmak/mp2-lab2-matrix|0|2026-11-02||Project-template dlya of performing second practical task",
-  "NickKurakin/mp2-lab2-matrix|0|2026-11-02||Project-template dlya of performing second practical task",
+  "k-tayaya/mp2-lab2-matrix|0|2026-11-02||A template project for the second practical assignment",
+  "RIParmak/mp2-lab2-matrix|0|2026-11-02||A template project for the second practical assignment",
+  "NickKurakin/mp2-lab2-matrix|0|2026-11-02||A template project for the second practical assignment",
   "alex-lt-kong-clone/matrix-pipeline|0|2026-11-02||a modular computer vision application that utilizes a c",
   "mmmlalala/DeepGEMM-Ascend|0|2026-11-02||DeepGEMM-Ascend: clean and efficient matrix multiplicat",
   "aay-gup/FBGEMM|0|2026-11-02||FB (Facebook) + GEMM (General Matrix-Matrix Multiplicat",
   "NataliaYuklaeva/mp2-lab2-sparse-matrix|0|2026-11-01||",
   "Mr-Slick/awtrix-ng|0|2026-11-01||AWTRIX NG - Next generation firmware for Matrix clocks",
   "drronnie85/awtrix-ng|0|2026-11-02||AWTRIX NG - Next generation firmware for Matrix clocks",
-  "vika555555/mp2-lab2-matrix|0|2026-11-01||Project-template dlya of performing second practical task",
-  "Julianaderevannyh/mp2-lab2-matrix|0|2026-11-01||Project-template dlya of performing second practical task",
+  "vika555555/mp2-lab2-matrix|0|2026-11-01||A template project for the second practical assignment",
+  "Julianaderevannyh/mp2-lab2-matrix|0|2026-11-01||A template project for the second practical assignment",
   "kayanut26/mp2-lab2-sparse-matrix|0|2026-11-01||",
   "--- matrix+language:QML+fork:only&sort=updated&order=desc&per_page=100 (82 total) ---",
   "Lumar-ux/Nihil-Shell|0|2026-11-01||A monochrome, dot‑matrix desktop for NixOS",
@@ -13996,7 +13996,7 @@ Let me run 3 parallel shell calls.
 }
 ```
 
-[{"description":"Marshrut «vse ulitsy rajona s minimumom povtorov» (mixed CPP): yadro C++17 + Android APK cherez GitHub Actions","isFork":false,"nameWithOwner":"MaurerAnton/every-street","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-11-03T13:01:27Z"},{"description":"CI build of octet (skaft-software) for aarch64-unknown-linux-gnu","isFork":false,"nameWithOwner":"MaurerAnton/octet-aarch64-build","parent":null,"primaryLanguage":null,"pushedAt":"2026-11-03T12:04:50Z"},{"description":"Agora - BYOK LLM client with Tor proxy support","isFork":false,"nameWithOwner":"MaurerAnton/agora","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-11-03T03:10:14Z"},{"description":"C++ web archiver: libcurl capture, WARC, SQLite FTS5, cgroup memory guards","isFork":false,"nameWithOwner":"MaurerAnton/archivebox-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-11-01T15:27:34Z"},{"description":"The shortest path between two files is a duct — raw TCP file transfer, 47 lines of C89 (+ GPL header)","isFork":false,"nameWithOwner":"MaurerAnton/duct","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-10-31T15:44:21Z"},{"description":"Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control.","isFork":false,"nameWithOwner":"MaurerAnton/Agora-1","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-09-16T12:08:35Z"},{"description":"Progressive Chat Desktop — pure C++/Qt6 Matrix client for Linux desktop + PineTab 2/PinePhone. Sister to progressive-android. Reuses progressive_native core.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-desktop","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-10T12:56:40Z"},{"description":"SOTA 2B multilingual text-to-speech model in pure C++ — 24 languages, zero-shot voice cloning, 48kHz output","isFork":false,"nameWithOwner":"MaurerAnton/audio.cpp26","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-09-09T03:43:32Z"},{"description":"A monitor of resources","isFork":true,"nameWithOwner":"MaurerAnton/btop","parent":{"id":"MDEwOlJlcG9zaXRvcnkzNjUwMDUzNzc=","name":"btop","owner":{"id":"MDQ6VXNlcjU5NjU5NDgz","login":"aristocratos"}},"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-09T03:24:13Z"},{"description":"Personal landing page","isFork":false,"nameWithOwner":"MaurerAnton/MaurerAnton.github.io","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-08-05T21:26:51Z"},{"description":"Open-source clone of the Fahren Lernen driving theory test app","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-clone","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-08-05T10:59:58Z"},{"description":"📈 Progressive Chat Android — aiming for pure C++ Matrix client. https://progressive.chat","isFork":true,"nameWithOwner":"MaurerAnton/progressive-android-experiments","parent":{"id":"R_kgDOSbkS3g","name":"progressive-android","owner":{"id":"O_kgDOEO51MA","login":"progressive-chat"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-08-03T14:27:12Z"},{"description":"Pure C++20 Zonos2 TTS — 28-layer MoE transformer","isFork":false,"nameWithOwner":"MaurerAnton/zonos2.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-15T04:28:12Z"},{"description":"Pure C++ npm registry caching proxy — zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/npmproxy","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-13T18:09:40Z"},{"description":"Pure C++ inference for NVIDIA Nemotron-3.5-ASR (FastConformer + RNNT) using ggml/CrispASR","isFork":false,"nameWithOwner":"MaurerAnton/nemotron-asr-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-07T11:53:21Z"},{"description":"1:1 MAUI clone - binary identical (MD5 match, 0 pixel differences)","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui8","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-06-04T17:31:33Z"},{"description":"MAUI clone of Fahren Lernen NEU - same stack as original","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui","parent":null,"primaryLanguage":{"name":"LLVM"},"pushedAt":"2026-06-04T12:11:49Z"},{"description":"Open-source business management platform — project management, HR, finance, time tracking","isFork":true,"nameWithOwner":"MaurerAnton/projectforge","parent":{"id":"MDEwOlJlcG9zaXRvcnk2MDg1MTMxOQ==","name":"projectforge","owner":{"id":"MDEyOk9yZ2FuaXphdGlvbjE3NzMxNjc=","login":"micromata"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-06-03T10:23:55Z"},{"description":"Pure C++ Git caching proxy — zero deps beyond libcurl and git","isFork":false,"nameWithOwner":"MaurerAnton/coblet","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-02T16:30:56Z"},{"description":"Fast source code line counter with complexity estimation — C++ port of scc","isFork":false,"nameWithOwner":"MaurerAnton/sccpp","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-06-01T17:01:32Z"},{"description":"Pure C++/OpenGL ES Matrix chat for Android. IRC-styled UI with SDFont rendering. Will be merged into progressive-android 0.5.5+. Zero JVM UI code.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-next","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-01T08:57:35Z"},{"description":"C++ port of shadow-tls: proxy that exposes real TLS handshake to firewall. V2/V3 protocol, real TLS via OpenSSL, 1780 MB/s throughput.","isFork":false,"nameWithOwner":"MaurerAnton/shadowtls-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T12:31:03Z"},{"description":"The agent that grows with you","isFork":true,"nameWithOwner":"MaurerAnton/hermes-agent","parent":{"id":"R_kgDORtBDWg","name":"hermes-agent","owner":{"id":"U_kgDODxGXnA","login":"adybag14-cyber"}},"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-30T08:38:29Z"},{"description":"Pure C++ PyPI caching proxy — zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/croxpi","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T07:39:08Z"},{"description":"RedReader with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-patched","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:36:08Z"},{"description":"RedReader Android Reddit client with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-old-broken","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:05:47Z"},{"description":"Single-file wxWidgets utility for interactive image cropping and resizing","isFork":false,"nameWithOwner":"MaurerAnton/crop-image-wx.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-29T10:22:49Z"},{"description":"C++ patches for Tenstorrent tt-metal: exp2 kernel (#44507) + host tilizer (#8621)","isFork":false,"nameWithOwner":"MaurerAnton/tt-metal-bounties","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-20T18:25:32Z"},{"description":"RoboSats-XMR: Clean-room FastAPI backend prototype for Monero-based P2P exchange with multisig escrow","isFork":false,"nameWithOwner":"MaurerAnton/robosats-xmr","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-20T11:35:18Z"},{"description":"Progressive Chat Android v0.0.2 ~2% C++ buildable C++ port","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-0.0.2","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-05-20T10:58:37Z"},{"description":"Reliable model swapping for any local OpenAI/Anthropic compatible server - llama.cpp, vllm, etc","isFork":true,"nameWithOwner":"MaurerAnton/llama-swap","parent":{"id":"R_kgDOM7P8-A","name":"llama-swap","owner":{"id":"MDQ6VXNlcjgzOTcy","login":"mostlygeek"}},"primaryLanguage":{"name":"Go"},"pushedAt":"2026-05-18T09:28:56Z"},{"description":"Parser for artificialanalysis.ai — extract AI model pricing, benchmarks & speed without an API key. Python / C++ / JavaScript (Node.js). Includes dashboard.html — interactive token cost calculator.","isFork":false,"nameWithOwner":"MaurerAnton/artificialanalysis-ai-parser","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-18T04:24:25Z"},{"description":"Personal site — static HTML with dark theme, content from JSON","isFork":false,"nameWithOwner":"MaurerAnton/maureranton.com","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-14T20:04:35Z"}]
+[{"description":"A route of "all district streets with the fewest repeats" (mixed CPP): a C++17 core + an Android APK through GitHub Actions","isFork":false,"nameWithOwner":"MaurerAnton/every-street","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-11-03T13:01:27Z"},{"description":"CI build of octet (skaft-software) for aarch64-unknown-linux-gnu","isFork":false,"nameWithOwner":"MaurerAnton/octet-aarch64-build","parent":null,"primaryLanguage":null,"pushedAt":"2026-11-03T12:04:50Z"},{"description":"Agora - BYOK LLM client with Tor proxy support","isFork":false,"nameWithOwner":"MaurerAnton/agora","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-11-03T03:10:14Z"},{"description":"C++ web archiver: libcurl capture, WARC, SQLite FTS5, cgroup memory guards","isFork":false,"nameWithOwner":"MaurerAnton/archivebox-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-11-01T15:27:34Z"},{"description":"The shortest path between two files is a duct — raw TCP file transfer, 47 lines of C89 (+ GPL header)","isFork":false,"nameWithOwner":"MaurerAnton/duct","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-10-31T15:44:21Z"},{"description":"Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control.","isFork":false,"nameWithOwner":"MaurerAnton/Agora-1","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-09-16T12:08:35Z"},{"description":"Progressive Chat Desktop — pure C++/Qt6 Matrix client for Linux desktop + PineTab 2/PinePhone. Sister to progressive-android. Reuses progressive_native core.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-desktop","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-10T12:56:40Z"},{"description":"SOTA 2B multilingual text-to-speech model in pure C++ — 24 languages, zero-shot voice cloning, 48kHz output","isFork":false,"nameWithOwner":"MaurerAnton/audio.cpp26","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-09-09T03:43:32Z"},{"description":"A monitor of resources","isFork":true,"nameWithOwner":"MaurerAnton/btop","parent":{"id":"MDEwOlJlcG9zaXRvcnkzNjUwMDUzNzc=","name":"btop","owner":{"id":"MDQ6VXNlcjU5NjU5NDgz","login":"aristocratos"}},"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-09T03:24:13Z"},{"description":"Personal landing page","isFork":false,"nameWithOwner":"MaurerAnton/MaurerAnton.github.io","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-08-05T21:26:51Z"},{"description":"Open-source clone of the Fahren Lernen driving theory test app","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-clone","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-08-05T10:59:58Z"},{"description":"📈 Progressive Chat Android — aiming for pure C++ Matrix client. https://progressive.chat","isFork":true,"nameWithOwner":"MaurerAnton/progressive-android-experiments","parent":{"id":"R_kgDOSbkS3g","name":"progressive-android","owner":{"id":"O_kgDOEO51MA","login":"progressive-chat"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-08-03T14:27:12Z"},{"description":"Pure C++20 Zonos2 TTS — 28-layer MoE transformer","isFork":false,"nameWithOwner":"MaurerAnton/zonos2.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-15T04:28:12Z"},{"description":"Pure C++ npm registry caching proxy — zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/npmproxy","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-13T18:09:40Z"},{"description":"Pure C++ inference for NVIDIA Nemotron-3.5-ASR (FastConformer + RNNT) using ggml/CrispASR","isFork":false,"nameWithOwner":"MaurerAnton/nemotron-asr-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-07T11:53:21Z"},{"description":"1:1 MAUI clone - binary identical (MD5 match, 0 pixel differences)","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui8","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-06-04T17:31:33Z"},{"description":"MAUI clone of Fahren Lernen NEU - same stack as original","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui","parent":null,"primaryLanguage":{"name":"LLVM"},"pushedAt":"2026-06-04T12:11:49Z"},{"description":"Open-source business management platform — project management, HR, finance, time tracking","isFork":true,"nameWithOwner":"MaurerAnton/projectforge","parent":{"id":"MDEwOlJlcG9zaXRvcnk2MDg1MTMxOQ==","name":"projectforge","owner":{"id":"MDEyOk9yZ2FuaXphdGlvbjE3NzMxNjc=","login":"micromata"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-06-03T10:23:55Z"},{"description":"Pure C++ Git caching proxy — zero deps beyond libcurl and git","isFork":false,"nameWithOwner":"MaurerAnton/coblet","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-02T16:30:56Z"},{"description":"Fast source code line counter with complexity estimation — C++ port of scc","isFork":false,"nameWithOwner":"MaurerAnton/sccpp","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-06-01T17:01:32Z"},{"description":"Pure C++/OpenGL ES Matrix chat for Android. IRC-styled UI with SDFont rendering. Will be merged into progressive-android 0.5.5+. Zero JVM UI code.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-next","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-01T08:57:35Z"},{"description":"C++ port of shadow-tls: proxy that exposes real TLS handshake to firewall. V2/V3 protocol, real TLS via OpenSSL, 1780 MB/s throughput.","isFork":false,"nameWithOwner":"MaurerAnton/shadowtls-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T12:31:03Z"},{"description":"The agent that grows with you","isFork":true,"nameWithOwner":"MaurerAnton/hermes-agent","parent":{"id":"R_kgDORtBDWg","name":"hermes-agent","owner":{"id":"U_kgDODxGXnA","login":"adybag14-cyber"}},"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-30T08:38:29Z"},{"description":"Pure C++ PyPI caching proxy — zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/croxpi","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T07:39:08Z"},{"description":"RedReader with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-patched","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:36:08Z"},{"description":"RedReader Android Reddit client with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-old-broken","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:05:47Z"},{"description":"Single-file wxWidgets utility for interactive image cropping and resizing","isFork":false,"nameWithOwner":"MaurerAnton/crop-image-wx.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-29T10:22:49Z"},{"description":"C++ patches for Tenstorrent tt-metal: exp2 kernel (#44507) + host tilizer (#8621)","isFork":false,"nameWithOwner":"MaurerAnton/tt-metal-bounties","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-20T18:25:32Z"},{"description":"RoboSats-XMR: Clean-room FastAPI backend prototype for Monero-based P2P exchange with multisig escrow","isFork":false,"nameWithOwner":"MaurerAnton/robosats-xmr","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-20T11:35:18Z"},{"description":"Progressive Chat Android v0.0.2 ~2% C++ buildable C++ port","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-0.0.2","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-05-20T10:58:37Z"},{"description":"Reliable model swapping for any local OpenAI/Anthropic compatible server - llama.cpp, vllm, etc","isFork":true,"nameWithOwner":"MaurerAnton/llama-swap","parent":{"id":"R_kgDOM7P8-A","name":"llama-swap","owner":{"id":"MDQ6VXNlcjgzOTcy","login":"mostlygeek"}},"primaryLanguage":{"name":"Go"},"pushedAt":"2026-05-18T09:28:56Z"},{"description":"Parser for artificialanalysis.ai — extract AI model pricing, benchmarks & speed without an API key. Python / C++ / JavaScript (Node.js). Includes dashboard.html — interactive token cost calculator.","isFork":false,"nameWithOwner":"MaurerAnton/artificialanalysis-ai-parser","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-18T04:24:25Z"},{"description":"Personal site — static HTML with dark theme, content from JSON","isFork":false,"nameWithOwner":"MaurerAnton/maureranton.com","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-14T20:04:35Z"}]
 
 
 **Tool: shell**
@@ -14104,76 +14104,76 @@ Their account has two Agora repos plus local research docs. Let me pull them tog
 ```
 
 Read file /home/user/questions/AGORA_SKIA_DEEP_RESEARCH.md, lines 1-70
-1: # Issledovanie: Pure-C++ UI-tulkity na baze Skia — ischerpyvayuschij obzor
+# Research: Pure-C++ UI toolkits on Skia — an exhaustive survey
 2: 
-3: **Tema:** Suschestvuet li podderzhivaemyj, permissive-litsenzirovannyj pure-C++ UI-tulkit na Skia
-4: s podderzhkoj Android (IME + TalkBack), Markdown/LaTeX, RTL i web-targeta.
-5: **Kontext primeneniya:** project Agora — chat, Markdown/LaTeX, IME, vydelenie texta, TalkBack,
-6: RTL, peremennye shrifty, **minSdk 26**.
-7: **Ogranicheniya zakazchika:** pure C++, bez QML, minimum Java, C++-yadro as perenosimyj sloj logiki;
-8: nuzhen project, kotoryj mozhno *soprovozhdat*, a ne drop-in production.
+**Topic:** Whether a maintained, permissively licensed pure-C++ UI toolkit on Skia exists
+with Android support (IME + TalkBack), Markdown/LaTeX, RTL and a web target.
+**Context of use:** the Agora project — chat, Markdown/LaTeX, IME, text selection, TalkBack,
+RTL, variable fonts, **minSdk 26**.
+**Client's constraints:** pure C++, no QML, minimal Java, a C++ core as a portable layer of logic;
+a project that can be *maintained*, rather than a drop-in production solution.
 9: 
 10: ---
 11: 
-12: ## 1. Metodologiya
+## 1. Methodology
 13: 
-14: ### 1.1 Protsedura
-15: Poisk vyolsya po shesti osyam (nezavisimym trebovaniyam), po kazhdoj — neskolko zaprosov
-16: k GitHub Search API s autentifikatsiej (`gh api`, snyatie limita 60 req/h), sortirovka po zvyozdam,
-17: filtr po yazyku/litsenzii/aktivnosti. Otobrannye repozitorii proveryalis **po derevu fajlov**
-18: (`git/trees?recursive=1`) na predmet realnogo nalichiya koda, a ne tolko upominaniya v README.
+### 1.1 Procedure
+The search ran along six axes (independent requirements), with several queries per axis
+against the authenticated GitHub Search API (`gh api`, lifting the 60 req/h limit), sorted by stars,
+filtered by language/license/activity. The selected repositories were checked **against the file tree**
+(`git/trees?recursive=1`) for actual code rather than a mere mention in the README.
 19: 
-20: Proveryaemye markery: `android/`, `jni`, `*.java`, `*.kt`, `ime`, `input_method`,
+Markers checked for: `android/`, `jni`, `*.java`, `*.kt`, `ime`, `input_method`,
 21: `accessib*`, `a11y`, `talkback`, `wasm`, `emscripten`, `harfbuzz`, `icu`, `fribidi`.
 22: 
-23: ### 1.2 Pochemu search po README nedostatochen
-24: Ryad projectov deklariruet "cross-platform", no v dereve fajlov prisutstvuet tolko odin
-25: platformennyj bekend. Poetomu kazhdyj kandidat prokhodil proverku po derevu. Eto klyuchevoe
-26: metodologicheskoe otlichie ot poverkhnostnogo obzora.
+### 1.2 Why a README search is not enough
+A number of projects declare "cross-platform", yet the file tree holds only a single
+platform backend. So every candidate went through the tree check. This is the key
+methodological difference from a superficial survey.
 27: 
 28: ---
 29: 
-30: ## 2. Os A. C++ tulkity na Skia — polnaya perepis
+## 2. Axis A. C++ toolkits on Skia — a full rewrite
 31: 
-32: | Project | ★ | Litsenziya | Aktivnost | Osnova | Android | Web/WASM | Verdikt |
+| Project | ★ | License | Activity | Base | Android | Web/WASM | Verdict |
 33: |---|---|---|---|---|---|---|---|
-34: | **nim_duilib** / **dui** | 335 | **MIT** | **2026-10-31 (segodnya)** | XML-DirectUI + Skia CPU/GPU + SDL3 | ✗ | ✗ | **Luchshij desktop-kandidat** |
-35: | Tencent/tgfx | 1601 | NOASSERTION | 2026-10-31 | tolko grafika (Metal/GL) | — | — | grafika, ne tulkit |
-36: | skui-org/skui | 435 | MIT | 2022-01-21 | Skia + signals | ✗ | ✗ | myortv 4 goda |
-37: | cutefish-toolkit | 229 | BSD-3 | 2026-10-31 | Skia + Wayland | ✗ | ✗ | tolko Wayland |
-38: | nidium/Nidium | 1146 | NOASSERTION | 2019-11-12 | Skia+Yoga+SpiderMonkey | ✗ | upom. | myortv 7 let |
+| **nim_duilib** / **dui** | 335 | **MIT** | **2026-10-31 (today)** | XML-DirectUI + Skia CPU/GPU + SDL3 | ✘ | ✘ | **The best desktop candidate** |
+| Tencent/tgfx | 1601 | NOASSERTION | 2026-10-31 | graphics only (Metal/GL) | — | — | graphics, not a toolkit |
+| skui-org/skui | 435 | MIT | 2022-01-21 | Skia + signals | ✘ | ✘ | dead for 4 years |
+| cutefish-toolkit | 229 | BSD-3 | 2026-10-31 | Skia + Wayland | ✘ | ✘ | Wayland only |
+| nidium/Nidium | 1146 | NOASSERTION | 2019-11-12 | Skia+Yoga+SpiderMonkey | ✘ | mentioned | dead for 7 years |
 39: | VuiLib (FSMargoo) | 107 | MIT | 2024-10-19 | Skia + GLFW | ✗ | ✗ | desktop only |
-40: | Pesto (marcj) | 78 | **net** | 2019-10-07 | Skia, CSS/HTML-podobnyj | ✗ | ✗ | myortv, net litsenzii |
+| Pesto (marcj) | 78 | **none** | 2019-10-07 | Skia, CSS/HTML-like | ✘ | ✘ | dead, no license |
 41: | psychic-ui (ubald) | 44 | MIT | 2025-02-05 | Skia + Yoga + GLFW | ✗ | ✗ | desktop only |
 42: | Kay (CuarzoSoftware) | 34 | LGPL-2.1 | 2026-10-23 | Skia + Yoga | ✗ | ✗ | desktop, LGPL |
-43: | tanpuer/SkiaUI | 16 | **net** | 2024-12-09 | Skia + Yoga | **✓** | ✗ | sm. os B |
-44: | imalimin/AlSkia | 19 | **net** | 2021-04-06 | prosto sborka Skia pod Android | ✓ | ✗ | ne tulkit |
-45: | Huiyicc/HYGUI | 14 | **net** | 2024-10-23 | Skia + SDL | ✗ | ✗ | bez litsenzii |
-46: | noartem/elementor | 17 | BSD-3 | 2024-06-11 | Skia + GLFW | ✗ | ✗ | mikro-project |
-47: | liteDui (BBDXF) | 2 | Apache-2.0 | 2026-03-11 | Skia + Yoga | ✗ | ✗ | zachatochnyj |
-48: | **ReactCpp** (faywong) | ~1 | NOASSERTION | 2026-10-30 | Skia + Yoga + SDL3 + Rive | ✗ | ✗ | sm. §6 |
-49: | FlexPlusOrg/skia-opengl-emscripten | 13 | **net** | 2020-12-25 | Skia + HTML/CSS + Emscripten | ✗ | **✓** | sm. os C |
+| tanpuer/SkiaUI | 16 | **none** | 2024-12-09 | Skia + Yoga | **✓** | ✘ | see axis B |
+| imalimin/AlSkia | 19 | **none** | 2021-04-06 | just a Skia build for Android | ✓ | ✘ | not a toolkit |
+| Huiyicc/HYGUI | 14 | **none** | 2024-10-23 | Skia + SDL | ✘ | ✘ | no license |
+| noartem/elementor | 17 | BSD-3 | 2024-06-11 | Skia + GLFW | ✘ | ✘ | micro project |
+| liteDui (BBDXF) | 2 | Apache-2.0 | 2026-03-11 | Skia + Yoga | ✘ | ✘ | embryonic |
+| **ReactCpp** (faywong) | ~1 | NOASSERTION | 2026-10-30 | Skia + Yoga + SDL3 + Rive | ✘ | ✘ | see §6 |
+| FlexPlusOrg/skia-opengl-emscripten | 13 | **none** | 2020-12-25 | Skia + HTML/CSS + Emscripten | ✘ | **✓** | see axis C |
 50: 
-51: ### 2.1 Klyuchevoj vyvod osi A
-52: **Ne suschestvuet** pure-C++ UI-tulkita na Skia, odnovremenno udovletvoryayuschego
-53: «aktivnyj» + «permissive litsenziya» + «Android» + «web».
-54: Mnozhestvo «aktivnykh» i mnozhestvo «s Android» **ne peresekayutsya**.
+### 2.1 Key conclusion of axis A
+**There is no** pure-C++ UI toolkit on Skia that simultaneously satisfies
+«active» + «permissive license» + «Android» + «web».
+The set of «active» ones and the set of those with Android **do not intersect**.
 55: 
-56: Edinstvennyj project, prokhodyaschij po aktivnosti + litsenzii + zrelosti vidzhetov —
-57: **nim_duilib/dui** — pri etom ne imeet ni Android, ni WASM.
+The only project passing on activity + license + widget maturity —
+**nim_duilib/dui** — while having neither Android nor WASM.
 58: 
 59: ---
 60: 
-61: ## 3. Os B. Android
+## 3. Axis B. Android
 62: 
-63: ### 3.1 Edinstvennyj realnyj Android-Skia project: `tanpuer/SkiaUI`
-64: Kotlin-poverkhnost: `HYSkiaEngine.kt`, `HYSkiaSurfaceView.kt`, `HYSkiaTextureView.kt`.
-65: C++-storona: `SkiaViewContext`, `gl/HYEGLContext`, `widget/TextView`.
+### 3.1 The only real Android-Skia project: `tanpuer/SkiaUI`
+Kotlin surface: `HYSkiaEngine.kt`, `HYSkiaSurfaceView.kt`, `HYSkiaTextureView.kt`.
+C++ side: `SkiaViewContext`, `gl/HYEGLContext`, `widget/TextView`.
 66: 
-67: Proverka dereva pokazala:
-68: - `TextView` — **tolko otobrazhenie** texta, redaktirovaniya net;
-69: - IME / `InputConnection` — **otsutstvuyut**;
-70: - accessibility / TalkBack / `AccessibilityNodeInfo` — **otsutstvuyut**;
+The tree check showed:
+- `TextView` — **display only**, no editing;
+- IME / `InputConnection` — **absent**;
+- accessibility / TalkBack / `AccessibilityNodeInfo` — **absent**;
 [Output truncated. Continue reading with offset: 71]
 
 **Tool: shell**
