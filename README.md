@@ -167,12 +167,12 @@ same three frames to and reads back.
 Two answers have been ruled out since, by reading mux rather than by
 guessing -- mux draws on the same phone without either of them:
 
-* what the GPU compiled is **kept between runs** since `a0f90c8ddf0d`. Skia
+* what the GPU compiled is **kept between runs**. Skia
   was compiling every program it needed at every start, because nothing told
   the window where to keep them; mux tells it, and now so does the window
   (`src/platform/kept.cc`). A phone is slow at compiling them, and until that
   is read off the machine it is the best candidate there is;
-* what the window itself says is **heard** since `a0f90c8ddf0d`. Both SDL and
+* what the window itself says is **heard**. Both SDL and
   skiff print to stderr -- among the rest the one line saying whether it is
   drawn through OpenGL or in software -- and Android throws stderr away; mux
   pipes it into logcat, and so does this now. Every question above could have

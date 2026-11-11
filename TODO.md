@@ -225,3 +225,18 @@ build and the next.
       open, which says neither what went wrong nor that anything had: it
       says what is missing now (`web/bootstrap.js`), and
       `tools/probe_worker_blocked.mjs` reads that back at both widths.
+
+## An idea from a long, unsuccessful start
+
+- [ ] **Build the same simple app on different stacks, and measure them.**
+      A first Android start was long and unsuccessful, and it suggested the
+      experiment: write one small, identical app -- the same screen, the same
+      draw, the same ask -- on this stack and on others, then compare what
+      each costs to start, to draw and to hold (start time, frames, memory,
+      binary size). The point is the numbers, not the app: a stack chosen by
+      looking at it is a guess, and one chosen by timing it on the same
+      machine is not. Where the stacks differ (C++26+skiff here, others
+      elsewhere) the same screen has to be honest about it -- one room, one
+      text, one press, and a stopwatch on each.
+
+      A ready-made bench candidate: `j4niwzis/calculator`.
