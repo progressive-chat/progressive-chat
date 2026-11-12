@@ -689,8 +689,35 @@ ImportResult DataImporter::import(
             } catch (const std::exception& e) {
                 result.errors.push_back(e.what());
             }
+        } else if (category == data_export::ExportCategory::Memories) {
+            // 5. Import memories and skills from the archive's memories/ tree.
+            try {
+                int imported = 0;
+                for (const std::string& name : archive.names()) {
+                    if (name.rfind("memories/", 0) != 0) continue;
+                    const std::string relative = name.substr(std::strlen("memories/"));
+                    const auto content = archive.bytes(name);
+                    if (!content) continue;
+                    if (relative == "active_memory.md") {
+                        memory_.update_active_memory(*content);
+                    } else if (relative == "memory_db/memory_meta.json") {
+                        memory_.save_meta_json(*content);
+                    } else if (relative.rfind("memory_db/", 0) == 0) {
+                        memory_.create_file(relative.substr(std::strlen("memory_db/")), *content);
+                    } else if (relative == "skill_db/skill_meta.json") {
+                        skill_.save_meta_json(*content);
+                    } else if (relative.rfind("skill_db/", 0) == 0) {
+                        skill_.create_file(relative.substr(std::strlen("skill_db/")), *content);
+                    }
+                    if (relative.size() >= 3 && relative.substr(relative.size() - 3) == ".md")
+                        ++imported;
+                }
+                result.memories_imported = imported;
+            } catch (const std::exception& e) {
+                result.errors.push_back(std::string("Memories: ") + e.what());
+            }
         }
-        // 5. Memories, 6. Settings, 7. API keys: staged (Conversations imported above).
+        // 6. Settings, 7. API keys: staged (Conversations imported above, prompts/memories here).
         step();
     }
 
