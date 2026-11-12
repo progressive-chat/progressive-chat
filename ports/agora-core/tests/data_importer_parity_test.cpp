@@ -1411,12 +1411,28 @@ void run_scenario(const std::filesystem::path& path) {
                                   "\n  expected: " + excerpt(*golden_result));
             }
 
-            // The call log the recording sink kept: the golden's settingsCalls.
+            // The call log the recording sink kept, filtered to the orchestration
+            // calls the reference's driver records (the archive's own scalar restore
+            // calls are excluded from the golden).
             const Value golden_calls_field = [&] {
+                static const std::set<std::string> kKeep = {
+                    "saveConversationSettingsMap", "invalidatePortableModelCaches",
+                    "saveSystemPrompts",          "saveEmbeddingModels",
+                    "setActiveEmbeddingModelId",  "saveCustomFontPath",
+                    "saveCustomFontName",         "saveShellDevices",
+                    "saveMcpServers",             "saveConversationSettings",
+                };
                 Value v;
                 v.kind = Kind::Array;
                 const json::ParseResult parsed_calls = json::parse("[" + sink.calls + "]");
-                if (parsed_calls.value) v = *parsed_calls.value;
+                if (parsed_calls.value && parsed_calls.value->kind == Kind::Array) {
+                    for (const Value& call : parsed_calls.value->elements) {
+                        const Value* name = field(call, "name");
+                        if (name != nullptr && name->kind == Kind::String &&
+                            kKeep.count(name->text))
+                            v.elements.push_back(call);
+                    }
+                }
                 return v;
             }();
             const Value actual_calls = masked(golden_calls_field);

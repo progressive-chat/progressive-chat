@@ -727,8 +727,35 @@ ImportResult DataImporter::import(
             } catch (const std::exception& e) {
                 result.errors.push_back(std::string("Memories: ") + e.what());
             }
+        } else if (category == data_export::ExportCategory::Settings) {
+            // 6. Import settings: restore the portable archive (validating it),
+            // restore a custom font, reconcile the embedding models.
+            try {
+                const auto settings_bytes = archive.bytes(native_backup::kSettingsEntry);
+                if (!settings_bytes) throw std::runtime_error("settings.json is missing");
+                settings_archive::RestoreOptions options;
+                options.replace = strategy == ImportStrategy::Replace;
+                if (archive.has(native_backup::kCustomFontEntry))
+                    options.restored_custom_font =
+                        restore_custom_font(archive, manifest.version);
+                const json::ParseResult parsed_settings = json::parse(*settings_bytes);
+                if (!parsed_settings.value || parsed_settings.value->kind != Kind::Object)
+                    throw std::runtime_error("settings.json is invalid");
+                if (writes_.archive_sink != nullptr) {
+                    settings_archive::restore_from_json_object(
+                        *parsed_settings.value, settings_.archive_snapshot
+                                                    ? settings_.archive_snapshot()
+                                                    : settings_archive::SettingsSnapshot{},
+                        *writes_.archive_sink, options);
+                }
+                result.settings_imported = true;
+            } catch (const settings_archive::IllegalArgumentException& e) {
+                result.errors.push_back(std::string("Settings: ") + e.what());
+            } catch (const std::exception& e) {
+                result.errors.push_back(std::string("Settings: ") + e.what());
+            }
         }
-        // 6. Settings, 7. API keys: staged (Conversations imported above, prompts/memories here).
+        // 7. API keys: staged (Conversations/prompts/memories/settings run above).
         step();
     }
 
