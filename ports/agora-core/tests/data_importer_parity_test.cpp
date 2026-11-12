@@ -29,6 +29,7 @@
 
 #include "agora/core/chat_dao.hpp"
 #include "agora/core/data_importer.hpp"
+#include "agora/core/font_utils.hpp"
 #include "agora/core/json.hpp"
 #include "agora/core/maintenance_debt.hpp"
 #include "agora/core/memory_manager.hpp"
@@ -107,6 +108,15 @@ Value json_bool(bool value) {
     return v;
 }
 
+// A bare token (null, true, a number): json::parse reads it as a Literal, so
+// the port must build it as one to compare equal.
+Value json_literal(std::string_view token) {
+    Value v;
+    v.kind = Kind::Literal;
+    v.text = std::string(token);
+    return v;
+}
+
 Value json_array(std::vector<Value> elements) {
     Value v;
     v.kind = Kind::Array;
@@ -139,6 +149,32 @@ bool json_equal(const Value& left, const Value& right) {
         if (match == nullptr || !json_equal(member.value, *match)) return false;
     }
     return true;
+}
+
+
+// base64 (the fixtures mirror java.util.Base64; copied from the exporter test
+// so both decode the same bytes).
+std::vector<std::uint8_t> base64_decode(std::string_view text) {
+    std::vector<std::uint8_t> out;
+    int accumulator = 0;
+    int bits = 0;
+    for (const char ch : text) {
+        if (ch == '=' || ch == '\n' || ch == '\r') break;
+        int value = -1;
+        if (ch >= 'A' && ch <= 'Z') value = ch - 'A';
+        else if (ch >= 'a' && ch <= 'z') value = ch - 'a' + 26;
+        else if (ch >= '0' && ch <= '9') value = ch - '0' + 52;
+        else if (ch == '+') value = 62;
+        else if (ch == '/') value = 63;
+        if (value < 0) continue;
+        accumulator = (accumulator << 6) | value;
+        bits += 6;
+        if (bits >= 8) {
+            bits -= 8;
+            out.push_back(static_cast<std::uint8_t>((accumulator >> bits) & 0xFF));
+        }
+    }
+    return out;
 }
 
 std::string excerpt(const Value& value, std::size_t limit = 400) {
@@ -394,30 +430,69 @@ void run_scenario(const std::filesystem::path& path) {
     if (golden_steps == nullptr || golden_steps->kind != Kind::Array)
         scenario_fail(stem + ": golden needs steps");
 
-    // The golden's preview steps, in order: the i-th preview step of the
-    // scenario is compared with the i-th preview step of the golden, so a
-    // scenario that previews several archives is checked step for step.
-    std::vector<const Value*> golden_previews;
-    for (const Value& golden_step : golden_steps->elements) {
-        if (required_text(golden_step, "op") == "preview")
-            golden_previews.push_back(field(golden_step, "result"));
-    }
+    // The golden's steps, grouped by op and kept in order: the i-th preview
+    // step of the scenario is compared with the i-th preview step of the
+    // golden, and the i-th font step with the i-th font step, so a scenario
+    // that previews several archives or reads several fonts is checked step
+    // for step.
+    auto golden_results_for = [&](std::string_view wanted) {
+        std::vector<const Value*> found;
+        for (const Value& golden_step : golden_steps->elements) {
+            if (required_text(golden_step, "op") == wanted)
+                found.push_back(field(golden_step, "result"));
+        }
+        return found;
+    };
+    const std::vector<const Value*> golden_previews = golden_results_for("preview");
+    const std::vector<const Value*> golden_fonts = golden_results_for("font");
     std::size_t preview_index = 0;
+    std::size_t font_index = 0;
+
+    // What one step says, asked of the port: a preview reads an archive it is
+    // given, a font reads the family out of the bytes of a TTF. (Import needs
+    // the whole import harness and is driven by its own test.)
+    auto actual_for = [&](const Value& step, std::string_view op) -> Value {
+        if (op == "preview") {
+            const std::string bytes = archive_bytes(step);
+            backup::NativeBackupArchive archive = backup::NativeBackupArchive::open_bytes(bytes);
+            return preview_value(importer.preview(archive));
+        }
+        // font: the base64 is the font itself; read its name table from a file.
+        const Value* encoded = field(step, "base64");
+        if (encoded == nullptr || encoded->kind != Kind::String)
+            scenario_fail("font step needs a base64 font");
+        const std::vector<std::uint8_t> font = base64_decode(encoded->text);
+        const std::filesystem::path temp =
+            std::filesystem::temp_directory_path() / (stem + "-font.ttf");
+        {
+            std::ofstream out(temp, std::ios::binary | std::ios::trunc);
+            out.write(reinterpret_cast<const char*>(font.data()),
+                      static_cast<std::streamsize>(font.size()));
+        }
+        const agora::core::font_utils::FontMetadata meta =
+            agora::core::font_utils::read_font_meta(temp);
+        std::error_code ignored;
+        std::filesystem::remove(temp, ignored);
+        return json_object({
+            {"family", json_string(meta.family)},
+            {"subfamily", meta.subfamily.has_value() ? json_string(*meta.subfamily)
+                                                     : json_literal("null")},
+        });
+    };
 
     for (const Value& step : steps->elements) {
         const std::string op = required_text(step, "op");
-        if (op != "preview") continue;  // import and font are driven elsewhere
+        if (op == "import") continue;  // driven by the import harness test
 
-        const std::string bytes = archive_bytes(step);
-        backup::NativeBackupArchive archive = backup::NativeBackupArchive::open_bytes(bytes);
-        const Value actual = preview_value(importer.preview(archive));
+        const std::size_t index = op == "preview" ? preview_index++ : font_index++;
+        const std::vector<const Value*>& golden_list =
+            op == "preview" ? golden_previews : golden_fonts;
+        if (index >= golden_list.size())
+            scenario_fail(stem + ": golden has fewer " + op + " steps than the scenario");
+        const Value* golden_result = golden_list[index];
+        if (golden_result == nullptr) scenario_fail(stem + ": golden has no result");
 
-        if (preview_index >= golden_previews.size())
-            scenario_fail(stem + ": golden has fewer preview steps than the scenario");
-        const Value* golden_result = golden_previews[preview_index];
-        ++preview_index;
-        if (golden_result == nullptr) scenario_fail(stem + ": golden has no preview result");
-
+        const Value actual = actual_for(step, op);
         if (!json_equal(actual, *golden_result))
             scenario_fail(stem + "\n  actual:   " + excerpt(actual) +
                           "\n  expected: " + excerpt(*golden_result));
