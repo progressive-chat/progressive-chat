@@ -420,7 +420,7 @@ void run_scenario(const std::filesystem::path& path) {
 
 }  // namespace
 
-TEST(data_importer, previews_every_archive_as_the_reference_does) {
+TEST(data_importer_previews_every_archive_as_the_reference_does) {
     const std::filesystem::path root_dir = AGORA_FIXTURE_DATA_IMPORTER_DIR;
     const std::filesystem::path scenarios_dir = root_dir / "scenarios";
     CHECK(std::filesystem::is_directory(scenarios_dir));
