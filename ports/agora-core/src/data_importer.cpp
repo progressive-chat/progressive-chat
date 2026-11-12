@@ -632,6 +632,45 @@ ImportResult DataImporter::import(
         return result;
     }
 
+    // 2/4. Stage + import the conversation graph first: a staging failure aborts
+    // the whole import before any progress is reported (the reference stages
+    // before it starts ticking progress).
+    if (active_categories.count(data_export::ExportCategory::Conversations)) {
+        const ImportStrategy strategy = active_categories.at(data_export::ExportCategory::Conversations);
+        try {
+            ArchiveEntrySource entry_source(archive);
+            native_graph::NativeConversationGraphSource source =
+                native_graph::NativeConversationGraphSource::open(entry_source, manifest.version,
+                                                                  platform_.files_dir);
+            int conversations = 0, tasks = 0, loops = 0;
+            const native_graph_import::ImportStrategy graph_strategy =
+                strategy == ImportStrategy::Replace ? native_graph_import::ImportStrategy::Replace
+                : strategy == ImportStrategy::Merge  ? native_graph_import::ImportStrategy::Merge
+                                                     : native_graph_import::ImportStrategy::Skip;
+            {
+                native_graph::NativeConversationGraphSource::Stream stream = source.open_stream();
+                native_graph_import::GraphStreamAdapter adapter(stream);
+                native_graph_import::ConversationGraphHeaders headers =
+                    graph_importer_.read_headers(adapter, graph_strategy,
+                                                 native_graph_import::RestoredMedia{});
+                conversations = static_cast<int>(headers.conversations.size());
+                tasks = static_cast<int>(headers.tasks.size());
+                loops = static_cast<int>(headers.loops.size());
+                semantic_index::SemanticModelSnapshot snapshot;
+                pending_transfer_id = graph_importer_.import_graph(source, graph_strategy, headers,
+                                                                  native_graph_import::RestoredMedia{},
+                                                                  manifest.version, snapshot);
+            }
+            source.close();
+            result.conversations_imported = conversations;
+            result.tasks_imported = tasks;
+            result.loops_imported = loops;
+        } catch (const std::exception& e) {
+            result.errors.push_back(std::string("Conversations: ") + e.what());
+            return result;
+        }
+    }
+
     // Each active category is processed in enum order, reporting progress after
     // it; the categories whose logic is still staged below are counted (their
     // step fires) so the progress matches the reference even before they write.
@@ -650,42 +689,8 @@ ImportResult DataImporter::import(
             } catch (const std::exception& e) {
                 result.errors.push_back(e.what());
             }
-        } else if (category == data_export::ExportCategory::Conversations) {
-            // 2. Stage conversation graph, 4. Import graph; the conversation-settings
-            // transfer the import stages is applied after every category below.
-            try {
-                ArchiveEntrySource entry_source(archive);
-                native_graph::NativeConversationGraphSource source =
-                    native_graph::NativeConversationGraphSource::open(entry_source, manifest.version,
-                                                                      platform_.files_dir);
-                int conversations = 0, tasks = 0, loops = 0;
-                const native_graph_import::ImportStrategy graph_strategy =
-                    strategy == ImportStrategy::Replace ? native_graph_import::ImportStrategy::Replace
-                    : strategy == ImportStrategy::Merge  ? native_graph_import::ImportStrategy::Merge
-                                                         : native_graph_import::ImportStrategy::Skip;
-                {
-                    native_graph::NativeConversationGraphSource::Stream stream = source.open_stream();
-                    native_graph_import::GraphStreamAdapter adapter(stream);
-                    native_graph_import::ConversationGraphHeaders headers =
-                        graph_importer_.read_headers(adapter, graph_strategy,
-                                                     native_graph_import::RestoredMedia{});
-                    conversations = static_cast<int>(headers.conversations.size());
-                    tasks = static_cast<int>(headers.tasks.size());
-                    loops = static_cast<int>(headers.loops.size());
-                    semantic_index::SemanticModelSnapshot snapshot;
-                    pending_transfer_id = graph_importer_.import_graph(source, graph_strategy, headers,
-                                                                      native_graph_import::RestoredMedia{},
-                                                                      manifest.version, snapshot);
-                }
-                source.close();
-                result.conversations_imported = conversations;
-                result.tasks_imported = tasks;
-                result.loops_imported = loops;
-            } catch (const std::exception& e) {
-                result.errors.push_back(e.what());
-            }
         }
-        // 5. Memories, 6. Settings, 7. API keys: staged.
+        // 5. Memories, 6. Settings, 7. API keys: staged (Conversations imported above).
         step();
     }
 
