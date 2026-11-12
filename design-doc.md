@@ -1,9 +1,10 @@
-# The design of a chat
+# The design of progressive-chat
 
-This document describes how the screen that displays a conversation should look.
-It is written once so that what the window draws can be compared against a
-reference. It covers this program's own screen — not the chat protocol's UI, and
-not another program's.
+This document describes how the program's screen should look — its visible
+design: the room, the drawer, the messages, the answer, and the settings. It is
+written once so that what the window draws can be compared against a reference.
+It covers this program's own screen — not the chat protocol's UI, and not another
+program's.
 
 Everything here is drawn by the same layout tree for all three target platforms,
 and no measurement in this document belongs to a single one of them: the room has
