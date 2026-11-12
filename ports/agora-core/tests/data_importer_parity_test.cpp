@@ -177,7 +177,18 @@ void seed_memory_skill(const Value& root, const std::filesystem::path& files_dir
     }
 }
 
+std::string g_mask_root;  // the temp files root, replaced by <root> in the compared text
+
 std::string mask_trace(std::string text) {
+    // The temporary root the import writes into: replaced by <root>, as the stand's
+    // driver does (the temporary root becomes <root>).
+    if (!g_mask_root.empty()) {
+        std::size_t at = 0;
+        while ((at = text.find(g_mask_root, at)) != std::string::npos) {
+            text.replace(at, g_mask_root.size(), "<root>");
+            at += 7;
+        }
+    }
     // UUIDs: first-appearance ordinal replacement. Fixture content never carries
     // UUID-shaped values; the generated ones are the uuids the import made.
     static const std::regex uuid_pattern(
@@ -1985,8 +1996,13 @@ void run_scenario(const std::filesystem::path& path) {
             // A deterministic platform: uuids numbered from zero (the golden's
             // <uuid:N> masks) and a scratch files dir the import writes media to.
             int uuid_counter = 0;
-            const std::filesystem::path files_dir =
+            // The import writes under <root>/files, and <root> (the temp root) is what
+            // the golden masks, so the compared path reads <root>/files/...
+            const std::filesystem::path temp_root =
                 std::filesystem::temp_directory_path() / "agora-import-parity";
+            const std::filesystem::path files_dir = temp_root / "files";
+            g_mask_root = temp_root.string();
+            std::filesystem::remove_all(temp_root);
             std::filesystem::create_directories(files_dir);
             data_import::Platform platform;
             platform.files_dir = files_dir;

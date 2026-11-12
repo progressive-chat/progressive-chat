@@ -706,7 +706,7 @@ ImportResult DataImporter::import(
         if (on_progress) on_progress(static_cast<float>(completed) / std::max(1, total_steps));
     };
 
-    [[maybe_unused]] bool allow_legacy_secrets = manifest.version < native_backup::kSeparateSecretsSinceVersion &&
+    const bool allow_legacy_secrets = manifest.version < native_backup::kSeparateSecretsSinceVersion &&
                                decisions.count(data_export::ExportCategory::ApiKeys) &&
                                decisions.at(data_export::ExportCategory::ApiKeys) != ImportStrategy::Skip;
 
@@ -834,6 +834,10 @@ ImportResult DataImporter::import(
                 if (!settings_bytes) throw std::runtime_error("settings.json is missing");
                 settings_archive::RestoreOptions options;
                 options.replace = strategy == ImportStrategy::Replace;
+                // Below the version where secrets moved out of the settings, the API keys
+                // category still lets the settings carry their legacy secrets (the remote
+                // embedding keys the settings object reads).
+                options.allow_legacy_secrets = allow_legacy_secrets;
                 // A font in the archive is restored whenever one is present (the helper
                 // picks custom_font/font at v4+, any custom_font/* below it, and returns
                 // nullopt when there is none). Below v4 the font is carried beside the
@@ -865,6 +869,8 @@ ImportResult DataImporter::import(
                 }
                 // The legacy settings (extra_settings.json) restore: conversation settings
                 // and the other fields this store writes, applied after the portable one.
+                // The restore only writes a conversation's settings when its id is allowed;
+                // the ids this settings object itself names are exactly those.
                 if (writes_.legacy_store != nullptr) {
                     if (auto extra = archive.bytes(native_backup::kLegacyExtraSettingsEntry);
                         extra) {
@@ -872,6 +878,11 @@ ImportResult DataImporter::import(
                         if (parsed_extra.value && parsed_extra.value->kind == Kind::Object) {
                             export_extra_settings::RestoreOptions legacy_options;
                             legacy_options.replace = strategy == ImportStrategy::Replace;
+                            if (const Value* convs =
+                                    field(*parsed_extra.value, "conversationSettings");
+                                convs != nullptr && convs->kind == Kind::Object)
+                                for (const Member& member : convs->members)
+                                    legacy_options.allowed_conversation_ids.push_back(member.key);
                             export_extra_settings::restore_legacy_from_json_object(
                                 *parsed_extra.value, *writes_.legacy_store, legacy_options);
                         }
