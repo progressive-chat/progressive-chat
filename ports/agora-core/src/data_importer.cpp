@@ -608,6 +608,7 @@ ImportResult DataImporter::import(
     }
     int total_steps = static_cast<int>(active_categories.size());
     int completed = 0;
+    std::string pending_transfer_id;
     auto step = [&]() {
         completed++;
         if (on_progress) on_progress(static_cast<float>(completed) / std::max(1, total_steps));
@@ -650,14 +651,13 @@ ImportResult DataImporter::import(
                 result.errors.push_back(e.what());
             }
         } else if (category == data_export::ExportCategory::Conversations) {
-            // 2. Stage conversation graph, 4. Import graph, then apply the
-            // conversation-settings transfer the import staged.
+            // 2. Stage conversation graph, 4. Import graph; the conversation-settings
+            // transfer the import stages is applied after every category below.
             try {
                 ArchiveEntrySource entry_source(archive);
                 native_graph::NativeConversationGraphSource source =
                     native_graph::NativeConversationGraphSource::open(entry_source, manifest.version,
                                                                       platform_.files_dir);
-                std::string transfer_id;
                 int conversations = 0, tasks = 0, loops = 0;
                 const native_graph_import::ImportStrategy graph_strategy =
                     strategy == ImportStrategy::Replace ? native_graph_import::ImportStrategy::Replace
@@ -673,12 +673,11 @@ ImportResult DataImporter::import(
                     tasks = static_cast<int>(headers.tasks.size());
                     loops = static_cast<int>(headers.loops.size());
                     semantic_index::SemanticModelSnapshot snapshot;
-                    transfer_id = graph_importer_.import_graph(source, graph_strategy, headers,
-                                                               native_graph_import::RestoredMedia{},
-                                                               manifest.version, snapshot);
+                    pending_transfer_id = graph_importer_.import_graph(source, graph_strategy, headers,
+                                                                      native_graph_import::RestoredMedia{},
+                                                                      manifest.version, snapshot);
                 }
                 source.close();
-                if (!transfer_id.empty()) transfers_.complete_import(transfer_id);
                 result.conversations_imported = conversations;
                 result.tasks_imported = tasks;
                 result.loops_imported = loops;
@@ -689,6 +688,10 @@ ImportResult DataImporter::import(
         // 5. Memories, 6. Settings, 7. API keys: staged.
         step();
     }
+
+    // Apply the conversation-settings transfer once every category has run, so the
+    // settings map lands after the prompts the transfer may depend on.
+    if (!pending_transfer_id.empty()) transfers_.complete_import(pending_transfer_id);
 
     // 8. Final progress and result
 
