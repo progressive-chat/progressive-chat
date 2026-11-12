@@ -322,7 +322,7 @@ std::vector<std::uint8_t> base64_decode(std::string_view text) {
     return out;
 }
 
-std::string excerpt(const Value& value, std::size_t limit = 400) {
+std::string excerpt(const Value& value, std::size_t limit = 4000) {
     std::string text = json::to_kotlin_string(value);
     if (text.size() > limit) return text.substr(0, limit) + "...";
     return text;
@@ -1125,6 +1125,16 @@ class SecretsStore : public secrets::SettingsStore {
 public:
     RecordingStore* sink = nullptr;
 
+    /** The store starts from the scenario's own settings: the shells, embeddings and mcp
+     *  servers the app holds before the import, which the restore then merges into. */
+    void seed(std::vector<secrets::ShellDeviceConfig> shells,
+              std::vector<secrets::EmbeddingModelConfig> embeddings,
+              std::vector<secrets::McpServerConfig> mcps) {
+        shell_devices_ = std::move(shells);
+        embedding_models_ = std::move(embeddings);
+        mcp_servers_ = std::move(mcps);
+    }
+
     const std::vector<secrets::ApiKeyEntry>& api_keys() const override { return api_keys_; }
     const secrets::StringMap& active_api_key_ids() const override { return active_ids_; }
     const secrets::StringMap& web_search_api_keys() const override { return web_keys_; }
@@ -1885,6 +1895,14 @@ void run_scenario(const std::filesystem::path& path) {
             writes.archive_sink = &sink;
             SecretsStore secrets_store;
             secrets_store.sink = &sink;
+            // The store starts from the scenario's own settings (what the app holds
+            // before the import), which the secrets restore then merges into.
+            if (const Value* settings_obj = field(root, "settings");
+                settings_obj != nullptr && settings_obj->kind == Kind::Object) {
+                secrets_store.seed(read_shell_list(*settings_obj, "shellDevices"),
+                                   read_embedding_list(*settings_obj, "embeddingModels"),
+                                   read_mcp_list(*settings_obj, "mcpServers"));
+            }
             writes.secrets_store = &secrets_store;
             writes.save_system_prompts =
                 [&sink](const std::vector<data_export::SystemPromptEntry>& prompts) {
