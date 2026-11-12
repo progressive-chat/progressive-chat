@@ -1118,6 +1118,77 @@ public:
     }
 };
 
+/** The NativeBackupSecretsPolicy's write surface: every save is recorded into the same
+ *  settings-call log the portable sink feeds; the getters hand back what the store holds
+ *  (a fresh one holds nothing, so a merge starts from the imported payload alone). */
+class SecretsStore : public secrets::SettingsStore {
+public:
+    RecordingStore* sink = nullptr;
+
+    const std::vector<secrets::ApiKeyEntry>& api_keys() const override { return api_keys_; }
+    const secrets::StringMap& active_api_key_ids() const override { return active_ids_; }
+    const secrets::StringMap& web_search_api_keys() const override { return web_keys_; }
+    const std::string& proxy_password() const override { return proxy_password_; }
+    const std::vector<secrets::ShellDeviceConfig>& shell_devices() const override {
+        return shell_devices_;
+    }
+    const std::vector<secrets::EmbeddingModelConfig>& embedding_models() const override {
+        return embedding_models_;
+    }
+    const std::vector<secrets::McpServerConfig>& mcp_servers() const override {
+        return mcp_servers_;
+    }
+
+    void save_api_keys(const std::vector<secrets::ApiKeyEntry>& keys) override {
+        api_keys_ = keys;
+        if (sink) sink->append("saveApiKeys", apiKeyEntries_value(keys));
+    }
+    void save_active_api_key_ids(const secrets::StringMap& ids) override { active_ids_ = ids; }
+    void save_web_search_api_keys(const secrets::StringMap& keys) override { web_keys_ = keys; }
+    void save_proxy_password(const std::string& password) override {
+        proxy_password_ = password;
+    }
+    void save_shell_devices(const std::vector<secrets::ShellDeviceConfig>& devices) override {
+        shell_devices_ = devices;
+        if (sink) sink->append("saveShellDevices", RecordingStore::shell_value(devices));
+    }
+    void save_embedding_models(const std::vector<secrets::EmbeddingModelConfig>& models) override {
+        embedding_models_ = models;
+        if (sink) sink->append("saveEmbeddingModels", RecordingStore::embedding_value(models));
+    }
+    void save_mcp_servers(const std::vector<secrets::McpServerConfig>& servers) override {
+        mcp_servers_ = servers;
+        if (sink) sink->append("saveMcpServers", RecordingStore::mcp_value(servers));
+    }
+
+private:
+    static std::string apiKeyEntries_value(const std::vector<secrets::ApiKeyEntry>& keys) {
+        std::string out = "{\"apiKeys\":[";
+        for (std::size_t i = 0; i < keys.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            out += "{\"id\":";
+            append_quoted(out, keys[i].id);
+            out += ",\"name\":";
+            append_quoted(out, keys[i].name);
+            out += ",\"key\":";
+            append_quoted(out, keys[i].key);
+            out += ",\"provider\":";
+            append_quoted(out, keys[i].provider);
+            out.push_back('}');
+        }
+        out += "]}";
+        return out;
+    }
+
+    std::vector<secrets::ApiKeyEntry> api_keys_;
+    secrets::StringMap active_ids_;
+    secrets::StringMap web_keys_;
+    std::string proxy_password_;
+    std::vector<secrets::ShellDeviceConfig> shell_devices_;
+    std::vector<secrets::EmbeddingModelConfig> embedding_models_;
+    std::vector<secrets::McpServerConfig> mcp_servers_;
+};
+
 /** The conversation-settings map value the golden's saveConversationSettingsMap carries. */
 std::string conversation_settings_value(
     const agora::core::export_extra_settings::ConversationSettings& one) {
@@ -1812,6 +1883,9 @@ void run_scenario(const std::filesystem::path& path) {
             std::vector<float> progress;
             data_import::SettingsWrites writes;
             writes.archive_sink = &sink;
+            SecretsStore secrets_store;
+            secrets_store.sink = &sink;
+            writes.secrets_store = &secrets_store;
             writes.save_system_prompts =
                 [&sink](const std::vector<data_export::SystemPromptEntry>& prompts) {
                     sink.append("saveSystemPrompts", RecordingStore::prompts_value(prompts));

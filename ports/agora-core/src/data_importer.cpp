@@ -567,6 +567,98 @@ std::vector<data_export::SystemPromptEntry> DataImporter::plan_system_prompts(
     return merged;
 }
 
+namespace {
+
+/** kotlinx's JsonDecodingException for a wrong token: the offset, the detail, the path,
+ *  and a 60-char window of the input around the offset (five dots each side when cut). */
+[[noreturn]] void throw_json_token(const std::string& raw, std::size_t offset,
+                                   const std::string& detail, const std::string& path) {
+    const std::size_t win = 60;
+    std::size_t start = offset > win / 2 ? offset - win / 2 : 0;
+    std::size_t end = start + win;
+    bool lead = start > 0;
+    if (end > raw.size()) end = raw.size();
+    bool tail = end < raw.size();
+    std::string window;
+    if (lead) window += ".....";
+    window += raw.substr(start, end - start);
+    if (tail) window += ".....";
+    throw std::runtime_error("Unexpected JSON token at offset " + std::to_string(offset) +
+                             ": " + detail + " at path: " + path + "\nJSON input: " + window);
+}
+
+/** Parses api_keys.json into NativeBackupSecrets, reporting shape errors the way kotlinx does
+ *  (shellDevices must be an object of id -> secrets, not an array). */
+native_backup::NativeBackupSecrets parse_api_keys(const std::string& raw) {
+    native_backup::NativeBackupSecrets data;
+    const json::ParseResult parsed = json::parse(raw);
+    if (!parsed.value || parsed.value->kind != Kind::Object)
+        throw std::runtime_error("api_keys.json is not an object");
+    const Value& root = *parsed.value;
+
+    // apiKeys: [{id,name,key,provider?}]
+    if (const Value* keys = field(root, "apiKeys"); keys != nullptr && keys->kind == Kind::Array) {
+        for (const Value& element : keys->elements) {
+            if (element.kind != Kind::Object) continue;
+            native_backup::ApiKeyEntry entry;
+            entry.id = string_field(element, "id").value_or("");
+            entry.name = string_field(element, "name").value_or("");
+            entry.key = string_field(element, "key").value_or("");
+            entry.provider = string_field(element, "provider").value_or("");
+            data.api_keys.push_back(std::move(entry));
+        }
+    }
+    // activeApiKeyIds / webSearchApiKeys / shellApiKeys / embeddingApiKeys: string maps
+    auto read_map = [&](std::string_view name, native_backup::StringMap& into) {
+        if (const Value* m = field(root, name); m != nullptr && m->kind == Kind::Object)
+            for (const Member& member : m->members)
+                if (member.value.kind == Kind::String)
+                    into.emplace_back(member.key, member.value.text);
+    };
+    read_map("activeApiKeyIds", data.active_api_key_ids);
+    read_map("webSearchApiKeys", data.web_search_api_keys);
+    read_map("shellApiKeys", data.shell_api_keys);
+    read_map("embeddingApiKeys", data.embedding_api_keys);
+    data.proxy_password = string_field(root, "proxyPassword").value_or("");
+
+    // shellDevices: an object { id: {apiKey, sshPassword, ...} } -- not an array.
+    if (const Value* shell = field(root, "shellDevices"); shell != nullptr) {
+        if (shell->kind != Kind::Object) {
+            // find the offset of the token in the raw text for the error
+            const std::string key = "\"shellDevices\"";
+            const std::size_t kpos = raw.find(key);
+            std::size_t at = kpos == std::string::npos ? 0 : kpos + key.size();
+            while (at < raw.size() && (raw[at] == ':' || raw[at] == ' ')) ++at;
+            const char had = at < raw.size() ? raw[at] : '?';
+            throw_json_token(raw, at, std::string("Expected start of the object '{', but had '") +
+                                         std::string(1, had) + "' instead",
+                             "$.shellDevices");
+        }
+        for (const Member& member : shell->members) {
+            native_backup::ShellDeviceSecrets secrets;
+            if (member.value.kind == Kind::Object) {
+                secrets.api_key = string_field(member.value, "apiKey").value_or("");
+                secrets.ssh_password = string_field(member.value, "sshPassword").value_or("");
+            }
+            data.shell_devices.emplace_back(member.key, std::move(secrets));
+        }
+    }
+    // mcpHeaders: { id: {header:value} }
+    if (const Value* mcp = field(root, "mcpHeaders"); mcp != nullptr && mcp->kind == Kind::Object) {
+        for (const Member& member : mcp->members) {
+            native_backup::StringMap headers;
+            if (member.value.kind == Kind::Object)
+                for (const Member& header : member.value.members)
+                    if (header.value.kind == Kind::String)
+                        headers.emplace_back(header.key, header.value.text);
+            data.mcp_headers.emplace_back(member.key, std::move(headers));
+        }
+    }
+    return data;
+}
+
+}  // namespace
+
 ImportResult DataImporter::import(
     native_backup_archive::NativeBackupArchive& archive,
     const std::map<data_export::ExportCategory, ImportStrategy>& decisions,
@@ -761,8 +853,23 @@ ImportResult DataImporter::import(
             } catch (const std::exception& e) {
                 result.errors.push_back(std::string("Settings: ") + e.what());
             }
+        } else if (category == data_export::ExportCategory::ApiKeys) {
+            // 7. Import API keys: read api_keys.json, restore the secrets through
+            // the secrets store (which records the shells, embeddings and mcp it saves).
+            try {
+                const auto secrets_bytes = archive.bytes(native_backup::kSecretsEntry);
+                if (!secrets_bytes) throw std::runtime_error("api_keys.json is missing");
+                native_backup::NativeBackupSecrets secrets = parse_api_keys(*secrets_bytes);
+                if (writes_.secrets_store != nullptr) {
+                    native_backup::restore(secrets, *writes_.secrets_store,
+                                           strategy == ImportStrategy::Replace);
+                }
+                result.api_keys_imported = true;
+            } catch (const std::exception& e) {
+                result.errors.push_back(std::string("API keys: ") + e.what());
+            }
         }
-        // 7. API keys: staged (Conversations/prompts/memories/settings run above).
+        // Progress step: every active category reports once.
         step();
     }
 
