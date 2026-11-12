@@ -394,6 +394,16 @@ void run_scenario(const std::filesystem::path& path) {
     if (golden_steps == nullptr || golden_steps->kind != Kind::Array)
         scenario_fail(stem + ": golden needs steps");
 
+    // The golden's preview steps, in order: the i-th preview step of the
+    // scenario is compared with the i-th preview step of the golden, so a
+    // scenario that previews several archives is checked step for step.
+    std::vector<const Value*> golden_previews;
+    for (const Value& golden_step : golden_steps->elements) {
+        if (required_text(golden_step, "op") == "preview")
+            golden_previews.push_back(field(golden_step, "result"));
+    }
+    std::size_t preview_index = 0;
+
     for (const Value& step : steps->elements) {
         const std::string op = required_text(step, "op");
         if (op != "preview") continue;  // import and font are driven elsewhere
@@ -402,14 +412,10 @@ void run_scenario(const std::filesystem::path& path) {
         backup::NativeBackupArchive archive = backup::NativeBackupArchive::open_bytes(bytes);
         const Value actual = preview_value(importer.preview(archive));
 
-        // The golden's matching step's result.
-        const Value* golden_result = nullptr;
-        for (const Value& golden_step : golden_steps->elements) {
-            if (required_text(golden_step, "op") == op) {
-                golden_result = field(golden_step, "result");
-                break;
-            }
-        }
+        if (preview_index >= golden_previews.size())
+            scenario_fail(stem + ": golden has fewer preview steps than the scenario");
+        const Value* golden_result = golden_previews[preview_index];
+        ++preview_index;
         if (golden_result == nullptr) scenario_fail(stem + ": golden has no preview result");
 
         if (!json_equal(actual, *golden_result))
