@@ -451,7 +451,7 @@ void run_scenario(const std::filesystem::path& path) {
     // What one step says, asked of the port: a preview reads an archive it is
     // given, a font reads the family out of the bytes of a TTF. (Import needs
     // the whole import harness and is driven by its own test.)
-    auto actual_for = [&](const Value& step, std::string_view op) -> Value {
+    auto actual_for = [&](const Value& step, std::string_view op, std::size_t index) -> Value {
         if (op == "preview") {
             const std::string bytes = archive_bytes(step);
             backup::NativeBackupArchive archive = backup::NativeBackupArchive::open_bytes(bytes);
@@ -462,8 +462,12 @@ void run_scenario(const std::filesystem::path& path) {
         if (encoded == nullptr || encoded->kind != Kind::String)
             scenario_fail("font step needs a base64 font");
         const std::vector<std::uint8_t> font = base64_decode(encoded->text);
+        // The reference writes each font to a file named for its step, so a
+        // font it cannot read falls back to that name ("font-2" in the golden);
+        // name ours the same way for the fallback to match.
         const std::filesystem::path temp =
-            std::filesystem::temp_directory_path() / (stem + "-font.ttf");
+            std::filesystem::temp_directory_path() /
+            ("font-" + std::to_string(index) + ".ttf");
         {
             std::ofstream out(temp, std::ios::binary | std::ios::trunc);
             out.write(reinterpret_cast<const char*>(font.data()),
@@ -492,7 +496,7 @@ void run_scenario(const std::filesystem::path& path) {
         const Value* golden_result = golden_list[index];
         if (golden_result == nullptr) scenario_fail(stem + ": golden has no result");
 
-        const Value actual = actual_for(step, op);
+        const Value actual = actual_for(step, op, index);
         if (!json_equal(actual, *golden_result))
             scenario_fail(stem + "\n  actual:   " + excerpt(actual) +
                           "\n  expected: " + excerpt(*golden_result));
