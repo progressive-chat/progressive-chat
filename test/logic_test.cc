@@ -387,7 +387,7 @@ SAID(logic, a_search_of_a_conversation_says_its_places_in_timeline_order) {
   EXPECT_TRUE(logic::hits_of(root, conversation_id{"2"}, "target").empty());
   const std::vector<logic::hit> places =
       logic::hits_of(root, conversation_id{"1"}, "target");
-  ASSERT_EQ(places.size(), 2u);
+  EXPECT_EQ(places.size(), 2u);
   // The timeline order: the message sent at 3 comes before the one sent at 9,
   // whatever order the rows stand in storage.
   if (places.size() == 2) {
