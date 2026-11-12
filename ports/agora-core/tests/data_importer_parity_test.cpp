@@ -1050,6 +1050,49 @@ public:
     }
 };
 
+/** The conversation-settings map value the golden's saveConversationSettingsMap carries. */
+std::string conversation_settings_value(
+    const agora::core::export_extra_settings::ConversationSettings& one) {
+    auto opt_int = [](const std::optional<int>& v) {
+        return v.has_value() ? std::to_string(*v) : std::string("null");
+    };
+    auto opt_float = [](const std::optional<float>& v) {
+        if (!v.has_value()) return std::string("null");
+        return "\"" + agora::core::openai::format_kotlin_float(*v) + "\"";
+    };
+    auto opt_bool = [](const std::optional<bool>& v) -> std::string {
+        if (!v.has_value()) return "null";
+        return *v ? "true" : "false";
+    };
+    auto opt_str = [](const std::optional<std::string>& v) {
+        if (!v.has_value()) return std::string("null");
+        std::string out;
+        append_quoted(out, *v);
+        return out;
+    };
+    std::string out = "{";
+    out += "\"contextWindow\":" + opt_int(one.context_window);
+    out += ",\"temperature\":" + opt_float(one.temperature);
+    out += ",\"maxTokens\":" + opt_int(one.max_tokens);
+    out += ",\"topP\":" + opt_float(one.top_p);
+    out += ",\"frequencyPenalty\":" + opt_float(one.frequency_penalty);
+    out += ",\"presencePenalty\":" + opt_float(one.presence_penalty);
+    out += ",\"codeExecutionEnabled\":" + opt_bool(one.code_execution_enabled);
+    out += ",\"googleSearchEnabled\":" + opt_bool(one.google_search_enabled);
+    out += ",\"openAiWebSearchEnabled\":" + opt_bool(one.open_ai_web_search_enabled);
+    out += ",\"thinkingEnabled\":" + opt_bool(one.thinking_enabled);
+    out += ",\"thinkingLevel\":" + opt_str(one.thinking_level);
+    out += ",\"thinkingBudgetEnabled\":" + opt_bool(one.thinking_budget_enabled);
+    out += ",\"thinkingBudgetTokens\":" + opt_int(one.thinking_budget_tokens);
+    out += ",\"openAiServiceTierEnabled\":" + opt_bool(one.open_ai_service_tier_enabled);
+    out += ",\"openAiServiceTier\":" + opt_str(one.open_ai_service_tier);
+    out += ",\"webSearchEnabled\":" + opt_bool(one.web_search_enabled);
+    out += ",\"shellEnabled\":" + opt_bool(one.shell_enabled);
+    out += ",\"lowContextModeEnabled\":" + opt_bool(one.low_context_mode_enabled);
+    out += "}";
+    return out;
+}
+
 void run_scenario(const std::filesystem::path& path) {
     const std::string stem = path.stem().string();
     const json::ParseResult parsed = json::parse(read_file(path));
@@ -1072,9 +1115,26 @@ void run_scenario(const std::filesystem::path& path) {
     agora::core::maintenance_debt::MaintenanceDebtDao debt(sql);
     agora::core::memory::MemoryManager memory((stand / "platform").string());
     agora::core::skill::SkillManager skill((stand / "platform").string());
+    // The recording sink the active import step is logging to; the settings-transfer
+    // apply writes saveConversationSettingsMap into it (the reference's SettingsManager).
+    RecordingStore* active_sink = nullptr;
     data_import::ConversationSettingsTransfer transfers(
-        chat, [] {}, [](const std::vector<std::pair<std::string,
-                        agora::core::export_extra_settings::ConversationSettings>>&, bool) {});
+        chat, [] {},
+        [&active_sink](const std::vector<std::pair<std::string,
+                        agora::core::export_extra_settings::ConversationSettings>>& settings,
+                       bool replace) {
+            if (active_sink == nullptr) return;
+            std::string out = "{\"conversationSettings\":{";
+            bool first = true;
+            for (const auto& [id, one] : settings) {
+                if (!first) out.push_back(',');
+                first = false;
+                out += "\"" + id + "\":" + conversation_settings_value(one);
+            }
+            out += "}}";
+            active_sink->append("saveConversationSettingsMap", out);
+            (void)replace;
+        });
     data_import::DataImporter importer(
         chat, semantic, debt, sql, memory, skill, data_import::SettingsView{},
         data_import::SettingsWrites{}, transfers, data_import::Platform{});
@@ -1220,8 +1280,10 @@ void run_scenario(const std::filesystem::path& path) {
             data_import::DataImporter import_importer(
                 chat, semantic, debt, sql, memory, skill, view, writes,
                 transfers, platform);
+            active_sink = &sink;
             const data_import::ImportResult result = import_importer.import(
                 archive, decisions, [&](float at) { progress.push_back(at); });
+            active_sink = nullptr;
 
             // The result: the counts and errors, and the progress as the
             // reference writes it -- each float as a string.

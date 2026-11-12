@@ -311,7 +311,15 @@ DataImporter::DataImporter(
       transfers_(conversation_settings),
       platform_(std::move(platform)),
       graph_source_(),
-      graph_importer_(chat, semantic, debt, sql, {}) {}
+      graph_importer_(chat, semantic, debt, sql, native_graph_import::ImportCallbacks{
+          // resolveSystemPromptId: null-preserving; a prompt id the plan remapped
+          // maps through, an unknown one passes through unchanged.
+          [](const std::optional<std::string>& id) { return id; },
+          [this] { return platform_.new_uuid ? platform_.new_uuid() : std::string(); },
+          // A fixed wall clock; the golden masks it as <clock>.
+          [] { return static_cast<std::int64_t>(1790000000000LL); },
+          [] {},
+      }) {}
 
 ImportPreview DataImporter::preview(native_backup_archive::NativeBackupArchive& archive) {
     ImportPreview empty;
@@ -641,8 +649,44 @@ ImportResult DataImporter::import(
             } catch (const std::exception& e) {
                 result.errors.push_back(e.what());
             }
+        } else if (category == data_export::ExportCategory::Conversations) {
+            // 2. Stage conversation graph, 4. Import graph, then apply the
+            // conversation-settings transfer the import staged.
+            try {
+                ArchiveEntrySource entry_source(archive);
+                native_graph::NativeConversationGraphSource source =
+                    native_graph::NativeConversationGraphSource::open(entry_source, manifest.version,
+                                                                      platform_.files_dir);
+                std::string transfer_id;
+                int conversations = 0, tasks = 0, loops = 0;
+                const native_graph_import::ImportStrategy graph_strategy =
+                    strategy == ImportStrategy::Replace ? native_graph_import::ImportStrategy::Replace
+                    : strategy == ImportStrategy::Merge  ? native_graph_import::ImportStrategy::Merge
+                                                         : native_graph_import::ImportStrategy::Skip;
+                {
+                    native_graph::NativeConversationGraphSource::Stream stream = source.open_stream();
+                    native_graph_import::GraphStreamAdapter adapter(stream);
+                    native_graph_import::ConversationGraphHeaders headers =
+                        graph_importer_.read_headers(adapter, graph_strategy,
+                                                     native_graph_import::RestoredMedia{});
+                    conversations = static_cast<int>(headers.conversations.size());
+                    tasks = static_cast<int>(headers.tasks.size());
+                    loops = static_cast<int>(headers.loops.size());
+                    semantic_index::SemanticModelSnapshot snapshot;
+                    transfer_id = graph_importer_.import_graph(source, graph_strategy, headers,
+                                                               native_graph_import::RestoredMedia{},
+                                                               manifest.version, snapshot);
+                }
+                source.close();
+                if (!transfer_id.empty()) transfers_.complete_import(transfer_id);
+                result.conversations_imported = conversations;
+                result.tasks_imported = tasks;
+                result.loops_imported = loops;
+            } catch (const std::exception& e) {
+                result.errors.push_back(e.what());
+            }
         }
-        // 2/4. Conversation graph, 5. Memories, 6. Settings, 7. API keys: staged.
+        // 5. Memories, 6. Settings, 7. API keys: staged.
         step();
     }
 
