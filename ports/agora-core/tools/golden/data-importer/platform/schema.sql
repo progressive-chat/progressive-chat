@@ -35,3 +35,19 @@ CREATE TABLE IF NOT EXISTS `semantic_index_ledger` (`modelId` TEXT NOT NULL, `st
 
 CREATE TABLE IF NOT EXISTS `semantic_index_work` (`modelId` TEXT NOT NULL, `messageId` TEXT NOT NULL, `sourceFingerprint` TEXT, `sourceRevision` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`modelId`, `messageId`), FOREIGN KEY(`modelId`) REFERENCES `semantic_index_ledger`(`modelId`) ON UPDATE NO ACTION ON DELETE CASCADE );
 CREATE INDEX IF NOT EXISTS `index_semantic_index_work_modelId_sourceRevision_messageId` ON `semantic_index_work` (`modelId`, `sourceRevision`, `messageId`);
+
+
+-- Tables the conversation-graph import reads/writes (missing from this stand's schema).
+CREATE TABLE IF NOT EXISTS `semantic_sources` (`messageId` TEXT NOT NULL, `conversationId` TEXT NOT NULL, `eligible` INTEGER NOT NULL, `sourcePrefix` BLOB NOT NULL, `sourceFingerprint` TEXT, `searchLength` INTEGER NOT NULL, `historyEligible` INTEGER NOT NULL, PRIMARY KEY(`messageId`), FOREIGN KEY(`conversationId`) REFERENCES `conversations`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE );
+
+CREATE TABLE IF NOT EXISTS `semantic_conversations` (`conversationId` TEXT NOT NULL, `sourceRevision` INTEGER NOT NULL, `eligibleCount` INTEGER NOT NULL, `cacheEligible` INTEGER NOT NULL, PRIMARY KEY(`conversationId`), FOREIGN KEY(`conversationId`) REFERENCES `conversations`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE );
+
+CREATE TABLE IF NOT EXISTS `semantic_model_conversations` (`modelId` TEXT NOT NULL, `conversationId` TEXT NOT NULL, `cachedCount` INTEGER NOT NULL, `indexedRevision` INTEGER NOT NULL, PRIMARY KEY(`modelId`, `conversationId`), FOREIGN KEY(`conversationId`) REFERENCES `conversations`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE );
+
+CREATE TABLE IF NOT EXISTS `semantic_metadata_state` (`id` INTEGER NOT NULL, `complete` INTEGER NOT NULL, `afterMessageId` TEXT, PRIMARY KEY(`id`));
+
+CREATE TABLE IF NOT EXISTS `attachment_reference_owners` (`kind` INTEGER NOT NULL, `ownerId` TEXT NOT NULL, `token` TEXT NOT NULL, `dirty` INTEGER NOT NULL, `invalid` INTEGER NOT NULL, PRIMARY KEY(`kind`, `ownerId`));
+
+CREATE TABLE IF NOT EXISTS `attachment_references` (`kind` INTEGER NOT NULL, `ownerId` TEXT NOT NULL, `path` TEXT NOT NULL, PRIMARY KEY(`kind`, `ownerId`, `path`), FOREIGN KEY(`kind`, `ownerId`) REFERENCES `attachment_reference_owners`(`kind`, `ownerId`) ON UPDATE NO ACTION ON DELETE CASCADE );
+
+CREATE TABLE IF NOT EXISTS `attachment_reference_state` (`id` INTEGER NOT NULL, `phase` INTEGER NOT NULL, `afterId` TEXT, `revision` INTEGER NOT NULL, PRIMARY KEY(`id`));
