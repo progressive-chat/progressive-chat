@@ -81,7 +81,17 @@ inline constexpr std::size_t foot_count = 6;
 [[nodiscard]] std::vector<scene::TextStyled> styles_in(
     const std::vector<logic::run_place> &runs) {
   std::vector<scene::TextStyled> styles;
-  for (const logic::run_place &one : runs)
+  for (const logic::run_place &one : runs) {
+    // A heading, drawn on its line of its own in the size of its level: the
+    // marks that said it are already out of the text, and the level is the
+    // one bit of h1..h6 that stands on the run.
+    float scale = 1.0f;
+    if (one.style & logic::heading) {
+      static constexpr float kHeadings[] = {2.0f, 1.5f, 1.3f, 1.1f, 1.0f,
+                                            0.95f};
+      for (std::size_t level = 0; level < 6; ++level)
+        if (one.style & (logic::h1 << level)) scale = kHeadings[level];
+    }
     styles.push_back({.first = one.first,
                       .last = one.last,
                       .strong = (one.style & logic::bold) != 0,
@@ -91,7 +101,9 @@ inline constexpr std::size_t foot_count = 6;
                       .underline = (one.style & logic::underline) != 0,
                       .block = (one.style & logic::block) != 0,
                       .quote = one.quoted > 0,
-                      .depth = one.quoted});
+                      .depth = one.quoted,
+                      .scale = scale});
+  }
   return styles;
 }
 

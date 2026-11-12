@@ -290,3 +290,53 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
   EXPECT_TRUE(titled);
   EXPECT_TRUE(listed);
 }
+
+SAID(logic, a_heading_and_a_list_said_as_they_were_written) {
+  // The marks at the head of a line are read, not drawn: what stands where
+  // the hash stood is the heading's own words, and the run says the line is
+  // a heading of the level the hashes said.
+  const logic::drawn head = logic::drawn_of("## The room");
+  EXPECT_EQ(head.said, std::string("The room"));
+  EXPECT_EQ(head.runs.size(), 1u);
+  if (!head.runs.empty()) {
+    EXPECT_TRUE((head.runs[0].style & logic::heading) != 0);
+    EXPECT_TRUE((head.runs[0].style & logic::h2) != 0);
+    EXPECT_TRUE((head.runs[0].style & logic::h1) == 0);
+  }
+  // One to six hashes, each size its own; seven are not a heading at all,
+  // and a hash with no space after it is a word written with a hash in it.
+  const logic::drawn one = logic::drawn_of("# Title");
+  EXPECT_EQ(one.said, std::string("Title"));
+  if (!one.runs.empty()) EXPECT_TRUE((one.runs[0].style & logic::h1) != 0);
+  const logic::drawn six = logic::drawn_of("###### Small");
+  EXPECT_EQ(six.said, std::string("Small"));
+  if (!six.runs.empty()) EXPECT_TRUE((six.runs[0].style & logic::h6) != 0);
+  const logic::drawn seven = logic::drawn_of("####### Not one");
+  EXPECT_EQ(seven.said, std::string("####### Not one"));
+  EXPECT_TRUE(seven.runs.empty());
+  const logic::drawn nospace = logic::drawn_of("#nospace");
+  EXPECT_EQ(nospace.said, std::string("#nospace"));
+  EXPECT_TRUE(nospace.runs.empty());
+  // A list begun by a dash, a star or a number and a dot: the mark is read
+  // and the words are the line. A dash with no space after it is two dashes.
+  const logic::drawn dash = logic::drawn_of("- another");
+  EXPECT_EQ(dash.said, std::string("\u2022  another"));
+  EXPECT_EQ(dash.runs.size(), 1u);
+  if (!dash.runs.empty()) EXPECT_TRUE((dash.runs[0].style & logic::list) != 0);
+  const logic::drawn star = logic::drawn_of("* a pill");
+  EXPECT_EQ(star.said, std::string("\u2022  a pill"));
+  const logic::drawn numbered = logic::drawn_of("2. the second");
+  EXPECT_EQ(numbered.said, std::string("\u2022  the second"));
+  const logic::drawn twodashes = logic::drawn_of("-- not one");
+  EXPECT_EQ(twodashes.said, std::string("-- not one"));
+  EXPECT_TRUE(twodashes.runs.empty());
+  // What a line is made of is said of that line and of no other: the next
+  // line after a heading is plain, hash and all, unless it says its own.
+  const logic::drawn two = logic::drawn_of("## Head\nplain words");
+  EXPECT_EQ(two.said, std::string("Head\nplain words"));
+  EXPECT_EQ(two.runs.size(), 1u);
+  if (!two.runs.empty()) {
+    EXPECT_EQ(two.runs[0].last, std::size_t{4});
+    EXPECT_TRUE((two.runs[0].style & logic::heading) != 0);
+  }
+}

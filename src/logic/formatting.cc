@@ -21,6 +21,18 @@ inline constexpr run_style underline = 1u << 5;
 // A block of code: what stands between two fences of three backticks, said
 // in the face code is said in and as it stands, marks and all.
 inline constexpr run_style block = 1u << 6;
+// What a line is made of at its head, read out of the marks that say it and
+// drawn without them: a heading (`#` to `######`) in the size of its level,
+// a list item (`-`, `*`, `+` or a number followed by `.`) as a list. Exactly
+// one of h1..h6 stands on a heading's runs; a line is a heading or it is not.
+inline constexpr run_style heading = 1u << 7;
+inline constexpr run_style h1 = 1u << 8;
+inline constexpr run_style h2 = 1u << 9;
+inline constexpr run_style h3 = 1u << 10;
+inline constexpr run_style h4 = 1u << 11;
+inline constexpr run_style h5 = 1u << 12;
+inline constexpr run_style h6 = 1u << 13;
+inline constexpr run_style list = 1u << 14;
 
 struct run {
   std::string_view text;
@@ -120,6 +132,47 @@ quoted_at(std::string_view text, std::size_t at) {
   return depth > 0 ? std::pair{taken, depth} : std::pair{std::size_t{0}, 0};
 }
 
+// What a line is made of at its head, read out of its marks: a heading of
+// one to six `#` each followed by a space, or a list begun by `-`, `*`, `+`
+// or a number and a dot, each followed by a space. How much of the line the
+// marks took to say it, and the run they say the line stands in. A mark that
+// does not say all of that is not one: `#nospace` is a word, `--` is two
+// dashes, `1.` at the end of a line is a number. None of the marks is drawn.
+[[nodiscard]] inline std::pair<std::size_t, run_style>
+line_head_at(std::string_view text, std::size_t at) {
+  // A heading: one to six `#`, the space after them taken too.
+  if (text[at] == '#') {
+    std::size_t taken = 0;
+    while (at + taken < text.size() && text[at + taken] == '#') ++taken;
+    if (taken <= 6 && at + taken < text.size() && text[at + taken] == ' ') {
+      ++taken;
+      const run_style level = h1 << (taken - 2);  // 2..7 marks -> h1..h6
+      return {taken, heading | level};
+    }
+    return {0, plain};
+  }
+  // A list begun by a dash, star or plus: the one mark and its space.
+  if (text[at] == '-' || text[at] == '*' || text[at] == '+') {
+    if (at + 2 <= text.size() && text[at + 1] == ' ')
+      return {2, list};
+    return {0, plain};
+  }
+  // A list begun by a number and a dot: one to nine digits (a longer run
+  // is a number, not the head of a list), the dot and the space after them.
+  if (text[at] >= '1' && text[at] <= '9') {
+    std::size_t taken = 0;
+    while (at + taken < text.size() && text[at + taken] >= '0' &&
+           text[at + taken] <= '9')
+      ++taken;
+    if (taken <= 9 && at + taken + 1 < text.size() &&
+        text[at + taken] == '.' && text[at + taken + 1] == ' ') {
+      return {taken + 2, list};
+    }
+    return {0, plain};
+  }
+  return {0, plain};
+}
+
 }  // namespace formatting_detail
 
 // The runs of one message's text. A mark that never closes is text, which is
@@ -139,6 +192,10 @@ quoted_at(std::string_view text, std::size_t at) {
                       .style = open,
                       .quoted = quoted});
       quoted = 0;
+      // What a line is made of is said of that line and of no other: the
+      // marks of a heading or a list are read again at the next line's
+      // head, so the bits that said them do not stand over the newline.
+      open &= ~(heading | h1 | h2 | h3 | h4 | h5 | h6 | list);
       from = at + 1;
       ++at;
       continue;
@@ -172,6 +229,26 @@ quoted_at(std::string_view text, std::size_t at) {
       if (taken > 0) {
         quoted = depth;
         at += taken;
+        from = at;
+        continue;
+      }
+      // What the line is made of at its head: a heading or a list, its marks
+      // taken out and the run they say the line stands in standing for them.
+      // A list keeps a bullet where its mark stood, as the doc draws one
+      // (`src/ui/doc.cc`), so the words are drawn and the mark is not.
+      const auto [head_taken, head_style] =
+          formatting_detail::line_head_at(text, at);
+      if (head_taken > 0) {
+        if (at > from)
+          runs.push_back({.text = text.substr(from, at - from),
+                          .style = open,
+                          .quoted = quoted});
+        if (head_style & list)
+          runs.push_back({.text = std::string_view{"\u2022  "},
+                          .style = open | head_style,
+                          .quoted = quoted});
+        open |= head_style;
+        at += head_taken;
         from = at;
         continue;
       }
