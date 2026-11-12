@@ -75,11 +75,16 @@ std::string decode_utf16be(const std::vector<std::uint8_t>& bytes) {
 }
 
 std::string decode_mac_roman(const std::vector<std::uint8_t>& bytes) {
-    // Simplified: treat as ASCII; MacRoman is similar for common chars
+    // The reference reads a Mac-Roman name byte it does not map as U+FFFD, the
+    // replacement character, which is what the golden freezes; a literal '?'
+    // would read as a different name. (The name table of the fixture font holds
+    // one high byte, 0x8E, which the reference cannot decode either.)
     std::string result;
     for (auto b : bytes) {
-        if (b < 0x80) result.push_back(static_cast<char>(b));
-        else result.push_back('?');
+        if (b < 0x80)
+            result.push_back(static_cast<char>(b));
+        else
+            result.append("\xef\xbf\xbd");  // U+FFFD
     }
     auto start = result.find_first_not_of(" \t\r\n");
     auto end = result.find_last_not_of(" \t\r\n");
