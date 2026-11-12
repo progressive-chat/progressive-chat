@@ -1428,4 +1428,14 @@ TEST(data_importer_previews_every_archive_as_the_reference_does) {
     std::sort(scenarios.begin(), scenarios.end());
     CHECK(scenarios.size() >= 4);
     for (const auto& scenario : scenarios) run_scenario(scenario);
+
+    // Every scenario ran; now report the collected differences together.
+    if (!g_mismatches.empty()) {
+        std::string report;
+        for (const std::string& one : g_mismatches) {
+            if (!report.empty()) report += "\n\n";
+            report += one;
+        }
+        scenario_fail(report);
+    }
 }
