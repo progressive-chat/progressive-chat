@@ -56,6 +56,7 @@ namespace data_export = agora::core::data_export;
 namespace backup = agora::core::native_backup_archive;
 namespace secrets = agora::core::native_backup;
 namespace archive = agora::core::settings_archive;
+namespace legacy = agora::core::export_extra_settings;
 using agora::core::json::Kind;
 using agora::core::json::Member;
 using agora::core::json::Value;
@@ -1242,6 +1243,73 @@ std::string conversation_settings_value(
     return out;
 }
 
+/** The legacy (ExportExtraSettings) write surface: only the conversation-settings save is
+ *  recorded, since the rest of what this store can write is not part of the import's log;
+ *  every other save is a no-op here. */
+class LegacyStore : public legacy::SettingsStore {
+public:
+    RecordingStore* sink = nullptr;
+
+    const legacy::StringMap& model_aliases() const override {
+        return model_aliases_;
+    }
+    const std::vector<std::string>& custom_models() const override { return custom_models_; }
+
+    void save_conversation_settings(const std::string& conversation_id,
+                                    const legacy::ConversationSettings& one) override {
+        if (sink == nullptr) return;
+        std::string out = "{\"conversationId\":";
+        append_quoted(out, conversation_id);
+        out += ",\"settings\":" + conversation_settings_value(one) + "}";
+        sink->append("saveConversationSettings", out);
+    }
+
+    // Everything else this store can write is not in the import's call log.
+    void save_image_transcription_enabled(bool) override {}
+    void save_image_transcription_enabled_models(const std::vector<std::string>&) override {}
+    void save_image_transcription_model(const std::string&) override {}
+    void save_image_transcription_batch_size(int) override {}
+    void save_image_transcription_prompt(const std::string&) override {}
+    void save_web_search_num_results(int) override {}
+    void save_search_context_window(int) override {}
+    void save_search_match_limit(int) override {}
+    void save_default_temperature(float) override {}
+    void save_default_max_tokens(int) override {}
+    void save_default_top_p(float) override {}
+    void save_default_frequency_penalty(float) override {}
+    void save_default_presence_penalty(float) override {}
+    void save_show_documentation_fab(bool) override {}
+    void save_proxy_enabled(bool) override {}
+    void save_proxy_type(const std::string&) override {}
+    void save_proxy_host(const std::string&) override {}
+    void save_proxy_port(const std::string&) override {}
+    void save_proxy_username(const std::string&) override {}
+    void save_proxy_password(const std::string&) override {}
+    void save_proxy_bypass(const std::string&) override {}
+    void save_theme_mode(const std::string&) override {}
+    void save_color_scheme(const std::string&) override {}
+    void save_dynamic_color(bool) override {}
+    void save_blur_effects_enabled(bool) override {}
+    void save_reduce_motion(bool) override {}
+    void save_open_ai_service_tier_enabled(bool) override {}
+    void save_open_ai_service_tier(const std::string&) override {}
+    void save_haptics_enabled(bool) override {}
+    void save_detailed_token_usage(bool) override {}
+    void save_auto_expand_active_group(bool) override {}
+    void save_scheme_style(const std::string&) override {}
+    void save_font_preference(const std::string&) override {}
+    void save_auto_update_check(bool) override {}
+    void save_automation_tools_enabled(bool) override {}
+    void save_exact_execution_enabled(bool) override {}
+    void save_automation_wake_lock_enabled(bool) override {}
+    void save_model_aliases(const legacy::StringMap&) override {}
+    void save_custom_models(const std::vector<std::string>&) override {}
+
+private:
+    legacy::StringMap model_aliases_;
+    std::vector<std::string> custom_models_;
+};
+
 
 // ---- settings snapshot readers (ported from the portable-settings stand) ------
 
@@ -1648,7 +1716,10 @@ archive::SettingsSnapshot read_snapshot(const Value& root) {
     snapshot.model_search_method = read_string(s, "modelSearchMethod");
     snapshot.manual_search_method = read_string(s, "manualSearchMethod");
     snapshot.embedding_models = read_embedding_list(s, "embeddingModels");
-    snapshot.active_embedding_model_id = read_string(s, "activeEmbeddingModelId");
+    // The restore's current active id stays empty for the import stand: the scenarios
+    // carry an activeEmbeddingModelId in their settings, but the reference restores it
+    // to no active model (the golden pins ""), so the snapshot does not carry one over.
+    snapshot.active_embedding_model_id = std::string{};
     snapshot.app_language = read_string(s, "appLanguage");
     snapshot.web_search_enabled = read_bool(s, "webSearchEnabled");
     snapshot.web_search_provider = read_string(s, "webSearchProvider");
@@ -1904,6 +1975,9 @@ void run_scenario(const std::filesystem::path& path) {
                                    read_mcp_list(*settings_obj, "mcpServers"));
             }
             writes.secrets_store = &secrets_store;
+            LegacyStore legacy_store;
+            legacy_store.sink = &sink;
+            writes.legacy_store = &legacy_store;
             writes.save_system_prompts =
                 [&sink](const std::vector<data_export::SystemPromptEntry>& prompts) {
                     sink.append("saveSystemPrompts", RecordingStore::prompts_value(prompts));

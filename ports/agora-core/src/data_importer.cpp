@@ -834,9 +834,17 @@ ImportResult DataImporter::import(
                 if (!settings_bytes) throw std::runtime_error("settings.json is missing");
                 settings_archive::RestoreOptions options;
                 options.replace = strategy == ImportStrategy::Replace;
-                if (archive.has(native_backup::kCustomFontEntry))
-                    options.restored_custom_font =
-                        restore_custom_font(archive, manifest.version);
+                // A font in the archive is restored whenever one is present (the helper
+                // picks custom_font/font at v4+, any custom_font/* below it, and returns
+                // nullopt when there is none). Below v4 the font is carried beside the
+                // settings, so its path and name are recorded by this importer after the
+                // restore; at v4+ the portable restore owns that from the settings object.
+                const bool legacy_font = manifest.version < 4;
+                bool font_carried = false;
+                for (const auto& entry_name : archive.names())
+                    if (entry_name.rfind("custom_font/", 0) == 0) { font_carried = true; break; }
+                if (font_carried)
+                    options.restored_custom_font = restore_custom_font(archive, manifest.version);
                 const json::ParseResult parsed_settings = json::parse(*settings_bytes);
                 if (!parsed_settings.value || parsed_settings.value->kind != Kind::Object)
                     throw std::runtime_error("settings.json is invalid");
@@ -846,6 +854,28 @@ ImportResult DataImporter::import(
                                                     ? settings_.archive_snapshot()
                                                     : settings_archive::SettingsSnapshot{},
                         *writes_.archive_sink, options);
+                }
+                // The legacy font is recorded after the restore, so it lands in the call
+                // log where the reference puts it.
+                if (legacy_font && options.restored_custom_font.has_value() &&
+                    writes_.archive_sink != nullptr) {
+                    writes_.archive_sink->save_custom_font_path(options.restored_custom_font->path);
+                    writes_.archive_sink->save_custom_font_name(
+                        options.restored_custom_font->display_name);
+                }
+                // The legacy settings (extra_settings.json) restore: conversation settings
+                // and the other fields this store writes, applied after the portable one.
+                if (writes_.legacy_store != nullptr) {
+                    if (auto extra = archive.bytes(native_backup::kLegacyExtraSettingsEntry);
+                        extra) {
+                        const json::ParseResult parsed_extra = json::parse(*extra);
+                        if (parsed_extra.value && parsed_extra.value->kind == Kind::Object) {
+                            export_extra_settings::RestoreOptions legacy_options;
+                            legacy_options.replace = strategy == ImportStrategy::Replace;
+                            export_extra_settings::restore_legacy_from_json_object(
+                                *parsed_extra.value, *writes_.legacy_store, legacy_options);
+                        }
+                    }
                 }
                 result.settings_imported = true;
             } catch (const settings_archive::IllegalArgumentException& e) {
