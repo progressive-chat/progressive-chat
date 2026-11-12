@@ -115,6 +115,12 @@ skiff over Skia — and this document says how that stack is used here.
 - A commit message says what changed and why: a short first line, then the
   reason. The first line is read most -- in `git log`, beside a build, in a
   file's own name -- so there is a rule for how it is written.
+- **A push is not rewritten.** Pushed commits are read by CI, by the build
+  names, and by anyone who fetched: rewriting them with `--force` replaces what
+  everyone already has with something else under the same branch. Force push is
+  done only when it is really needed -- a branch nobody has read yet, or a
+  mistake that must not stand at all -- and never to tidy a name, to rebase, or
+  to resume work. What is pushed stays pushed.
 
 ### How a commit is named
 
