@@ -469,8 +469,8 @@ void run_scenario(const std::filesystem::path& path) {
             out.write(reinterpret_cast<const char*>(font.data()),
                       static_cast<std::streamsize>(font.size()));
         }
-        const agora::core::font_utils::FontMetadata meta =
-            agora::core::font_utils::read_font_meta(temp);
+        const agora::core::font::FontMetadata meta =
+            agora::core::font::read_font_meta(temp);
         std::error_code ignored;
         std::filesystem::remove(temp, ignored);
         return json_object({
