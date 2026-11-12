@@ -1692,7 +1692,10 @@ RestoreResult restore_from_json_object(const json::Value& obj, const SettingsSna
         sink.save_scheme_style(*value);
     }
 
-    if (has_field(obj, "fontPreference") || options.replace) {
+    // A restored font is saved whatever the archive says about fonts: the bytes
+    // were taken out of the archive and written, so the path and name have to be
+    // recorded even when this settings.json mentions no font at all.
+    if (has_field(obj, "fontPreference") || options.replace || options.restored_custom_font.has_value()) {
         const std::optional<std::string> requested_value = string_field(obj, "fontPreference");
         const std::string requested = requested_value.value_or("app_default");
         if (options.restored_custom_font.has_value()) {

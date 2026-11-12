@@ -728,6 +728,13 @@ ImportResult DataImporter::import(
                 result.errors.push_back(std::string("Memories: ") + e.what());
             }
         } else if (category == data_export::ExportCategory::Settings) {
+            // The conversation-settings transfer the graph import staged lands
+            // after the prompts and before the settings restore -- the reference
+            // saves the map first, then restores the archive.
+            if (!pending_transfer_id.empty()) {
+                transfers_.complete_import(pending_transfer_id);
+                pending_transfer_id.clear();
+            }
             // 6. Import settings: restore the portable archive (validating it),
             // restore a custom font, reconcile the embedding models.
             try {
@@ -759,8 +766,8 @@ ImportResult DataImporter::import(
         step();
     }
 
-    // Apply the conversation-settings transfer once every category has run, so the
-    // settings map lands after the prompts the transfer may depend on.
+    // Apply the conversation-settings transfer if no settings category consumed it
+    // (scenario 06: prompts + conversations only -- the map still lands).
     if (!pending_transfer_id.empty()) transfers_.complete_import(pending_transfer_id);
 
     // 8. Final progress and result
