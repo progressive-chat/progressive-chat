@@ -369,3 +369,40 @@ SAID(logic, what_a_model_said_for_later_read_into_a_run) {
       });
   EXPECT_EQ(covered_count, 2);
 }
+
+SAID(logic, a_search_of_a_conversation_says_its_places_in_timeline_order) {
+  chats_root root;
+  root.conversations.push_back(conversation{.id = conversation_id{"1"}, .title = "One"});
+  // Written out of order in storage: the later moment first, the earlier
+  // moment last, so a hit list that read the rows as they stand would say the
+  // newer message first.
+  root.messages.push_back(message{.id = message_id{"m2"}, .chat = conversation_id{"1"},
+                                  .text = "the TARGET here", .sent = 9});
+  root.messages.push_back(message{.id = message_id{"m1"}, .chat = conversation_id{"1"},
+                                  .text = "TARGET said first", .sent = 3});
+  // An empty query says nothing, and a query nobody says finds nothing.
+  EXPECT_TRUE(logic::hits_of(root, conversation_id{"1"}, "").empty());
+  EXPECT_TRUE(logic::hits_of(root, conversation_id{"1"}, "absent").empty());
+  // A hit in another conversation is not this conversation's.
+  EXPECT_TRUE(logic::hits_of(root, conversation_id{"2"}, "target").empty());
+  const std::vector<logic::hit> places =
+      logic::hits_of(root, conversation_id{"1"}, "target");
+  ASSERT_EQ(places.size(), 2u);
+  // The timeline order: the message sent at 3 comes before the one sent at 9,
+  // whatever order the rows stand in storage.
+  if (places.size() == 2) {
+    EXPECT_EQ(places[0].found->sent, 3);
+    EXPECT_EQ(places[1].found->sent, 9);
+    // Inside one message the offset stands where the query is said: "TARGET"
+    // begins at 0 in "TARGET said first".
+    EXPECT_EQ(places[0].at, std::size_t{0});
+    // ... and at 4 in "the TARGET here".
+    EXPECT_EQ(places[1].at, std::size_t{4});
+  }
+  // Case is folded, so a query in another case still finds it.
+  EXPECT_EQ(logic::hits_of(root, conversation_id{"1"}, "TarGeT").size(), 2u);
+  // Every place one message says it is a place: two in one line, both listed.
+  root.messages.push_back(message{.id = message_id{"m3"}, .chat = conversation_id{"1"},
+                                  .text = "target, target", .sent = 12});
+  EXPECT_EQ(logic::hits_of(root, conversation_id{"1"}, "target").size(), 4u);
+}
