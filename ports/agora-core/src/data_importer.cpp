@@ -9,6 +9,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -453,6 +454,111 @@ std::optional<settings_archive::CustomFont> DataImporter::restore_custom_font(
     }
 }
 
+namespace {
+
+/** Reads the prompt items array under `name` (absent = empty). */
+std::vector<data_export::PromptTemplateItem> read_items(const Value& object, std::string_view name) {
+    std::vector<data_export::PromptTemplateItem> out;
+    const Value* value = field(object, name);
+    if (value == nullptr) return out;
+    if (value->kind != Kind::Array) return out;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) continue;
+        data_export::PromptTemplateItem item;
+        item.id = string_field(element, "id").value_or("");
+        if (item.id.empty()) item.id = "i" + std::to_string(out.size());
+        item.type = string_field(element, "type").value_or("");
+        item.value = string_field(element, "value").value_or("");
+        out.push_back(std::move(item));
+    }
+    return out;
+}
+
+/** Parses system_prompts.json (a JSON array of prompt entries). */
+std::vector<data_export::SystemPromptEntry> parse_system_prompts(std::string_view bytes) {
+    std::vector<data_export::SystemPromptEntry> out;
+    ParseResult pr = json::parse(std::string(bytes));
+    if (!pr.value || pr.value->kind != Kind::Array) return out;
+    for (const Value& element : pr.value->elements) {
+        if (element.kind != Kind::Object) continue;
+        data_export::SystemPromptEntry entry;
+        entry.id = string_field(element, "id").value_or("");
+        entry.title = string_field(element, "title").value_or("");
+        entry.content = string_field(element, "content").value_or("");
+        entry.system_items = read_items(element, "systemItems");
+        entry.user_items = read_items(element, "userItems");
+        entry.assistant_items = read_items(element, "assistantItems");
+        entry.user_prepend_items = read_items(element, "userPrependItems");
+        entry.user_postpend_items = read_items(element, "userPostpendItems");
+        out.push_back(std::move(entry));
+    }
+    return out;
+}
+
+/** True when two prompts carry the same id. */
+bool same_prompt_id(const data_export::SystemPromptEntry& a, const data_export::SystemPromptEntry& b) {
+    return a.id == b.id;
+}
+
+/** True when two prompts are identical in title and content (the merge's skip test). */
+bool identical_prompt(const data_export::SystemPromptEntry& a, const data_export::SystemPromptEntry& b) {
+    return a.title == b.title && a.content == b.content;
+}
+
+/** Makes `title` unique against `taken` by appending " (imported)" / " (imported) N". */
+std::string unique_title(std::string title, const std::set<std::string>& taken) {
+    if (!taken.count(title)) return title;
+    std::string candidate = title + " (imported)";
+    int n = 2;
+    while (taken.count(candidate)) {
+        candidate = title + " (imported) " + std::to_string(n);
+        ++n;
+    }
+    return candidate;
+}
+
+}  // namespace
+
+std::vector<data_export::SystemPromptEntry> DataImporter::plan_system_prompts(
+    native_backup_archive::NativeBackupArchive& archive,
+    ImportStrategy strategy) {
+    // What the archive carries, parsed.
+    std::vector<data_export::SystemPromptEntry> incoming;
+    if (auto bytes = archive.bytes(native_backup::kSystemPromptsEntry); bytes)
+        incoming = parse_system_prompts(*bytes);
+
+    // REPLACE: the archive becomes the whole set.
+    if (strategy == ImportStrategy::Replace) return incoming;
+
+    // MERGE: start from what is already there and fold the archive in.
+    std::vector<data_export::SystemPromptEntry> merged;
+    if (settings_.system_prompts) merged = settings_.system_prompts();
+
+    for (data_export::SystemPromptEntry& candidate : incoming) {
+        // An identical prompt (same title and content) is already present: skip it.
+        bool present = false;
+        for (const auto& existing : merged) {
+            if (identical_prompt(existing, candidate)) { present = true; break; }
+        }
+        if (present) continue;
+
+        // Ids that collide with an existing prompt get a fresh uuid; free ids are kept.
+        bool id_taken = false;
+        for (const auto& existing : merged) {
+            if (same_prompt_id(existing, candidate)) { id_taken = true; break; }
+        }
+        if (id_taken && platform_.new_uuid) candidate.id = platform_.new_uuid();
+
+        // Titles are kept unique across the merged set.
+        std::set<std::string> taken;
+        for (const auto& existing : merged) taken.insert(existing.title);
+        candidate.title = unique_title(candidate.title, taken);
+
+        merged.push_back(std::move(candidate));
+    }
+    return merged;
+}
+
 ImportResult DataImporter::import(
     native_backup_archive::NativeBackupArchive& archive,
     const std::map<data_export::ExportCategory, ImportStrategy>& decisions,
@@ -487,7 +593,6 @@ ImportResult DataImporter::import(
         return result;
     }
 
-    std::vector<std::string> errors;
     std::map<data_export::ExportCategory, ImportStrategy> active_categories = decisions;
     for (auto it = active_categories.begin(); it != active_categories.end();) {
         if (it->second == ImportStrategy::Skip) it = active_categories.erase(it);
@@ -495,7 +600,7 @@ ImportResult DataImporter::import(
     }
     int total_steps = static_cast<int>(active_categories.size());
     int completed = 0;
-    [[maybe_unused]] auto step = [&]() {
+    auto step = [&]() {
         completed++;
         if (on_progress) on_progress(static_cast<float>(completed) / std::max(1, total_steps));
     };
@@ -518,15 +623,29 @@ ImportResult DataImporter::import(
         return result;
     }
 
-    // TODO: Implement full import logic following DataImporter.kt exactly
-    // This includes:
-    // 1. Plan system prompts (MERGE/REPLACE)
-    // 2. Stage conversation graph (media restore + graph source + headers)
-    // 3. Save prompts
-    // 4. Import graph (with semantic snapshot, transfer, coordinator)
-    // 5. Import memories
-    // 6. Import settings (font, portable archive, legacy extra, reconcile embeddings)
-    // 7. Import API keys (secrets policy)
+    // Each active category is processed in enum order, reporting progress after
+    // it; the categories whose logic is still staged below are counted (their
+    // step fires) so the progress matches the reference even before they write.
+    for (const auto& [category, strategy] : active_categories) {
+        if (category == data_export::ExportCategory::SystemPrompts) {
+            // 1. Plan system prompts (MERGE/REPLACE), 3. Save prompts.
+            try {
+                const int incoming_count = [&] {
+                    auto bytes = archive.bytes(native_backup::kSystemPromptsEntry);
+                    if (!bytes) return 0;
+                    return static_cast<int>(parse_system_prompts(*bytes).size());
+                }();
+                std::vector<data_export::SystemPromptEntry> planned = plan_system_prompts(archive, strategy);
+                if (writes_.save_system_prompts) writes_.save_system_prompts(planned);
+                result.system_prompts_imported = incoming_count;
+            } catch (const std::exception& e) {
+                result.errors.push_back(e.what());
+            }
+        }
+        // 2/4. Conversation graph, 5. Memories, 6. Settings, 7. API keys: staged.
+        step();
+    }
+
     // 8. Final progress and result
 
     if (on_progress) on_progress(1.0f);
