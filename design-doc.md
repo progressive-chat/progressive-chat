@@ -1,9 +1,9 @@
 # The design of a chat
 
-This document describes how the screen that displays a conversation looks. It is
-written once so that what the window draws can be compared against a reference.
-It covers this program's own screen — not the chat protocol's UI, and not another
-program's.
+This document describes how the screen that displays a conversation should look.
+It is written once so that what the window draws can be compared against a
+reference. It covers this program's own screen — not the chat protocol's UI, and
+not another program's.
 
 Everything here is drawn by the same layout tree for all three target platforms,
 and no measurement in this document belongs to a single one of them: the room has
@@ -11,8 +11,8 @@ a width, and the content inside it takes a share of that width.
 
 ## The room
 
-One conversation fills the room. Three parts are always present, regardless of
-what is said: the top bar, the message area, and the footer.
+One conversation fills the room. Three parts are always present: the top bar,
+the message area, and the footer.
 
 - **Top bar** — floats over the scrolling content below. It contains: the button
   that opens the conversation drawer (where a drawer can be opened at all), the
@@ -22,12 +22,14 @@ what is said: the top bar, the message area, and the footer.
   answered. Nothing else is in the top bar. It has no search of its own; the
   drawer provides search.
 - **Message area** — between the top bar and the footer, where messages scroll.
-- **Footer** — the editor, where text is written.
+- **Footer** — the editor, where text is written. It always shows **which model
+  will receive the message**, even before anything is written, and next to that a
+  **circle showing how full the context is** — filled by the share of the model's
+  window this conversation has consumed, empty where there is room left. Both are
+  always present: writing to a model without knowing which one it is, or how close
+  to the limit the conversation has come, is writing blind.
 
-### Top-bar items that are not drawn yet
-
-Everything below this line is described because it is wanted; none of it exists
-in the program today.
+### Top-bar items beyond the plus and the token count
 
 - **Model bubbles for the answering models** sit on the top edge of the main
   panel, one per bubble. The name in a bubble is **the model's name**, and
@@ -46,15 +48,6 @@ in the program today.
   the plus: **search**, **system prompt**, **fork conversation**, and **share**.
   On a wide screen they stand as themselves; on a narrow one they are one press
   deep.
-
-### Footer (the editor)
-
-The footer is the editor. It always shows **which model will receive the
-message**, even before anything is written, and next to that a **circle showing
-how full the context is** — filled by the share of the model's window this
-conversation has consumed, empty where there is room left. Both of these are
-always present: writing to a model without knowing which one it is, or how close
-to the limit the conversation has come, is writing blind.
 
 ## The drawer
 
@@ -153,7 +146,7 @@ else in the panel is a plus:
   and **presence penalty** — the same five that settings keeps under
   **Responses → Generation**, reached from where they are used.
 
-### What the fold shows today
+### What the fold shows
 
 Above the answer, and only where there is something to fold, is what the model did
 before answering: **how long it took**, **how many tool calls it made**, and —
@@ -189,11 +182,11 @@ program must be able to agree or refuse, and to what degree.
 - **Providers** — API keys, the base URL each is asked at, and which providers
   this program talks to at all.
 - **Models** — which models are enabled, which are disabled, and how each is
-  configured. What is drawn under this row today is every offered answerer
-  (`pchat.config`), a switch for each, and the currently open conversation is
-  the one a press puts a model into or takes it out of: the first is what
-  answers when nothing else has been said, and the last is never removed,
-  because no conversation can be said to have no answerer.
+  configured. Under this row: every offered answerer (`pchat.config`), a switch
+  for each, and the currently open conversation is the one a press puts a model
+  into or takes it out of: the first is what answers when nothing else has been
+  said, and the last is never removed, because no conversation can be said to
+  have no answerer.
 
 **Responses**
 
@@ -203,8 +196,7 @@ program must be able to agree or refuse, and to what degree.
   values: **temperature**, **top p**, **maximum tokens**, **presence penalty**,
   and **frequency penalty**, each adjusted one step at a time by a control
   beside it and kept within its range (`0…2`, `0…1`, `256…32768`, `-2…2`,
-  `-2…2`). Nothing else behind them yet: their values are what every answer is
-  asked with.
+  `-2…2`).
 - **Context** — what is kept from a conversation when the window is smaller than
   the conversation.
 - **Title generation** — naming a conversation automatically.
@@ -212,19 +204,18 @@ program must be able to agree or refuse, and to what degree.
 **Multimodal**
 
 - **Image transcription** — a vision model asked to describe a picture, so what
-  cannot see can still be told. This program implements two switches under this
-  row: **read a picture into words** and **make a picture out of words**. When
-  one is off it is not offered at all, and nothing here describes either of them
-  beyond the row above.
+  cannot see can still be told. Two switches stand under this row: **read a
+  picture into words** and **make a picture out of words**. When one is off it is
+  not offered at all.
 - **Image generation** — pictures produced from written descriptions.
 
 **Tools**
 
 - **Web search** — one search tool, configured once, shared across all providers.
 - **Conversation search** — the conversation's history and how it is searched.
-  This program implements three switches under this row: **look up what was said
-  here**, **say how much has been said**, and **say what time it is**. When one
-  is off it is not offered to a model at all.
+  Three switches stand under this row: **look up what was said here**, **say how
+  much has been said**, and **say what time it is**. When one is off it is not
+  offered to a model at all.
 - **Shell** — commands run on a remote machine.
 - **Tor** — requests routed through the Tor network. *Where this belongs is
   undecided:* it is a tool here, but it could equally be under Network or under
@@ -271,20 +262,7 @@ program must be able to agree or refuse, and to what degree.
 
 - **About** — what this build is: its number and source commit, the license it
   is distributed under, and where its source is kept. Every line is copied
-  whole to the system clipboard by pressing it. *Whether it also asks the
-  holder to rate it is undecided: nothing of it is drawn, and it may never be
-  needed.*
-
-Of all of the above, what is drawn today is **Appearance** — the theme, its
-scheme, its type and dark mode; the five generation parameters, under
-**Generation**; which answerers are active in the open conversation, under
-**Models**; the three tools this program owns, under **Tools**; and the build
-info, under **About**; plus a switch for each of the seven switchable features,
-which is what the other three groups were previously empty for — two under
-**Multimodal**, one under **Network**, and three under **Memory & Data**. What
-each of the seven does when switched on is not written yet: the row only says it
-is offered. A press under **Test** requests one notification of the program's
-own from the host machine.
+  whole to the system clipboard by pressing it.
 
 ## What this design does not do
 
