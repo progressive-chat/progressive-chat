@@ -358,9 +358,35 @@ public:
 
     std::int64_t last_insert_rowid() override { return sqlite3_last_insert_rowid(db_); }
 
-    void begin() override { exec_raw("BEGIN"); }
-    void commit() override { exec_raw("COMMIT"); }
-    void rollback() override { exec_raw("ROLLBACK"); }
+    // Reference-counted: nested DAO transactions join the outer import transaction, and only the
+    // outermost level issues COMMIT/ROLLBACK — the JVM SQLiteSession behavior Room relies on.
+    void begin() override {
+        if (depth_++ == 0) {
+            aborted_ = false;
+            exec_raw("BEGIN");
+        }
+    }
+
+    void commit() override {
+        if (depth_ == 0) throw agora::core::SqlError("commit without a transaction");
+        if (--depth_ == 0) {
+            if (deferred_rollback_) {
+                deferred_rollback_ = false;
+                exec_raw("ROLLBACK");
+            } else {
+                exec_raw("COMMIT");
+            }
+        }
+    }
+
+    void rollback() override {
+        if (depth_ == 0) throw agora::core::SqlError("rollback without a transaction");
+        deferred_rollback_ = true;
+        if (--depth_ == 0) {
+            deferred_rollback_ = false;
+            exec_raw("ROLLBACK");
+        }
+    }
 
 private:
     void exec_raw(const std::string& sql) {
@@ -453,6 +479,9 @@ private:
     }
 
     sqlite3* db_ = nullptr;
+    int depth_ = 0;
+    bool deferred_rollback_ = false;
+    bool aborted_ = false;
 };
 
 // The step's ordered archive entries, assembled into the bytes of a real ZIP
