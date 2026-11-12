@@ -99,6 +99,7 @@ std::string required_text(const Value& object, std::string_view name) {
     return found->text;
 }
 
+
 std::string text_or(const Value& object, std::string_view name, std::string fallback = "") {
     const Value* found = field(object, name);
     if (found == nullptr || found->kind != Kind::String) return fallback;
@@ -1183,6 +1184,52 @@ std::optional<float> parse_float_for_scenario(std::string_view text) {
     return value;
 }
 
+// Tolerant readers for the settings snapshot: the data-importer scenarios carry a
+// partial settings object, so a field that is simply not there keeps the snapshot's
+// own default instead of failing the scenario (the portable stand's fixtures always
+// carry every key; these do not).
+std::string opt_string(const Value& object, std::string_view name, std::string fallback = "") {
+    const Value* value = field(object, name);
+    if (value == nullptr) return fallback;
+    if (value->kind == Kind::String) return value->text;
+    if (value->kind == Kind::Literal && value->text == "null") return fallback;
+    return fallback;
+}
+
+bool opt_bool(const Value& object, std::string_view name, bool fallback = false) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return fallback;
+    std::string lowered = value->text;
+    for (char& c : lowered)
+        if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "true")
+        return true;
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "false")
+        return false;
+    return fallback;
+}
+
+std::optional<int> opt_int(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::nullopt;
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) return std::nullopt;
+    return parse_int_for_scenario(value->text);
+}
+
+int opt_int_or(const Value& object, std::string_view name, int fallback) {
+    const std::optional<int> value = opt_int(object, name);
+    return value.has_value() ? *value : fallback;
+}
+
+std::optional<float> opt_float(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::nullopt;
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) return std::nullopt;
+    return parse_float_for_scenario(value->text);
+}
+
 const Value& required_object(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
     if (value == nullptr || value->kind != Kind::Object) {
@@ -1191,17 +1238,18 @@ const Value& required_object(const Value& object, std::string_view name) {
     return *value;
 }
 
+// Absent = leave the snapshot's default (the data-importer scenarios carry only
+// part of the settings keys); present-but-wrong is still a failure.
 std::string read_string(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::String) {
-        scenario_fail(std::string(name) + " must be a string");
-    }
+    if (value == nullptr) return std::string{};
+    if (value->kind != Kind::String) scenario_fail(std::string(name) + " must be a string");
     return value->text;
 }
 
 std::optional<std::string> read_nullable_string(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr) scenario_fail(std::string(name) + " must be present");
+    if (value == nullptr) return std::nullopt;
     if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
     if (value->kind != Kind::String) scenario_fail(std::string(name) + " must be a string");
     return value->text;
@@ -1209,7 +1257,7 @@ std::optional<std::string> read_nullable_string(const Value& object, std::string
 
 bool read_bool(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr) scenario_fail(std::string(name) + " must be a bool");
+    if (value == nullptr) return false;
     std::string lowered;
     if (value != nullptr) lowered = value->text;
     for (char& c : lowered) {
@@ -1226,7 +1274,7 @@ bool read_bool(const Value& object, std::string_view name) {
 
 std::optional<int> read_nullable_int(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr) scenario_fail(std::string(name) + " must be present");
+    if (value == nullptr) return std::nullopt;
     if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
     if (value->kind != Kind::Literal) scenario_fail(std::string(name) + " must be an int");
     const std::optional<int> parsed = parse_int_for_scenario(value->text);
@@ -1236,13 +1284,12 @@ std::optional<int> read_nullable_int(const Value& object, std::string_view name)
 
 int read_int(const Value& object, std::string_view name) {
     const std::optional<int> value = read_nullable_int(object, name);
-    if (!value.has_value()) scenario_fail(std::string(name) + " must not be null");
-    return *value;
+    return value.value_or(0);
 }
 
 std::optional<float> read_nullable_float(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr) scenario_fail(std::string(name) + " must be present");
+    if (value == nullptr) return std::nullopt;
     if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
     if (value->kind != Kind::Literal) scenario_fail(std::string(name) + " must be a float");
     const std::optional<float> parsed = parse_float_for_scenario(value->text);
@@ -1252,16 +1299,14 @@ std::optional<float> read_nullable_float(const Value& object, std::string_view n
 
 float read_float(const Value& object, std::string_view name) {
     const std::optional<float> value = read_nullable_float(object, name);
-    if (!value.has_value()) scenario_fail(std::string(name) + " must not be null");
-    return *value;
+    return value.value_or(0.0f);
 }
 
 std::vector<std::string> read_string_set(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::Array) {
-        scenario_fail(std::string(name) + " must be an array");
-    }
     std::vector<std::string> out;  // LinkedHashSet: first occurrence wins
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
     for (const Value& element : value->elements) {
         if (element.kind != Kind::String) scenario_fail(std::string(name) + " needs strings");
         if (std::find(out.begin(), out.end(), element.text) == out.end()) {
@@ -1273,10 +1318,9 @@ std::vector<std::string> read_string_set(const Value& object, std::string_view n
 
 archive::StringMap read_string_map(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::Object) {
-        scenario_fail(std::string(name) + " must be an object");
-    }
     archive::StringMap out;  // LinkedHashMap: last value, first position
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an object");
     for (const Member& member : value->members) {
         if (member.value.kind != Kind::String) {
             scenario_fail(std::string(name) + " values must be strings");
@@ -1296,10 +1340,9 @@ archive::StringMap read_string_map(const Value& object, std::string_view name) {
 
 archive::BoolMap read_bool_map(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::Object) {
-        scenario_fail(std::string(name) + " must be an object");
-    }
     archive::BoolMap out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an object");
     for (const Member& member : value->members) {
         bool flag;
         const std::string& text = member.value.text;
@@ -1328,10 +1371,9 @@ archive::BoolMap read_bool_map(const Value& object, std::string_view name) {
 std::vector<secrets::EmbeddingModelConfig> read_embedding_list(const Value& object,
                                                               std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::Array) {
-        scenario_fail(std::string(name) + " must be an array");
-    }
     std::vector<secrets::EmbeddingModelConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
     for (const Value& element : value->elements) {
         if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
         secrets::EmbeddingModelConfig model;
@@ -1376,10 +1418,9 @@ std::vector<secrets::EmbeddingModelConfig> read_embedding_list(const Value& obje
 std::vector<secrets::ShellDeviceConfig> read_shell_list(const Value& object,
                                                        std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::Array) {
-        scenario_fail(std::string(name) + " must be an array");
-    }
     std::vector<secrets::ShellDeviceConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
     for (const Value& element : value->elements) {
         if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
         secrets::ShellDeviceConfig device;
@@ -1410,10 +1451,9 @@ std::vector<secrets::ShellDeviceConfig> read_shell_list(const Value& object,
 
 std::vector<secrets::McpServerConfig> read_mcp_list(const Value& object, std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::Array) {
-        scenario_fail(std::string(name) + " must be an array");
-    }
     std::vector<secrets::McpServerConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
     for (const Value& element : value->elements) {
         if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
         secrets::McpServerConfig server;
@@ -1450,10 +1490,9 @@ std::vector<secrets::McpServerConfig> read_mcp_list(const Value& object, std::st
 std::vector<archive::CustomProviderConfig> read_provider_list(const Value& object,
                                                               std::string_view name) {
     const Value* value = field(object, name);
-    if (value == nullptr || value->kind != Kind::Array) {
-        scenario_fail(std::string(name) + " must be an array");
-    }
     std::vector<archive::CustomProviderConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
     for (const Value& element : value->elements) {
         if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
         archive::CustomProviderConfig provider;
