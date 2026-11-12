@@ -14197,7 +14197,7 @@ created=2026-09-16 pushed=2026-09-16 size_mb=110.9 license=MIT topics=[] fork=fa
 
 _Thinking:_
 
-Now I understand the context much better. Agora = their own BYOK LLM client project (chat with Markdown/LaTeX, IME, text selection, TalkBack, RTL, variable fonts, minSdk 26). There's extensive prior research (in Russian) concluding no pure-C++ Skia toolkit exists with Android+permissive license+activity.
+Now I understand the context much better. Agora = their own BYOK LLM client project (chat with Markdown/LaTeX, IME, text selection, TalkBack, RTL, variable fonts, minSdk 26). There's extensive prior research concluding no pure-C++ Skia toolkit exists with Android+permissive license+activity.
 
 Now "i fork agora, to get the same, but better and bloatless" — hmm. Maybe: there is an upstream popular project also called "Agora"? Let me search GitHub for other agora repos — maybe an existing Kotlin BYOK LLM client that's bloated, and they want a leaner fork. Their `agora` (created 2026-06-09, GPL-3.0, 132 MB, Kotlin, 1 star) vs `Agora-1` (created 2026-09-16, MIT, 110.9MB, Kotlin) — Agora-1 description "Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control" sounds like a *copy* of another repo (maybe they cloned someone's agora and re-published it — that's the "fork" they mean: "I fork agora" = they took an existing agora app as base).
 
