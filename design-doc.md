@@ -1,308 +1,303 @@
 # The design of a chat
 
-How the screen that reads a conversation looks, said once, so that what the
-window draws can be read against something. It is the design of this program's
-own screen: not of the protocol's chat, and not of another program's.
+This document describes how the screen that displays a conversation looks. It is
+written once so that what the window draws can be compared against a reference.
+It covers this program's own screen — not the chat protocol's UI, and not another
+program's.
 
-Everything here is drawn by the same tree for the three targets, and none of it
-names a measure that belongs to one of them: the room is a breadth, and what is
-said in it takes a share of that breadth.
+Everything here is drawn by the same layout tree for all three target platforms,
+and no measurement in this document belongs to a single one of them: the room has
+a width, and the content inside it takes a share of that width.
 
 ## The room
 
-One conversation fills the room. Three things are always in it, whatever is
-said: the top, over the messages; the messages, between the top and the foot;
-and the foot itself, where what is written is written.
+One conversation fills the room. Three parts are always present, regardless of
+what is said: the top bar, the message area, and the footer.
 
-The top is a bar that floats over what scrolls under it. In it: the pill that
-opens the drawer of conversations, where a drawer can be opened at all; the name
-of this conversation; and at the other side, two things — a **plus**, which
-begins a new chat, and beside it **how many tokens this chat is** (for example
-`12.4k tokens`), which is what it has asked the model and been answered with,
-put together. Nothing else is in the top. No search of its own: the drawer
-searches.
+- **Top bar** — floats over the scrolling content below. It contains: the button
+  that opens the conversation drawer (where a drawer can be opened at all), the
+  name of the current conversation, and on the other side two items — a **plus**
+  that starts a new chat, and next to it **the conversation's token count** (e.g.
+  `12.4k tokens`), which is the total of what the model was asked and what it
+  answered. Nothing else is in the top bar. It has no search of its own; the
+  drawer provides search.
+- **Message area** — between the top bar and the footer, where messages scroll.
+- **Footer** — the editor, where text is written.
 
-### What the top holds that is not drawn yet
+### Top-bar items that are not drawn yet
 
-Everything below this line is said because it is wanted, and none of it stands
+Everything below this line is described because it is wanted; none of it exists
 in the program today.
 
-* **The models that answer this conversation** stand on the top edge of the
-  main panel, one bubble each: the name in a bubble is **what the model is
-  called**, and pressing the bubble is how you say which model this is and read
-  which it has been. What it has used of its window is **not** said again in
-  every bubble — one conversation's share of one window is said once, beside
-  the editor below (**The editor's row**), where every model that answers in it
-  would otherwise say the same count three times over.
-* **A button for the system prompt**: what is told to every model before
-  anything else is said to it — `You are answering in Progressive Chat, briefly
-  and plainly.` — read and written from here. Not only a plus is in the top;
-  this is beside it.
-* **Fork conversation** and **share** stand in the top as well: the one takes
-  this conversation as a new one written from here on apart, the other gives it
-  out.
-* **Where the screen is narrow**, four of these go behind **three dots** beside
-  the plus and come out of it: **search**, **system prompt**, **fork
-  conversation**, **share**. Wide, they stand as themselves; narrow, they are
-  one press deep.
+- **Model bubbles for the answering models** sit on the top edge of the main
+  panel, one per bubble. The name in a bubble is **the model's name**, and
+  pressing a bubble selects which model answers and shows which one has been
+  used. The portion of the model's window this conversation has consumed is
+  **not** repeated in every bubble — it is shown once, next to the editor
+  (**The editor's row**), because otherwise every answering model would repeat
+  the same count three times.
+- **A button for the system prompt**: the instructions given to every model
+  before anything else, e.g. `You are answering in Progressive Chat, briefly and
+  plainly.` — read and edited here. This sits next to the plus; the top bar is
+  not just a plus.
+- **Fork conversation** and **share** also live in the top bar: the first makes a
+  new conversation branched from this one, the second shares it.
+- **When the screen is narrow**, four of these move behind **three dots** next to
+  the plus: **search**, **system prompt**, **fork conversation**, and **share**.
+  On a wide screen they stand as themselves; on a narrow one they are one press
+  deep.
 
-The foot is the editor. It always says **which model it will send to**, even
-before anything has been written, and beside that a **circle that shows how full
-the context is** — filled by the share of the model's window this conversation
-has taken, empty where there is room left. Those two never move and never go
-away: writing to a model without being told which one it is, or without being
-told how near the edge this chat has come, is writing blind.
+### Footer (the editor)
+
+The footer is the editor. It always shows **which model will receive the
+message**, even before anything is written, and next to that a **circle showing
+how full the context is** — filled by the share of the model's window this
+conversation has consumed, empty where there is room left. Both of these are
+always present: writing to a model without knowing which one it is, or how close
+to the limit the conversation has come, is writing blind.
 
 ## The drawer
 
-The list of conversations comes over the messages where the room is too narrow
-to keep it beside them, and stands beside them where it is not. It is never the
-whole room wide: a strip of the messages is left in sight beside it, and that
-strip, pressed, is what puts it away again.
+The conversation list overlays the messages when the room is too narrow to keep
+it beside them, and stands beside them otherwise. It is never full-width: a strip
+of the messages stays visible beside it, and pressing that strip closes the
+drawer.
 
-Down it, in this order:
+Contents, in order from top to bottom:
 
-* **Conversations** — the panel's heading, set large and bold, further in from
-  the panel's own edge than the things under it.
-* **Search conversations...** — the only search there is: its own ground,
-  rounded the whole way round, a magnifier before the hint, and the hint in
-  grey.
-* **Tasks**, and **Remote** under it, only a few pixels apart: both on one
-  ground, and rounded between them so that the two read as one row cut in two
-  — the upper rounded above and barely below, the lower barely above and
+- **Conversations** — the panel heading, large and bold, set further in from the
+  panel's edge than the items below it.
+- **Search conversations...** — the only search. Its own rounded ground (rounded
+  all the way around), a magnifier icon before the placeholder, and the
+  placeholder in grey.
+- **Tasks** and **Remote** below it, only a few pixels apart: both share one
+  ground, rounded between them so the two read as a single row split in two —
+  the upper one rounded above and barely below, the lower one barely above and
   rounded below.
-* **+ New Chat** — its own ground, rounded the whole way round, as the field
-  is.
-* The conversations, one row each.
-* **Settings** — the panel's last row: a gear and its name on the same ground
-  as Tasks and Remote, rounded as the field is. This is the only way into the
-  settings, because nothing else in the room has room to spare.
+- **+ New Chat** — its own ground, fully rounded, like the search field.
+- The conversation rows, one per conversation.
+- **Settings** — the panel's last row: a gear icon and its label on the same
+  ground as Tasks and Remote, rounded like the search field. This is the only
+  entry into settings, because nothing else in the room has space for it.
 
-A conversation's row says **its name**, **what was said last**, and a **badge
-for what is unread**. It does not say how long ago that was: the time is one
-thing a row may be asked for, and it is asked for nowhere by default. What the
-row keeps clear at its right is three times what it keeps at its left, so that
-a name read to its end is not read into the badge.
+A conversation's row shows **its name**, **the last thing said**, and an **unread
+badge**. It does not show how long ago that was: a timestamp is something a row
+can be asked for, but it is not shown by default. The right side of a row reserves
+three times the space of the left, so a name read to its end does not run into
+the badge.
 
-Nor does a circle stand for a conversation by default — no letter, no picture.
-Where one is asked for, the row's own circle is put before its name, and
-everything after it stands over by the circle's breadth.
+By default, a conversation has no avatar — no letter, no picture. Where one is
+enabled, the row's circle is placed before its name, and everything after it
+shifts right by the circle's width.
 
 ## A message you wrote
 
-Yours are **bubbles**, and are put on **the right** of the room. A bubble may
-take **three quarters of the room's breadth** and no more; what is shorter than
-that is only as wide as its words, not stretched.
+Your messages are **bubbles**, placed on **the right** of the room. A bubble can
+be at most **three-quarters of the room's width**; anything shorter is only as
+wide as its text, not stretched to fill.
 
-Two things say the bubble is yours, and either alone would do — together there
-is no reading it the wrong way:
+Two things indicate a bubble is yours — either alone is sufficient, and together
+there is no way to misread it:
 
-* it stands on the right, against the room's edge, while everything else reads
-  from the left;
-* **its bottom right corner is squarer than its other three**, which are all
-  rounded alike. The corner is the tail: the bubble leans towards whoever wrote
-  it, and the model's answers, having no bubble, cannot have one.
+- it is on the right, against the room's edge, while everything else is read from
+  the left;
+- **its bottom-right corner is squarer than the other three**, which are all
+  rounded alike. This corner is the tail: the bubble points toward whoever wrote
+  it. A model's answers, having no bubble, cannot have one.
 
-Under your words is the time, small, in the bubble's own colour, at its right.
-No name is put over a bubble of yours: whose it is, the two things above say
-already.
+Below your text is the timestamp, small, in the bubble's own color, aligned
+right. No name is shown above your bubble: the two indicators above already say
+whose it is.
 
 ## A model's answer
 
-A model's answer has **no bubble**. It is all the width of the room, text on the
-background, as wide as the room is and no wider. No nickname above it, and no
-model's name or id either: which model answered is what the editor says, and it
-says it once, for everything that follows. Nothing of an answer is put on the
-right.
+A model's answer has **no bubble**. It spans the full width of the room, text on
+the background, no wider than the room. No nickname above it, and no model name
+or id either: which model answered is shown in the editor, once, for everything
+that follows. Nothing of an answer is placed on the right.
 
 ### Folded above it
 
-Folded above an answer: **how long it was thinking, and how often it reached
-for a tool** — `Thought for 4.2 s · 3 tool calls`. The whole line is **one
-press**, and a press **opens it**: what the model wrote to itself while it was
-thinking is said under it, greentext, and beneath that **every tool call it
-made on the way**, one line each — what it asked for, and what it was given
-back — for those three are what the count was counting. Pressed again it folds.
+Folded above an answer: **how long it was thinking and how often it called a
+tool** — `Thought for 4.2 s · 3 tool calls`. The whole line is **one press**, and
+pressing it **opens the fold**: what the model wrote to itself while thinking is
+shown below in greentext, and beneath that **every tool call it made along the
+way**, one line each — what it requested and what it received — since those three
+are what the count refers to. Pressing again folds it back.
 
 ### The editor's row
 
-The bottom of the main panel is one row, read left to right, and nothing else
-in the panel is a plus:
+The bottom of the main panel is a single row, read left to right, and nothing
+else in the panel is a plus:
 
-* **A plus at the panel's top right begins a new chat.** That is the only plus
-  in that part of the screen. Nothing beside it adds an answerer: which models
-  answer this conversation is said under **Services → Models** in the settings,
+- **A plus at the panel's top right starts a new chat.** That is the only plus in
+  that part of the screen. Nothing beside it adds an answerer: which models
+  answer this conversation is configured under **Services → Models** in settings,
   and nowhere else.
-* **A plus at the editor's left, before the model's name**, attaches something
-  to what you are writing. Pressed, it says four things: **photo or media from
-  the camera**, **photos from the gallery**, **videos**, **files**.
-* **The model's name** stands next, as **the model itself is called** and,
-  after it in brackets, **which provider it is asked through**:
-  `DeepSeek V4.1 Flash (ds)`. The id a wire is given — `deepseek-v4-1-flash` —
-  is not what is written here.
-* **A circle beside the name** says **how much of this model's window this
-  conversation has taken**, filled from twelve o'clock clockwise, and nothing
-  beside it says the same count in words again: what one conversation has used
-  of one window is said once on the screen and not once for every model that
-  answers in it.
-* **Three dots after the circle** open one menu, and in it: **thinking**,
-  switched on and off, with **how hard it is asked to think** said beside it
-  (`max`); **web search**, switched on and off; **compact context**, which is a
-  grey press and nothing else while the chat is empty; and **Advanced**.
-* **Advanced** opens the **large settings**: the **context window size**, the
-  **temperature**, the **maximum output tokens**, the **top p**, the
-  **frequency penalty** and the **presence penalty** — the same five the
-  settings keep under **Responses → Generation**, reached from where they are
-  asked about.
+- **A plus at the editor's left, before the model name**, attaches something to
+  the message. Pressed, it offers four things: **photo or media from the
+  camera**, **photos from the gallery**, **videos**, and **files**.
+- **The model name** comes next, shown as **the model's own name** followed, in
+  brackets, by **the provider it is asked through**: `DeepSeek V4.1 Flash (ds)`.
+  The wire id given to the provider — `deepseek-v4-1-flash` — is not shown here.
+- **A circle next to the name** shows **how much of this model's window the
+  conversation has consumed**, filled clockwise from twelve o'clock. Nothing
+  beside it repeats the same count in words: a conversation's share of a window
+  is shown once on screen, not once per answering model.
+- **Three dots after the circle** open one menu containing: **thinking**, on/off,
+  with **the thinking effort** shown beside it (`max`); **web search**, on/off;
+  **compact context**, which is a disabled grey control while the chat is empty;
+  and **Advanced**.
+- **Advanced** opens the **large settings**: **context window size**,
+  **temperature**, **maximum output tokens**, **top p**, **frequency penalty**,
+  and **presence penalty** — the same five that settings keeps under
+  **Responses → Generation**, reached from where they are used.
 
-### What the fold keeps today
+### What the fold shows today
 
-Above the answer, and only where there is something to fold, stands what the
-model did before it answered: **how long it took**, **how many tool calls it
-made**, and — folded inside that line — **its thinking, as greentext**: what it
-wrote while it was not yet answering, in one green of its own, which is the
-colour it keeps when the fold is opened. Folded, it is one line under which
-nothing is read; unfolded, the greentext stands under it, and the answer below
-it moves down by what it came to.
+Above the answer, and only where there is something to fold, is what the model did
+before answering: **how long it took**, **how many tool calls it made**, and —
+folded inside that line — **its thinking, as greentext**: what it wrote while not
+yet answering, in its own green, which is the color it keeps when the fold is
+open. Folded, it is one line with nothing read under it; unfolded, the greentext
+appears below it, and the answer beneath moves down accordingly.
 
 ### Under it
 
-The answer keeps a **footer** of its own, a row of small ones at its left:
+An answer has a **footer** — a row of small controls on its left:
 
-* **copy** — the answer's text, whole, onto the clipboard;
-* **regenerate** — the same answer asked for again, and this one replaced;
-* **fork** — this answer taken as a chat of its own, and the two written from
-  here on apart;
-* **share** — the answer given out as a link or text of its own;
-* **info** — what answered it, how long the answer took, how many tokens it
-  cost, and when: the numbers the design otherwise keeps out of sight;
-* **delete** — the answer gone, and the one asked above it left where it is.
+- **copy** — the answer's full text to the clipboard;
+- **regenerate** — the same answer requested again, replacing this one;
+- **fork** — this answer taken as its own conversation, the two diverging from
+  here;
+- **share** — the answer shared as a link or standalone text;
+- **info** — what answered it, how long it took, its token cost, and when: the
+  numbers the design otherwise hides;
+- **delete** — the answer removed, leaving the one asked above it in place.
 
-They are there whenever an answer is, whether the pointer is over it or not:
-what an answer can be asked for should be seen before it is looked for.
+These are always visible when an answer exists, whether or not the pointer is
+over them: what an answer can be asked for should be visible before it is
+looked for.
 
 ## The settings
 
-One panel, and in it **eight groups**, in this order. What is in each is what
-this program has to be able to say yes or no to, and to what degree.
+One panel with **eight groups**, in this order. Each group contains what this
+program must be able to agree or refuse, and to what degree.
 
 **Services**
 
-* **Providers** — the keys, the base URL each one is asked at, and which of
-  them this program talks to at all.
-* **Models** — which models are enabled, which are not, and how each one is
-  configured. What is drawn under this row today is every answerer offered
-  (`pchat.config`), a switch to each of them, and the conversation the window
-  has open is the one a press puts one into or takes it out of: the first of
-  them is what answers where nothing else has been said, and the last of them
-  is never taken out, because nothing can say of a chat that nothing answers
-  in it.
+- **Providers** — API keys, the base URL each is asked at, and which providers
+  this program talks to at all.
+- **Models** — which models are enabled, which are disabled, and how each is
+  configured. What is drawn under this row today is every offered answerer
+  (`pchat.config`), a switch for each, and the currently open conversation is
+  the one a press puts a model into or takes it out of: the first is what
+  answers when nothing else has been said, and the last is never removed,
+  because no conversation can be said to have no answerer.
 
 **Responses**
 
-* **System prompts** — the instructions every answer is given before it is
-  asked, created and kept here.
-* **Generation** — the parameters an answer is asked with, and what each of
-  them stands at now: **temperature**, **top p**, **maximum tokens**,
-  **presence penalty** and **frequency penalty**, each moved one step either
-  way by a press beside it and kept inside the lines it has (`0…2`, `0…1`,
-  `256…32768`, `-2…2`, `-2…2`). Nothing else behind them yet: what they are set
-  to is what every answer is asked with, once anything is asked for.
-* **Context** — what is kept of a conversation when the window is smaller than
-  the talking.
-* **Title generation** — a conversation named for itself, without being asked.
+- **System prompts** — the instructions given to every answer before it is
+  asked, created and stored here.
+- **Generation** — the parameters an answer is asked with, and their current
+  values: **temperature**, **top p**, **maximum tokens**, **presence penalty**,
+  and **frequency penalty**, each adjusted one step at a time by a control
+  beside it and kept within its range (`0…2`, `0…1`, `256…32768`, `-2…2`,
+  `-2…2`). Nothing else behind them yet: their values are what every answer is
+  asked with.
+- **Context** — what is kept from a conversation when the window is smaller than
+  the conversation.
+- **Title generation** — naming a conversation automatically.
 
 **Multimodal**
 
-* **Image transcription** — a vision model asked what is in a picture, so that
-  what cannot see can still be told. What this program answers for stands under
-  this row as a switch to each of the two: **read a picture into words**, and
-  **make a picture out of words**. One switched off is not offered at all, and
-  nothing here says either of them more than the row above it does.
-* **Image generation** — pictures made out of what was written.
+- **Image transcription** — a vision model asked to describe a picture, so what
+  cannot see can still be told. This program implements two switches under this
+  row: **read a picture into words** and **make a picture out of words**. When
+  one is off it is not offered at all, and nothing here describes either of them
+  beyond the row above.
+- **Image generation** — pictures produced from written descriptions.
 
 **Tools**
 
-* **Web search** — one search tool, configured once, for every provider.
-* **Conversation search** — the history of this conversation, and how it is
-  looked through. What this program owns itself stands under this row as a
-  switch to each of the three: **look up what was said here**, **say how much
-  has been said**, and **say what time it is**. One switched off is not
-  offered to a model at all, whatever else this program would answer for it.
-* **Shell** — commands run on a machine elsewhere.
-* **Tor** — an asking put through the Tor network. *Where this belongs is not
-  settled:* it is a tool here, and it could as well be under Network, or under
-  Services beside what routes the asking.
-* **MCP** — tool servers outside this program, connected to.
-* **Automation** — tasks, loops, and how precisely they are scheduled.
-* **Interaction** — the questions the assistant asks back.
+- **Web search** — one search tool, configured once, shared across all providers.
+- **Conversation search** — the conversation's history and how it is searched.
+  This program implements three switches under this row: **look up what was said
+  here**, **say how much has been said**, and **say what time it is**. When one
+  is off it is not offered to a model at all.
+- **Shell** — commands run on a remote machine.
+- **Tor** — requests routed through the Tor network. *Where this belongs is
+  undecided:* it is a tool here, but it could equally be under Network or under
+  Services next to what routes requests.
+- **MCP** — external tool servers this program connects to.
+- **Automation** — tasks, loops, and their scheduling precision.
+- **Interaction** — questions the assistant asks back.
 
 **Network**
 
-* **Proxy** — everything asked routed through an HTTP or a SOCKS proxy.
-  Whether it is put through one at all stands under this row as a switch:
-  **speak through another program**. It is off until something asks for it,
-  because a proxy nothing is routed through is nothing said.
-* **WebUI** — this program driven from a browser, from another machine.
+- **Proxy** — all requests routed through an HTTP or SOCKS proxy. Whether a
+  proxy is used at all is a switch under this row: **speak through another
+  program**. It is off by default because a proxy nothing routes through is
+  pointless.
+- **WebUI** — this program driven from a browser on another machine.
 
 **Memory & Data**
 
-* **Memory** — what is remembered while it runs, and what is kept in files.
-* **Skills** — instruction files the model can be given.
-* **Data control** — everything of yours given out as a file, or taken back
-  in. What is kept at all stands under this row as a switch to each of the
-  three: **keep what has been said here**, **keep what it has been taught**,
-  and **keep what has been given to it**.
+- **Memory** — what is remembered while running, and what is stored in files.
+- **Skills** — instruction files that can be given to the model.
+- **Data control** — everything of yours exported as a file or taken back. What
+  is retained at all is a switch under this row: **keep what has been said
+  here**, **keep what it has been taught**, and **keep what has been given to
+  it**.
 
 **Notifications**
 
-* **Test** — one notification of this program's own, shown by the machine it
-  runs on: a press asks for it, and what is asked for is a test, not a
-  message. Where the machine lets an app show notifications only once it has
-  been let (Android 13 and later), the first press asks for that and shows
-  nothing, and the press after it shows one. Nothing behind this row keeps
-  anything: there are no notifications to speak of yet.
+- **Test** — one notification of this program's own, shown by the host machine:
+  a press requests it, and what is requested is a test, not a message. On
+  machines where an app may only show notifications after being allowed (Android
+  13+), the first press requests permission and shows nothing, and the next
+  press shows one. Nothing behind this row stores anything: there are no
+  notifications yet.
 
 **Appearance & Language**
 
-* **Appearance** — the theme, its scheme of colours, whether the colours
-  follow the machine's own, and what the drawer's rows are asked for: whether
-  a circle stands by the names in it, and whether a row says how long ago what
-  it shows was said. Both are asked for nowhere by default.
-* **Language** — which language the program itself speaks on the screen.
+- **Appearance** — the theme, its color scheme, whether colors follow the
+  system's, and the drawer's row options: whether a circle appears beside names,
+  and whether a row shows how long ago its content was said. Both are off by
+  default.
+- **Language** — which language the program itself uses on screen.
 
 **About**
 
-* **About** — what this build is: its number and the commit it was made of,
-  the licence it is let out under, and where its source is kept. Every line of
-  it is given whole to the machine's clipboard by a press on it. *Whether it
-  also asks the holder to rate it is not decided: nothing of it is drawn, and
-  it may never be needed.*
+- **About** — what this build is: its number and source commit, the license it
+  is distributed under, and where its source is kept. Every line is copied
+  whole to the system clipboard by pressing it. *Whether it also asks the
+  holder to rate it is undecided: nothing of it is drawn, and it may never be
+  needed.*
 
-Of all this, what is drawn today is **Appearance** — the theme, its scheme,
-its type and its dark; the five things an answer is asked with, under
-**Generation**; which answerers answer in the chat that is open, under
-**Models**; the three tools this program owns, under **Tools**; and what this
-build is, under **About**; and a switch to each of the seven things a switch
-is offered for, which is what the other three groups had stood empty for —
-two under **Multimodal**, one under **Network** and three under **Memory &
-**Data**. What any of the seven does when it is switched on is not written yet:
-the row says it is offered, and nothing here says more than that. A press
-under **Test** asks the machine it runs on for one notification of the
-program's own.
+Of all of the above, what is drawn today is **Appearance** — the theme, its
+scheme, its type and dark mode; the five generation parameters, under
+**Generation**; which answerers are active in the open conversation, under
+**Models**; the three tools this program owns, under **Tools**; and the build
+info, under **About**; plus a switch for each of the seven switchable features,
+which is what the other three groups were previously empty for — two under
+**Multimodal**, one under **Network**, and three under **Memory & Data**. What
+each of the seven does when switched on is not written yet: the row only says it
+is offered. A press under **Test** requests one notification of the program's
+own from the host machine.
 
 ## What this design does not do
 
-* It does not say "user" or "model" anywhere on the screen. The side says it,
-  and the bubble says it, and the editor says which model.
-* It does not give a model's answer a colour of its own ground, and does not
-  put its own text inside an edge. Answers are read as text; only yours are
+- It does not say "user" or "model" anywhere on screen. The side indicates it,
+  the bubble indicates it, and the editor shows which model.
+- It does not give a model's answer its own background color, nor does it put the
+  answer's text inside a border. Answers are read as plain text; only yours are
   held in a shape.
-* It does not put the time of an answer beside every line of it: only yours
-  keep a time, and it is kept inside them.
-* It does not open what it folds. The line above an answer -- how long it
-  took, how many calls it made -- is written as one line and stays one: the
-  thinking under it and the calls it counts are not read anywhere yet.
-* It does not yet count anything for real. Until the program's own back end is
-  here, what fills the room is sample: the numbers said above are written in it
-  like any other words, and nothing measures them.
+- It does not place an answer's timestamp next to every line: only your messages
+  keep a timestamp, and it is kept inside them.
+- It does not expand what it folds. The line above an answer — how long it took,
+  how many calls it made — is written as one line and stays one: the thinking
+  beneath it and the calls it counts are not read anywhere yet.
+- It does not yet count anything for real. Until the program's own back end
+  exists, what fills the room is sample data: the numbers above are written into
+  it like any other words, and nothing measures them.
