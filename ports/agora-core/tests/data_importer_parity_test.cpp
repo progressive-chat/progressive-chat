@@ -145,6 +145,36 @@ std::vector<data_export::SystemPromptEntry> read_prompt_seed(const Value& root) 
 
 // ---- masking (identical to the stand driver's two passes) -----------------------------------------
 
+/** Seeds a fresh memory/skill root from the scenario's memory/skills state. */
+void seed_memory_skill(const Value& root, const std::filesystem::path& files_dir) {
+    std::filesystem::create_directories(files_dir / "memory_db");
+    std::filesystem::create_directories(files_dir / "skill_db");
+    auto write = [](const std::filesystem::path& path, const std::string& text) {
+        std::filesystem::create_directories(path.parent_path());
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        out << text;
+    };
+    if (const Value* memory = field(root, "memory"); memory != nullptr) {
+        write(files_dir / "memory_db" / "active_memory.md", text_or(*memory, "active"));
+        write(files_dir / "memory_db" / "memory_meta.json", text_or(*memory, "meta", "{}"));
+        if (const Value* files = field(*memory, "files");
+            files != nullptr && files->kind == Kind::Object) {
+            for (const Member& member : files->members)
+                write(files_dir / "memory_db" / member.key,
+                      member.value.kind == Kind::String ? member.value.text : "");
+        }
+    }
+    if (const Value* skills = field(root, "skills"); skills != nullptr) {
+        write(files_dir / "skill_db" / "skill_meta.json", text_or(*skills, "meta", "{}"));
+        if (const Value* files = field(*skills, "files");
+            files != nullptr && files->kind == Kind::Object) {
+            for (const Member& member : files->members)
+                write(files_dir / "skill_db" / member.key,
+                      member.value.kind == Kind::String ? member.value.text : "");
+        }
+    }
+}
+
 std::string mask_trace(std::string text) {
     // UUIDs: first-appearance ordinal replacement. Fixture content never carries
     // UUID-shaped values; the generated ones are the uuids the import made.
@@ -1150,8 +1180,14 @@ void run_scenario(const std::filesystem::path& path) {
     agora::core::chat_dao::ChatDao chat(sql);
     agora::core::semantic_index::SemanticIndexDao semantic(sql);
     agora::core::maintenance_debt::MaintenanceDebtDao debt(sql);
-    agora::core::memory::MemoryManager memory((stand / "platform").string());
-    agora::core::skill::SkillManager skill((stand / "platform").string());
+    // A fresh memory/skill root per scenario, seeded from the scenario's own
+    // memory/skills state, so one scenario's writes never reach the next.
+    const std::filesystem::path mem_root =
+        std::filesystem::temp_directory_path() / ("agora-import-" + stem);
+    std::filesystem::remove_all(mem_root);
+    seed_memory_skill(root, mem_root);
+    agora::core::memory::MemoryManager memory(mem_root.string());
+    agora::core::skill::SkillManager skill(mem_root.string());
     // The recording sink the active import step is logging to; the settings-transfer
     // apply writes saveConversationSettingsMap into it (the reference's SettingsManager).
     RecordingStore* active_sink = nullptr;

@@ -698,16 +698,27 @@ ImportResult DataImporter::import(
                     const std::string relative = name.substr(std::strlen("memories/"));
                     const auto content = archive.bytes(name);
                     if (!content) continue;
+                    // Overwrite an existing file the way the reference's import does:
+                    // a name already on disk is replaced, not rejected.
+                    auto write_or_replace = [](auto& manager, const std::string& file_name,
+                                               const std::string& text) {
+                        try {
+                            manager.create_file(file_name, text);
+                        } catch (const std::exception&) {
+                            manager.delete_file(file_name);
+                            manager.create_file(file_name, text);
+                        }
+                    };
                     if (relative == "active_memory.md") {
                         memory_.update_active_memory(*content);
                     } else if (relative == "memory_db/memory_meta.json") {
                         memory_.save_meta_json(*content);
                     } else if (relative.rfind("memory_db/", 0) == 0) {
-                        memory_.create_file(relative.substr(std::strlen("memory_db/")), *content);
+                        write_or_replace(memory_, relative.substr(std::strlen("memory_db/")), *content);
                     } else if (relative == "skill_db/skill_meta.json") {
                         skill_.save_meta_json(*content);
                     } else if (relative.rfind("skill_db/", 0) == 0) {
-                        skill_.create_file(relative.substr(std::strlen("skill_db/")), *content);
+                        write_or_replace(skill_, relative.substr(std::strlen("skill_db/")), *content);
                     }
                     if (relative.size() >= 3 && relative.substr(relative.size() - 3) == ".md")
                         ++imported;
