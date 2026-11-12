@@ -70,6 +70,14 @@ using agora::core::SqlConstraintError;
     agora::core::test::fail(__FILE__, __LINE__, what);
 }
 
+// Mismatches are collected rather than aborting the run, so one scenario's failure
+// does not hide the rest: every scenario is checked, then all differences report at once.
+std::vector<std::string> g_mismatches;
+
+void scenario_diff(const std::string& what) {
+    g_mismatches.push_back(what);
+}
+
 std::string read_file(const std::filesystem::path& path) {
     std::ifstream stream(path, std::ios::binary);
     std::ostringstream buffer;
@@ -1346,8 +1354,10 @@ void run_scenario(const std::filesystem::path& path) {
             });
 
             // The golden's matching import step (i-th import step, in order).
-            if (import_index >= golden_imports.size())
-                scenario_fail(stem + ": golden has fewer import steps than the scenario");
+            if (import_index >= golden_imports.size()) {
+                scenario_diff(stem + ": golden has fewer import steps than the scenario");
+                continue;
+            }
             const Value& golden_step = *golden_imports[import_index];
             ++import_index;
 
@@ -1356,11 +1366,14 @@ void run_scenario(const std::filesystem::path& path) {
             // here; the rest are compared against what this test captured (empty
             // where the import wrote nothing, as in the no-decisions case).
             const Value* golden_result = field(golden_step, "result");
-            if (golden_result == nullptr) scenario_fail(stem + ": golden import has no result");
-            const Value actual_result = masked(actual);
-            if (!json_equal(actual_result, *golden_result))
-                scenario_fail(stem + "\n  actual:   " + excerpt(actual_result) +
-                              "\n  expected: " + excerpt(*golden_result));
+            if (golden_result == nullptr) {
+                scenario_diff(stem + ": golden import has no result");
+            } else {
+                const Value actual_result = masked(actual);
+                if (!json_equal(actual_result, *golden_result))
+                    scenario_diff(stem + "\n  actual:   " + excerpt(actual_result) +
+                                  "\n  expected: " + excerpt(*golden_result));
+            }
 
             // The call log the recording sink kept: the golden's settingsCalls.
             const Value golden_calls_field = [&] {
@@ -1372,24 +1385,31 @@ void run_scenario(const std::filesystem::path& path) {
             }();
             const Value actual_calls = masked(golden_calls_field);
             const Value* golden_calls = field(golden_step, "settingsCalls");
-            if (golden_calls == nullptr) scenario_fail(stem + ": golden has no settingsCalls");
-            if (!json_equal(actual_calls, *golden_calls))
-                scenario_fail(stem + "\n  settingsCalls actual:   " + excerpt(actual_calls) +
+            if (golden_calls == nullptr) {
+                scenario_diff(stem + ": golden has no settingsCalls");
+            } else if (!json_equal(actual_calls, *golden_calls)) {
+                scenario_diff(stem + "\n  settingsCalls actual:   " + excerpt(actual_calls) +
                               "\n  settingsCalls expected: " + excerpt(*golden_calls));
+            }
             continue;
         }
 
         const std::size_t index = op == "preview" ? preview_index++ : font_index++;
         const std::vector<const Value*>& golden_list =
             op == "preview" ? golden_previews : golden_fonts;
-        if (index >= golden_list.size())
-            scenario_fail(stem + ": golden has fewer " + op + " steps than the scenario");
+        if (index >= golden_list.size()) {
+            scenario_diff(stem + ": golden has fewer " + op + " steps than the scenario");
+            continue;
+        }
         const Value* preview_font_golden = golden_list[index];
-        if (preview_font_golden == nullptr) scenario_fail(stem + ": golden has no result");
+        if (preview_font_golden == nullptr) {
+            scenario_diff(stem + ": golden has no result");
+            continue;
+        }
 
         const Value actual = actual_for(step, op, index);
         if (!json_equal(actual, *preview_font_golden))
-            scenario_fail(stem + "\n  actual:   " + excerpt(actual) +
+            scenario_diff(stem + "\n  actual:   " + excerpt(actual) +
                           "\n  expected: " + excerpt(*preview_font_golden));
     }
 }
