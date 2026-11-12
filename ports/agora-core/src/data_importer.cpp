@@ -1,4 +1,5 @@
 #include "agora/core/data_importer.hpp"
+#include "agora/core/font_utils.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -433,9 +434,10 @@ std::optional<settings_archive::CustomFont> DataImporter::restore_custom_font(
         auto copy_result = archive.copy_to(entry_name, temp_path, MAX_CUSTOM_FONT_BYTES, platform_.available_bytes);
         if (!copy_result) return std::nullopt;
 
-        // TODO: Implement full TTF name table parsing (port of FontUtils.readFontName)
-        // For now, use the file name as fallback
-        std::string display_name = temp_path.stem().string();
+        // The font's own name, read from its name table (FontUtils.readFontName); a
+        // file with no readable name table falls back to the file it was written as.
+        std::string display_name = agora::core::font::read_font_name(temp_path);
+        if (display_name.empty()) display_name = temp_path.stem().string();
 
         std::error_code ec;
         std::filesystem::rename(temp_path, target_path, ec);
