@@ -464,10 +464,20 @@ std::string archive_bytes(const Value& step) {
     agora::core::zip::Writer writer;
     for (const Value& entry : entries->elements) {
         const std::string name = required_text(entry, "name");
-        const Value* text = field(entry, "text");
-        if (text == nullptr || text->kind != Kind::String)
-            scenario_fail("archive entry needs a text");
-        writer.put_entry(name, text->text);
+        if (const Value* text = field(entry, "text");
+            text != nullptr && text->kind == Kind::String) {
+            writer.put_entry(name, text->text);
+            continue;
+        }
+        // Media and font entries carry raw bytes, base64-encoded.
+        if (const Value* encoded = field(entry, "base64");
+            encoded != nullptr && encoded->kind == Kind::String) {
+            const std::vector<std::uint8_t> bytes = base64_decode(encoded->text);
+            writer.put_entry(name, std::string_view(reinterpret_cast<const char*>(bytes.data()),
+                                                    bytes.size()));
+            continue;
+        }
+        scenario_fail("archive entry needs a text");
     }
     return writer.finish();
 }
