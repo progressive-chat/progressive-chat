@@ -1,7 +1,7 @@
 -- Room-generated DDL for ChatDatabase schema 36 (entity createSql + indices), copied
 -- verbatim from app/schemas/com.newoether.agora.data.local.ChatDatabase/36.json.
 
-CREATE TABLE IF NOT EXISTS `conversations` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `lastUpdated` INTEGER NOT NULL, `dataChangedAt` INTEGER NOT NULL, `selectedBranchesJson` TEXT, `systemPromptId` TEXT, `modelId` TEXT, `taskId` TEXT, `origin` TEXT NOT NULL, `graduated` INTEGER NOT NULL, `draftText` TEXT NOT NULL, `draftAttachments` TEXT, `selectedRunBranchesJson` TEXT, `hasUnreadGeneration` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`));
+CREATE TABLE IF NOT EXISTS `conversations` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `lastUpdated` INTEGER NOT NULL, `dataChangedAt` INTEGER NOT NULL, `selectedBranchesJson` TEXT, `systemPromptId` TEXT, `modelId` TEXT, `taskId` TEXT, `origin` TEXT NOT NULL, `graduated` INTEGER NOT NULL, `draftText` TEXT NOT NULL, `draftAttachments` TEXT, `selectedRunBranchesJson` TEXT, `hasUnreadGeneration` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL DEFAULT 0, `todoJson` TEXT, `parentConversationId` TEXT, `createdAt` INTEGER NOT NULL DEFAULT 0, `subagentResultJson` TEXT, `subagentResultId` TEXT, `subagentResultStatus` TEXT, `subagentDeliveredResultId` TEXT, PRIMARY KEY(`id`));
 CREATE INDEX IF NOT EXISTS `index_conversations_taskId` ON `conversations` (`taskId`);
 
 CREATE TABLE IF NOT EXISTS `runs` (`id` TEXT NOT NULL, `conversationId` TEXT NOT NULL, `parentRunId` TEXT, `status` TEXT NOT NULL, `activeSlot` INTEGER, `startedAt` INTEGER NOT NULL, `lastCheckpointAt` INTEGER NOT NULL, `stopRequestedAt` INTEGER, `endedAt` INTEGER, `endReason` TEXT, `currentPass` INTEGER NOT NULL, `legacyAmbiguous` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`conversationId`) REFERENCES `conversations`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`parentRunId`) REFERENCES `runs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE );
@@ -14,7 +14,7 @@ CREATE INDEX IF NOT EXISTS `index_messages_conversationId` ON `messages` (`conve
 CREATE INDEX IF NOT EXISTS `index_messages_runId` ON `messages` (`runId`);
 CREATE INDEX IF NOT EXISTS `index_messages_id_images_attachmentMeta` ON `messages` (`id`, `images`, `attachmentMeta`);
 
-CREATE TABLE IF NOT EXISTS `embeddings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `messageId` TEXT NOT NULL, `modelId` TEXT NOT NULL, `embedding` BLOB NOT NULL, `chunkText` TEXT NOT NULL, `dimension` INTEGER NOT NULL, `sourceFingerprint` TEXT);
+CREATE TABLE IF NOT EXISTS `embeddings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `messageId` TEXT NOT NULL, `modelId` TEXT NOT NULL, `embedding` BLOB NOT NULL, `chunkText` TEXT NOT NULL, `dimension` INTEGER NOT NULL, `sourceFingerprint` TEXT, `generation` INTEGER NOT NULL DEFAULT 0);
 CREATE UNIQUE INDEX IF NOT EXISTS `index_embeddings_messageId_modelId` ON `embeddings` (`messageId`, `modelId`);
 CREATE INDEX IF NOT EXISTS `index_embeddings_modelId` ON `embeddings` (`modelId`);
 
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `conversation_settings_import_transfer` (`id` INTEGER
 CREATE TABLE IF NOT EXISTS `maintenance_debt` (`kind` TEXT NOT NULL, `identity` TEXT NOT NULL, `state` TEXT NOT NULL, `revision` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `claimId` TEXT, `claimedAt` INTEGER, PRIMARY KEY(`kind`, `identity`));
 CREATE INDEX IF NOT EXISTS `index_maintenance_debt_state_updatedAt_kind_identity` ON `maintenance_debt` (`state`, `updatedAt`, `kind`, `identity`);
 
-CREATE TABLE IF NOT EXISTS `semantic_index_ledger` (`modelId` TEXT NOT NULL, `state` TEXT NOT NULL, `sourceRevision` INTEGER NOT NULL, `completedRevision` INTEGER NOT NULL, `reconcileRevision` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`modelId`));
+CREATE TABLE IF NOT EXISTS `semantic_index_ledger` (`modelId` TEXT NOT NULL, `state` TEXT NOT NULL, `sourceRevision` INTEGER NOT NULL, `completedRevision` INTEGER NOT NULL, `reconcileRevision` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `generation` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`modelId`));
 
 CREATE TABLE IF NOT EXISTS `semantic_index_work` (`modelId` TEXT NOT NULL, `messageId` TEXT NOT NULL, `sourceFingerprint` TEXT, `sourceRevision` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`modelId`, `messageId`), FOREIGN KEY(`modelId`) REFERENCES `semantic_index_ledger`(`modelId`) ON UPDATE NO ACTION ON DELETE CASCADE );
 CREATE INDEX IF NOT EXISTS `index_semantic_index_work_modelId_sourceRevision_messageId` ON `semantic_index_work` (`modelId`, `sourceRevision`, `messageId`);
