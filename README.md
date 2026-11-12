@@ -1,4 +1,4 @@
-# progressive-chat
+# 📈 progressive-chat
 
 A client for talking to a model: the conversations of one account, the
 messages in one of them, and the appearance of both. It is a **new front end
@@ -77,6 +77,30 @@ said of that day.
 It (this readme section's workdays summaries) is written by hand. Nothing
 writes here that is not that hand, and no paragraph of it is written by a
 model, an agent or a script on its own.
+
+### 2026-11-10
+
+10th November… The project is halfway to its first useful function. My first
+experimental iOS builds are successful. Since yesterday: +2,104 lines of code,
++30 commits. Counted to `370d09e`.
+
+### 2026-11-09
+
+Started organizing the builds on the releases page. Brought the site up and
+did some cosmetics of the project. The code got closer to the first useful use
+of the program. Since yesterday: +2,750 lines of code, +8 commits.
+
+### 2026-11-08
+
+The GitHub repository has been created with the code that exists at this point.
+The git repository keeps its creation date of November 3, and the whole of its
+history comes over with it. Today's work was on automating testing on Android,
+cloud-based among it, with different tasks in front of it -- for example to
+tell quickly that the application does not start on Android. Various
+functionality was also written, for example data export. Work was done on the
+documentation. From the next day on I will count the number of lines exactly,
+and of commits too, every day. This day two thousand lines were written.
+Some git SHAs were changed.
 
 ### 2026-11-07
 
