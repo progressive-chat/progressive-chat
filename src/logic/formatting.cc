@@ -33,6 +33,10 @@ inline constexpr run_style h4 = 1u << 11;
 inline constexpr run_style h5 = 1u << 12;
 inline constexpr run_style h6 = 1u << 13;
 inline constexpr run_style list = 1u << 14;
+// What a model said for later: `||` either side of it. Read as one stretch
+// of the line and drawn covered behind a plate of dots, so it is there and
+// is not said until the screen is asked to show it.
+inline constexpr run_style spoiler = 1u << 15;
 
 struct run {
   std::string_view text;
@@ -69,6 +73,7 @@ inline constexpr mark marks[] = {
   {std::string_view{"_"}, italic, false},
   {std::string_view{"~~"}, struck, false},
   {std::string_view{"`"}, code, false},
+  {std::string_view{"||"}, spoiler, false},
 };
 
 [[nodiscard]] inline std::optional<std::pair<std::size_t, run_style>> opening_at(
@@ -195,7 +200,7 @@ line_head_at(std::string_view text, std::size_t at) {
       // What a line is made of is said of that line and of no other: the
       // marks of a heading or a list are read again at the next line's
       // head, so the bits that said them do not stand over the newline.
-      open &= ~(heading | h1 | h2 | h3 | h4 | h5 | h6 | list);
+      open &= ~(heading | h1 | h2 | h3 | h4 | h5 | h6 | list | spoiler);
       from = at + 1;
       ++at;
       continue;

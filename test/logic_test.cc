@@ -340,3 +340,32 @@ SAID(logic, a_heading_and_a_list_said_as_they_were_written) {
     EXPECT_TRUE((two.runs[0].style & logic::heading) != 0);
   }
 }
+
+SAID(logic, what_a_model_said_for_later_read_into_a_run) {
+  // `||` either side of it is read as one stretch of the line, its words
+  // kept whole and the run saying they stand covered.
+  const logic::drawn hidden = logic::drawn_of("before ||kept for later|| after");
+  EXPECT_EQ(hidden.said, std::string("before kept for later after"));
+  const auto covered = std::ranges::find_if(
+      hidden.runs, [](const logic::run_place &one) {
+        return (one.style & logic::spoiler) != 0;
+      });
+  EXPECT_TRUE(covered != hidden.runs.end());
+  if (covered != hidden.runs.end()) {
+    EXPECT_EQ(std::string(hidden.said.substr(
+                  covered->first, covered->last - covered->first)),
+              std::string("kept for later"));
+  }
+  // What stands outside the stops is said plainly, and is not covered.
+  EXPECT_TRUE((hidden.runs[0].style & logic::spoiler) == 0);
+  // Two spoilers in one line, each in its own stretch, and the words
+  // between them said plainly.
+  const logic::drawn two =
+      logic::drawn_of("||one|| and ||two||");
+  EXPECT_EQ(two.said, std::string("one and two"));
+  const auto covered_count = std::ranges::count_if(
+      two.runs, [](const logic::run_place &one) {
+        return (one.style & logic::spoiler) != 0;
+      });
+  EXPECT_EQ(covered_count, 2);
+}
