@@ -1160,6 +1160,457 @@ std::string conversation_settings_value(
     return out;
 }
 
+
+// ---- settings snapshot readers (ported from the portable-settings stand) ------
+
+std::optional<int> parse_int_for_scenario(std::string_view text) {
+    const std::string copy(text);
+    char* end = nullptr;
+    errno = 0;
+    const long value = std::strtol(copy.c_str(), &end, 10);
+    if (end != copy.c_str() + copy.size()) return std::nullopt;
+    if (value < std::numeric_limits<int>::min() || value > std::numeric_limits<int>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<int>(value);
+}
+
+std::optional<float> parse_float_for_scenario(std::string_view text) {
+    const std::string copy(text);
+    char* end = nullptr;
+    const float value = std::strtof(copy.c_str(), &end);
+    if (end != copy.c_str() + copy.size()) return std::nullopt;
+    return value;
+}
+
+const Value& required_object(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Object) {
+        scenario_fail(std::string(name) + " must be an object");
+    }
+    return *value;
+}
+
+std::string read_string(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::String) {
+        scenario_fail(std::string(name) + " must be a string");
+    }
+    return value->text;
+}
+
+std::optional<std::string> read_nullable_string(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) scenario_fail(std::string(name) + " must be present");
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::String) scenario_fail(std::string(name) + " must be a string");
+    return value->text;
+}
+
+bool read_bool(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) scenario_fail(std::string(name) + " must be a bool");
+    std::string lowered;
+    if (value != nullptr) lowered = value->text;
+    for (char& c : lowered) {
+        if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+    }
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "true") {
+        return true;
+    }
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "false") {
+        return false;
+    }
+    scenario_fail(std::string(name) + " is not a bool");
+}
+
+std::optional<int> read_nullable_int(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) scenario_fail(std::string(name) + " must be present");
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) scenario_fail(std::string(name) + " must be an int");
+    const std::optional<int> parsed = parse_int_for_scenario(value->text);
+    if (!parsed.has_value()) scenario_fail(std::string(name) + " is not an int");
+    return parsed;
+}
+
+int read_int(const Value& object, std::string_view name) {
+    const std::optional<int> value = read_nullable_int(object, name);
+    if (!value.has_value()) scenario_fail(std::string(name) + " must not be null");
+    return *value;
+}
+
+std::optional<float> read_nullable_float(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) scenario_fail(std::string(name) + " must be present");
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) scenario_fail(std::string(name) + " must be a float");
+    const std::optional<float> parsed = parse_float_for_scenario(value->text);
+    if (!parsed.has_value()) scenario_fail(std::string(name) + " is not a float");
+    return parsed;
+}
+
+float read_float(const Value& object, std::string_view name) {
+    const std::optional<float> value = read_nullable_float(object, name);
+    if (!value.has_value()) scenario_fail(std::string(name) + " must not be null");
+    return *value;
+}
+
+std::vector<std::string> read_string_set(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Array) {
+        scenario_fail(std::string(name) + " must be an array");
+    }
+    std::vector<std::string> out;  // LinkedHashSet: first occurrence wins
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::String) scenario_fail(std::string(name) + " needs strings");
+        if (std::find(out.begin(), out.end(), element.text) == out.end()) {
+            out.push_back(element.text);
+        }
+    }
+    return out;
+}
+
+archive::StringMap read_string_map(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Object) {
+        scenario_fail(std::string(name) + " must be an object");
+    }
+    archive::StringMap out;  // LinkedHashMap: last value, first position
+    for (const Member& member : value->members) {
+        if (member.value.kind != Kind::String) {
+            scenario_fail(std::string(name) + " values must be strings");
+        }
+        bool replaced = false;
+        for (auto& entry : out) {
+            if (entry.first == member.key) {
+                entry.second = member.value.text;
+                replaced = true;
+                break;
+            }
+        }
+        if (!replaced) out.emplace_back(member.key, member.value.text);
+    }
+    return out;
+}
+
+archive::BoolMap read_bool_map(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Object) {
+        scenario_fail(std::string(name) + " must be an object");
+    }
+    archive::BoolMap out;
+    for (const Member& member : value->members) {
+        bool flag;
+        const std::string& text = member.value.text;
+        if ((member.value.kind == Kind::Literal || member.value.kind == Kind::String) &&
+            (text == "true" || text == "TRUE" || text == "True")) {
+            flag = true;
+        } else if ((member.value.kind == Kind::Literal || member.value.kind == Kind::String) &&
+                   (text == "false" || text == "FALSE" || text == "False")) {
+            flag = false;
+        } else {
+            scenario_fail(std::string(name) + " values must be bools");
+        }
+        bool replaced = false;
+        for (auto& entry : out) {
+            if (entry.first == member.key) {
+                entry.second = flag;
+                replaced = true;
+                break;
+            }
+        }
+        if (!replaced) out.emplace_back(member.key, flag);
+    }
+    return out;
+}
+
+std::vector<secrets::EmbeddingModelConfig> read_embedding_list(const Value& object,
+                                                              std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Array) {
+        scenario_fail(std::string(name) + " must be an array");
+    }
+    std::vector<secrets::EmbeddingModelConfig> out;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        secrets::EmbeddingModelConfig model;
+        if (const Value* id = field(element, "id")) {
+            if (id->kind != Kind::String) scenario_fail(std::string(name) + ".id must be a string");
+            model.id = id->text;
+        }
+        if (const Value* name_value = field(element, "name");
+            name_value != nullptr && name_value->kind == Kind::String) {
+            model.name = name_value->text;
+        }
+        if (const Value* type = field(element, "type")) {
+            if (type->kind != Kind::String) scenario_fail(std::string(name) + ".type must be a string");
+            model.type = type->text == "LOCAL" ? secrets::EmbeddingModelType::Local
+                                               : secrets::EmbeddingModelType::Remote;
+        }
+        if (const Value* remote_name = field(element, "remoteModelName")) {
+            if (remote_name->kind != Kind::String) scenario_fail("remoteModelName must be a string");
+            model.remote_model_name = remote_name->text;
+        }
+        if (const Value* remote_url = field(element, "remoteBaseUrl")) {
+            if (remote_url->kind != Kind::String) scenario_fail("remoteBaseUrl must be a string");
+            model.remote_base_url = remote_url->text;
+        }
+        if (const Value* remote_key = field(element, "remoteApiKey")) {
+            if (remote_key->kind != Kind::String) scenario_fail("remoteApiKey must be a string");
+            model.remote_api_key = remote_key->text;
+        }
+        if (const Value* local_path = field(element, "localFilePath")) {
+            if (local_path->kind != Kind::String) scenario_fail("localFilePath must be a string");
+            model.local_file_path = local_path->text;
+        }
+        if (const Value* batch = field(element, "batchSize")) {
+            if (batch->kind != Kind::Literal) scenario_fail("batchSize must be an int");
+            model.batch_size = parse_int_for_scenario(batch->text).value_or(8);
+        }
+        out.push_back(model);
+    }
+    return out;
+}
+
+std::vector<secrets::ShellDeviceConfig> read_shell_list(const Value& object,
+                                                       std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Array) {
+        scenario_fail(std::string(name) + " must be an array");
+    }
+    std::vector<secrets::ShellDeviceConfig> out;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        secrets::ShellDeviceConfig device;
+        if (const Value* id = field(element, "id")) device.id = id->text;
+        if (const Value* device_name = field(element, "name")) device.name = device_name->text;
+        auto text_or = [&](std::string_view key, std::string* out_value) {
+            if (const Value* member = field(element, key)) {
+                if (member->kind != Kind::String) scenario_fail("shell field must be a string");
+                *out_value = member->text;
+            }
+        };
+        text_or("description", &device.description);
+        text_or("type", &device.type);
+        text_or("serverUrl", &device.server_url);
+        text_or("apiKey", &device.api_key);
+        text_or("conchPublicKey", &device.conch_public_key);
+        text_or("sshHost", &device.ssh_host);
+        if (const Value* port = field(element, "sshPort")) {
+            device.ssh_port = parse_int_for_scenario(port->text).value_or(22);
+        }
+        text_or("sshUser", &device.ssh_user);
+        text_or("sshPassword", &device.ssh_password);
+        text_or("sshHostKey", &device.ssh_host_key);
+        out.push_back(device);
+    }
+    return out;
+}
+
+std::vector<secrets::McpServerConfig> read_mcp_list(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Array) {
+        scenario_fail(std::string(name) + " must be an array");
+    }
+    std::vector<secrets::McpServerConfig> out;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        secrets::McpServerConfig server;
+        if (const Value* id = field(element, "id")) server.id = id->text;
+        if (const Value* server_name = field(element, "name")) server.name = server_name->text;
+        if (const Value* enabled = field(element, "enabled")) {
+            if (enabled->kind == Kind::Literal && enabled->text == "false") {
+                server.enabled = false;
+            } else if (enabled->kind == Kind::Literal && enabled->text == "true") {
+                server.enabled = true;
+            } else {
+                scenario_fail("enabled must be a bool");
+            }
+        }
+        if (const Value* url = field(element, "url")) server.url = url->text;
+        if (const Value* transport = field(element, "transport")) server.transport = transport->text;
+        if (const Value* headers = field(element, "headers")) {
+            if (headers->kind != Kind::Object) scenario_fail("headers must be an object");
+            for (const Member& member : headers->members) {
+                server.headers.emplace_back(member.key, member.value.text);
+            }
+        }
+        if (const Value* tools = field(element, "disabledTools")) {
+            if (tools->kind != Kind::Array) scenario_fail("disabledTools must be an array");
+            for (const Value& tool : tools->elements) {
+                server.disabled_tools.push_back(tool.text);
+            }
+        }
+        out.push_back(server);
+    }
+    return out;
+}
+
+std::vector<archive::CustomProviderConfig> read_provider_list(const Value& object,
+                                                              std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Array) {
+        scenario_fail(std::string(name) + " must be an array");
+    }
+    std::vector<archive::CustomProviderConfig> out;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        archive::CustomProviderConfig provider;
+        if (const Value* provider_name = field(element, "name")) provider.name = provider_name->text;
+        if (const Value* protocol = field(element, "protocol")) {
+            if (protocol->kind != Kind::String) scenario_fail("protocol must be a string");
+            provider.protocol = protocol->text;
+        }
+        if (const Value* id = field(element, "id")) provider.id = id->text;
+        if (const Value* legacy = field(element, "legacyNames");
+            legacy != nullptr && legacy->kind == Kind::Array) {
+            for (const Value& entry : legacy->elements) {
+                provider.legacy_names.push_back(entry.text);
+            }
+        }
+        if (const Value* responses = field(element, "responsesApiEnabled")) {
+            if (responses->kind != Kind::Literal) scenario_fail("responsesApiEnabled must be bool");
+            provider.responses_api_enabled = responses->text == "true";
+        }
+        if (const Value* cache = field(element, "anthropicCacheEnabled")) {
+            if (cache->kind != Kind::Literal) scenario_fail("anthropicCacheEnabled must be bool");
+            provider.anthropic_cache_enabled = cache->text == "true";
+        }
+        if (const Value* ttl = field(element, "anthropicCacheTtl")) {
+            if (ttl->kind != Kind::String) scenario_fail("anthropicCacheTtl must be a string");
+            provider.anthropic_cache_ttl = ttl->text;
+        }
+        out.push_back(provider);
+    }
+    return out;
+}
+
+archive::SettingsSnapshot read_snapshot(const Value& root) {
+    const Value& s = required_object(root, "settings");
+    archive::SettingsSnapshot snapshot;
+    snapshot.selected_model = read_string(s, "selectedModel");
+    snapshot.custom_models = read_string_set(s, "customModels");
+    snapshot.enabled_models = read_string_set(s, "enabledModels");
+    snapshot.model_aliases = read_string_map(s, "modelAliases");
+    snapshot.model_provider_names = read_bool_map(s, "modelProviderNames");
+    snapshot.max_context_window = read_int(s, "maxContextWindow");
+    snapshot.visualize_context_rollout = read_bool(s, "visualizeContextRollout");
+    snapshot.context_compact_enabled = read_bool(s, "contextCompactEnabled");
+    snapshot.context_compact_model = read_nullable_string(s, "contextCompactModel");
+    snapshot.context_compact_prompt = read_string(s, "contextCompactPrompt");
+    snapshot.context_compact_retain_count = read_int(s, "contextCompactRetainCount");
+    snapshot.context_compact_preserve_system_prompt =
+        read_bool(s, "contextCompactPreserveSystemPrompt");
+    snapshot.context_compact_threshold_percent = read_int(s, "contextCompactThresholdPercent");
+    snapshot.code_execution_enabled = read_bool(s, "codeExecutionEnabled");
+    snapshot.google_search_enabled = read_bool(s, "googleSearchEnabled");
+    snapshot.thinking_enabled = read_bool(s, "thinkingEnabled");
+    snapshot.thinking_level = read_string(s, "thinkingLevel");
+    snapshot.thinking_budget_enabled = read_bool(s, "thinkingBudgetEnabled");
+    snapshot.thinking_budget_tokens = read_int(s, "thinkingBudgetTokens");
+    snapshot.open_ai_service_tier_enabled = read_bool(s, "openAiServiceTierEnabled");
+    snapshot.open_ai_service_tier = read_string(s, "openAiServiceTier");
+    snapshot.open_ai_responses_api_enabled = read_bool(s, "openAiResponsesApiEnabled");
+    snapshot.anthropic_cache_enabled = read_bool(s, "anthropicCacheEnabled");
+    snapshot.anthropic_cache_ttl = read_string(s, "anthropicCacheTtl");
+    snapshot.provider_base_urls = read_string_map(s, "providerBaseUrls");
+    snapshot.title_generation_enabled = read_bool(s, "titleGenerationEnabled");
+    snapshot.title_generation_model = read_nullable_string(s, "titleGenerationModel");
+    snapshot.title_generation_prompt = read_string(s, "titleGenerationPrompt");
+    snapshot.title_generation_notifications_enabled =
+        read_bool(s, "titleGenerationNotificationsEnabled");
+    snapshot.access_past_conversations = read_bool(s, "accessPastConversations");
+    snapshot.access_saved_memories = read_bool(s, "accessSavedMemories");
+    snapshot.access_active_memory = read_bool(s, "accessActiveMemory");
+    snapshot.access_skills = read_bool(s, "accessSkills");
+    snapshot.rag_search_enabled = read_bool(s, "ragSearchEnabled");
+    snapshot.model_search_method = read_string(s, "modelSearchMethod");
+    snapshot.manual_search_method = read_string(s, "manualSearchMethod");
+    snapshot.embedding_models = read_embedding_list(s, "embeddingModels");
+    snapshot.active_embedding_model_id = read_string(s, "activeEmbeddingModelId");
+    snapshot.app_language = read_string(s, "appLanguage");
+    snapshot.web_search_enabled = read_bool(s, "webSearchEnabled");
+    snapshot.web_search_provider = read_string(s, "webSearchProvider");
+    snapshot.web_search_num_results = read_int(s, "webSearchNumResults");
+    snapshot.web_search_base_url = read_string(s, "webSearchBaseUrl");
+    if (const Value* image_quality = field(s, "imageQuality"); image_quality != nullptr) {
+        snapshot.image_quality_mode = read_string(*image_quality, "mode");
+        snapshot.image_quality_max_long_edge = read_int(*image_quality, "customMaxLongEdge");
+        snapshot.image_quality_jpeg_quality = read_int(*image_quality, "customJpegQuality");
+    }
+    snapshot.image_gen_enabled = read_bool(s, "imageGenEnabled");
+    snapshot.image_gen_model = read_nullable_string(s, "imageGenModel");
+    snapshot.image_gen_size = read_string(s, "imageGenSize");
+    snapshot.search_context_window = read_int(s, "searchContextWindow");
+    snapshot.search_match_limit = read_int(s, "searchMatchLimit");
+    snapshot.rag_threshold = read_float(s, "ragThreshold");
+    snapshot.auto_cache_enabled = read_bool(s, "autoCacheEnabled");
+    snapshot.show_uncached_notification = read_bool(s, "showUncachedNotification");
+    snapshot.auto_update_check = read_bool(s, "autoUpdateCheck");
+    snapshot.image_transcription_enabled = read_bool(s, "imageTranscriptionEnabled");
+    snapshot.image_transcription_enabled_models =
+        read_string_set(s, "imageTranscriptionEnabledModels");
+    snapshot.image_transcription_model = read_nullable_string(s, "imageTranscriptionModel");
+    snapshot.image_transcription_batch_size = read_int(s, "imageTranscriptionBatchSize");
+    snapshot.image_transcription_prompt = read_string(s, "imageTranscriptionPrompt");
+    snapshot.shell_enabled = read_bool(s, "shellEnabled");
+    snapshot.shell_confirm_enabled = read_bool(s, "shellConfirmEnabled");
+    snapshot.ask_user_enabled = read_bool(s, "askUserEnabled");
+    snapshot.ask_user_timeout_minutes = read_int(s, "askUserTimeoutMinutes");
+    snapshot.todo_enabled = read_bool(s, "todoEnabled");
+    snapshot.subagent_tools_enabled = read_bool(s, "subagentToolsEnabled");
+    snapshot.subagent_delete_enabled = read_bool(s, "subagentDeleteEnabled");
+    snapshot.subagent_max_total = read_int(s, "subagentMaxTotal");
+    snapshot.subagent_max_concurrent = read_int(s, "subagentMaxConcurrent");
+    snapshot.subagent_capsule_display_mode = read_string(s, "subagentCapsuleDisplayMode");
+    if (const Value* value = field(s, "subagentEnabledModels");
+        value == nullptr || (value->kind == Kind::Literal && value->text == "null")) {
+        snapshot.subagent_enabled_models = std::nullopt;
+    } else {
+        snapshot.subagent_enabled_models = read_string_set(s, "subagentEnabledModels");
+    }
+    snapshot.subagent_recommended_model = read_nullable_string(s, "subagentRecommendedModel");
+    snapshot.shell_devices = read_shell_list(s, "shellDevices");
+    snapshot.automation_tools_enabled = read_bool(s, "automationToolsEnabled");
+    snapshot.exact_execution_enabled = read_bool(s, "exactExecutionEnabled");
+    snapshot.automation_wake_lock_enabled = read_bool(s, "automationWakeLockEnabled");
+    snapshot.custom_providers = read_provider_list(s, "customProviders");
+    snapshot.mcp_servers = read_mcp_list(s, "mcpServers");
+    snapshot.proxy_enabled = read_bool(s, "proxyEnabled");
+    snapshot.proxy_type = read_string(s, "proxyType");
+    snapshot.proxy_host = read_string(s, "proxyHost");
+    snapshot.proxy_port = read_string(s, "proxyPort");
+    snapshot.proxy_username = read_string(s, "proxyUsername");
+    snapshot.proxy_bypass = read_string(s, "proxyBypass");
+    snapshot.show_documentation_fab = read_bool(s, "showDocumentationFab");
+    snapshot.theme_mode = read_string(s, "themeMode");
+    snapshot.amoled_enabled = read_bool(s, "amoledEnabled");
+    snapshot.color_scheme = read_string(s, "colorScheme");
+    snapshot.dynamic_color = read_bool(s, "dynamicColor");
+    snapshot.blur_effects_enabled = read_bool(s, "blurEffectsEnabled");
+    snapshot.reduce_motion = read_bool(s, "reduceMotion");
+    snapshot.stick_to_bottom = read_bool(s, "stickToBottom");
+    snapshot.parse_inline_dollar_math = read_bool(s, "parseInlineDollarMath");
+    snapshot.auto_wrap_code_blocks = read_bool(s, "autoWrapCodeBlocks");
+    snapshot.haptics_enabled = read_bool(s, "hapticsEnabled");
+    snapshot.detailed_token_usage = read_bool(s, "detailedTokenUsage");
+    snapshot.tool_call_display_mode = read_string(s, "toolCallDisplayMode");
+    snapshot.thinking_segment_display_mode = read_string(s, "thinkingSegmentDisplayMode");
+    snapshot.auto_expand_active_group = read_bool(s, "autoExpandActiveGroup");
+    snapshot.scheme_style = read_string(s, "schemeStyle");
+    snapshot.font_preference = read_string(s, "fontPreference");
+    snapshot.custom_font_name = read_string(s, "customFontName");
+    snapshot.custom_font_path = read_string(s, "customFontPath");
+    snapshot.default_temperature = read_nullable_float(s, "defaultTemperature");
+    snapshot.default_max_tokens = read_nullable_int(s, "defaultMaxTokens");
+    snapshot.default_top_p = read_nullable_float(s, "defaultTopP");
+    snapshot.default_frequency_penalty = read_nullable_float(s, "defaultFrequencyPenalty");
+    snapshot.default_presence_penalty = read_nullable_float(s, "defaultPresencePenalty");
+    snapshot.active_system_prompt_id = read_nullable_string(s, "activeSystemPromptId");
+    return snapshot;
+}
+
 void run_scenario(const std::filesystem::path& path) {
     const std::string stem = path.stem().string();
     const json::ParseResult parsed = json::parse(read_file(path));
@@ -1346,10 +1797,13 @@ void run_scenario(const std::filesystem::path& path) {
                 return "content://agora.test.files/" + path.filename().string();
             };
             // The initial settings: the scenario's seed system prompts (a MERGE
-            // folds the archive into these).
+            // folds the archive into these) and the full snapshot the portable
+            // restore reads its "previous" state from.
             const std::vector<data_export::SystemPromptEntry> seed_prompts = read_prompt_seed(root);
             data_import::SettingsView view;
             view.system_prompts = [&seed_prompts] { return seed_prompts; };
+            const archive::SettingsSnapshot initial_snapshot = read_snapshot(root);
+            view.archive_snapshot = [&initial_snapshot] { return initial_snapshot; };
             data_import::DataImporter import_importer(
                 chat, semantic, debt, sql, memory, skill, view, writes,
                 transfers, platform);
