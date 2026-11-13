@@ -77,7 +77,7 @@ inline constexpr float more_row_height = 44.0f;
 inline constexpr float more_card_width = 208.0f;
 
 // One model that answers in this conversation: its name alone. What this
-// conversation took of the window is said once, by the editor above:
+// conversation took of the window is counted once, in the editor above:
 // a three-model chat would say that number three times in its bubbles.
 struct answerer_bubble : scene::Node {
   nodes::Box<> fPlate{0u};
@@ -356,8 +356,8 @@ struct top_bar : scene::Node {
            .visible = true},
           said_as_a_model(chat->models[at]));
     }
-    // What this whole conversation has been worth, said once beside them, not
-    // again in each bubble: what the bar named before any bubble held it.
+    // What this whole conversation has been worth, written once beside them,
+    // not in each bubble: the bar named it before any bubble held it.
     fTokens.setText(chat ? tokens_short(chat->tokens) + " tokens"
                          : std::string{});
     fTokens.setColour(look.faint);

@@ -519,7 +519,7 @@ private:
 
   // Every call it stopped to ask for, answered by whoever owns it -- here,
   // now, by this program -- and the question asked again with what they said.
-  // False where there is nothing left to ask, which is when the answer is put
+  // False when nothing is left to ask: that is when the answer is put
   // where it belongs.
   [[nodiscard]] bool asked_again(answer_coming &one) {
     std::vector<provider::call_answered> answered;
@@ -563,7 +563,7 @@ private:
         return at + 1;
     return 0;
   }
-  // What one said reads, or nothing where there is no such said.
+  // The text of that message, empty when there is no such message.
   [[nodiscard]] std::string text_of(const message_id &said) const {
     for (const message &one : root_.messages)
       if (one.id == said)

@@ -70,9 +70,9 @@ struct paints {
   out.badge_text = scheme.on_primary;
   out.avatar = scheme.primary_container;
   out.on_avatar = scheme.on_primary_container;
-  // Green of its own, whatever the seed is: the tertiary of a scheme, which
-  // no other part on the screen borrows, so thinking read above an answer is
-  // never mistaken for the answer.
+  // A green kept apart from the seed: the tertiary, which no
+  // other part of the screen borrows, so thinking above an answer reads as
+  // thinking and not as the answer.
   out.thought = scheme.tertiary;
   // A link is drawn in the colour everything pressed is drawn in: it is the
   // one thing in a message that answers a press.

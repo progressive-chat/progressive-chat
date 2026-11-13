@@ -247,7 +247,7 @@ the page and loads the client, and `web/worker.js`, the service worker that
 answers the isolation headers -- the client is linked with threads, and threads
 are not a page's to have without them, which a host that only serves files
 cannot say. `tools/package_web.py` puts the four and the client together into
-one directory, named by what the client is made of so that a page left open
+one directory, named by what the client is made of so a page left open
 does not keep one that has been replaced.
 
 ## License

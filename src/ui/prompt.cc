@@ -3,7 +3,7 @@
 // before anything else is said to it, read and written where the conversation
 // is: a card over the room, one field in it, and the words the field keeps
 // going into the conversation as they are typed -- not when the card is put
-// away, which would keep two copies of what is only said once.
+// away, which would keep two copies of a message sent only once.
 //
 // What every answer is given where a conversation has said nothing of its own
 // stands in the field as its hint, and is never written in: what is told for

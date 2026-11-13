@@ -406,8 +406,8 @@ struct composer : scene::Node {
 
   composer() {
     // One line, which is what makes Enter send rather than put a line break
-    // in: what is written here is said once, as a message, and its shape is
-    // kept by the room, not by this field.
+    // in: the text here is sent once as a message, and its shape is kept
+    // by the room, not by this field.
     fField.setSingleLine(true);
     fSend.field = &fField;
     fSend.sink = fSink;

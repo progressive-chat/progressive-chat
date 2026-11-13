@@ -124,8 +124,8 @@ constexpr scheme_ramp_set ramps_of(argb seed, scheme_style style) {
           .neutral = palette::ramp(palette::turned(hue, figures.neutral_turn), figures.neutral_chroma),
           .neutral_variant = palette::ramp(palette::turned(hue, figures.neutral_variant_turn),
                                            figures.neutral_variant_chroma),
-          // Red, kept away from the seed's hue: whatever the seed is, an
-          // error is still red and still reads as one beside it.
+          // Red, kept away from the seed's hue: beside any seed, red stays
+          // red and still reads as an error.
           .error = palette::ramp(25.0 * 3.14159265358979323846 / 180.0, 40.0)};
 }
 

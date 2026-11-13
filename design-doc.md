@@ -21,13 +21,13 @@ the message area, and the footer.
   name of the current conversation, and on the other side two items -- a **plus**
   that starts a new chat, and next to it **the conversation's token count** (e.g.
   `12.4k tokens`), which is the total of what the model was asked and what it
-  answered. Nothing else is in the top bar. It has no search of its own; the
-  drawer provides search.
+  answered. Nothing else is in the top bar. It has no search; the drawer
+  provides search.
 - **Message area** -- between the top bar and the footer, where messages scroll.
 - **Footer** -- the editor, where text is written. It always shows **which model
   will receive the message**, even before anything is written, and next to that a
   **circle showing how full the context is** -- filled by the share of the model's
-  window this conversation has consumed, empty where there is room left. Both are
+  window this conversation has consumed, empty when there is room left. Both are
   always present: writing to a model without knowing which one it is, or how close
   to the limit the conversation has come, is writing blind.
 
@@ -150,7 +150,7 @@ else in the panel is a plus:
 
 ### What the fold shows
 
-Above the answer, and only where there is something to fold, is what the model did
+Above the answer, and only when there is something to fold, is what the model did
 before answering: **how long it took**, **how many tool calls it made**, and --
 folded inside that line -- **its thinking, as greentext**: what it wrote while not
 yet answering, in its own green, which is the color it keeps when the fold is

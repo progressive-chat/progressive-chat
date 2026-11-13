@@ -516,9 +516,8 @@ struct settings_rows : scene::Node {
       }
     for (std::size_t at = 0; at < max_seeds; ++at)
       fSeeds[at].blank();
-    // Hidden until the group that holds them is said: whatever is not
-    // drawn under any name stays hidden, as a card it was never given
-    // leaves it, and each of these says it is drawn when it is.
+    // Hidden until the group that holds them is shown: a control no card
+    // drew under any name stays hidden, and each marks itself drawn.
     for (knob_row &one : fKnobs)
       one.setVisible(false);
     for (switch_row &one : fTools)

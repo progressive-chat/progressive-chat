@@ -69,7 +69,7 @@ inline constexpr std::size_t switches_owned = 7u;
 // every body written for a provider (pchat.provider, `wanted`).
 // How hard a model is to think before it answers, in the only four ways any
 // wire is asked for it: a little, some, most of what it can, or all of it.
-// Said once here, written as each family names it by pchat.provider.
+// Named once here, written as each family names it by pchat.provider.
 enum class effort { least, some, most, all };
 
 // The next of the four, whichever of them stands now: what one press behind
@@ -104,7 +104,7 @@ enum class effort { least, some, most, all };
 
 struct asking {
   // That it thinks at all before it answers: off, and a model answers out of
-  // whatever it knows; on, and every wire this program speaks to is asked for
+  // what it knows; on, and every wire this program speaks to is asked for
   // the thinking in the words that family takes it in.
   bool thinking = true;
   // How hard, where thinking is on at all.
@@ -139,9 +139,9 @@ inline constexpr asking default_asking{};
 // row asks for, and in what the program keeps inside its lines.
 enum class asking_what { temperature, top_p, max_tokens, presence, often };
 
-// How far each of them goes, and by how much one press moves it: said once
-// here because the row that moves one of them and the program that keeps it
-// ask for the same numbers, and a row told its own would soon say another's.
+// How far each goes, and how much one press moves it: named once here
+// because the row that moves it and the program that keeps it need the same
+// numbers, and a row keeping its own would soon answer another's.
 struct asking_range {
   double least = 0.0;
   double most = 1.0;
@@ -299,8 +299,8 @@ inline constexpr std::array<answerer_choice, 7> answerers_offered{{
 
 // One of them put into a chat, or taken out of it: put in at the end of the
 // ones already answering, taken out from wherever it stood, and never the
-// last one -- a chat with nothing to answer in it is not a thing any page can
-// say, so taking out is left undone where it would leave none.
+// last one -- a chat with nothing answering in it says nothing to a page,
+// so taking one out is left undone where it would leave none.
 [[nodiscard]] inline std::vector<std::string>
 models_with(std::span<const std::string> models, std::string_view name,
             bool wanted) {

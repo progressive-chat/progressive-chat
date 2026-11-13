@@ -202,7 +202,7 @@ struct metrics {
 }
 // The clock as it is read in this window: the hour of the day and the minute
 // in it, out of a moment kept as it is in the model. No zone of its own to
-// ask, because what a chat is written in is whatever its reader's is.
+// ask, because a chat is written in its reader's zone.
 [[nodiscard]] inline std::string clock_of(moment at) {
   const std::int64_t minutes = (at / 60'000) % (24 * 60);
   const std::int64_t hour = minutes / 60;

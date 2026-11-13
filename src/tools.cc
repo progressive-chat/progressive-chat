@@ -59,7 +59,7 @@ export namespace pchat::tools {
 }
 
 // The ones a reader has left switched on, in what a wire is told this
-// program owns: nothing for a tool switched off, whatever is said about it
+// program owns: nothing for a tool switched off, even where its entry names it.
 // elsewhere.
 [[nodiscard]] inline std::vector<provider::offered> tools_of(const asking &how) {
   std::vector<provider::offered> out;
@@ -106,7 +106,7 @@ public:
   }
 
 private:
-  // One string taken out of what a model sent, whatever else it sent with it:
+  // One string taken out of what a model sent, and of all else it sent:
   // a call that named it badly is answered nothing rather than wrongly.
   [[nodiscard]] static std::string what_was_asked(std::string_view asked_for,
                                                   std::string_view takes) {
