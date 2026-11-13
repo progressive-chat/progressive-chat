@@ -12,8 +12,11 @@ fetchcontent_declare(sdl3
   GIT_REPOSITORY https://github.com/j4niwzis/SDL
   GIT_TAG 91c08de87b43fdecc824464fcce15499ccbc7101
 )
-fetchcontent_makeavailable(sdl3)
 
+# SDL3 reads these while its own CMakeLists runs, which is what
+# fetchcontent_makeavailable starts below. Set after it, they are read too
+# late: SDL3 builds shared, no SDL3main is made, and the link below asks for
+# a library that was never produced.
 # Build SDL3 statically
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
@@ -34,6 +37,8 @@ set(SDL_LOCALE OFF)
 set(SDL_CAMERA OFF)
 set(SDL_DIALOG OFF)
 set(SDL_CLIPBOARD ON)
+
+fetchcontent_makeavailable(sdl3)
 
 add_executable(pchat-windows-test main.c)
 target_link_libraries(pchat-windows-test PRIVATE SDL3::SDL3)
