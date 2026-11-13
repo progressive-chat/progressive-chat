@@ -114,34 +114,34 @@ private:
   void anthropic_said(const anthropic_frame &one) {
     switch (one.what) {
     case anthropic_frame::kind::text:
-      answer_said(one.said);
+      answer_said(one.text);
       return;
     case anthropic_frame::kind::thought:
-      thought_said(one.said);
+      thought_said(one.text);
       return;
     case anthropic_frame::kind::tool: {
       const tool_call call{
-          .id = one.call_id, .name = one.call_name, .arguments = one.call_arguments};
+          .id = one.id, .name = one.name, .arguments = one.arguments};
       calls_.push_back(call);
       said_.push_back(event{.what = event::kind::tool, .call = call});
       return;
     }
     case anthropic_frame::kind::usage:
-      cost_.in = one.used_in;
-      cost_.out = one.used_out;
+      cost_.in = one.input_tokens;
+      cost_.out = one.output_tokens;
       said_.push_back(event{.what = event::kind::usage, .cost = cost_});
       return;
     case anthropic_frame::kind::ended:
       content_ended();
       if (ended_)
         return;
-      finish_ = one.finish.empty() ? std::string("stop") : one.finish;
+      finish_ = one.stop_reason.empty() ? std::string("stop") : one.stop_reason;
       ended_ = true;
       said_.push_back(event{.what = event::kind::ended, .finish = finish_});
       return;
     case anthropic_frame::kind::failed:
       failed_ = true;
-      failure_ = one.said;
+      failure_ = one.text;
       said_.push_back(event{.what = event::kind::failed, .said = failure_});
       return;
     }
@@ -180,34 +180,34 @@ private:
     void gemini_said(const gemini_frame &one) {
       switch (one.what) {
       case gemini_frame::kind::text:
-        answer_said(one.said);
+        answer_said(one.text);
         return;
       case gemini_frame::kind::thought:
-        thought_said(one.said);
+        thought_said(one.text);
         return;
       case gemini_frame::kind::tool: {
         const tool_call call{
-            .id = one.call_id, .name = one.call_name, .arguments = one.call_arguments};
+            .id = one.id, .name = one.name, .arguments = one.arguments};
         calls_.push_back(call);
         said_.push_back(event{.what = event::kind::tool, .call = call});
         return;
       }
       case gemini_frame::kind::usage:
-        cost_.in = one.used_in;
-        cost_.out = one.used_out;
+        cost_.in = one.input_tokens;
+        cost_.out = one.output_tokens;
         said_.push_back(event{.what = event::kind::usage, .cost = cost_});
         return;
       case gemini_frame::kind::ended:
         content_ended();
         if (ended_)
           return;
-        finish_ = one.finish.empty() ? std::string("stop") : one.finish;
+        finish_ = one.stop_reason.empty() ? std::string("stop") : one.stop_reason;
         ended_ = true;
         said_.push_back(event{.what = event::kind::ended, .finish = finish_});
         return;
       case gemini_frame::kind::failed:
         failed_ = true;
-        failure_ = one.said;
+        failure_ = one.text;
         said_.push_back(event{.what = event::kind::failed, .said = failure_});
         return;
       }

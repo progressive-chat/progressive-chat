@@ -23,14 +23,14 @@ namespace pchat::provider {
 struct anthropic_frame {
   enum class kind { text, thought, tool, usage, ended, failed } what = kind::text;
   // The piece of text or of thought, or -- where it failed -- why.
-  std::string said;
-  std::string call_id;
-  std::string call_name;
-  std::string call_arguments;
-  std::uint32_t used_in = 0;
-  std::uint32_t used_out = 0;
+  std::string text;
+  std::string id;
+  std::string name;
+  std::string arguments;
+  std::uint32_t input_tokens = 0;
+  std::uint32_t output_tokens = 0;
   // Why it stopped, as the wire said it: empty only where it did not say.
-  std::string finish;
+  std::string stop_reason;
 };
 
 // The reader, one per stream: the wire's own router held behind a pointer so
