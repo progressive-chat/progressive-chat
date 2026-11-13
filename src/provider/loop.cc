@@ -10,6 +10,9 @@
 // whole loop can be said by a test with no tools and no wire under it, and
 // why nothing above this has to know that a second answer ever happened --
 // one answer arriving still looks like one answer arriving.
+module;
+#include "retry/retry.h"
+
 export module pchat.provider.loop;
 
 import std;
@@ -58,6 +61,7 @@ public:
                   .out = cost_.out + one.cost().out};
     ended_ = one.ended();
     trouble_ = one.trouble();
+    failed_why_ = one.why_failed();
     said_now_ = std::string(one.said());
     asked_ = named(one.called(), rounds_);
   }
@@ -101,6 +105,10 @@ public:
   [[nodiscard]] const std::optional<std::string> &trouble() const {
     return trouble_;
   }
+  // Why the last answer failed, the way Agora says it: the kind of it, and
+  // what came with it. Set only where it failed, and read by whoever decides
+  // whether to ask again.
+  [[nodiscard]] const failure &why_failed() const { return failed_why_; }
 
   // One message of the model's, from every round of this question: what it
   // said in all of them, what it thought, how many tools it asked for, what
@@ -137,6 +145,7 @@ private:
   std::vector<tool_call> asked_;
   provider::over ended_ = provider::over::none;
   std::optional<std::string> trouble_;
+  failure failed_why_;
 };
 
 } // namespace pchat::provider

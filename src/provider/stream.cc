@@ -29,6 +29,9 @@ struct event {
   // Why it stopped, as the wire gave it: stop, length, tool_calls,
   // content_filter. Empty where a wire said it was done without saying why.
   std::string finish;
+  // Why it failed, the way Agora says it -- the kind of it and what came with
+  // it -- set only on an event whose kind is failed.
+  failure why_failed;
 };
 
 class stream {
@@ -79,6 +82,8 @@ public:
   [[nodiscard]] bool ended() const { return ended_; }
   [[nodiscard]] bool failed() const { return failed_; }
   [[nodiscard]] std::string_view why() const { return failure_; }
+  // Why it failed, the way Agora says it. Set only where it failed.
+  [[nodiscard]] const failure &why_failed() const { return failed_why_; }
   [[nodiscard]] std::string_view finish() const { return finish_; }
 
 private:
@@ -142,7 +147,9 @@ private:
     case anthropic_frame::kind::failed:
       failed_ = true;
       failure_ = one.text;
-      said_.push_back(event{.what = event::kind::failed, .said = failure_});
+      failed_why_ = one.why_failed;
+      said_.push_back(event{.what = event::kind::failed, .said = failure_,
+                            .why_failed = failed_why_});
       return;
     }
   }
@@ -208,7 +215,9 @@ private:
       case gemini_frame::kind::failed:
         failed_ = true;
         failure_ = one.text;
-        said_.push_back(event{.what = event::kind::failed, .said = failure_});
+        failed_why_ = one.why_failed;
+        said_.push_back(event{.what = event::kind::failed, .said = failure_,
+                              .why_failed = failed_why_});
         return;
       }
     }
@@ -251,13 +260,19 @@ private:
       failure_ = "a frame that was not written in JSON, at its " +
                  std::to_string(whole.error().at) + "th character: " +
                  whole.error().said;
-      said_.push_back(event{.what = event::kind::failed, .said = failure_});
+      failed_why_ = {failure_kind::line, std::string(), std::string(), failure_,
+                     0};
+      said_.push_back(event{.what = event::kind::failed, .said = failure_,
+                            .why_failed = failed_why_});
       return;
     }
     if (const json::value *bad = json::said(*whole, "error")) {
       failed_ = true;
       failure_ = "the wire's own error: " + std::string(text_in(bad, "message"));
-      said_.push_back(event{.what = event::kind::failed, .said = failure_});
+      failed_why_ = {failure_kind::api, std::string(), std::string(),
+                     std::string(text_in(bad, "message")), 0};
+      said_.push_back(event{.what = event::kind::failed, .said = failure_,
+                            .why_failed = failed_why_});
       return;
     }
     const json::value *spent = json::said(*whole, "usage");
@@ -660,6 +675,7 @@ private:
   usage cost_;
   std::string finish_;
   std::string failure_;
+  failure failed_why_;
   bool ended_ = false;
   bool failed_ = false;
 };

@@ -43,6 +43,38 @@ std::string error_text(const sn::GenerationError &error) {
   return "the wire stopped the answer";
 }
 
+// The same failure, said the way retry.h says it: the kind Agora names it by,
+// and what of code, type and message came with it. A module unit never sees
+// the variant, only this.
+[[nodiscard]] failure failure_of(const sn::GenerationError &error) {
+  if (const auto *api = std::get_if<sn::ErrorApi>(&error))
+    return {failure_kind::api, api->code.value_or(std::string()),
+            api->type.value_or(std::string()), api->message, 0};
+  if (const auto *network = std::get_if<sn::ErrorNetwork>(&error))
+    return {failure_kind::network, std::string(), std::string(),
+            network->message, network->status_code};
+  if (const auto *sse = std::get_if<sn::ErrorSseParse>(&error))
+    return {failure_kind::line, std::string(), std::string(), sse->cause, 0};
+  if (const auto *bad_call = std::get_if<sn::ErrorMalformedToolCall>(&error))
+    return {failure_kind::malformed_call, std::string(), std::string(),
+            bad_call->cause, 0};
+  if (const auto *incomplete = std::get_if<sn::ErrorIncompleteStream>(&error)) {
+    failure out{failure_kind::unfinished, std::string(), std::string(),
+                incomplete->provider, 0};
+    if (incomplete->tool_call_in_flight)
+      out.message = "a tool call it asked for was never finished";
+    return out;
+  }
+  if (std::holds_alternative<sn::ErrorOutputTruncated>(error))
+    return {failure_kind::truncated, std::string(), std::string(),
+            "the answer ran out of the model's window", 0};
+  if (std::holds_alternative<sn::ErrorTimeout>(error))
+    return {failure_kind::timed_out, std::string(), std::string(),
+            "the answer timed out", 0};
+  return {failure_kind::api, std::string(), std::string(),
+          "the wire stopped the answer", 0};
+}
+
 // One event of the wire, in the frames this folder hands over. A tool call is
 // only said whole (the router finishes its arguments first), the incremental
 // updates behind it are display material for a screen that has none here, and
@@ -67,7 +99,9 @@ void frame_of(const as::StreamEvent &event, std::vector<anthropic_frame> &out) {
                         .name = call->name,
                         .arguments = call->arguments});
   } else if (const auto *failure = std::get_if<as::ErrorEvent>(&event)) {
-    out.push_back(frame{.what = frame::kind::failed, .text = error_text(failure->error)});
+    out.push_back(frame{.what = frame::kind::failed,
+                        .text = error_text(failure->error),
+                        .why_failed = failure_of(failure->error)});
   }
   // as::ToolCallUpdate, as::CitationUpdate: nothing to say here yet.
 }
@@ -104,7 +138,8 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
     if (reader.router.stream_error && !reader.failed_emitted) {
       reader.failed_emitted = true;
       out.push_back(frame{.what = frame::kind::failed,
-                          .text = error_text(*reader.router.stream_error)});
+                          .text = error_text(*reader.router.stream_error),
+                          .why_failed = failure_of(*reader.router.stream_error)});
     }
     return out;
   }
@@ -115,7 +150,8 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
   if (reader.router.stream_error && !reader.failed_emitted) {
     reader.failed_emitted = true;
     out.push_back(frame{.what = frame::kind::failed,
-                        .text = error_text(*reader.router.stream_error)});
+                        .text = error_text(*reader.router.stream_error),
+                        .why_failed = failure_of(*reader.router.stream_error)});
     return out;
   }
   if (reader.router.saw_terminal_marker() && !reader.ended_emitted) {
@@ -130,7 +166,8 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
   if (reader.router.stream_error && !reader.failed_emitted) {
     reader.failed_emitted = true;
     out.push_back(frame{.what = frame::kind::failed,
-                        .text = error_text(*reader.router.stream_error)});
+                        .text = error_text(*reader.router.stream_error),
+                        .why_failed = failure_of(*reader.router.stream_error)});
   }
   return out;
 }

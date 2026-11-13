@@ -5,6 +5,9 @@
 //
 // Nothing here talks to a server: the sample fills the model until the
 // client does.
+module;
+#include "../provider/retry/retry.h"
+
 export module pchat.app.screens;
 
 import splice;
@@ -412,6 +415,12 @@ private:
     // them and what answered them are two ends of a wire and neither is the
     // loop between.
     std::vector<call_made> calls{};
+    // Which ask this is: the first is one, and each retry after a failure is
+    // one more. Read by the retry decision -- Agora waits between asks.
+    int attempt = 1;
+    // When the next ask is due: nothing while an answer is coming, and a
+    // moment in the future once a failure has been decided worth waiting out.
+    moment again_at = 0;
   };
   std::optional<answer_coming> answering_;
 
@@ -481,9 +490,21 @@ private:
   // Where it stopped because it asked for something this program owns, those
   // calls are answered here and the question is asked again with them.
   void read_what_arrived() {
-    if (!answering_ || !answering_->asked)
+    if (!answering_)
       return;
     answer_coming &one = *answering_;
+    // Waiting out the backoff before asking again: nothing of the answer is
+    // read, and when the moment has come the question is asked again of a
+    // fresh answer, with the same turns the failed one had.
+    if (!one.asked && one.again_at != 0) {
+      if (now_ms() < one.again_at)
+        return;
+      one.again_at = 0;
+      carry(one);
+      return;
+    }
+    if (!one.asked)
+      return;
     const std::string arrived = one.carried.take();
     if (!arrived.empty())
       one.asked->arrive(arrived);
@@ -493,6 +514,17 @@ private:
     if (!one.carried.over())
       return;
     one.asked->carried_over(one.carried.trouble());
+    // A failure worth asking again: the answer is not kept yet -- nothing it
+    // said is appended, since the ask is made again and what it said comes
+    // back whole -- and the next ask is made when Agora's backoff says.
+    if (one.asked->ended() == provider::over::failed &&
+        provider::worth_asking_again(one.asked->why_failed()) &&
+        provider::wait_before_again(one.attempt) > 0) {
+      one.attempt += 1;
+      one.again_at = now_ms() + provider::wait_before_again(one.attempt - 1);
+      one.asked.reset();
+      return;
+    }
     one.going.came_back(*one.asked);
     one.asked.reset();
     if (!one.going.asked_for().empty() && asked_again(one)) {
