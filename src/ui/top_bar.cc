@@ -365,7 +365,8 @@ struct top_bar : scene::Node {
                    .origin = scene::anchor::kCentreRight,
                    .x = -(left_of_bubbles +
                           static_cast<float>(answerers) *
-                              (answerer_bubble_width + bar_gap)),
+                              (answerer_bubble_width + bar_gap) +
+                          bar_gap),
                    .y = top_bar_height / 2.0f,
                    .relativeSize = scene::axes::kNone,
                    .visible = true});
