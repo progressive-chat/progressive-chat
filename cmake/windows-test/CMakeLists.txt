@@ -42,4 +42,5 @@ fetchcontent_makeavailable(sdl3)
 
 add_executable(pchat-windows-test main.c)
 target_link_libraries(pchat-windows-test PRIVATE SDL3::SDL3)
-target_link_libraries(pchat-windows-test PRIVATE "-lmingw32" "-lSDL3main")
+# SDL3 has no SDL3main beside itself: its static library carries the entry.
+target_link_libraries(pchat-windows-test PRIVATE "-lmingw32")
