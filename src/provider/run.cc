@@ -121,11 +121,12 @@ public:
   // What carried it has finished: `why` is its own words where it could not
   // carry it (no route, no answer, the wire closed early) and nothing at all
   // where it carried it whole.
-  void carried_over(std::optional<std::string> why) {
+  void carried_over(std::optional<std::string> why,
+                    const failure &why_failed = {}) {
     if (now_ == standing::done)
       return;
     if (why)
-      stop_over(over::failed, std::move(*why));
+      stop_over(over::failed, std::move(*why), why_failed);
     else
       stop_over(over::complete, std::nullopt);
   }

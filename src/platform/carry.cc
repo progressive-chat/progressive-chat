@@ -39,7 +39,8 @@ public:
       : place_(std::move(gone.place_)), wrote_(std::move(gone.wrote_)),
         fields_(std::move(gone.fields_)), flat_(std::move(gone.flat_)),
         arrived_(std::move(gone.arrived_)), trouble_(std::move(gone.trouble_)),
-        over_(gone.over_), read_(gone.read_) {
+        over_(gone.over_), read_(gone.read_), status_(gone.status_),
+        status_text_(std::move(gone.status_text_)) {
 #if defined(__EMSCRIPTEN__)
     held_ = std::exchange(gone.held_, nullptr);
 #endif
@@ -54,6 +55,8 @@ public:
       arrived_ = std::move(gone.arrived_);
       trouble_ = std::move(gone.trouble_);
       over_ = gone.over_;
+      status_ = gone.status_;
+      status_text_ = std::move(gone.status_text_);
       read_ = gone.read_;
 #if defined(__EMSCRIPTEN__)
       held_ = std::exchange(gone.held_, nullptr);
@@ -139,6 +142,12 @@ public:
   [[nodiscard]] const std::optional<std::string> &trouble() const {
     return trouble_;
   }
+  // The status the server answered with, where it answered with one, and the
+  // words it gave beside it. Zero where nothing answered with a status: a
+  // page that could not ask at all has none. Read by whoever decides whether
+  // a refusal is worth asking again.
+  [[nodiscard]] int status() const { return status_; }
+  [[nodiscard]] const std::string &status_text() const { return status_text_; }
 
   // Not wanted any more: what is still coming is not read, and what asked is
   // closed. Nothing anywhere it has already been answered.
@@ -190,12 +199,18 @@ private:
     // is not the answer asked for, so it is said here and nothing of it
     // is taken.
     if (one->status >= 400) {
+      // The status is kept whole -- the number and the words beside it -- so a
+      // reader can ask whether this refusal is the kind that passes, without
+      // parsing the sentence the trouble was written in.
+      self.status_ = static_cast<int>(one->status);
+      self.status_text_ =
+          one->statusText[0] != '\0' ? std::string(one->statusText)
+                                      : std::string{};
       if (!self.trouble_)
         self.trouble_ =
             "the server answered " + std::to_string(one->status) +
-            (one->statusText[0] != '\0'
-                                     ? ": " + std::string(one->statusText)
-                                     : std::string{});
+            (self.status_text_.empty() ? std::string{}
+                                       : ": " + self.status_text_);
       self.over_ = true;
     }
   }
@@ -218,6 +233,8 @@ private:
   std::vector<const char *> flat_;
   std::string arrived_;
   std::optional<std::string> trouble_;
+  int status_ = 0;
+  std::string status_text_;
   bool over_ = false;
   std::uint64_t read_ = 0;   // how much of the body has been taken already
 };

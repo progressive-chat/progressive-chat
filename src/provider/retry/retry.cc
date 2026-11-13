@@ -46,7 +46,10 @@ namespace {
 }  // namespace
 
 bool worth_asking_again(const failure &one) {
-  if (one.message.empty() && one.code.empty())
+  // Nothing behind the failure: not a status, not a code, not a word -- no
+  // reason to ask again. A refusal with only its status still has its status
+  // to read.
+  if (one.message.empty() && one.code.empty() && one.status == 0)
     return false;
   const sn::GenerationError error = as_error(one);
   return sn::ProviderRetryPolicy::should_retry_stream_error(&error);
