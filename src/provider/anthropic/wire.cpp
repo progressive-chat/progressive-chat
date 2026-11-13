@@ -23,6 +23,7 @@ namespace sn = agora::core::stream_normalization;
 struct router_box {
   as::AnthropicStreamEventRouter router;
   bool ended_emitted = false;
+  bool failed_emitted = false;
   router_box() : router([] { return sn::random_uuid_v4(); }) {}
 };
 
@@ -92,18 +93,44 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
   if (state == nullptr || state->router == nullptr)
     return out;
   router_box &reader = *static_cast<router_box *>(state->router);
-  const std::optional<as::AnthropicStreamEvent> decoded = as::decode_stream_event(payload);
+  as::DecodeFailure failure;
+  const std::optional<as::AnthropicStreamEvent> decoded =
+      as::decode_stream_event(payload, &failure);
   if (!decoded) {
-    out.push_back(frame{.what = frame::kind::failed,
-                        .said = "a frame the wire's own events would not read"});
+    // What the router keeps of a line its events would not read: said as the
+    // failure it is, once, in the words the wire gave it -- the same as the
+    // shaped wire beside this one, so both folders speak a bad line alike.
+    reader.router.capture_parse_error(std::string(payload), failure.message);
+    if (reader.router.stream_error && !reader.failed_emitted) {
+      reader.failed_emitted = true;
+      out.push_back(frame{.what = frame::kind::failed,
+                          .said = error_text(*reader.router.stream_error)});
+    }
     return out;
   }
   for (const as::StreamEvent &event : reader.router.route(*decoded))
     frame_of(event, out);
+  // A failure ends the reading of the stream here: nothing after it is an
+  // answer, and the end the wire may still name is not one worth saying.
+  if (reader.router.stream_error && !reader.failed_emitted) {
+    reader.failed_emitted = true;
+    out.push_back(frame{.what = frame::kind::failed,
+                        .said = error_text(*reader.router.stream_error)});
+    return out;
+  }
   if (reader.router.saw_terminal_marker() && !reader.ended_emitted) {
     reader.ended_emitted = true;
     out.push_back(frame{.what = frame::kind::ended,
                         .finish = reader.router.stop_reason.value_or("stop")});
+  }
+  // The wire ended before a tool name was complete: said as the failure it is,
+  // the way the wire's own client ends a stream. The router keeps it on the
+  // stream itself; no event comes back, so the failure is read after it.
+  reader.router.report_incomplete_blocks();
+  if (reader.router.stream_error && !reader.failed_emitted) {
+    reader.failed_emitted = true;
+    out.push_back(frame{.what = frame::kind::failed,
+                        .said = error_text(*reader.router.stream_error)});
   }
   return out;
 }
