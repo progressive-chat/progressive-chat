@@ -433,7 +433,7 @@ private:
     platform::carrying carried;
     if (!carried.any())
       return;
-    const provider::endpoint at{.base = opened_.base,
+    const provider::endpoint at{.base_url = opened_.base_url,
                                 .model = ending_of(chat),
                                 .system_prompt = system_prompt_of(chat)};
     // Not const: a view over messages is asked of more than once and read
@@ -697,7 +697,7 @@ private:
   // way in is relative and why there is no key in it. Whose a key is is
   // that server's own to know.
   const provider::endpoint opened_{
-      .base = "/v1",
+      .base_url = "/v1",
       .system_prompt = "You are answering in Progressive Chat, briefly and plainly."};
   window_scene scene_{std::in_place};
   chats_root root_;

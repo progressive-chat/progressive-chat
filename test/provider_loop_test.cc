@@ -49,7 +49,7 @@ data: [DONE]
 )--";
 
 [[nodiscard]] provider::endpoint an_endpoint() {
-  return provider::endpoint{.base = "https://api.openai.com/v1",
+  return provider::endpoint{.base_url = "https://api.openai.com/v1",
                             .model = "o4-mini"};
 }
 
