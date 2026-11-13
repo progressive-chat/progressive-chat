@@ -290,8 +290,6 @@ private:
     if (const std::string_view why = text_in(choice, "finish_reason"); !why.empty()) {
       content_ended();
       finish_ = std::string(why);
-      if (why == "tool_calls")
-        tools_done();
       ended_ = true;
       said_.push_back(event{.what = event::kind::ended, .finish = finish_});
     }
@@ -451,7 +449,9 @@ private:
 
   // Nothing more is coming: what is held back is said as whichever side of a
   // tag it fell on, and nothing keeps waiting for a tag that will never be
-  // finished. A thought the wire left open is thought up to its last word.
+  // finished. A thought the wire left open is thought up to its last word. A
+  // tool call it opened but never finished is said too -- the wire ended on it,
+  // so its name and whatever arrived of its arguments stand as the call.
   void content_ended() {
     if (thinking_) {
       thought_said(held_);
@@ -459,11 +459,13 @@ private:
       thinking_ = false;
       wanted_shut_ = {};
       tools_written_in(thought_);
+      tools_done();
       return;
     }
     answer_said(held_);
     held_.clear();
     tools_written_in(text_);
+    tools_done();
   }
 
   [[nodiscard]] static std::string_view shut_of(std::string_view opened) {
@@ -592,9 +594,10 @@ private:
     }
   }
 
-  // The frame where it stopped to ask for tools: each call it asked for is
-  // said now, whole, and written into the thought above the answer as
-  // its greentext.
+  // The calls it opened are said whole -- by the frame that asked for them, or
+  // by the end of the stream where it never sent that frame -- and written into
+  // the thought above the answer as its greentext. What arrived of the
+  // arguments is what the call had.
   void tools_done() {
     for (tool_call &kept : partial_) {
       if (kept.name.empty() && kept.arguments.empty())

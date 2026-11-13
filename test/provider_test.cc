@@ -259,6 +259,23 @@ SAID(provider, a_tool_written_in_the_answer_is_a_call_and_not_text) {
   EXPECT_EQ(one.calls().front().arguments, std::string("{\"city\":\"Oslo\"}"));
 }
 
+// A tool it opened over JSON but never named as done: the wire ended on it
+// instead of asking for the tools, so what arrived of it is the call -- said
+// now rather than left behind with the answer over.
+SAID(provider, a_tool_opened_when_the_stream_ends_still_says_what_it_got) {
+  provider::stream one;
+  one.feed("data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,"
+           "\"id\":\"call_1\",\"function\":{\"name\":\"weather\","
+           "\"arguments\":\"{\\\"city\\\":\\\"Oslo\\\"}\"}}]},"
+           "\"index\":0}]}\n\n"
+           "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n");
+  EXPECT_TRUE(one.ended());
+  EXPECT_EQ(one.calls().size(), std::size_t(1));
+  EXPECT_EQ(one.calls().front().name, std::string("weather"));
+  EXPECT_EQ(one.calls().front().arguments, std::string("{\"city\":\"Oslo\"}"));
+  EXPECT_EQ(std::string(one.finish()), std::string("stop"));
+}
+
 // Thinking, asked for in the words each family takes it in: openai's own
 // reasoning effort, the relay's thing inside the body, and deepseek, which is
 // never asked because it thinks whenever it answers.
