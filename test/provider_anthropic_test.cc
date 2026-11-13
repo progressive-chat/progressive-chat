@@ -90,4 +90,14 @@ SAID(anthropic, a_failure_the_wire_reports_inside_the_stream_says_why) {
   EXPECT_TRUE(std::string(one.why()).find("overloaded") != std::string::npos);
 }
 
+// A line the wire's own events will not read: said as the failure it is, in the
+// words the wire gave it, rather than a sentence this folder made up.
+SAID(anthropic, a_line_the_wire_cannot_read_fails_in_the_wires_own_words) {
+  stream one{wire::anthropic};
+  one.feed("data: {not json\n\n");
+  EXPECT_TRUE(one.failed());
+  EXPECT_FALSE(one.why().empty());
+  EXPECT_FALSE(one.ended());
+}
+
 int main() { return pchat::tests::run(); }
