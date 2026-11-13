@@ -26,43 +26,6 @@ export namespace pchat::ui {
 namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 
-// A pill over the messages: its plate, its icon, its label.
-struct bar_pill : scene::Node {
-  nodes::Box<> fPlate{0u};
-  nodes::Icon fMark{shape::menu(), 0u};
-  nodes::Text fLabel{"", 13.0f, 0u};
-
-  bar_pill() {
-    this->apply(
-        {.height = 36.0f, .autoSize = scene::axes::kX, .cornerRadius = 18.0f});
-    fPlate.apply({.fill = true, .cornerRadius = 18.0f});
-    fMark.apply({.width = 18.0f,
-                 .height = 18.0f,
-                 .anchor = scene::anchor::kCentreLeft,
-                 .origin = scene::anchor::kCentreLeft,
-                 .x = 12.0f});
-    fLabel.apply({.anchor = scene::anchor::kCentreLeft,
-                  .origin = scene::anchor::kCentreLeft,
-                  .x = 36.0f});
-  }
-
-  void again(const paints &look, scene::Colour plate, std::string_view label) {
-    (void)look;
-    fPlate.setColour(plate);
-    fMark.setColour(look.text);
-    fLabel.setText(std::string(label));
-    fLabel.setColour(look.text);
-    this->apply(
-        {.height = 36.0f, .autoSize = scene::axes::kX, .cornerRadius = 18.0f});
-  }
-
-  void forEachChild(auto &&f) {
-    f(fPlate);
-    f(fMark);
-    f(fLabel);
-  }
-};
-
 // How many answerers one conversation may have at once, how wide a bubble is,
 // and how far apart two of anything in the bar stand.
 inline constexpr std::size_t max_answerers = 4u;
