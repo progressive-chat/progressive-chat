@@ -125,6 +125,10 @@ struct message {
   // What this one is worth, in tokens: read out of a protocol where it says,
   // counted out of its words where it does not.
   std::uint32_t tokens = 0;
+  // Why it is a failure, in the words that said it: empty where nothing was
+  // answered, and for every state that is not failed. Last of the fields, so
+  // the braces a sample or a test writes whole keep their meaning.
+  std::optional<std::string> why_failed;
   friend bool operator==(const message &, const message &) = default;
 };
 

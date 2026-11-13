@@ -211,6 +211,8 @@ inline constexpr std::int64_t version = 1;
       written.name("text").text(one.text);
       written.name("sent").number(one.sent);
       written.name("state").text(said_of(one.state));
+      if (one.why_failed)
+        written.name("why").text(*one.why_failed);
       written.name("tokens").number(static_cast<std::int64_t>(one.tokens));
       if (one.replies_to)
         written.name("replies_to").text(one.replies_to->value);

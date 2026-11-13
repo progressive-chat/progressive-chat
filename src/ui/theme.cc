@@ -34,6 +34,7 @@ struct paints {
   Colour on_avatar = 0xffffffffu;
   Colour thought = 0xff6ede8au;   // a model's thinking, folded above its answer
   Colour link = 0xff86d19bu;      // a place said in a message, pressed to go to it
+  Colour error = 0xffd18686u;     // an answer that failed, and why
   Colour scrim_top = 0x000c160cu; // see-through, the top of the messages
   // Nothing at all, painted whole: what takes a press away from a card that
   // came out of three dots, seen nowhere and answered everywhere else in the
@@ -77,6 +78,7 @@ struct paints {
   // A link is drawn in the colour everything pressed is drawn in: it is the
   // one thing in a message that answers a press.
   out.link = scheme.primary;
+  out.error = scheme.error;
   out.scrim_top = scheme.background & 0x00ffffffu;
   out.search_bar = (out.card & 0x00ffffffu) | (0xd9u << 24);
   out.scrim = 0x99000000u;

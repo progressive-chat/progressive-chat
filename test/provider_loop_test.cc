@@ -116,6 +116,8 @@ SAID(provider_loop, what_a_tool_answered_goes_back_into_the_asking) {
       .author = "o4-mini", .sent = 1700000000000, .took_ms = 1500});
   EXPECT_EQ(said.text, std::string("One moment.\nIt is raining."));
   EXPECT_EQ(said.state, delivery::sent);
+  // Through it went, so it says nothing about a reason it has none of.
+  EXPECT_FALSE(said.why_failed.has_value());
   // What both rounds cost, together.
   EXPECT_EQ(said.tokens, 33u);
   EXPECT_EQ(said.before->tool_calls, 1u);

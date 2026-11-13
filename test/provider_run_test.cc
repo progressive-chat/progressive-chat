@@ -177,6 +177,11 @@ SAID(provider_run, an_answer_that_never_came_is_a_failed_message) {
   EXPECT_EQ(said.state, delivery::failed);
   EXPECT_TRUE(said.text.empty());
   EXPECT_FALSE(said.before.has_value());
+  // What said it was a failure is kept with the failure, so a screen can say
+  // it beside what the answer did get to.
+  EXPECT_TRUE(said.why_failed.has_value());
+  if (said.why_failed)
+    EXPECT_EQ(*said.why_failed, std::string("the wire closed early"));
 }
 
 int main() { return pchat::tests::run(); }

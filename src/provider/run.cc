@@ -54,7 +54,8 @@ struct put_in {
 [[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
                                        std::string_view thinking,
                                        std::size_t asking, usage cost,
-                                       bool failed) {
+                                       bool failed,
+                                       const std::optional<std::string> &why = {}) {
   message out{.id = into.id,
               .chat = into.chat,
               .author = into.author,
@@ -62,6 +63,10 @@ struct put_in {
               .text = std::string(said),
               .sent = into.sent,
               .state = failed ? delivery::failed : delivery::sent};
+  // What said it was a failure: held only where it was one, so a message that
+  // went through says nothing about a reason it has none of.
+  if (failed && why)
+    out.why_failed = *why;
   out.tokens = static_cast<std::uint32_t>(cost.in + cost.out);
   // Said in full: `thought` is what an answer thought, and not the same word
   // as the type what it thought is kept in.
@@ -161,7 +166,7 @@ public:
   // elsewhere.
   [[nodiscard]] message answer_of(const put_in &into) const {
     return provider::answer_of(into, said(), thought(), tool_calls(), cost(),
-                               ended_ == over::failed);
+                               ended_ == over::failed, trouble_);
   }
 
 private:
