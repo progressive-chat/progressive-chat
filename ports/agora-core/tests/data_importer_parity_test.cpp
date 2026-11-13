@@ -611,6 +611,9 @@ class RecordingStore : public archive::SettingsSink {
 public:
     std::string calls;
     bool first = true;
+    // The embedding list the portable restore writes, shared with the store the
+    // secrets policy reads (one settings state, reached through two sinks).
+    std::vector<secrets::EmbeddingModelConfig>* embedding_state = nullptr;
 
     void append(const char* name, const std::string& value) {
         if (!first) calls.push_back(',');
@@ -933,6 +936,9 @@ public:
     }
     void save_embedding_models(const std::vector<secrets::EmbeddingModelConfig>& models) override {
         append("saveEmbeddingModels", embedding_value(models));
+        // The portable restore's embedding list is what the secrets restore merges into
+        // afterwards, so it is kept where the secrets policy reads it.
+        if (embedding_state != nullptr) *embedding_state = models;
     }
     void set_active_embedding_model_id(const std::string& id) override {
         append("setActiveEmbeddingModelId", string_value(std::optional<std::string>(id)));
@@ -1145,6 +1151,11 @@ public:
         shell_devices_ = std::move(shells);
         embedding_models_ = std::move(embeddings);
         mcp_servers_ = std::move(mcps);
+    }
+
+    // The portable restore's embedding list flows into the state the secrets policy reads.
+    std::vector<secrets::EmbeddingModelConfig>& embedding_models_ref() {
+        return embedding_models_;
     }
 
     const std::vector<secrets::ApiKeyEntry>& api_keys() const override { return api_keys_; }
@@ -1977,6 +1988,7 @@ void run_scenario(const std::filesystem::path& path) {
             writes.archive_sink = &sink;
             SecretsStore secrets_store;
             secrets_store.sink = &sink;
+            sink.embedding_state = &secrets_store.embedding_models_ref();
             // The store starts from the scenario's own settings (what the app holds
             // before the import), which the secrets restore then merges into.
             if (const Value* settings_obj = field(root, "settings");
