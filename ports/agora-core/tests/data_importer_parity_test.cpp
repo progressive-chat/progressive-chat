@@ -1993,6 +1993,16 @@ json::Value dump_tables(SqlExecutor& sql) {
                     {"dimension", cell_long(row, 4)},
                 });
             })},
+        {"conversation_settings_transfer", query_rows(
+            sql,
+            "SELECT conversationId, settingsJson FROM conversation_settings_transfer "
+            "ORDER BY conversationId",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"conversationId", cell_text(row, 0)},
+                    {"settingsJson", cell_text(row, 1)},
+                });
+            })},
         {"conversation_settings_import_transfer", query_rows(
             sql,
             "SELECT id, transferId, settingsJson, mode FROM conversation_settings_import_transfer "
