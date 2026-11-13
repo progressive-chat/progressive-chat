@@ -420,6 +420,9 @@ struct reader_row : nodes::Stack {
 struct answer_row : nodes::Stack {
   history_fold fFold;
   nodes::Text fBody{"", 15.0f, 0u};
+  // Why this answer is a failure, said under what it did manage to say.
+  // Nothing drawn where the answer went through.
+  nodes::Text fWhy{"", 13.0f, 0u};
   nodes::Text fInfo{"", 11.0f, 0u};
   foot_row fFoot;
 
@@ -428,6 +431,7 @@ struct answer_row : nodes::Stack {
     fStack = {.direction = nodes::direction::vertical{},
               .spacingY = answer_gap};
     fFoot.apply({.fillX = true, .autoSize = scene::axes::kY});
+    fWhy.setVisible(false);
     fInfo.setVisible(false);
     this->blank();
   }
@@ -438,6 +442,8 @@ struct answer_row : nodes::Stack {
     fBody.setText("");
     fBody.setLinks({}, 0u);
     fBody.setStyles({}, 0u);
+    fWhy.setText("");
+    fWhy.setVisible(false);
     fInfo.setText("");
   }
 
@@ -456,6 +462,18 @@ struct answer_row : nodes::Stack {
     fBody.setColour(look.text);
     fBody.setFontSize(look.size);
     fBody.apply({.maxWidth = widest});
+    // What said the answer failed, under what it got to say -- in the failure
+    // colour, so it reads as not part of the answer. Empty where it went
+    // through, and then it is not drawn at all.
+    if (said.why_failed) {
+      fWhy.setText(*said.why_failed);
+      fWhy.setColour(look.error);
+      fWhy.apply({.maxWidth = widest});
+      fWhy.setVisible(true);
+    } else {
+      fWhy.setText("");
+      fWhy.setVisible(false);
+    }
     fFoot.again(sink, look, said);
     // What About tells: what answered, and what this answer came to -- the
     // model that keeps this chat, then how long it thought, how often it
@@ -477,6 +495,7 @@ struct answer_row : nodes::Stack {
   void forEachChild(auto &&f) {
     f(fFold);
     f(fBody);
+    f(fWhy);
     f(fFoot);
     f(fInfo);
   }

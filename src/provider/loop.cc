@@ -107,7 +107,7 @@ public:
   // all of it cost, and failed where it could not be had at all.
   [[nodiscard]] message answer_of(const put_in &into) const {
     return provider::answer_of(into, said_, thinking_, calls_, cost_,
-                               ended_ == provider::over::failed);
+                               ended_ == provider::over::failed, trouble_);
   }
 
 private:
