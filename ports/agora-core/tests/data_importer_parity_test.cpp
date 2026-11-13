@@ -2059,6 +2059,16 @@ void run_scenario(const std::filesystem::path& path) {
     const std::filesystem::path stand(AGORA_FIXTURE_DATA_IMPORTER_DIR);
     SqliteExecutor sql(stand / "platform" / "schema.sql");
 
+    // The database state the import starts from: the scenario's seedSql runs before
+    // any step, so a scenario that begins with existing rows has them.
+    if (const Value* seeds = field(root, "seedSql"); seeds != nullptr) {
+        if (seeds->kind != Kind::Array) scenario_fail(stem + ": seedSql must be an array");
+        for (const Value& seed : seeds->elements) {
+            if (seed.kind != Kind::String) scenario_fail(stem + ": seedSql entries must be strings");
+            sql.execute(seed.text, {});
+        }
+    }
+
     // The importer's dependencies. A preview reads only the archive and the
     // graph counter, so these stand empty; the import steps drive them for
     // real when their own test lands.
