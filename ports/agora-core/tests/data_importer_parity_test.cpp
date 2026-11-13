@@ -17,6 +17,7 @@
 #include <fstream>
 #include <functional>
 #include <map>
+#include <regex>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -28,7 +29,10 @@
 #include <sqlite3.h>
 
 #include "agora/core/chat_dao.hpp"
+#include "agora/core/data_exporter.hpp"
 #include "agora/core/data_importer.hpp"
+#include "agora/core/openai_request.hpp"
+#include "agora/core/portable_settings_archive.hpp"
 #include "agora/core/font_utils.hpp"
 #include "agora/core/json.hpp"
 #include "agora/core/maintenance_debt.hpp"
@@ -48,7 +52,11 @@ namespace {
 
 namespace json = agora::core::json;
 namespace data_import = agora::core::data_import;
+namespace data_export = agora::core::data_export;
 namespace backup = agora::core::native_backup_archive;
+namespace secrets = agora::core::native_backup;
+namespace archive = agora::core::settings_archive;
+namespace legacy = agora::core::export_extra_settings;
 using agora::core::json::Kind;
 using agora::core::json::Member;
 using agora::core::json::Value;
@@ -61,6 +69,14 @@ using agora::core::SqlConstraintError;
 
 [[noreturn]] void scenario_fail(const std::string& what) {
     agora::core::test::fail(__FILE__, __LINE__, what);
+}
+
+// Mismatches are collected rather than aborting the run, so one scenario's failure
+// does not hide the rest: every scenario is checked, then all differences report at once.
+std::vector<std::string> g_mismatches;
+
+void scenario_diff(const std::string& what) {
+    g_mismatches.push_back(what);
 }
 
 std::string read_file(const std::filesystem::path& path) {
@@ -82,6 +98,147 @@ std::string required_text(const Value& object, std::string_view name) {
     if (found == nullptr || found->kind != Kind::String)
         scenario_fail("scenario needs a string " + std::string(name));
     return found->text;
+}
+
+
+std::string text_or(const Value& object, std::string_view name, std::string fallback = "") {
+    const Value* found = field(object, name);
+    if (found == nullptr || found->kind != Kind::String) return fallback;
+    return found->text;
+}
+
+std::vector<data_export::PromptTemplateItem> read_items(const Value& object, std::string_view name) {
+    std::vector<data_export::PromptTemplateItem> out;
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Array) return out;
+    std::size_t n = 0;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) continue;
+        data_export::PromptTemplateItem item;
+        item.id = text_or(element, "id", "i" + std::to_string(n));
+        item.type = text_or(element, "type");
+        item.value = text_or(element, "value");
+        out.push_back(std::move(item));
+        ++n;
+    }
+    return out;
+}
+
+/** The scenario's seed system prompts (the initial state for a MERGE). */
+std::vector<data_export::SystemPromptEntry> read_prompt_seed(const Value& root) {
+    std::vector<data_export::SystemPromptEntry> out;
+    const Value* value = field(root, "systemPrompts");
+    if (value == nullptr || value->kind != Kind::Array) return out;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) continue;
+        data_export::SystemPromptEntry entry;
+        entry.id = text_or(element, "id");
+        entry.title = text_or(element, "title");
+        entry.content = text_or(element, "content");
+        entry.system_items = read_items(element, "systemItems");
+        entry.user_items = read_items(element, "userItems");
+        entry.assistant_items = read_items(element, "assistantItems");
+        entry.user_prepend_items = read_items(element, "userPrependItems");
+        entry.user_postpend_items = read_items(element, "userPostpendItems");
+        out.push_back(std::move(entry));
+    }
+    return out;
+}
+
+// ---- masking (identical to the stand driver's two passes) -----------------------------------------
+
+/** Seeds a fresh memory/skill root from the scenario's memory/skills state. */
+void seed_memory_skill(const Value& root, const std::filesystem::path& files_dir) {
+    std::filesystem::create_directories(files_dir / "memory_db");
+    std::filesystem::create_directories(files_dir / "skill_db");
+    auto write = [](const std::filesystem::path& path, const std::string& text) {
+        std::filesystem::create_directories(path.parent_path());
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        out << text;
+    };
+    if (const Value* memory = field(root, "memory"); memory != nullptr) {
+        write(files_dir / "memory_db" / "active_memory.md", text_or(*memory, "active"));
+        write(files_dir / "memory_db" / "memory_meta.json", text_or(*memory, "meta", "{}"));
+        if (const Value* files = field(*memory, "files");
+            files != nullptr && files->kind == Kind::Object) {
+            for (const Member& member : files->members)
+                write(files_dir / "memory_db" / member.key,
+                      member.value.kind == Kind::String ? member.value.text : "");
+        }
+    }
+    if (const Value* skills = field(root, "skills"); skills != nullptr) {
+        write(files_dir / "skill_db" / "skill_meta.json", text_or(*skills, "meta", "{}"));
+        if (const Value* files = field(*skills, "files");
+            files != nullptr && files->kind == Kind::Object) {
+            for (const Member& member : files->members)
+                write(files_dir / "skill_db" / member.key,
+                      member.value.kind == Kind::String ? member.value.text : "");
+        }
+    }
+}
+
+std::string g_mask_root;  // the temp files root, replaced by <root> in the compared text
+
+std::string mask_trace(std::string text) {
+    // The temporary root the import writes into: replaced by <root>, as the stand's
+    // driver does (the temporary root becomes <root>).
+    if (!g_mask_root.empty()) {
+        std::size_t at = 0;
+        while ((at = text.find(g_mask_root, at)) != std::string::npos) {
+            text.replace(at, g_mask_root.size(), "<root>");
+            at += 7;
+        }
+    }
+    // UUIDs: first-appearance ordinal replacement. Fixture content never carries
+    // UUID-shaped values; the generated ones are the uuids the import made.
+    static const std::regex uuid_pattern(
+        "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+    std::map<std::string, std::string> ordinals;
+    std::string masked;
+    auto begin = std::sregex_iterator(text.begin(), text.end(), uuid_pattern);
+    std::size_t copied = 0;
+    for (auto it = begin; it != std::sregex_iterator(); ++it) {
+        const std::smatch& match = *it;
+        const std::string uuid = match.str();
+        const auto [entry, inserted] =
+            ordinals.emplace(uuid, "<uuid:" + std::to_string(ordinals.size()) + ">");
+        (void)inserted;
+        masked.append(text, copied,
+                      static_cast<std::size_t>(match.position(0)) - copied);
+        copied = static_cast<std::size_t>(match.position(0) + match.length(0));
+        masked += entry->second;
+    }
+    masked.append(text, copied, std::string::npos);
+
+    // Epochs: any 13-digit 1[7-9] value bounded by non-digits -> "<clock>".
+    std::string out;
+    out.reserve(masked.size());
+    for (std::size_t i = 0; i < masked.size();) {
+        const auto digit = [](char c) { return c >= '0' && c <= '9'; };
+        if (digit(masked[i]) && i + 13 <= masked.size()) {
+            bool candidate = (masked[i + 1] == '7' || masked[i + 1] == '8' ||
+                              masked[i + 1] == '9');
+            for (std::size_t k = 0; k < 13 && candidate; ++k) candidate = digit(masked[i + k]);
+            if (candidate) {
+                const bool before_ok = i == 0 || (!digit(masked[i - 1]) && masked[i - 1] != '.');
+                const bool after_ok = i + 13 == masked.size() || !digit(masked[i + 13]);
+                if (before_ok && after_ok) {
+                    out += "\"<clock>\"";
+                    i += 13;
+                    continue;
+                }
+            }
+        }
+        out.push_back(masked[i]);
+        ++i;
+    }
+    return out;
+}
+
+/** Renders a Value, masks uuids/clocks, and re-parses it for comparison. */
+Value masked(const Value& value) {
+    const json::ParseResult parsed = json::parse(mask_trace(json::to_kotlin_string(value)));
+    return parsed.value ? *parsed.value : value;
 }
 
 // The Value builders the sibling tests use: a string is a String, and a bare
@@ -177,7 +334,7 @@ std::vector<std::uint8_t> base64_decode(std::string_view text) {
     return out;
 }
 
-std::string excerpt(const Value& value, std::size_t limit = 400) {
+std::string excerpt(const Value& value, std::size_t limit = 4000) {
     std::string text = json::to_kotlin_string(value);
     if (text.size() > limit) return text.substr(0, limit) + "...";
     return text;
@@ -252,9 +409,35 @@ public:
 
     std::int64_t last_insert_rowid() override { return sqlite3_last_insert_rowid(db_); }
 
-    void begin() override { exec_raw("BEGIN"); }
-    void commit() override { exec_raw("COMMIT"); }
-    void rollback() override { exec_raw("ROLLBACK"); }
+    // Reference-counted: nested DAO transactions join the outer import transaction, and only the
+    // outermost level issues COMMIT/ROLLBACK — the JVM SQLiteSession behavior Room relies on.
+    void begin() override {
+        if (depth_++ == 0) {
+            aborted_ = false;
+            exec_raw("BEGIN");
+        }
+    }
+
+    void commit() override {
+        if (depth_ == 0) throw agora::core::SqlError("commit without a transaction");
+        if (--depth_ == 0) {
+            if (deferred_rollback_) {
+                deferred_rollback_ = false;
+                exec_raw("ROLLBACK");
+            } else {
+                exec_raw("COMMIT");
+            }
+        }
+    }
+
+    void rollback() override {
+        if (depth_ == 0) throw agora::core::SqlError("rollback without a transaction");
+        deferred_rollback_ = true;
+        if (--depth_ == 0) {
+            deferred_rollback_ = false;
+            exec_raw("ROLLBACK");
+        }
+    }
 
 private:
     void exec_raw(const std::string& sql) {
@@ -347,6 +530,9 @@ private:
     }
 
     sqlite3* db_ = nullptr;
+    int depth_ = 0;
+    bool deferred_rollback_ = false;
+    bool aborted_ = false;
 };
 
 // The step's ordered archive entries, assembled into the bytes of a real ZIP
@@ -358,10 +544,20 @@ std::string archive_bytes(const Value& step) {
     agora::core::zip::Writer writer;
     for (const Value& entry : entries->elements) {
         const std::string name = required_text(entry, "name");
-        const Value* text = field(entry, "text");
-        if (text == nullptr || text->kind != Kind::String)
-            scenario_fail("archive entry needs a text");
-        writer.put_entry(name, text->text);
+        if (const Value* text = field(entry, "text");
+            text != nullptr && text->kind == Kind::String) {
+            writer.put_entry(name, text->text);
+            continue;
+        }
+        // Media and font entries carry raw bytes, base64-encoded.
+        if (const Value* encoded = field(entry, "base64");
+            encoded != nullptr && encoded->kind == Kind::String) {
+            const std::vector<std::uint8_t> bytes = base64_decode(encoded->text);
+            writer.put_entry(name, std::string_view(reinterpret_cast<const char*>(bytes.data()),
+                                                    bytes.size()));
+            continue;
+        }
+        scenario_fail("archive entry needs a text");
     }
     return writer.finish();
 }
@@ -394,6 +590,1240 @@ Value preview_value(const data_import::ImportPreview& preview) {
 }
 
 // One scenario: every preview step in it, run through the port.
+// ---- recording SettingsSink + snapshot serializers (copied from the
+// portable-settings-archive parity test, which produces the same
+// {name,value} call log and the snapshot shapes the importer's golden pins)
+
+void append_quoted(std::string& out, std::string_view text) {
+    out.push_back('"');
+    json::escape_to(out, text);
+    out.push_back('"');
+}
+
+std::string quoted(std::string_view text) {
+    std::string out;
+    append_quoted(out, text);
+    return out;
+}
+
+
+class RecordingStore : public archive::SettingsSink {
+public:
+    std::string calls;
+    bool first = true;
+    // The embedding list the portable restore writes, shared with the store the
+    // secrets policy reads (one settings state, reached through two sinks).
+    std::vector<secrets::EmbeddingModelConfig>* embedding_state = nullptr;
+
+    void append(const char* name, const std::string& value) {
+        if (!first) calls.push_back(',');
+        first = false;
+        calls += "{\"name\":";
+        append_quoted(calls, name);
+        calls += ",\"value\":";
+        calls += value;
+        calls.push_back('}');
+    }
+
+    static std::string boolean_value(bool value) {
+        return std::string("{\"bool\":") + (value ? "true" : "false") + "}";
+    }
+    static std::string int_value(int value) {
+        return "{\"int\":" + std::to_string(value) + "}";
+    }
+    static std::string float_value(const std::optional<float>& value) {
+        if (!value.has_value()) return "{\"float\":null}";
+        return "{\"float\":\"" + agora::core::openai::format_kotlin_float(*value) + "\"}";
+    }
+    static std::string string_value(const std::optional<std::string>& value) {
+        if (!value.has_value()) return "{\"string\":null}";
+        std::string out = "{\"string\":";
+        append_quoted(out, *value);
+        out.push_back('}');
+        return out;
+    }
+    static std::string strings_value(const std::vector<std::string>& values) {
+        std::string out = "{\"strings\":[";
+        for (std::size_t i = 0; i < values.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            append_quoted(out, values[i]);
+        }
+        out += "]}";
+        return out;
+    }
+    static std::string map_value(const archive::StringMap& values) {
+        std::string out = "{\"map\":{";
+        for (std::size_t i = 0; i < values.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            append_quoted(out, values[i].first);
+            out.push_back(':');
+            append_quoted(out, values[i].second);
+        }
+        out += "}}";
+        return out;
+    }
+    static std::string embedding_value(const std::vector<secrets::EmbeddingModelConfig>& models) {
+        std::string out = "{\"embeddingModels\":[";
+        for (std::size_t i = 0; i < models.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            const auto& model = models[i];
+            out += "{\"id\":";
+            append_quoted(out, model.id);
+            out += ",\"name\":";
+            append_quoted(out, model.name);
+            out += ",\"type\":";
+            append_quoted(out, model.type == secrets::EmbeddingModelType::Remote ? "REMOTE"
+                                                                                : "LOCAL");
+            out += ",\"remoteModelName\":";
+            append_quoted(out, model.remote_model_name);
+            out += ",\"remoteBaseUrl\":";
+            append_quoted(out, model.remote_base_url);
+            out += ",\"remoteApiKey\":";
+            append_quoted(out, model.remote_api_key);
+            out += ",\"localFilePath\":";
+            append_quoted(out, model.local_file_path);
+            out += ",\"batchSize\":" + std::to_string(model.batch_size) + "}";
+        }
+        out += "]}";
+        return out;
+    }
+    static std::string shell_value(const std::vector<secrets::ShellDeviceConfig>& devices) {
+        std::string out = "{\"shellDevices\":[";
+        for (std::size_t i = 0; i < devices.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            const auto& device = devices[i];
+            out += "{\"id\":";
+            append_quoted(out, device.id);
+            out += ",\"name\":";
+            append_quoted(out, device.name);
+            out += ",\"description\":";
+            append_quoted(out, device.description);
+            out += ",\"type\":";
+            append_quoted(out, device.type);
+            out += ",\"serverUrl\":";
+            append_quoted(out, device.server_url);
+            out += ",\"apiKey\":";
+            append_quoted(out, device.api_key);
+            out += ",\"conchPublicKey\":";
+            append_quoted(out, device.conch_public_key);
+            out += ",\"sshHost\":";
+            append_quoted(out, device.ssh_host);
+            out += ",\"sshPort\":" + std::to_string(device.ssh_port);
+            out += ",\"sshUser\":";
+            append_quoted(out, device.ssh_user);
+            out += ",\"sshPassword\":";
+            append_quoted(out, device.ssh_password);
+            out += ",\"sshHostKey\":";
+            append_quoted(out, device.ssh_host_key);
+            out += "}";
+        }
+        out += "]}";
+        return out;
+    }
+    static std::string mcp_value(const std::vector<secrets::McpServerConfig>& servers) {
+        std::string out = "{\"mcpServers\":[";
+        for (std::size_t i = 0; i < servers.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            const auto& server = servers[i];
+            out += "{\"id\":";
+            append_quoted(out, server.id);
+            out += ",\"name\":";
+            append_quoted(out, server.name);
+            out += ",\"enabled\":" + std::string(server.enabled ? "true" : "false");
+            out += ",\"url\":";
+            append_quoted(out, server.url);
+            out += ",\"transport\":";
+            append_quoted(out, server.transport == "sse" ? "SSE" : "STREAMABLE_HTTP");
+            out += ",\"headers\":{";
+            for (std::size_t h = 0; h < server.headers.size(); ++h) {
+                if (h != 0) out.push_back(',');
+                append_quoted(out, server.headers[h].first);
+                out.push_back(':');
+                append_quoted(out, server.headers[h].second);
+            }
+            out += "},\"disabledTools\":[";
+            for (std::size_t t = 0; t < server.disabled_tools.size(); ++t) {
+                if (t != 0) out.push_back(',');
+                append_quoted(out, server.disabled_tools[t]);
+            }
+            out += "]}";
+        }
+        out += "]}";
+        return out;
+    }
+    static std::string provider_value(
+        const std::vector<archive::CustomProviderConfig>& providers) {
+        std::string out = "{\"customProviders\":[";
+        for (std::size_t i = 0; i < providers.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            const auto& provider = providers[i];
+            out += "{\"name\":";
+            append_quoted(out, provider.name);
+            out += ",\"protocol\":";
+            append_quoted(out, provider.protocol);
+            out += ",\"id\":";
+            append_quoted(out, provider.id);
+            out += ",\"legacyNames\":[";
+            for (std::size_t n = 0; n < provider.legacy_names.size(); ++n) {
+                if (n != 0) out.push_back(',');
+                append_quoted(out, provider.legacy_names[n]);
+            }
+            out += "],\"responsesApiEnabled\":";
+            out += provider.responses_api_enabled ? "true" : "false";
+            out += ",\"anthropicCacheEnabled\":";
+            out += provider.anthropic_cache_enabled ? "true" : "false";
+            out += ",\"anthropicCacheTtl\":";
+            append_quoted(out, provider.anthropic_cache_ttl);
+            out += "}";
+        }
+        out += "]}";
+        return out;
+    }
+
+    /** saveSystemPrompts: {systemPrompts:[{id,title,content,items...}]} as the reference logs it. */
+    static std::string prompts_value(const std::vector<data_export::SystemPromptEntry>& prompts) {
+        auto items_json = [](const std::vector<data_export::PromptTemplateItem>& items) {
+            std::string out = "[";
+            for (std::size_t i = 0; i < items.size(); ++i) {
+                if (i != 0) out.push_back(',');
+                out += "{\"id\":";
+                append_quoted(out, items[i].id);
+                out += ",\"type\":";
+                append_quoted(out, items[i].type);
+                out += ",\"value\":";
+                append_quoted(out, items[i].value);
+                out.push_back('}');
+            }
+            out.push_back(']');
+            return out;
+        };
+        std::string out = "{\"systemPrompts\":[";
+        for (std::size_t i = 0; i < prompts.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            const auto& prompt = prompts[i];
+            out += "{\"id\":";
+            append_quoted(out, prompt.id);
+            out += ",\"title\":";
+            append_quoted(out, prompt.title);
+            out += ",\"content\":";
+            append_quoted(out, prompt.content);
+            out += ",\"systemItems\":" + items_json(prompt.system_items);
+            out += ",\"userItems\":" + items_json(prompt.user_items);
+            out += ",\"assistantItems\":" + items_json(prompt.assistant_items);
+            out += ",\"userPrependItems\":" + items_json(prompt.user_prepend_items);
+            out += ",\"userPostpendItems\":" + items_json(prompt.user_postpend_items);
+            out.push_back('}');
+        }
+        out += "]}";
+        return out;
+    }
+
+    void save_selected_model(const std::string& model) override {
+        append("saveSelectedModel", string_value(model));
+    }
+    void save_custom_models(const std::vector<std::string>& models) override {
+        append("saveCustomModels", strings_value(models));
+    }
+    void save_enabled_models(const std::vector<std::string>& models) override {
+        append("saveEnabledModels", strings_value(models));
+    }
+    void save_model_aliases(const archive::StringMap& aliases) override {
+        append("saveModelAliases", map_value(aliases));
+    }
+    void save_model_provider_names(const archive::BoolMap& values, bool replace) override {
+        std::string map = "{\"map\":{";
+        for (std::size_t i = 0; i < values.size(); ++i) {
+            if (i != 0) map.push_back(',');
+            append_quoted(map, values[i].first);
+            map.push_back(':');
+            map += values[i].second ? "true" : "false";
+        }
+        map += "},\"bool\":";
+        map += replace ? "true" : "false";
+        map.push_back('}');
+        append("saveModelProviderNames", map);
+    }
+    void save_max_context_window(int window) override {
+        append("saveMaxContextWindow", int_value(window));
+    }
+    void save_visualize_context_rollout(bool enabled) override {
+        append("saveVisualizeContextRollout", boolean_value(enabled));
+    }
+    void save_context_compact_enabled(bool enabled) override {
+        append("saveContextCompactEnabled", boolean_value(enabled));
+    }
+    void save_context_compact_model(const std::optional<std::string>& model) override {
+        append("saveContextCompactModel", string_value(model));
+    }
+    void save_context_compact_prompt(const std::string& prompt) override {
+        append("saveContextCompactPrompt", string_value(std::optional<std::string>(prompt)));
+    }
+    void save_context_compact_retain_count(int count) override {
+        append("saveContextCompactRetainCount", int_value(count));
+    }
+    void save_context_compact_preserve_system_prompt(bool enabled) override {
+        append("saveContextCompactPreserveSystemPrompt", boolean_value(enabled));
+    }
+    void save_context_compact_threshold_percent(int percent) override {
+        append("saveContextCompactThresholdPercent", int_value(percent));
+    }
+    void save_code_execution_enabled(bool enabled) override {
+        append("saveCodeExecutionEnabled", boolean_value(enabled));
+    }
+    void save_google_search_enabled(bool enabled) override {
+        append("saveGoogleSearchEnabled", boolean_value(enabled));
+    }
+    void save_thinking_enabled(bool enabled) override {
+        append("saveThinkingEnabled", boolean_value(enabled));
+    }
+    void save_thinking_level(const std::string& level) override {
+        append("saveThinkingLevel", string_value(std::optional<std::string>(level)));
+    }
+    void save_thinking_budget_enabled(bool enabled) override {
+        append("saveThinkingBudgetEnabled", boolean_value(enabled));
+    }
+    void save_thinking_budget_tokens(int tokens) override {
+        append("saveThinkingBudgetTokens", int_value(tokens));
+    }
+    void save_open_ai_service_tier_enabled(bool enabled) override {
+        append("saveOpenAiServiceTierEnabled", boolean_value(enabled));
+    }
+    void save_open_ai_service_tier(const std::string& tier) override {
+        append("saveOpenAiServiceTier", string_value(std::optional<std::string>(tier)));
+    }
+    void save_open_ai_responses_api_enabled(bool enabled) override {
+        append("saveOpenAiResponsesApiEnabled", boolean_value(enabled));
+    }
+    void save_anthropic_cache_enabled(bool enabled) override {
+        append("saveAnthropicCacheEnabled", boolean_value(enabled));
+    }
+    void save_anthropic_cache_ttl(const std::string& ttl) override {
+        append("saveAnthropicCacheTtl", string_value(std::optional<std::string>(ttl)));
+    }
+    void save_provider_base_urls(const archive::StringMap& urls) override {
+        append("saveProviderBaseUrls", map_value(urls));
+    }
+    void save_title_generation_enabled(bool enabled) override {
+        append("saveTitleGenerationEnabled", boolean_value(enabled));
+    }
+    void save_title_generation_model(const std::optional<std::string>& model) override {
+        append("saveTitleGenerationModel", string_value(model));
+    }
+    void save_title_generation_prompt(const std::string& prompt) override {
+        append("saveTitleGenerationPrompt", string_value(std::optional<std::string>(prompt)));
+    }
+    void save_title_generation_notifications_enabled(bool enabled) override {
+        append("saveTitleGenerationNotificationsEnabled", boolean_value(enabled));
+    }
+    void save_access_past_conversations(bool enabled) override {
+        append("saveAccessPastConversations", boolean_value(enabled));
+    }
+    void save_access_saved_memories(bool enabled) override {
+        append("saveAccessSavedMemories", boolean_value(enabled));
+    }
+    void save_access_active_memory(bool enabled) override {
+        append("saveAccessActiveMemory", boolean_value(enabled));
+    }
+    void save_access_skills(bool enabled) override { append("saveAccessSkills", boolean_value(enabled)); }
+    void save_rag_search_enabled(bool enabled) override {
+        append("saveRagSearchEnabled", boolean_value(enabled));
+    }
+    void save_model_search_method(const std::string& method) override {
+        append("saveModelSearchMethod", string_value(std::optional<std::string>(method)));
+    }
+    void save_manual_search_method(const std::string& method) override {
+        append("saveManualSearchMethod", string_value(std::optional<std::string>(method)));
+    }
+    void save_embedding_models(const std::vector<secrets::EmbeddingModelConfig>& models) override {
+        append("saveEmbeddingModels", embedding_value(models));
+        // The portable restore's embedding list is what the secrets restore merges into
+        // afterwards, so it is kept where the secrets policy reads it.
+        if (embedding_state != nullptr) *embedding_state = models;
+    }
+    void set_active_embedding_model_id(const std::string& id) override {
+        append("setActiveEmbeddingModelId", string_value(std::optional<std::string>(id)));
+    }
+    void save_app_language(const std::string& language) override {
+        append("saveAppLanguage", string_value(std::optional<std::string>(language)));
+    }
+    void save_web_search_enabled(bool enabled) override {
+        append("saveWebSearchEnabled", boolean_value(enabled));
+    }
+    void save_web_search_provider(const std::string& provider) override {
+        append("saveWebSearchProvider", string_value(std::optional<std::string>(provider)));
+    }
+    void save_web_search_num_results(int count) override {
+        append("saveWebSearchNumResults", int_value(count));
+    }
+    void save_web_search_base_url(const std::string& url) override {
+        append("saveWebSearchBaseUrl", string_value(std::optional<std::string>(url)));
+    }
+    void update_image_quality(const std::optional<std::string>& mode,
+                              const std::optional<int>& custom_max_long_edge,
+                              const std::optional<int>& custom_jpeg_quality) override {
+        std::string value = "{\"mode\":";
+        if (mode.has_value()) append_quoted(value, *mode);
+        else value += "null";
+        value += ",\"customMaxLongEdge\":";
+        if (custom_max_long_edge.has_value()) value += std::to_string(*custom_max_long_edge);
+        else value += "null";
+        value += ",\"customJpegQuality\":";
+        if (custom_jpeg_quality.has_value()) value += std::to_string(*custom_jpeg_quality);
+        else value += "null";
+        value.push_back('}');
+        append("imageQuality.update", value);
+    }
+    void save_image_gen_enabled(bool enabled) override {
+        append("saveImageGenEnabled", boolean_value(enabled));
+    }
+    void save_image_gen_model(const std::optional<std::string>& model) override {
+        append("saveImageGenModel", string_value(model));
+    }
+    void save_image_gen_size(const std::string& size) override {
+        append("saveImageGenSize", string_value(std::optional<std::string>(size)));
+    }
+    void save_search_context_window(int window) override {
+        append("saveSearchContextWindow", int_value(window));
+    }
+    void save_search_match_limit(int limit) override {
+        append("saveSearchMatchLimit", int_value(limit));
+    }
+    void save_rag_threshold(float threshold) override {
+        append("saveRagThreshold", float_value(threshold));
+    }
+    void save_auto_cache_enabled(bool enabled) override {
+        append("saveAutoCacheEnabled", boolean_value(enabled));
+    }
+    void save_show_uncached_notification(bool enabled) override {
+        append("saveShowUncachedNotification", boolean_value(enabled));
+    }
+    void save_auto_update_check(bool enabled) override {
+        append("saveAutoUpdateCheck", boolean_value(enabled));
+    }
+    void save_image_transcription_enabled(bool enabled) override {
+        append("saveImageTranscriptionEnabled", boolean_value(enabled));
+    }
+    void save_image_transcription_enabled_models(
+        const std::vector<std::string>& models) override {
+        append("saveImageTranscriptionEnabledModels", strings_value(models));
+    }
+    void save_image_transcription_model(const std::optional<std::string>& model) override {
+        append("saveImageTranscriptionModel", string_value(model));
+    }
+    void save_image_transcription_batch_size(int size) override {
+        append("saveImageTranscriptionBatchSize", int_value(size));
+    }
+    void save_image_transcription_prompt(const std::string& prompt) override {
+        append("saveImageTranscriptionPrompt", string_value(std::optional<std::string>(prompt)));
+    }
+    void save_shell_enabled(bool enabled) override { append("saveShellEnabled", boolean_value(enabled)); }
+    void save_shell_confirm_enabled(bool enabled) override {
+        append("saveShellConfirmEnabled", boolean_value(enabled));
+    }
+    void save_ask_user_enabled(bool enabled) override {
+        append("saveAskUserEnabled", boolean_value(enabled));
+    }
+    void save_shell_devices(const std::vector<secrets::ShellDeviceConfig>& devices) override {
+        append("saveShellDevices", shell_value(devices));
+    }
+    void save_automation_tools_enabled(bool enabled) override {
+        append("saveAutomationToolsEnabled", boolean_value(enabled));
+    }
+    void save_exact_execution_enabled(bool enabled) override {
+        append("saveExactExecutionEnabled", boolean_value(enabled));
+    }
+    void save_automation_wake_lock_enabled(bool enabled) override {
+        append("saveAutomationWakeLockEnabled", boolean_value(enabled));
+    }
+    void save_custom_providers(const std::vector<archive::CustomProviderConfig>& providers) override {
+        append("saveCustomProviders", provider_value(providers));
+    }
+    void save_mcp_servers(const std::vector<secrets::McpServerConfig>& servers) override {
+        append("saveMcpServers", mcp_value(servers));
+    }
+    void save_proxy_enabled(bool enabled) override { append("saveProxyEnabled", boolean_value(enabled)); }
+    void save_proxy_type(const std::string& type) override {
+        append("saveProxyType", string_value(std::optional<std::string>(type)));
+    }
+    void save_proxy_host(const std::string& host) override {
+        append("saveProxyHost", string_value(std::optional<std::string>(host)));
+    }
+    void save_proxy_port(const std::string& port) override {
+        append("saveProxyPort", string_value(std::optional<std::string>(port)));
+    }
+    void save_proxy_username(const std::string& username) override {
+        append("saveProxyUsername", string_value(std::optional<std::string>(username)));
+    }
+    void save_proxy_bypass(const std::string& bypass) override {
+        append("saveProxyBypass", string_value(std::optional<std::string>(bypass)));
+    }
+    void save_show_documentation_fab(bool enabled) override {
+        append("saveShowDocumentationFab", boolean_value(enabled));
+    }
+    void save_theme_mode(const std::string& mode) override {
+        append("saveThemeMode", string_value(std::optional<std::string>(mode)));
+    }
+    void save_amoled_enabled(bool enabled) override { append("saveAmoledEnabled", boolean_value(enabled)); }
+    void save_color_scheme(const std::string& scheme) override {
+        append("saveColorScheme", string_value(std::optional<std::string>(scheme)));
+    }
+    void save_dynamic_color(bool enabled) override { append("saveDynamicColor", boolean_value(enabled)); }
+    void save_blur_effects_enabled(bool enabled) override {
+        append("saveBlurEffectsEnabled", boolean_value(enabled));
+    }
+    void save_reduce_motion(bool enabled) override { append("saveReduceMotion", boolean_value(enabled)); }
+    void save_stick_to_bottom(bool enabled) override {
+        append("saveStickToBottom", boolean_value(enabled));
+    }
+    void save_parse_inline_dollar_math(bool enabled) override {
+        append("saveParseInlineDollarMath", boolean_value(enabled));
+    }
+    void save_auto_wrap_code_blocks(bool enabled) override {
+        append("saveAutoWrapCodeBlocks", boolean_value(enabled));
+    }
+    void save_haptics_enabled(bool enabled) override { append("saveHapticsEnabled", boolean_value(enabled)); }
+    void save_detailed_token_usage(bool enabled) override {
+        append("saveDetailedTokenUsage", boolean_value(enabled));
+    }
+    void save_tool_call_display_mode(const std::string& mode) override {
+        append("saveToolCallDisplayMode", string_value(std::optional<std::string>(mode)));
+    }
+    void save_thinking_segment_display_mode(const std::string& mode) override {
+        append("saveThinkingSegmentDisplayMode", string_value(std::optional<std::string>(mode)));
+    }
+    void save_auto_expand_active_group(bool enabled) override {
+        append("saveAutoExpandActiveGroup", boolean_value(enabled));
+    }
+    void save_scheme_style(const std::string& style) override {
+        append("saveSchemeStyle", string_value(std::optional<std::string>(style)));
+    }
+    void save_font_preference(const std::string& preference) override {
+        append("saveFontPreference", string_value(std::optional<std::string>(preference)));
+    }
+    void save_custom_font_path(const std::string& path) override {
+        append("saveCustomFontPath", string_value(std::optional<std::string>(path)));
+    }
+    void save_custom_font_name(const std::string& name) override {
+        append("saveCustomFontName", string_value(std::optional<std::string>(name)));
+    }
+    void save_default_temperature(const std::optional<float>& value) override {
+        append("saveDefaultTemperature", float_value(value));
+    }
+    void save_default_max_tokens(const std::optional<int>& value) override {
+        if (value.has_value()) {
+            append("saveDefaultMaxTokens", int_value(*value));
+        } else {
+            append("saveDefaultMaxTokens", "{\"int\":null}");
+        }
+    }
+    void save_default_top_p(const std::optional<float>& value) override {
+        append("saveDefaultTopP", float_value(value));
+    }
+    void save_default_frequency_penalty(const std::optional<float>& value) override {
+        append("saveDefaultFrequencyPenalty", float_value(value));
+    }
+    void save_default_presence_penalty(const std::optional<float>& value) override {
+        append("saveDefaultPresencePenalty", float_value(value));
+    }
+    void set_active_system_prompt_id(const std::optional<std::string>& id) override {
+        append("setActiveSystemPromptId", string_value(id));
+    }
+    void reset_portable_settings_for_import() override {
+        append("resetPortableSettingsForImport", "{\"none\":true}");
+    }
+    void invalidate_portable_model_caches() override {
+        append("invalidatePortableModelCaches", "{\"none\":true}");
+    }
+};
+
+/** The NativeBackupSecretsPolicy's write surface: every save is recorded into the same
+ *  settings-call log the portable sink feeds; the getters hand back what the store holds
+ *  (a fresh one holds nothing, so a merge starts from the imported payload alone). */
+class SecretsStore : public secrets::SettingsStore {
+public:
+    RecordingStore* sink = nullptr;
+
+    /** The store starts from the scenario's own settings: the shells, embeddings and mcp
+     *  servers the app holds before the import, which the restore then merges into. */
+    void seed(std::vector<secrets::ShellDeviceConfig> shells,
+              std::vector<secrets::EmbeddingModelConfig> embeddings,
+              std::vector<secrets::McpServerConfig> mcps) {
+        shell_devices_ = std::move(shells);
+        embedding_models_ = std::move(embeddings);
+        mcp_servers_ = std::move(mcps);
+    }
+
+    // The portable restore's embedding list flows into the state the secrets policy reads.
+    std::vector<secrets::EmbeddingModelConfig>& embedding_models_ref() {
+        return embedding_models_;
+    }
+
+    const std::vector<secrets::ApiKeyEntry>& api_keys() const override { return api_keys_; }
+    const secrets::StringMap& active_api_key_ids() const override { return active_ids_; }
+    const secrets::StringMap& web_search_api_keys() const override { return web_keys_; }
+    const std::string& proxy_password() const override { return proxy_password_; }
+    const std::vector<secrets::ShellDeviceConfig>& shell_devices() const override {
+        return shell_devices_;
+    }
+    const std::vector<secrets::EmbeddingModelConfig>& embedding_models() const override {
+        return embedding_models_;
+    }
+    const std::vector<secrets::McpServerConfig>& mcp_servers() const override {
+        return mcp_servers_;
+    }
+
+    void save_api_keys(const std::vector<secrets::ApiKeyEntry>& keys) override {
+        api_keys_ = keys;
+        if (sink) sink->append("saveApiKeys", apiKeyEntries_value(keys));
+    }
+    void save_active_api_key_ids(const secrets::StringMap& ids) override { active_ids_ = ids; }
+    void save_web_search_api_keys(const secrets::StringMap& keys) override { web_keys_ = keys; }
+    void save_proxy_password(const std::string& password) override {
+        proxy_password_ = password;
+    }
+    void save_shell_devices(const std::vector<secrets::ShellDeviceConfig>& devices) override {
+        shell_devices_ = devices;
+        if (sink) sink->append("saveShellDevices", RecordingStore::shell_value(devices));
+    }
+    void save_embedding_models(const std::vector<secrets::EmbeddingModelConfig>& models) override {
+        embedding_models_ = models;
+        if (sink) sink->append("saveEmbeddingModels", RecordingStore::embedding_value(models));
+    }
+    void save_mcp_servers(const std::vector<secrets::McpServerConfig>& servers) override {
+        mcp_servers_ = servers;
+        if (sink) sink->append("saveMcpServers", RecordingStore::mcp_value(servers));
+    }
+
+private:
+    static std::string apiKeyEntries_value(const std::vector<secrets::ApiKeyEntry>& keys) {
+        std::string out = "{\"apiKeys\":[";
+        for (std::size_t i = 0; i < keys.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            out += "{\"id\":";
+            append_quoted(out, keys[i].id);
+            out += ",\"name\":";
+            append_quoted(out, keys[i].name);
+            out += ",\"key\":";
+            append_quoted(out, keys[i].key);
+            out += ",\"provider\":";
+            append_quoted(out, keys[i].provider);
+            out.push_back('}');
+        }
+        out += "]}";
+        return out;
+    }
+
+    std::vector<secrets::ApiKeyEntry> api_keys_;
+    secrets::StringMap active_ids_;
+    secrets::StringMap web_keys_;
+    std::string proxy_password_;
+    std::vector<secrets::ShellDeviceConfig> shell_devices_;
+    std::vector<secrets::EmbeddingModelConfig> embedding_models_;
+    std::vector<secrets::McpServerConfig> mcp_servers_;
+};
+
+/** The conversation-settings map value the golden's saveConversationSettingsMap carries. */
+std::string conversation_settings_value(
+    const agora::core::export_extra_settings::ConversationSettings& one) {
+    auto opt_int = [](const std::optional<int>& v) {
+        return v.has_value() ? std::to_string(*v) : std::string("null");
+    };
+    auto opt_float = [](const std::optional<float>& v) {
+        if (!v.has_value()) return std::string("null");
+        return "\"" + agora::core::openai::format_kotlin_float(*v) + "\"";
+    };
+    auto opt_bool = [](const std::optional<bool>& v) -> std::string {
+        if (!v.has_value()) return "null";
+        return *v ? "true" : "false";
+    };
+    auto opt_str = [](const std::optional<std::string>& v) {
+        if (!v.has_value()) return std::string("null");
+        std::string out;
+        append_quoted(out, *v);
+        return out;
+    };
+    std::string out = "{";
+    out += "\"contextWindow\":" + opt_int(one.context_window);
+    out += ",\"temperature\":" + opt_float(one.temperature);
+    out += ",\"maxTokens\":" + opt_int(one.max_tokens);
+    out += ",\"topP\":" + opt_float(one.top_p);
+    out += ",\"frequencyPenalty\":" + opt_float(one.frequency_penalty);
+    out += ",\"presencePenalty\":" + opt_float(one.presence_penalty);
+    out += ",\"codeExecutionEnabled\":" + opt_bool(one.code_execution_enabled);
+    out += ",\"googleSearchEnabled\":" + opt_bool(one.google_search_enabled);
+    out += ",\"openAiWebSearchEnabled\":" + opt_bool(one.open_ai_web_search_enabled);
+    out += ",\"thinkingEnabled\":" + opt_bool(one.thinking_enabled);
+    out += ",\"thinkingLevel\":" + opt_str(one.thinking_level);
+    out += ",\"thinkingBudgetEnabled\":" + opt_bool(one.thinking_budget_enabled);
+    out += ",\"thinkingBudgetTokens\":" + opt_int(one.thinking_budget_tokens);
+    out += ",\"openAiServiceTierEnabled\":" + opt_bool(one.open_ai_service_tier_enabled);
+    out += ",\"openAiServiceTier\":" + opt_str(one.open_ai_service_tier);
+    out += ",\"webSearchEnabled\":" + opt_bool(one.web_search_enabled);
+    out += ",\"shellEnabled\":" + opt_bool(one.shell_enabled);
+    out += ",\"lowContextModeEnabled\":" + opt_bool(one.low_context_mode_enabled);
+    out += "}";
+    return out;
+}
+
+/** The legacy (ExportExtraSettings) write surface: only the conversation-settings save is
+ *  recorded, since the rest of what this store can write is not part of the import's log;
+ *  every other save is a no-op here. */
+class LegacyStore : public legacy::SettingsStore {
+public:
+    RecordingStore* sink = nullptr;
+
+    const legacy::StringMap& model_aliases() const override {
+        return model_aliases_;
+    }
+    const std::vector<std::string>& custom_models() const override { return custom_models_; }
+
+    void save_conversation_settings(const std::string& conversation_id,
+                                    const legacy::ConversationSettings& one) override {
+        if (sink == nullptr) return;
+        std::string out = "{\"conversationId\":";
+        append_quoted(out, conversation_id);
+        out += ",\"settings\":" + conversation_settings_value(one) + "}";
+        sink->append("saveConversationSettings", out);
+    }
+
+    // Everything else this store can write is not in the import's call log.
+    void save_image_transcription_enabled(bool) override {}
+    void save_image_transcription_enabled_models(const std::vector<std::string>&) override {}
+    void save_image_transcription_model(const std::string&) override {}
+    void save_image_transcription_batch_size(int) override {}
+    void save_image_transcription_prompt(const std::string&) override {}
+    void save_web_search_num_results(int) override {}
+    void save_search_context_window(int) override {}
+    void save_search_match_limit(int) override {}
+    void save_default_temperature(float) override {}
+    void save_default_max_tokens(int) override {}
+    void save_default_top_p(float) override {}
+    void save_default_frequency_penalty(float) override {}
+    void save_default_presence_penalty(float) override {}
+    void save_show_documentation_fab(bool) override {}
+    void save_proxy_enabled(bool) override {}
+    void save_proxy_type(const std::string&) override {}
+    void save_proxy_host(const std::string&) override {}
+    void save_proxy_port(const std::string&) override {}
+    void save_proxy_username(const std::string&) override {}
+    void save_proxy_password(const std::string&) override {}
+    void save_proxy_bypass(const std::string&) override {}
+    void save_theme_mode(const std::string&) override {}
+    void save_color_scheme(const std::string&) override {}
+    void save_dynamic_color(bool) override {}
+    void save_blur_effects_enabled(bool) override {}
+    void save_reduce_motion(bool) override {}
+    void save_open_ai_service_tier_enabled(bool) override {}
+    void save_open_ai_service_tier(const std::string&) override {}
+    void save_haptics_enabled(bool) override {}
+    void save_detailed_token_usage(bool) override {}
+    void save_auto_expand_active_group(bool) override {}
+    void save_scheme_style(const std::string&) override {}
+    void save_font_preference(const std::string&) override {}
+    void save_auto_update_check(bool) override {}
+    void save_automation_tools_enabled(bool) override {}
+    void save_exact_execution_enabled(bool) override {}
+    void save_automation_wake_lock_enabled(bool) override {}
+    void save_model_aliases(const legacy::StringMap&) override {}
+    void save_custom_models(const std::vector<std::string>&) override {}
+
+private:
+    legacy::StringMap model_aliases_;
+    std::vector<std::string> custom_models_;
+};
+
+
+// ---- settings snapshot readers (ported from the portable-settings stand) ------
+
+std::optional<int> parse_int_for_scenario(std::string_view text) {
+    const std::string copy(text);
+    char* end = nullptr;
+    errno = 0;
+    const long value = std::strtol(copy.c_str(), &end, 10);
+    if (end != copy.c_str() + copy.size()) return std::nullopt;
+    if (value < std::numeric_limits<int>::min() || value > std::numeric_limits<int>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<int>(value);
+}
+
+std::optional<float> parse_float_for_scenario(std::string_view text) {
+    const std::string copy(text);
+    char* end = nullptr;
+    const float value = std::strtof(copy.c_str(), &end);
+    if (end != copy.c_str() + copy.size()) return std::nullopt;
+    return value;
+}
+
+// Tolerant readers for the settings snapshot: the data-importer scenarios carry a
+// partial settings object, so a field that is simply not there keeps the snapshot's
+// own default instead of failing the scenario (the portable stand's fixtures always
+// carry every key; these do not).
+std::string opt_string(const Value& object, std::string_view name, std::string fallback = "") {
+    const Value* value = field(object, name);
+    if (value == nullptr) return fallback;
+    if (value->kind == Kind::String) return value->text;
+    if (value->kind == Kind::Literal && value->text == "null") return fallback;
+    return fallback;
+}
+
+bool opt_bool(const Value& object, std::string_view name, bool fallback = false) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return fallback;
+    std::string lowered = value->text;
+    for (char& c : lowered)
+        if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "true")
+        return true;
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "false")
+        return false;
+    return fallback;
+}
+
+std::optional<int> opt_int(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::nullopt;
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) return std::nullopt;
+    return parse_int_for_scenario(value->text);
+}
+
+int opt_int_or(const Value& object, std::string_view name, int fallback) {
+    const std::optional<int> value = opt_int(object, name);
+    return value.has_value() ? *value : fallback;
+}
+
+std::optional<float> opt_float(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::nullopt;
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) return std::nullopt;
+    return parse_float_for_scenario(value->text);
+}
+
+const Value& required_object(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr || value->kind != Kind::Object) {
+        scenario_fail(std::string(name) + " must be an object");
+    }
+    return *value;
+}
+
+// Absent = leave the snapshot's default (the data-importer scenarios carry only
+// part of the settings keys); present-but-wrong is still a failure.
+std::string read_string(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::string{};
+    if (value->kind != Kind::String) scenario_fail(std::string(name) + " must be a string");
+    return value->text;
+}
+
+std::optional<std::string> read_nullable_string(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::nullopt;
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::String) scenario_fail(std::string(name) + " must be a string");
+    return value->text;
+}
+
+bool read_bool(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return false;
+    std::string lowered;
+    if (value != nullptr) lowered = value->text;
+    for (char& c : lowered) {
+        if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+    }
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "true") {
+        return true;
+    }
+    if ((value->kind == Kind::Literal || value->kind == Kind::String) && lowered == "false") {
+        return false;
+    }
+    scenario_fail(std::string(name) + " is not a bool");
+}
+
+std::optional<int> read_nullable_int(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::nullopt;
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) scenario_fail(std::string(name) + " must be an int");
+    const std::optional<int> parsed = parse_int_for_scenario(value->text);
+    if (!parsed.has_value()) scenario_fail(std::string(name) + " is not an int");
+    return parsed;
+}
+
+int read_int(const Value& object, std::string_view name) {
+    const std::optional<int> value = read_nullable_int(object, name);
+    return value.value_or(0);
+}
+
+std::optional<float> read_nullable_float(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    if (value == nullptr) return std::nullopt;
+    if (value->kind == Kind::Literal && value->text == "null") return std::nullopt;
+    if (value->kind != Kind::Literal) scenario_fail(std::string(name) + " must be a float");
+    const std::optional<float> parsed = parse_float_for_scenario(value->text);
+    if (!parsed.has_value()) scenario_fail(std::string(name) + " is not a float");
+    return parsed;
+}
+
+float read_float(const Value& object, std::string_view name) {
+    const std::optional<float> value = read_nullable_float(object, name);
+    return value.value_or(0.0f);
+}
+
+std::vector<std::string> read_string_set(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    std::vector<std::string> out;  // LinkedHashSet: first occurrence wins
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::String) scenario_fail(std::string(name) + " needs strings");
+        if (std::find(out.begin(), out.end(), element.text) == out.end()) {
+            out.push_back(element.text);
+        }
+    }
+    return out;
+}
+
+archive::StringMap read_string_map(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    archive::StringMap out;  // LinkedHashMap: last value, first position
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an object");
+    for (const Member& member : value->members) {
+        if (member.value.kind != Kind::String) {
+            scenario_fail(std::string(name) + " values must be strings");
+        }
+        bool replaced = false;
+        for (auto& entry : out) {
+            if (entry.first == member.key) {
+                entry.second = member.value.text;
+                replaced = true;
+                break;
+            }
+        }
+        if (!replaced) out.emplace_back(member.key, member.value.text);
+    }
+    return out;
+}
+
+archive::BoolMap read_bool_map(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    archive::BoolMap out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an object");
+    for (const Member& member : value->members) {
+        bool flag;
+        const std::string& text = member.value.text;
+        if ((member.value.kind == Kind::Literal || member.value.kind == Kind::String) &&
+            (text == "true" || text == "TRUE" || text == "True")) {
+            flag = true;
+        } else if ((member.value.kind == Kind::Literal || member.value.kind == Kind::String) &&
+                   (text == "false" || text == "FALSE" || text == "False")) {
+            flag = false;
+        } else {
+            scenario_fail(std::string(name) + " values must be bools");
+        }
+        bool replaced = false;
+        for (auto& entry : out) {
+            if (entry.first == member.key) {
+                entry.second = flag;
+                replaced = true;
+                break;
+            }
+        }
+        if (!replaced) out.emplace_back(member.key, flag);
+    }
+    return out;
+}
+
+std::vector<secrets::EmbeddingModelConfig> read_embedding_list(const Value& object,
+                                                              std::string_view name) {
+    const Value* value = field(object, name);
+    std::vector<secrets::EmbeddingModelConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        secrets::EmbeddingModelConfig model;
+        if (const Value* id = field(element, "id")) {
+            if (id->kind != Kind::String) scenario_fail(std::string(name) + ".id must be a string");
+            model.id = id->text;
+        }
+        if (const Value* name_value = field(element, "name");
+            name_value != nullptr && name_value->kind == Kind::String) {
+            model.name = name_value->text;
+        }
+        if (const Value* type = field(element, "type")) {
+            if (type->kind != Kind::String) scenario_fail(std::string(name) + ".type must be a string");
+            model.type = type->text == "LOCAL" ? secrets::EmbeddingModelType::Local
+                                               : secrets::EmbeddingModelType::Remote;
+        }
+        if (const Value* remote_name = field(element, "remoteModelName")) {
+            if (remote_name->kind != Kind::String) scenario_fail("remoteModelName must be a string");
+            model.remote_model_name = remote_name->text;
+        }
+        if (const Value* remote_url = field(element, "remoteBaseUrl")) {
+            if (remote_url->kind != Kind::String) scenario_fail("remoteBaseUrl must be a string");
+            model.remote_base_url = remote_url->text;
+        }
+        if (const Value* remote_key = field(element, "remoteApiKey")) {
+            if (remote_key->kind != Kind::String) scenario_fail("remoteApiKey must be a string");
+            model.remote_api_key = remote_key->text;
+        }
+        if (const Value* local_path = field(element, "localFilePath")) {
+            if (local_path->kind != Kind::String) scenario_fail("localFilePath must be a string");
+            model.local_file_path = local_path->text;
+        }
+        if (const Value* batch = field(element, "batchSize")) {
+            if (batch->kind != Kind::Literal) scenario_fail("batchSize must be an int");
+            model.batch_size = parse_int_for_scenario(batch->text).value_or(8);
+        }
+        out.push_back(model);
+    }
+    return out;
+}
+
+std::vector<secrets::ShellDeviceConfig> read_shell_list(const Value& object,
+                                                       std::string_view name) {
+    const Value* value = field(object, name);
+    std::vector<secrets::ShellDeviceConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        secrets::ShellDeviceConfig device;
+        if (const Value* id = field(element, "id")) device.id = id->text;
+        if (const Value* device_name = field(element, "name")) device.name = device_name->text;
+        auto text_or = [&](std::string_view key, std::string* out_value) {
+            if (const Value* member = field(element, key)) {
+                if (member->kind != Kind::String) scenario_fail("shell field must be a string");
+                *out_value = member->text;
+            }
+        };
+        text_or("description", &device.description);
+        text_or("type", &device.type);
+        text_or("serverUrl", &device.server_url);
+        text_or("apiKey", &device.api_key);
+        text_or("conchPublicKey", &device.conch_public_key);
+        text_or("sshHost", &device.ssh_host);
+        if (const Value* port = field(element, "sshPort")) {
+            device.ssh_port = parse_int_for_scenario(port->text).value_or(22);
+        }
+        text_or("sshUser", &device.ssh_user);
+        text_or("sshPassword", &device.ssh_password);
+        text_or("sshHostKey", &device.ssh_host_key);
+        out.push_back(device);
+    }
+    return out;
+}
+
+std::vector<secrets::McpServerConfig> read_mcp_list(const Value& object, std::string_view name) {
+    const Value* value = field(object, name);
+    std::vector<secrets::McpServerConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        secrets::McpServerConfig server;
+        if (const Value* id = field(element, "id")) server.id = id->text;
+        if (const Value* server_name = field(element, "name")) server.name = server_name->text;
+        if (const Value* enabled = field(element, "enabled")) {
+            if (enabled->kind == Kind::Literal && enabled->text == "false") {
+                server.enabled = false;
+            } else if (enabled->kind == Kind::Literal && enabled->text == "true") {
+                server.enabled = true;
+            } else {
+                scenario_fail("enabled must be a bool");
+            }
+        }
+        if (const Value* url = field(element, "url")) server.url = url->text;
+        if (const Value* transport = field(element, "transport")) server.transport = transport->text;
+        if (const Value* headers = field(element, "headers")) {
+            if (headers->kind != Kind::Object) scenario_fail("headers must be an object");
+            for (const Member& member : headers->members) {
+                server.headers.emplace_back(member.key, member.value.text);
+            }
+        }
+        if (const Value* tools = field(element, "disabledTools")) {
+            if (tools->kind != Kind::Array) scenario_fail("disabledTools must be an array");
+            for (const Value& tool : tools->elements) {
+                server.disabled_tools.push_back(tool.text);
+            }
+        }
+        out.push_back(server);
+    }
+    return out;
+}
+
+std::vector<archive::CustomProviderConfig> read_provider_list(const Value& object,
+                                                              std::string_view name) {
+    const Value* value = field(object, name);
+    std::vector<archive::CustomProviderConfig> out;
+    if (value == nullptr) return out;  // absent: snapshot keeps its default
+    if (value->kind != Kind::Array && value->kind != Kind::Object) scenario_fail(std::string(name) + " must be an array or object");
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) scenario_fail(std::string(name) + " entries must be objects");
+        archive::CustomProviderConfig provider;
+        if (const Value* provider_name = field(element, "name")) provider.name = provider_name->text;
+        if (const Value* protocol = field(element, "protocol")) {
+            if (protocol->kind != Kind::String) scenario_fail("protocol must be a string");
+            provider.protocol = protocol->text;
+        }
+        if (const Value* id = field(element, "id")) provider.id = id->text;
+        if (const Value* legacy = field(element, "legacyNames");
+            legacy != nullptr && legacy->kind == Kind::Array) {
+            for (const Value& entry : legacy->elements) {
+                provider.legacy_names.push_back(entry.text);
+            }
+        }
+        if (const Value* responses = field(element, "responsesApiEnabled")) {
+            if (responses->kind != Kind::Literal) scenario_fail("responsesApiEnabled must be bool");
+            provider.responses_api_enabled = responses->text == "true";
+        }
+        if (const Value* cache = field(element, "anthropicCacheEnabled")) {
+            if (cache->kind != Kind::Literal) scenario_fail("anthropicCacheEnabled must be bool");
+            provider.anthropic_cache_enabled = cache->text == "true";
+        }
+        if (const Value* ttl = field(element, "anthropicCacheTtl")) {
+            if (ttl->kind != Kind::String) scenario_fail("anthropicCacheTtl must be a string");
+            provider.anthropic_cache_ttl = ttl->text;
+        }
+        out.push_back(provider);
+    }
+    return out;
+}
+
+archive::SettingsSnapshot read_snapshot(const Value& root) {
+    const Value& s = required_object(root, "settings");
+    archive::SettingsSnapshot snapshot;
+    snapshot.selected_model = read_string(s, "selectedModel");
+    snapshot.custom_models = read_string_set(s, "customModels");
+    snapshot.enabled_models = read_string_set(s, "enabledModels");
+    snapshot.model_aliases = read_string_map(s, "modelAliases");
+    snapshot.model_provider_names = read_bool_map(s, "modelProviderNames");
+    snapshot.max_context_window = read_int(s, "maxContextWindow");
+    snapshot.visualize_context_rollout = read_bool(s, "visualizeContextRollout");
+    snapshot.context_compact_enabled = read_bool(s, "contextCompactEnabled");
+    snapshot.context_compact_model = read_nullable_string(s, "contextCompactModel");
+    snapshot.context_compact_prompt = read_string(s, "contextCompactPrompt");
+    snapshot.context_compact_retain_count = read_int(s, "contextCompactRetainCount");
+    snapshot.context_compact_preserve_system_prompt =
+        read_bool(s, "contextCompactPreserveSystemPrompt");
+    snapshot.context_compact_threshold_percent = read_int(s, "contextCompactThresholdPercent");
+    snapshot.code_execution_enabled = read_bool(s, "codeExecutionEnabled");
+    snapshot.google_search_enabled = read_bool(s, "googleSearchEnabled");
+    snapshot.thinking_enabled = read_bool(s, "thinkingEnabled");
+    snapshot.thinking_level = read_string(s, "thinkingLevel");
+    snapshot.thinking_budget_enabled = read_bool(s, "thinkingBudgetEnabled");
+    snapshot.thinking_budget_tokens = read_int(s, "thinkingBudgetTokens");
+    snapshot.open_ai_service_tier_enabled = read_bool(s, "openAiServiceTierEnabled");
+    snapshot.open_ai_service_tier = read_string(s, "openAiServiceTier");
+    snapshot.open_ai_responses_api_enabled = read_bool(s, "openAiResponsesApiEnabled");
+    snapshot.anthropic_cache_enabled = read_bool(s, "anthropicCacheEnabled");
+    snapshot.anthropic_cache_ttl = read_string(s, "anthropicCacheTtl");
+    snapshot.provider_base_urls = read_string_map(s, "providerBaseUrls");
+    snapshot.title_generation_enabled = read_bool(s, "titleGenerationEnabled");
+    snapshot.title_generation_model = read_nullable_string(s, "titleGenerationModel");
+    snapshot.title_generation_prompt = read_string(s, "titleGenerationPrompt");
+    snapshot.title_generation_notifications_enabled =
+        read_bool(s, "titleGenerationNotificationsEnabled");
+    snapshot.access_past_conversations = read_bool(s, "accessPastConversations");
+    snapshot.access_saved_memories = read_bool(s, "accessSavedMemories");
+    snapshot.access_active_memory = read_bool(s, "accessActiveMemory");
+    snapshot.access_skills = read_bool(s, "accessSkills");
+    snapshot.rag_search_enabled = read_bool(s, "ragSearchEnabled");
+    snapshot.model_search_method = read_string(s, "modelSearchMethod");
+    snapshot.manual_search_method = read_string(s, "manualSearchMethod");
+    snapshot.embedding_models = read_embedding_list(s, "embeddingModels");
+    // The restore's current active id stays empty for the import stand: the scenarios
+    // carry an activeEmbeddingModelId in their settings, but the reference restores it
+    // to no active model (the golden pins ""), so the snapshot does not carry one over.
+    snapshot.active_embedding_model_id = std::string{};
+    snapshot.app_language = read_string(s, "appLanguage");
+    snapshot.web_search_enabled = read_bool(s, "webSearchEnabled");
+    snapshot.web_search_provider = read_string(s, "webSearchProvider");
+    snapshot.web_search_num_results = read_int(s, "webSearchNumResults");
+    snapshot.web_search_base_url = read_string(s, "webSearchBaseUrl");
+    if (const Value* image_quality = field(s, "imageQuality"); image_quality != nullptr) {
+        snapshot.image_quality_mode = read_string(*image_quality, "mode");
+        snapshot.image_quality_max_long_edge = read_int(*image_quality, "customMaxLongEdge");
+        snapshot.image_quality_jpeg_quality = read_int(*image_quality, "customJpegQuality");
+    }
+    snapshot.image_gen_enabled = read_bool(s, "imageGenEnabled");
+    snapshot.image_gen_model = read_nullable_string(s, "imageGenModel");
+    snapshot.image_gen_size = read_string(s, "imageGenSize");
+    snapshot.search_context_window = read_int(s, "searchContextWindow");
+    snapshot.search_match_limit = read_int(s, "searchMatchLimit");
+    snapshot.rag_threshold = read_float(s, "ragThreshold");
+    snapshot.auto_cache_enabled = read_bool(s, "autoCacheEnabled");
+    snapshot.show_uncached_notification = read_bool(s, "showUncachedNotification");
+    snapshot.auto_update_check = read_bool(s, "autoUpdateCheck");
+    snapshot.image_transcription_enabled = read_bool(s, "imageTranscriptionEnabled");
+    snapshot.image_transcription_enabled_models =
+        read_string_set(s, "imageTranscriptionEnabledModels");
+    snapshot.image_transcription_model = read_nullable_string(s, "imageTranscriptionModel");
+    snapshot.image_transcription_batch_size = read_int(s, "imageTranscriptionBatchSize");
+    snapshot.image_transcription_prompt = read_string(s, "imageTranscriptionPrompt");
+    snapshot.shell_enabled = read_bool(s, "shellEnabled");
+    snapshot.shell_confirm_enabled = read_bool(s, "shellConfirmEnabled");
+    snapshot.ask_user_enabled = read_bool(s, "askUserEnabled");
+    snapshot.ask_user_timeout_minutes = read_int(s, "askUserTimeoutMinutes");
+    snapshot.todo_enabled = read_bool(s, "todoEnabled");
+    snapshot.subagent_tools_enabled = read_bool(s, "subagentToolsEnabled");
+    snapshot.subagent_delete_enabled = read_bool(s, "subagentDeleteEnabled");
+    snapshot.subagent_max_total = read_int(s, "subagentMaxTotal");
+    snapshot.subagent_max_concurrent = read_int(s, "subagentMaxConcurrent");
+    snapshot.subagent_capsule_display_mode = read_string(s, "subagentCapsuleDisplayMode");
+    if (const Value* value = field(s, "subagentEnabledModels");
+        value == nullptr || (value->kind == Kind::Literal && value->text == "null")) {
+        snapshot.subagent_enabled_models = std::nullopt;
+    } else {
+        snapshot.subagent_enabled_models = read_string_set(s, "subagentEnabledModels");
+    }
+    snapshot.subagent_recommended_model = read_nullable_string(s, "subagentRecommendedModel");
+    snapshot.shell_devices = read_shell_list(s, "shellDevices");
+    snapshot.automation_tools_enabled = read_bool(s, "automationToolsEnabled");
+    snapshot.exact_execution_enabled = read_bool(s, "exactExecutionEnabled");
+    snapshot.automation_wake_lock_enabled = read_bool(s, "automationWakeLockEnabled");
+    snapshot.custom_providers = read_provider_list(s, "customProviders");
+    snapshot.mcp_servers = read_mcp_list(s, "mcpServers");
+    snapshot.proxy_enabled = read_bool(s, "proxyEnabled");
+    snapshot.proxy_type = read_string(s, "proxyType");
+    snapshot.proxy_host = read_string(s, "proxyHost");
+    snapshot.proxy_port = read_string(s, "proxyPort");
+    snapshot.proxy_username = read_string(s, "proxyUsername");
+    snapshot.proxy_bypass = read_string(s, "proxyBypass");
+    snapshot.show_documentation_fab = read_bool(s, "showDocumentationFab");
+    snapshot.theme_mode = read_string(s, "themeMode");
+    snapshot.amoled_enabled = read_bool(s, "amoledEnabled");
+    snapshot.color_scheme = read_string(s, "colorScheme");
+    snapshot.dynamic_color = read_bool(s, "dynamicColor");
+    snapshot.blur_effects_enabled = read_bool(s, "blurEffectsEnabled");
+    snapshot.reduce_motion = read_bool(s, "reduceMotion");
+    snapshot.stick_to_bottom = read_bool(s, "stickToBottom");
+    snapshot.parse_inline_dollar_math = read_bool(s, "parseInlineDollarMath");
+    snapshot.auto_wrap_code_blocks = read_bool(s, "autoWrapCodeBlocks");
+    snapshot.haptics_enabled = read_bool(s, "hapticsEnabled");
+    snapshot.detailed_token_usage = read_bool(s, "detailedTokenUsage");
+    snapshot.tool_call_display_mode = read_string(s, "toolCallDisplayMode");
+    snapshot.thinking_segment_display_mode = read_string(s, "thinkingSegmentDisplayMode");
+    snapshot.auto_expand_active_group = read_bool(s, "autoExpandActiveGroup");
+    snapshot.scheme_style = read_string(s, "schemeStyle");
+    snapshot.font_preference = read_string(s, "fontPreference");
+    snapshot.custom_font_name = read_string(s, "customFontName");
+    snapshot.custom_font_path = read_string(s, "customFontPath");
+    snapshot.default_temperature = read_nullable_float(s, "defaultTemperature");
+    snapshot.default_max_tokens = read_nullable_int(s, "defaultMaxTokens");
+    snapshot.default_top_p = read_nullable_float(s, "defaultTopP");
+    snapshot.default_frequency_penalty = read_nullable_float(s, "defaultFrequencyPenalty");
+    snapshot.default_presence_penalty = read_nullable_float(s, "defaultPresencePenalty");
+    snapshot.active_system_prompt_id = read_nullable_string(s, "activeSystemPromptId");
+    return snapshot;
+}
+
 void run_scenario(const std::filesystem::path& path) {
     const std::string stem = path.stem().string();
     const json::ParseResult parsed = json::parse(read_file(path));
@@ -414,11 +1844,34 @@ void run_scenario(const std::filesystem::path& path) {
     agora::core::chat_dao::ChatDao chat(sql);
     agora::core::semantic_index::SemanticIndexDao semantic(sql);
     agora::core::maintenance_debt::MaintenanceDebtDao debt(sql);
-    agora::core::memory::MemoryManager memory((stand / "platform").string());
-    agora::core::skill::SkillManager skill((stand / "platform").string());
+    // A fresh memory/skill root per scenario, seeded from the scenario's own
+    // memory/skills state, so one scenario's writes never reach the next.
+    const std::filesystem::path mem_root =
+        std::filesystem::temp_directory_path() / ("agora-import-" + stem);
+    std::filesystem::remove_all(mem_root);
+    seed_memory_skill(root, mem_root);
+    agora::core::memory::MemoryManager memory(mem_root.string());
+    agora::core::skill::SkillManager skill(mem_root.string());
+    // The recording sink the active import step is logging to; the settings-transfer
+    // apply writes saveConversationSettingsMap into it (the reference's SettingsManager).
+    RecordingStore* active_sink = nullptr;
     data_import::ConversationSettingsTransfer transfers(
-        chat, [] {}, [](const std::vector<std::pair<std::string,
-                        agora::core::export_extra_settings::ConversationSettings>>&, bool) {});
+        chat, [] {},
+        [&active_sink](const std::vector<std::pair<std::string,
+                        agora::core::export_extra_settings::ConversationSettings>>& settings,
+                       bool replace) {
+            if (active_sink == nullptr) return;
+            std::string out = "{\"conversationSettings\":{";
+            bool first = true;
+            for (const auto& [id, one] : settings) {
+                if (!first) out.push_back(',');
+                first = false;
+                out += "\"" + id + "\":" + conversation_settings_value(one);
+            }
+            out += "}}";
+            active_sink->append("saveConversationSettingsMap", out);
+            (void)replace;
+        });
     data_import::DataImporter importer(
         chat, semantic, debt, sql, memory, skill, data_import::SettingsView{},
         data_import::SettingsWrites{}, transfers, data_import::Platform{});
@@ -445,8 +1898,15 @@ void run_scenario(const std::filesystem::path& path) {
     };
     const std::vector<const Value*> golden_previews = golden_results_for("preview");
     const std::vector<const Value*> golden_fonts = golden_results_for("font");
+    // The golden's import steps, kept whole (not just their result): each
+    // carries the result, the settings-call log, and the post-import captures.
+    std::vector<const Value*> golden_imports;
+    for (const Value& golden_step : golden_steps->elements) {
+        if (required_text(golden_step, "op") == "import") golden_imports.push_back(&golden_step);
+    }
     std::size_t preview_index = 0;
     std::size_t font_index = 0;
+    std::size_t import_index = 0;
 
     // What one step says, asked of the port: a preview reads an archive it is
     // given, a font reads the family out of the bytes of a TTF. (Import needs
@@ -486,22 +1946,213 @@ void run_scenario(const std::filesystem::path& path) {
 
     for (const Value& step : steps->elements) {
         const std::string op = required_text(step, "op");
-        if (op == "import") continue;  // driven by the import harness test
+        if (op == "import") {
+            // An import: the archive, the decisions the scenario was given, and
+            // everything the import left behind -- the call log, the view of the
+            // settings it read, the files it wrote, the tables it changed -- which
+            // is what the golden pins.
+            const std::string bytes = archive_bytes(step);
+            backup::NativeBackupArchive archive = backup::NativeBackupArchive::open_bytes(bytes);
+
+            // The decisions, as the enum the importer takes.
+            std::map<data_export::ExportCategory, data_import::ImportStrategy> decisions;
+            if (const Value* raw = field(step, "decisions");
+                raw != nullptr && raw->kind == Kind::Object) {
+                static const std::map<std::string, data_export::ExportCategory> kCategories = {
+                    {"CONVERSATIONS", data_export::ExportCategory::Conversations},
+                    {"MEMORIES", data_export::ExportCategory::Memories},
+                    {"SYSTEM_PROMPTS", data_export::ExportCategory::SystemPrompts},
+                    {"SETTINGS", data_export::ExportCategory::Settings},
+                    {"API_KEYS", data_export::ExportCategory::ApiKeys},
+                };
+                static const std::map<std::string, data_import::ImportStrategy> kStrategies = {
+                    {"MERGE", data_import::ImportStrategy::Merge},
+                    {"REPLACE", data_import::ImportStrategy::Replace},
+                    {"SKIP", data_import::ImportStrategy::Skip},
+                };
+                for (const Member& member : raw->members) {
+                    const auto category = kCategories.find(member.key);
+                    const auto strategy = kStrategies.find(member.value.text);
+                    if (category == kCategories.end() || strategy == kStrategies.end())
+                        scenario_fail(stem + ": unknown decision " + member.key + "=" + member.value.text);
+                    decisions[category->second] = strategy->second;
+                }
+            }
+
+            // The recording sinks: what the import asked the settings to save.
+            // saveSystemPrompts is called directly (it is in no sink); the rest
+            // go through the archive sink. Both log with the reference's names.
+            RecordingStore sink;
+            std::vector<float> progress;
+            data_import::SettingsWrites writes;
+            writes.archive_sink = &sink;
+            SecretsStore secrets_store;
+            secrets_store.sink = &sink;
+            sink.embedding_state = &secrets_store.embedding_models_ref();
+            // The store starts from the scenario's own settings (what the app holds
+            // before the import), which the secrets restore then merges into.
+            if (const Value* settings_obj = field(root, "settings");
+                settings_obj != nullptr && settings_obj->kind == Kind::Object) {
+                secrets_store.seed(read_shell_list(*settings_obj, "shellDevices"),
+                                   read_embedding_list(*settings_obj, "embeddingModels"),
+                                   read_mcp_list(*settings_obj, "mcpServers"));
+            }
+            writes.secrets_store = &secrets_store;
+            LegacyStore legacy_store;
+            legacy_store.sink = &sink;
+            writes.legacy_store = &legacy_store;
+            writes.save_system_prompts =
+                [&sink](const std::vector<data_export::SystemPromptEntry>& prompts) {
+                    sink.append("saveSystemPrompts", RecordingStore::prompts_value(prompts));
+                };
+            // A deterministic platform: uuids numbered from zero (the golden's
+            // <uuid:N> masks) and a scratch files dir the import writes media to.
+            int uuid_counter = 0;
+            // The import writes under <root>/files, and <root> (the temp root) is what
+            // the golden masks, so the compared path reads <root>/files/...
+            const std::filesystem::path temp_root =
+                std::filesystem::temp_directory_path() / "agora-import-parity";
+            const std::filesystem::path files_dir = temp_root / "files";
+            g_mask_root = temp_root.string();
+            std::filesystem::remove_all(temp_root);
+            std::filesystem::create_directories(files_dir);
+            data_import::Platform platform;
+            platform.files_dir = files_dir;
+            platform.package_name = "agora.test";
+            platform.new_uuid = [&uuid_counter] {
+                char buffer[37];
+                std::snprintf(buffer, sizeof(buffer), "%08x-0000-4000-8000-%012x", uuid_counter,
+                              uuid_counter);
+                ++uuid_counter;
+                return std::string(buffer);
+            };
+            platform.file_provider_uri = [](const std::filesystem::path& path) {
+                return "content://agora.test.files/" + path.filename().string();
+            };
+            // The initial settings: the scenario's seed system prompts (a MERGE
+            // folds the archive into these) and the full snapshot the portable
+            // restore reads its "previous" state from.
+            const std::vector<data_export::SystemPromptEntry> seed_prompts = read_prompt_seed(root);
+            data_import::SettingsView view;
+            view.system_prompts = [&seed_prompts] { return seed_prompts; };
+            const archive::SettingsSnapshot initial_snapshot = read_snapshot(root);
+            view.archive_snapshot = [&initial_snapshot] { return initial_snapshot; };
+            data_import::DataImporter import_importer(
+                chat, semantic, debt, sql, memory, skill, view, writes,
+                transfers, platform);
+            active_sink = &sink;
+            const data_import::ImportResult result = import_importer.import(
+                archive, decisions, [&](float at) { progress.push_back(at); });
+            active_sink = nullptr;
+
+            // The result: the counts and errors, and the progress as the
+            // reference writes it -- each float as a string.
+            std::string progress_json = "[";
+            for (std::size_t i = 0; i < progress.size(); ++i) {
+                if (i != 0) progress_json.push_back(',');
+                progress_json += "\"" + agora::core::openai::format_kotlin_float(progress[i]) + "\"";
+            }
+            progress_json += "]";
+            Value progress_value;
+            {
+                const json::ParseResult parsed_progress = json::parse(progress_json);
+                progress_value = parsed_progress.value ? *parsed_progress.value : Value{};
+                progress_value.kind = Kind::Array;
+            }
+            std::vector<Value> error_values;
+            for (const std::string& message : result.errors) error_values.push_back(json_string(message));
+            const Value actual = json_object({
+                {"result",
+                 json_object({
+                     {"conversationsImported", json_long(result.conversations_imported)},
+                     {"tasksImported", json_long(result.tasks_imported)},
+                     {"loopsImported", json_long(result.loops_imported)},
+                     {"memoriesImported", json_long(result.memories_imported)},
+                     {"systemPromptsImported", json_long(result.system_prompts_imported)},
+                     {"settingsImported", json_bool(result.settings_imported)},
+                     {"apiKeysImported", json_bool(result.api_keys_imported)},
+                     {"errors", json_array(error_values)},
+                 })},
+                {"progress", progress_value},
+            });
+
+            // The golden's matching import step (i-th import step, in order).
+            if (import_index >= golden_imports.size()) {
+                scenario_diff(stem + ": golden has fewer import steps than the scenario");
+                continue;
+            }
+            const Value& golden_step = *golden_imports[import_index];
+            ++import_index;
+
+            // The golden pins the whole step: result, settingsCalls, settingsView,
+            // memory, skills, files, tables, appliedImports. The result is compared
+            // here; the rest are compared against what this test captured (empty
+            // where the import wrote nothing, as in the no-decisions case).
+            const Value* golden_result = field(golden_step, "result");
+            if (golden_result == nullptr) {
+                scenario_diff(stem + ": golden import has no result");
+            } else {
+                const Value actual_result = masked(actual);
+                if (!json_equal(actual_result, *golden_result))
+                    scenario_diff(stem + "\n  actual:   " + excerpt(actual_result) +
+                                  "\n  expected: " + excerpt(*golden_result));
+            }
+
+            // The call log the recording sink kept, filtered to the orchestration
+            // calls the reference's driver records (the archive's own scalar restore
+            // calls are excluded from the golden).
+            const Value golden_calls_field = [&] {
+                static const std::set<std::string> kKeep = {
+                    "saveConversationSettingsMap", "invalidatePortableModelCaches",
+                    "saveSystemPrompts",          "saveEmbeddingModels",
+                    "setActiveEmbeddingModelId",  "saveCustomFontPath",
+                    "saveCustomFontName",         "saveShellDevices",
+                    "saveMcpServers",             "saveConversationSettings",
+                };
+                Value v;
+                v.kind = Kind::Array;
+                const json::ParseResult parsed_calls = json::parse("[" + sink.calls + "]");
+                if (parsed_calls.value && parsed_calls.value->kind == Kind::Array) {
+                    for (const Value& call : parsed_calls.value->elements) {
+                        const Value* name = field(call, "name");
+                        if (name != nullptr && name->kind == Kind::String &&
+                            kKeep.count(name->text))
+                            v.elements.push_back(call);
+                    }
+                }
+                return v;
+            }();
+            const Value actual_calls = masked(golden_calls_field);
+            const Value* golden_calls = field(golden_step, "settingsCalls");
+            if (golden_calls == nullptr) {
+                scenario_diff(stem + ": golden has no settingsCalls");
+            } else if (!json_equal(actual_calls, *golden_calls)) {
+                scenario_diff(stem + "\n  settingsCalls actual:   " + excerpt(actual_calls) +
+                              "\n  settingsCalls expected: " + excerpt(*golden_calls));
+            }
+            continue;
+        }
 
         const std::size_t index = op == "preview" ? preview_index++ : font_index++;
         const std::vector<const Value*>& golden_list =
             op == "preview" ? golden_previews : golden_fonts;
-        if (index >= golden_list.size())
-            scenario_fail(stem + ": golden has fewer " + op + " steps than the scenario");
-        const Value* golden_result = golden_list[index];
-        if (golden_result == nullptr) scenario_fail(stem + ": golden has no result");
+        if (index >= golden_list.size()) {
+            scenario_diff(stem + ": golden has fewer " + op + " steps than the scenario");
+            continue;
+        }
+        const Value* preview_font_golden = golden_list[index];
+        if (preview_font_golden == nullptr) {
+            scenario_diff(stem + ": golden has no result");
+            continue;
+        }
 
         const Value actual = actual_for(step, op, index);
-        if (!json_equal(actual, *golden_result))
-            scenario_fail(stem + "\n  actual:   " + excerpt(actual) +
-                          "\n  expected: " + excerpt(*golden_result));
+        if (!json_equal(actual, *preview_font_golden))
+            scenario_diff(stem + "\n  actual:   " + excerpt(actual) +
+                          "\n  expected: " + excerpt(*preview_font_golden));
     }
 }
+
 
 }  // namespace
 
@@ -516,4 +2167,14 @@ TEST(data_importer_previews_every_archive_as_the_reference_does) {
     std::sort(scenarios.begin(), scenarios.end());
     CHECK(scenarios.size() >= 4);
     for (const auto& scenario : scenarios) run_scenario(scenario);
+
+    // Every scenario ran; now report the collected differences together.
+    if (!g_mismatches.empty()) {
+        std::string report;
+        for (const std::string& one : g_mismatches) {
+            if (!report.empty()) report += "\n\n";
+            report += one;
+        }
+        scenario_fail(report);
+    }
 }

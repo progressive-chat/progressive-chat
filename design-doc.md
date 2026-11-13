@@ -1,11 +1,11 @@
 # The design of progressive-chat
 
 This document is the design of progressive-chat: how it should be, focused on
-what can be seen — the repo's own look (how the tree is laid out, the README,
-and the docs that say where everything is), and the app's screen: the room, the
-drawer, the messages, the answer, and the settings. It is written once so that
-what exists can be compared against a reference. It covers this program's own
-design — not the chat protocol's, and not another program's.
+what can be seen — the app's screen: the room, the drawer, the messages, the
+answer, and the settings, and this repo's own look (how the tree is laid out,
+the README, and the docs that say where everything is). It is written once so
+that what exists can be compared against a reference. It covers this program's
+own design — not the chat protocol's, and not another program's.
 
 Everything here is drawn by the same layout tree for all three target platforms,
 and no measurement in this document belongs to a single one of them: the room has

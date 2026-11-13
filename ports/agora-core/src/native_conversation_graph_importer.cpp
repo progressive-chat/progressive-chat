@@ -404,10 +404,29 @@ ExportChat decode_export_chat(const Value& value) {
     if (value.kind != Kind::Object) {
         throw Exception("SerializationException", "Expected JSON object");
     }
+    // kotlinx collects every missing required field before throwing: one field reads
+    // "Field 'x' is required ...", several read "Fields [x, y] are required ...".
+    {
+        std::vector<std::string> missing;
+        if (member_of(value, "id") == nullptr) missing.push_back("id");
+        if (member_of(value, "lastUpdated") == nullptr) missing.push_back("lastUpdated");
+        if (missing.size() == 1) {
+            missing_field("NativeConversationGraphImporter.ExportChatEntity", missing[0]);
+        } else if (missing.size() > 1) {
+            std::string joined;
+            for (std::size_t i = 0; i < missing.size(); ++i) {
+                if (i) joined += ", ";
+                joined += missing[i];
+            }
+            throw Exception("MissingFieldException",
+                            "Fields [" + joined + "] are required for type with serial name '" +
+                                kImporterSerialPrefix + "NativeConversationGraphImporter.ExportChatEntity', but they were missing");
+        }
+    }
     ExportChat out;
-    out.id = require_string(value, "id", "NativeExportChatEntity");
-    out.title = require_string(value, "title", "NativeExportChatEntity");
-    out.last_updated = require_long(value, "lastUpdated", "NativeExportChatEntity");
+    out.id = require_string(value, "id", "NativeConversationGraphImporter.ExportChatEntity");
+    out.title = require_string(value, "title", "NativeConversationGraphImporter.ExportChatEntity");
+    out.last_updated = require_long(value, "lastUpdated", "NativeConversationGraphImporter.ExportChatEntity");
     out.is_pinned = optional_bool(value, "isPinned", false);
     out.selected_branches_json = optional_string(value, "selectedBranchesJson");
     out.system_prompt_id = optional_string(value, "systemPromptId");

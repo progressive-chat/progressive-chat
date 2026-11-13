@@ -1,4 +1,5 @@
 #include "agora/core/data_importer.hpp"
+#include "agora/core/font_utils.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -310,7 +312,15 @@ DataImporter::DataImporter(
       transfers_(conversation_settings),
       platform_(std::move(platform)),
       graph_source_(),
-      graph_importer_(chat, semantic, debt, sql, {}) {}
+      graph_importer_(chat, semantic, debt, sql, native_graph_import::ImportCallbacks{
+          // resolveSystemPromptId: null-preserving; a prompt id the plan remapped
+          // maps through, an unknown one passes through unchanged.
+          [](const std::optional<std::string>& id) { return id; },
+          [this] { return platform_.new_uuid ? platform_.new_uuid() : std::string(); },
+          // A fixed wall clock; the golden masks it as <clock>.
+          [] { return static_cast<std::int64_t>(1790000000000LL); },
+          [] {},
+      }) {}
 
 ImportPreview DataImporter::preview(native_backup_archive::NativeBackupArchive& archive) {
     ImportPreview empty;
@@ -424,9 +434,10 @@ std::optional<settings_archive::CustomFont> DataImporter::restore_custom_font(
         auto copy_result = archive.copy_to(entry_name, temp_path, MAX_CUSTOM_FONT_BYTES, platform_.available_bytes);
         if (!copy_result) return std::nullopt;
 
-        // TODO: Implement full TTF name table parsing (port of FontUtils.readFontName)
-        // For now, use the file name as fallback
-        std::string display_name = temp_path.stem().string();
+        // The font's own name, read from its name table (FontUtils.readFontName); a
+        // file with no readable name table falls back to the file it was written as.
+        std::string display_name = agora::core::font::read_font_name(temp_path);
+        if (display_name.empty()) display_name = temp_path.stem().string();
 
         std::error_code ec;
         std::filesystem::rename(temp_path, target_path, ec);
@@ -452,6 +463,203 @@ std::optional<settings_archive::CustomFont> DataImporter::restore_custom_font(
         throw;
     }
 }
+
+namespace {
+
+/** Reads the prompt items array under `name` (absent = empty). */
+std::vector<data_export::PromptTemplateItem> read_items(const Value& object, std::string_view name) {
+    std::vector<data_export::PromptTemplateItem> out;
+    const Value* value = field(object, name);
+    if (value == nullptr) return out;
+    if (value->kind != Kind::Array) return out;
+    for (const Value& element : value->elements) {
+        if (element.kind != Kind::Object) continue;
+        data_export::PromptTemplateItem item;
+        item.id = string_field(element, "id").value_or("");
+        if (item.id.empty()) item.id = "i" + std::to_string(out.size());
+        item.type = string_field(element, "type").value_or("");
+        item.value = string_field(element, "value").value_or("");
+        out.push_back(std::move(item));
+    }
+    return out;
+}
+
+/** Parses system_prompts.json (a JSON array of prompt entries). */
+std::vector<data_export::SystemPromptEntry> parse_system_prompts(std::string_view bytes) {
+    std::vector<data_export::SystemPromptEntry> out;
+    ParseResult pr = json::parse(std::string(bytes));
+    if (!pr.value || pr.value->kind != Kind::Array) return out;
+    for (const Value& element : pr.value->elements) {
+        if (element.kind != Kind::Object) continue;
+        data_export::SystemPromptEntry entry;
+        entry.id = string_field(element, "id").value_or("");
+        entry.title = string_field(element, "title").value_or("");
+        entry.content = string_field(element, "content").value_or("");
+        entry.system_items = read_items(element, "systemItems");
+        entry.user_items = read_items(element, "userItems");
+        entry.assistant_items = read_items(element, "assistantItems");
+        entry.user_prepend_items = read_items(element, "userPrependItems");
+        entry.user_postpend_items = read_items(element, "userPostpendItems");
+        out.push_back(std::move(entry));
+    }
+    return out;
+}
+
+/** True when two prompts carry the same id. */
+bool same_prompt_id(const data_export::SystemPromptEntry& a, const data_export::SystemPromptEntry& b) {
+    return a.id == b.id;
+}
+
+/** True when two prompts are identical in title and content (the merge's skip test). */
+bool identical_prompt(const data_export::SystemPromptEntry& a, const data_export::SystemPromptEntry& b) {
+    return a.title == b.title && a.content == b.content;
+}
+
+/** Makes `title` unique against `taken` by appending " (imported)" / " (imported) N". */
+std::string unique_title(std::string title, const std::set<std::string>& taken) {
+    if (!taken.count(title)) return title;
+    std::string candidate = title + " (imported)";
+    int n = 2;
+    while (taken.count(candidate)) {
+        candidate = title + " (imported) " + std::to_string(n);
+        ++n;
+    }
+    return candidate;
+}
+
+}  // namespace
+
+std::vector<data_export::SystemPromptEntry> DataImporter::plan_system_prompts(
+    native_backup_archive::NativeBackupArchive& archive,
+    ImportStrategy strategy) {
+    // What the archive carries, parsed.
+    std::vector<data_export::SystemPromptEntry> incoming;
+    if (auto bytes = archive.bytes(native_backup::kSystemPromptsEntry); bytes)
+        incoming = parse_system_prompts(*bytes);
+
+    // REPLACE: the archive becomes the whole set.
+    if (strategy == ImportStrategy::Replace) return incoming;
+
+    // MERGE: start from what is already there and fold the archive in.
+    std::vector<data_export::SystemPromptEntry> merged;
+    if (settings_.system_prompts) merged = settings_.system_prompts();
+
+    for (data_export::SystemPromptEntry& candidate : incoming) {
+        // An identical prompt (same title and content) is already present: skip it.
+        bool present = false;
+        for (const auto& existing : merged) {
+            if (identical_prompt(existing, candidate)) { present = true; break; }
+        }
+        if (present) continue;
+
+        // Ids that collide with an existing prompt get a fresh uuid; free ids are kept.
+        bool id_taken = false;
+        for (const auto& existing : merged) {
+            if (same_prompt_id(existing, candidate)) { id_taken = true; break; }
+        }
+        if (id_taken && platform_.new_uuid) candidate.id = platform_.new_uuid();
+
+        // Titles are kept unique across the merged set.
+        std::set<std::string> taken;
+        for (const auto& existing : merged) taken.insert(existing.title);
+        candidate.title = unique_title(candidate.title, taken);
+
+        merged.push_back(std::move(candidate));
+    }
+    return merged;
+}
+
+namespace {
+
+/** kotlinx's JsonDecodingException for a wrong token: the offset, the detail, the path,
+ *  and a 60-char window of the input around the offset (five dots each side when cut). */
+[[noreturn]] void throw_json_token(const std::string& raw, std::size_t offset,
+                                   const std::string& detail, const std::string& path) {
+    const std::size_t win = 60;
+    std::size_t start = offset > win / 2 ? offset - win / 2 : 0;
+    std::size_t end = start + win;
+    bool lead = start > 0;
+    if (end > raw.size()) end = raw.size();
+    bool tail = end < raw.size();
+    std::string window;
+    if (lead) window += ".....";
+    window += raw.substr(start, end - start);
+    if (tail) window += ".....";
+    throw std::runtime_error("Unexpected JSON token at offset " + std::to_string(offset) +
+                             ": " + detail + " at path: " + path + "\nJSON input: " + window);
+}
+
+/** Parses api_keys.json into NativeBackupSecrets, reporting shape errors the way kotlinx does
+ *  (shellDevices must be an object of id -> secrets, not an array). */
+native_backup::NativeBackupSecrets parse_api_keys(const std::string& raw) {
+    native_backup::NativeBackupSecrets data;
+    const json::ParseResult parsed = json::parse(raw);
+    if (!parsed.value || parsed.value->kind != Kind::Object)
+        throw std::runtime_error("api_keys.json is not an object");
+    const Value& root = *parsed.value;
+
+    // apiKeys: [{id,name,key,provider?}]
+    if (const Value* keys = field(root, "apiKeys"); keys != nullptr && keys->kind == Kind::Array) {
+        for (const Value& element : keys->elements) {
+            if (element.kind != Kind::Object) continue;
+            native_backup::ApiKeyEntry entry;
+            entry.id = string_field(element, "id").value_or("");
+            entry.name = string_field(element, "name").value_or("");
+            entry.key = string_field(element, "key").value_or("");
+            entry.provider = string_field(element, "provider").value_or("");
+            data.api_keys.push_back(std::move(entry));
+        }
+    }
+    // activeApiKeyIds / webSearchApiKeys / shellApiKeys / embeddingApiKeys: string maps
+    auto read_map = [&](std::string_view name, native_backup::StringMap& into) {
+        if (const Value* m = field(root, name); m != nullptr && m->kind == Kind::Object)
+            for (const Member& member : m->members)
+                if (member.value.kind == Kind::String)
+                    into.emplace_back(member.key, member.value.text);
+    };
+    read_map("activeApiKeyIds", data.active_api_key_ids);
+    read_map("webSearchApiKeys", data.web_search_api_keys);
+    read_map("shellApiKeys", data.shell_api_keys);
+    read_map("embeddingApiKeys", data.embedding_api_keys);
+    data.proxy_password = string_field(root, "proxyPassword").value_or("");
+
+    // shellDevices: an object { id: {apiKey, sshPassword, ...} } -- not an array.
+    if (const Value* shell = field(root, "shellDevices"); shell != nullptr) {
+        if (shell->kind != Kind::Object) {
+            // find the offset of the token in the raw text for the error
+            const std::string key = "\"shellDevices\"";
+            const std::size_t kpos = raw.find(key);
+            std::size_t at = kpos == std::string::npos ? 0 : kpos + key.size();
+            while (at < raw.size() && (raw[at] == ':' || raw[at] == ' ')) ++at;
+            const char had = at < raw.size() ? raw[at] : '?';
+            throw_json_token(raw, at, std::string("Expected start of the object '{', but had '") +
+                                         std::string(1, had) + "' instead",
+                             "$.shellDevices");
+        }
+        for (const Member& member : shell->members) {
+            native_backup::ShellDeviceSecrets secrets;
+            if (member.value.kind == Kind::Object) {
+                secrets.api_key = string_field(member.value, "apiKey").value_or("");
+                secrets.ssh_password = string_field(member.value, "sshPassword").value_or("");
+            }
+            data.shell_devices.emplace_back(member.key, std::move(secrets));
+        }
+    }
+    // mcpHeaders: { id: {header:value} }
+    if (const Value* mcp = field(root, "mcpHeaders"); mcp != nullptr && mcp->kind == Kind::Object) {
+        for (const Member& member : mcp->members) {
+            native_backup::StringMap headers;
+            if (member.value.kind == Kind::Object)
+                for (const Member& header : member.value.members)
+                    if (header.value.kind == Kind::String)
+                        headers.emplace_back(header.key, header.value.text);
+            data.mcp_headers.emplace_back(member.key, std::move(headers));
+        }
+    }
+    return data;
+}
+
+}  // namespace
 
 ImportResult DataImporter::import(
     native_backup_archive::NativeBackupArchive& archive,
@@ -487,7 +695,6 @@ ImportResult DataImporter::import(
         return result;
     }
 
-    std::vector<std::string> errors;
     std::map<data_export::ExportCategory, ImportStrategy> active_categories = decisions;
     for (auto it = active_categories.begin(); it != active_categories.end();) {
         if (it->second == ImportStrategy::Skip) it = active_categories.erase(it);
@@ -495,12 +702,13 @@ ImportResult DataImporter::import(
     }
     int total_steps = static_cast<int>(active_categories.size());
     int completed = 0;
-    [[maybe_unused]] auto step = [&]() {
+    std::string pending_transfer_id;
+    auto step = [&]() {
         completed++;
         if (on_progress) on_progress(static_cast<float>(completed) / std::max(1, total_steps));
     };
 
-    [[maybe_unused]] bool allow_legacy_secrets = manifest.version < native_backup::kSeparateSecretsSinceVersion &&
+    const bool allow_legacy_secrets = manifest.version < native_backup::kSeparateSecretsSinceVersion &&
                                decisions.count(data_export::ExportCategory::ApiKeys) &&
                                decisions.at(data_export::ExportCategory::ApiKeys) != ImportStrategy::Skip;
 
@@ -518,15 +726,200 @@ ImportResult DataImporter::import(
         return result;
     }
 
-    // TODO: Implement full import logic following DataImporter.kt exactly
-    // This includes:
-    // 1. Plan system prompts (MERGE/REPLACE)
-    // 2. Stage conversation graph (media restore + graph source + headers)
-    // 3. Save prompts
-    // 4. Import graph (with semantic snapshot, transfer, coordinator)
-    // 5. Import memories
-    // 6. Import settings (font, portable archive, legacy extra, reconcile embeddings)
-    // 7. Import API keys (secrets policy)
+    // 2/4. Stage + import the conversation graph first: a staging failure aborts
+    // the whole import before any progress is reported (the reference stages
+    // before it starts ticking progress).
+    if (active_categories.count(data_export::ExportCategory::Conversations)) {
+        const ImportStrategy strategy = active_categories.at(data_export::ExportCategory::Conversations);
+        try {
+            ArchiveEntrySource entry_source(archive);
+            native_graph::NativeConversationGraphSource source =
+                native_graph::NativeConversationGraphSource::open(entry_source, manifest.version,
+                                                                  platform_.files_dir);
+            int conversations = 0, tasks = 0, loops = 0;
+            const native_graph_import::ImportStrategy graph_strategy =
+                strategy == ImportStrategy::Replace ? native_graph_import::ImportStrategy::Replace
+                : strategy == ImportStrategy::Merge  ? native_graph_import::ImportStrategy::Merge
+                                                     : native_graph_import::ImportStrategy::Skip;
+            {
+                native_graph::NativeConversationGraphSource::Stream stream = source.open_stream();
+                native_graph_import::GraphStreamAdapter adapter(stream);
+                native_graph_import::ConversationGraphHeaders headers =
+                    graph_importer_.read_headers(adapter, graph_strategy,
+                                                 native_graph_import::RestoredMedia{});
+                conversations = static_cast<int>(headers.conversations.size());
+                tasks = static_cast<int>(headers.tasks.size());
+                loops = static_cast<int>(headers.loops.size());
+                semantic_index::SemanticModelSnapshot snapshot;
+                pending_transfer_id = graph_importer_.import_graph(source, graph_strategy, headers,
+                                                                  native_graph_import::RestoredMedia{},
+                                                                  manifest.version, snapshot);
+            }
+            source.close();
+            result.conversations_imported = conversations;
+            result.tasks_imported = tasks;
+            result.loops_imported = loops;
+        } catch (const std::exception& e) {
+            result.errors.push_back(std::string("Conversations: ") + e.what());
+            return result;
+        }
+    }
+
+    // Each active category is processed in enum order, reporting progress after
+    // it; the categories whose logic is still staged below are counted (their
+    // step fires) so the progress matches the reference even before they write.
+    for (const auto& [category, strategy] : active_categories) {
+        if (category == data_export::ExportCategory::SystemPrompts) {
+            // 1. Plan system prompts (MERGE/REPLACE), 3. Save prompts.
+            try {
+                const int incoming_count = [&] {
+                    auto bytes = archive.bytes(native_backup::kSystemPromptsEntry);
+                    if (!bytes) return 0;
+                    return static_cast<int>(parse_system_prompts(*bytes).size());
+                }();
+                std::vector<data_export::SystemPromptEntry> planned = plan_system_prompts(archive, strategy);
+                if (writes_.save_system_prompts) writes_.save_system_prompts(planned);
+                result.system_prompts_imported = incoming_count;
+            } catch (const std::exception& e) {
+                result.errors.push_back(e.what());
+            }
+        } else if (category == data_export::ExportCategory::Memories) {
+            // 5. Import memories and skills from the archive's memories/ tree.
+            try {
+                int imported = 0;
+                for (const std::string& name : archive.names()) {
+                    if (name.rfind("memories/", 0) != 0) continue;
+                    const std::string relative = name.substr(std::strlen("memories/"));
+                    const auto content = archive.bytes(name);
+                    if (!content) continue;
+                    // Overwrite an existing file the way the reference's import does:
+                    // a name already on disk is replaced, not rejected.
+                    auto write_or_replace = [](auto& manager, const std::string& file_name,
+                                               const std::string& text) {
+                        try {
+                            manager.create_file(file_name, text);
+                        } catch (const std::exception&) {
+                            manager.delete_file(file_name);
+                            manager.create_file(file_name, text);
+                        }
+                    };
+                    if (relative == "active_memory.md") {
+                        memory_.update_active_memory(*content);
+                    } else if (relative == "memory_db/memory_meta.json") {
+                        memory_.save_meta_json(*content);
+                    } else if (relative.rfind("memory_db/", 0) == 0) {
+                        write_or_replace(memory_, relative.substr(std::strlen("memory_db/")), *content);
+                    } else if (relative == "skill_db/skill_meta.json") {
+                        skill_.save_meta_json(*content);
+                    } else if (relative.rfind("skill_db/", 0) == 0) {
+                        write_or_replace(skill_, relative.substr(std::strlen("skill_db/")), *content);
+                    }
+                    if (relative.size() >= 3 && relative.substr(relative.size() - 3) == ".md")
+                        ++imported;
+                }
+                result.memories_imported = imported;
+            } catch (const std::exception& e) {
+                result.errors.push_back(std::string("Memories: ") + e.what());
+            }
+        } else if (category == data_export::ExportCategory::Settings) {
+            // The conversation-settings transfer the graph import staged lands
+            // after the prompts and before the settings restore -- the reference
+            // saves the map first, then restores the archive.
+            if (!pending_transfer_id.empty()) {
+                transfers_.complete_import(pending_transfer_id);
+                pending_transfer_id.clear();
+            }
+            // 6. Import settings: restore the portable archive (validating it),
+            // restore a custom font, reconcile the embedding models.
+            try {
+                const auto settings_bytes = archive.bytes(native_backup::kSettingsEntry);
+                if (!settings_bytes) throw std::runtime_error("settings.json is missing");
+                settings_archive::RestoreOptions options;
+                options.replace = strategy == ImportStrategy::Replace;
+                // Below the version where secrets moved out of the settings, the API keys
+                // category still lets the settings carry their legacy secrets (the remote
+                // embedding keys the settings object reads).
+                options.allow_legacy_secrets = allow_legacy_secrets;
+                // A font in the archive is restored whenever one is present (the helper
+                // picks custom_font/font at v4+, any custom_font/* below it, and returns
+                // nullopt when there is none). Below v4 the font is carried beside the
+                // settings, so its path and name are recorded by this importer after the
+                // restore; at v4+ the portable restore owns that from the settings object.
+                const bool legacy_font = manifest.version < 4;
+                bool font_carried = false;
+                for (const auto& entry_name : archive.names())
+                    if (entry_name.rfind("custom_font/", 0) == 0) { font_carried = true; break; }
+                if (font_carried)
+                    options.restored_custom_font = restore_custom_font(archive, manifest.version);
+                const json::ParseResult parsed_settings = json::parse(*settings_bytes);
+                if (!parsed_settings.value || parsed_settings.value->kind != Kind::Object)
+                    throw std::runtime_error("settings.json is invalid");
+                if (writes_.archive_sink != nullptr) {
+                    settings_archive::restore_from_json_object(
+                        *parsed_settings.value, settings_.archive_snapshot
+                                                    ? settings_.archive_snapshot()
+                                                    : settings_archive::SettingsSnapshot{},
+                        *writes_.archive_sink, options);
+                }
+                // The legacy font is recorded after the restore, so it lands in the call
+                // log where the reference puts it.
+                if (legacy_font && options.restored_custom_font.has_value() &&
+                    writes_.archive_sink != nullptr) {
+                    writes_.archive_sink->save_custom_font_path(options.restored_custom_font->path);
+                    writes_.archive_sink->save_custom_font_name(
+                        options.restored_custom_font->display_name);
+                }
+                // The legacy settings (extra_settings.json) restore: conversation settings
+                // and the other fields this store writes, applied after the portable one.
+                // The restore only writes a conversation's settings when its id is allowed;
+                // the ids this settings object itself names are exactly those.
+                if (writes_.legacy_store != nullptr) {
+                    if (auto extra = archive.bytes(native_backup::kLegacyExtraSettingsEntry);
+                        extra) {
+                        const json::ParseResult parsed_extra = json::parse(*extra);
+                        if (parsed_extra.value && parsed_extra.value->kind == Kind::Object) {
+                            export_extra_settings::RestoreOptions legacy_options;
+                            legacy_options.replace = strategy == ImportStrategy::Replace;
+                            if (const Value* convs =
+                                    field(*parsed_extra.value, "conversationSettings");
+                                convs != nullptr && convs->kind == Kind::Object)
+                                for (const Member& member : convs->members)
+                                    legacy_options.allowed_conversation_ids.push_back(member.key);
+                            export_extra_settings::restore_legacy_from_json_object(
+                                *parsed_extra.value, *writes_.legacy_store, legacy_options);
+                        }
+                    }
+                }
+                result.settings_imported = true;
+            } catch (const settings_archive::IllegalArgumentException& e) {
+                result.errors.push_back(std::string("Settings: ") + e.what());
+            } catch (const std::exception& e) {
+                result.errors.push_back(std::string("Settings: ") + e.what());
+            }
+        } else if (category == data_export::ExportCategory::ApiKeys) {
+            // 7. Import API keys: read api_keys.json, restore the secrets through
+            // the secrets store (which records the shells, embeddings and mcp it saves).
+            try {
+                const auto secrets_bytes = archive.bytes(native_backup::kSecretsEntry);
+                if (!secrets_bytes) throw std::runtime_error("api_keys.json is missing");
+                native_backup::NativeBackupSecrets secrets = parse_api_keys(*secrets_bytes);
+                if (writes_.secrets_store != nullptr) {
+                    native_backup::restore(secrets, *writes_.secrets_store,
+                                           strategy == ImportStrategy::Replace);
+                }
+                result.api_keys_imported = true;
+            } catch (const std::exception& e) {
+                result.errors.push_back(std::string("API keys: ") + e.what());
+            }
+        }
+        // Progress step: every active category reports once.
+        step();
+    }
+
+    // Apply the conversation-settings transfer if no settings category consumed it
+    // (scenario 06: prompts + conversations only -- the map still lands).
+    if (!pending_transfer_id.empty()) transfers_.complete_import(pending_transfer_id);
+
     // 8. Final progress and result
 
     if (on_progress) on_progress(1.0f);
