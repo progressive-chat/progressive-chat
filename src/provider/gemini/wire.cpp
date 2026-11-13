@@ -52,22 +52,22 @@ std::string error_text(const sn::GenerationError &error) {
 void frame_of(const gs::StreamEvent &event, std::vector<gemini_frame> &out) {
   using frame = gemini_frame;
   if (const auto *text = std::get_if<sn::TextChunk>(&event)) {
-    out.push_back(frame{.what = frame::kind::text, .said = text->text});
+    out.push_back(frame{.what = frame::kind::text, .text = text->text});
   } else if (const auto *thought = std::get_if<sn::ThoughtChunk>(&event)) {
-    out.push_back(frame{.what = frame::kind::thought, .said = thought->thought});
+    out.push_back(frame{.what = frame::kind::thought, .text = thought->thought});
   } else if (const auto *usage = std::get_if<gs::UsageUpdate>(&event)) {
     // The wire counts in ints and can leave one out; a count of tokens held as
     // unsigned stops at zero, as the counters elsewhere do.
     const int input = usage->usage.input_token_count.value_or(0);
     const int output = usage->usage.output_token_count.value_or(0);
     out.push_back(frame{.what = frame::kind::usage,
-                        .used_in = static_cast<std::uint32_t>(input > 0 ? input : 0),
-                        .used_out = static_cast<std::uint32_t>(output > 0 ? output : 0)});
+                        .input_tokens = static_cast<std::uint32_t>(input > 0 ? input : 0),
+                        .output_tokens = static_cast<std::uint32_t>(output > 0 ? output : 0)});
   } else if (const auto *call = std::get_if<sn::ToolCallRequest>(&event)) {
     out.push_back(frame{.what = frame::kind::tool,
-                        .call_id = call->id,
-                        .call_name = call->name,
-                        .call_arguments = call->arguments});
+                        .id = call->id,
+                        .name = call->name,
+                        .arguments = call->arguments});
   }
   // sn::ToolCallUpdate, sn::HostedToolCallUpdate, gs::CitationUpdate: nothing
   // to say here yet.
@@ -104,7 +104,7 @@ std::vector<gemini_frame> gemini_step(gemini_state *state, std::string_view payl
     if (reader.router.stream_error && !reader.failed_emitted) {
       reader.failed_emitted = true;
       out.push_back(frame{.what = frame::kind::failed,
-                          .said = error_text(*reader.router.stream_error)});
+                          .text = error_text(*reader.router.stream_error)});
     }
     return out;
   }
@@ -115,13 +115,13 @@ std::vector<gemini_frame> gemini_step(gemini_state *state, std::string_view payl
   if (reader.router.stream_error && !reader.failed_emitted) {
     reader.failed_emitted = true;
     out.push_back(frame{.what = frame::kind::failed,
-                        .said = error_text(*reader.router.stream_error)});
+                        .text = error_text(*reader.router.stream_error)});
     return out;
   }
   if (reader.router.saw_done && !reader.ended_emitted) {
     reader.ended_emitted = true;
     out.push_back(frame{.what = frame::kind::ended,
-                        .finish = reader.router.finish_reason.value_or("stop")});
+                        .stop_reason = reader.router.finish_reason.value_or("stop")});
   }
   return out;
 }

@@ -50,24 +50,24 @@ std::string error_text(const sn::GenerationError &error) {
 void frame_of(const as::StreamEvent &event, std::vector<anthropic_frame> &out) {
   using frame = anthropic_frame;
   if (const auto *text = std::get_if<as::TextChunk>(&event)) {
-    out.push_back(frame{.what = frame::kind::text, .said = text->text});
+    out.push_back(frame{.what = frame::kind::text, .text = text->text});
   } else if (const auto *thought = std::get_if<as::ThoughtChunk>(&event)) {
-    out.push_back(frame{.what = frame::kind::thought, .said = thought->thought});
+    out.push_back(frame{.what = frame::kind::thought, .text = thought->thought});
   } else if (const auto *usage = std::get_if<as::UsageUpdate>(&event)) {
     // The wire counts in ints and can name a negative one; a count of tokens
     // held as unsigned stops at zero, as the counters elsewhere do.
     const int input = usage->usage.input_token_count.value_or(0);
     const int output = usage->usage.output_token_count.value_or(0);
     out.push_back(frame{.what = frame::kind::usage,
-                        .used_in = static_cast<std::uint32_t>(input > 0 ? input : 0),
-                        .used_out = static_cast<std::uint32_t>(output > 0 ? output : 0)});
+                        .input_tokens = static_cast<std::uint32_t>(input > 0 ? input : 0),
+                        .output_tokens = static_cast<std::uint32_t>(output > 0 ? output : 0)});
   } else if (const auto *call = std::get_if<as::ToolCallRequest>(&event)) {
     out.push_back(frame{.what = frame::kind::tool,
-                        .call_id = call->id,
-                        .call_name = call->name,
-                        .call_arguments = call->arguments});
+                        .id = call->id,
+                        .name = call->name,
+                        .arguments = call->arguments});
   } else if (const auto *failure = std::get_if<as::ErrorEvent>(&event)) {
-    out.push_back(frame{.what = frame::kind::failed, .said = error_text(failure->error)});
+    out.push_back(frame{.what = frame::kind::failed, .text = error_text(failure->error)});
   }
   // as::ToolCallUpdate, as::CitationUpdate: nothing to say here yet.
 }
@@ -104,7 +104,7 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
     if (reader.router.stream_error && !reader.failed_emitted) {
       reader.failed_emitted = true;
       out.push_back(frame{.what = frame::kind::failed,
-                          .said = error_text(*reader.router.stream_error)});
+                          .text = error_text(*reader.router.stream_error)});
     }
     return out;
   }
@@ -115,13 +115,13 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
   if (reader.router.stream_error && !reader.failed_emitted) {
     reader.failed_emitted = true;
     out.push_back(frame{.what = frame::kind::failed,
-                        .said = error_text(*reader.router.stream_error)});
+                        .text = error_text(*reader.router.stream_error)});
     return out;
   }
   if (reader.router.saw_terminal_marker() && !reader.ended_emitted) {
     reader.ended_emitted = true;
     out.push_back(frame{.what = frame::kind::ended,
-                        .finish = reader.router.stop_reason.value_or("stop")});
+                        .stop_reason = reader.router.stop_reason.value_or("stop")});
   }
   // The wire ended before a tool name was complete: said as the failure it is,
   // the way the wire's own client ends a stream. The router keeps it on the
@@ -130,7 +130,7 @@ std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_
   if (reader.router.stream_error && !reader.failed_emitted) {
     reader.failed_emitted = true;
     out.push_back(frame{.what = frame::kind::failed,
-                        .said = error_text(*reader.router.stream_error)});
+                        .text = error_text(*reader.router.stream_error)});
   }
   return out;
 }
