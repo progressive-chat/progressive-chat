@@ -513,7 +513,21 @@ private:
                     std::string(one.asked->said());
     if (!one.carried.over())
       return;
-    one.asked->carried_over(one.carried.trouble());
+    // A refusal the server named: kept whole -- its status and the words it
+    // gave beside it -- so the retry decision reads the status and not the
+    // sentence the trouble was written in. Nothing behind it, where the page
+    // could not ask at all.
+    provider::failure transport;
+    if (one.carried.status() != 0) {
+      // The status decides it; the message is only what a screen shows.
+      const std::string words = one.carried.status_text().empty()
+                                    ? "the server answered " +
+                                          std::to_string(one.carried.status())
+                                    : one.carried.status_text();
+      transport = {provider::failure_kind::network, std::string{},
+                   std::string{}, words, one.carried.status()};
+    }
+    one.asked->carried_over(one.carried.trouble(), transport);
     // A failure worth asking again: the answer is not kept yet -- nothing it
     // said is appended, since the ask is made again and what it said comes
     // back whole -- and the next ask is made when Agora's backoff says.

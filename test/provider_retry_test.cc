@@ -51,6 +51,27 @@ SAID(provider_retry, a_failure_with_nothing_behind_it_is_not_asked_again) {
   EXPECT_FALSE(pchat::provider::worth_asking_again(failure{}));
 }
 
+// The status a server refused with, the way a transport reports it: a
+// service that is down and a rate limit pass, a bad request does not -- the
+// policy reads the status, not the sentence the trouble was written in.
+SAID(provider_retry, a_status_the_policy_waits_out_is_asked_again) {
+  const failure down{failure_kind::network, std::string(), std::string(),
+                     "Service Unavailable", 503};
+  EXPECT_TRUE(pchat::provider::worth_asking_again(down));
+  const failure busy{failure_kind::network, std::string(), std::string(),
+                     "Too Many Requests", 429};
+  EXPECT_TRUE(pchat::provider::worth_asking_again(busy));
+}
+
+SAID(provider_retry, a_status_the_policy_refuses_is_not_asked_again) {
+  const failure bad{failure_kind::network, std::string(), std::string(),
+                    "Bad Request", 400};
+  EXPECT_FALSE(pchat::provider::worth_asking_again(bad));
+  const failure denied{failure_kind::network, std::string(), std::string(),
+                       "Unauthorized", 401};
+  EXPECT_FALSE(pchat::provider::worth_asking_again(denied));
+}
+
 // The waits Agora gives its own retries: one second and a half at most for the
 // first ask after a failure, doubling with each, and nothing at all for a
 // sixth -- the policy has five.
