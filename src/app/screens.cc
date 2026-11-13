@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// pchat.app.screens -- What the window shows, and what a control's asking is
-// answered with: one model, one set of looks, one scene. Every request a
-// control asked for is answered here, between frames, and the tree is filled
-// in again from the model before the frame is drawn.
+// pchat.app.screens -- What the window shows: one model, one set of looks,
+// one scene. Control requests are answered here between frames, and the tree
+// is filled in from the model before each frame.
 //
-// Nothing here talks to a server: what fills the model is the sample, until
-// the client is.
+// Nothing here talks to a server: the sample fills the model until the
+// client does.
 export module pchat.app.screens;
 
 import splice;
@@ -35,8 +34,8 @@ namespace scene = skiff::scene;
 
 export namespace pchat::app {
 
-// The tree the host draws, and what a Scene holds it as: said here, so that
-// the program needs nothing of the screens but these.
+// The tree the host draws, held by a Scene. Declared here so the program
+// needs nothing of the screens but these.
 using window_scene = scene::Scene<ui::window_type>;
 
 // Everything shown, and what is done with what was asked for.
@@ -48,8 +47,8 @@ public:
 
   [[nodiscard]] window_scene &window() noexcept { return scene_; }
 
-  // How answers are asked for, as it stands now, and as one row of the
-  // settings may move it: one of the five, kept inside its own lines.
+  // How answers are asked for now: one of the five, kept inside its lines,
+  // as a settings row may move it.
   [[nodiscard]] const asking &how() const noexcept { return how_; }
   void how(asking_what field, double value) { how_ = set_of(how_, field, value); }
 
@@ -59,11 +58,11 @@ public:
         spl::overloaded{
             [&](const open_conversation &asking) {
               root_.opened = asking.chat;
-              // The card of faces belongs to the conversation it was opened
-              // in: nothing written into it follows its reader elsewhere.
+              // The card of faces belongs to this conversation: closing it
+              // keeps it here rather than following the reader elsewhere.
               faces_ = false;
-              // A drawer that came over the messages has been used:
-              // put away, leaving the conversation it opened.
+              // A drawer opened over the messages has been used: put away,
+              // leaving the conversation it opened.
               if (width_ < ui::side_by_side_from)
                 drawer_ = false;
             },
@@ -75,9 +74,9 @@ public:
               root_.messages.push_back(said.said);
               recount(asking.chat);
               ask_a_model(asking.chat);
-              // What was written has left the field, and the card that
-              // writes into it goes with it: nothing left open would write
-              // into a field that has already been given away.
+              // The sent text left the field, and the card that writes into
+              // it goes with it: nothing left open can write into a field
+              // that was already given away.
               faces_ = false;
             },
 
@@ -91,8 +90,8 @@ public:
                   "New chat", conversation_kind::direct, ++said_count_};
               if (root_.opened)
                 fresh.models.push_back(model_of(*root_.opened));
-              // The room every answerer in it has, said by the first of them:
-              // a chat made new has all of its window to talk into.
+              // A new chat takes the whole window: all of its leading
+              // model's window to talk into.
               fresh.window = window_of(fresh.leading_model());
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(fresh));
@@ -100,23 +99,21 @@ public:
               if (width_ < ui::side_by_side_from)
                 drawer_ = false;
             },
-            // Taken whole, so that it can be put down somewhere else.
+            // Taken whole, then put down somewhere else.
             [&](const copy_answer &asking) { this->give(text_of(asking.said)); },
             // One line of the settings page: what it says is given whole.
             [&](const copy_text &asking) { this->give(asking.text); },
-            // Asked again: this answer taken away, and every one after it, so
-            // that the question above it is open to be answered again -- and
-            // asked again it is, then and there, for a question left open is
-            // not what this one was pressed for. Before, it only took the
-            // answer away: pressed again, again, a conversation lost an
-            // answer each time and never had one back, though what asks for
-            // one was already here and only this line kept it out.
+            // This answer and every one after it are removed, and the
+            // question above them is asked again at once. Before, only the
+            // answer was removed: each press cost the conversation an answer
+            // and gave none back, though the asker was already here and this
+            // line alone kept it out.
             [&](const regenerate_answer &asking) {
               cut_away(asking.said);
               ask_a_model(asking.chat);
             },
-            // Into a chat of its own: everything asked and answered up to this
-            // answer, and nothing said after it.
+            // Into a chat of its own: everything asked and answered up to
+            // this answer, nothing said after it.
             [&](const fork_answer &asking) {
               const conversation_id made{"chat-" +
                                          std::to_string(++chat_count_)};
@@ -141,24 +138,22 @@ public:
               recount(made);
               root_.opened = made;
             },
-            // Given away as it reads, until the program has somewhere to give
-            // it to.
+            // Given away as it reads, until the program has somewhere to
+            // give it to.
             [&](const share_answer &asking) { this->give(text_of(asking.said)); },
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
-            // The settings are opened from the card's own three dots as well
-            // as from the drawer, and what opened them is put away either
-            // way: two cards over each other are one too many.
+            // Settings open from the card's own three dots as well as from
+            // the drawer, and what opened them is put away either way.
             [&](const open_settings &) {
               settings_ = true;
               editor_menu_ = false;
             },
             [&](const close_settings &) { settings_ = false; },
-            // What the drawer's two rows are there for: nothing stands behind
-            // either of them yet, and so nothing is opened. They are drawn
-            // where the panel has them, and what they ask for is answered
-            // the day there is something to answer it with.
+            // The drawer's two rows: nothing stands behind either of them
+            // yet, so neither opens. They are drawn where the panel has them,
+            // and what they ask for is answered once something can answer it.
             [&](const open_tasks &) {},
             [&](const open_remote &) {},
             [&](const fork_conversation &asking) {
@@ -195,9 +190,8 @@ public:
               recount(made);
               (void)kept;
             },
-            // Given away as it reads, until the program has somewhere to give
-            // it to: everything said in the conversation, in the order it was
-            // said in.
+            // Given away as it reads, until the program has somewhere to
+            // give it to: everything said in the conversation, in order.
             [&](const share_conversation &asking) {
               std::string whole;
               for (const conversation &one : root_.conversations)
@@ -210,22 +204,20 @@ public:
                 this->give(whole);
             },
             [&](const toggle_more &) { more_ = !more_; },
-            // What the card's three dots hold: thinking, how hard it is asked
-            // to think, and the large settings. Thinking and how hard are how
-            // every answer in every conversation is asked for from now on
-            // (pchat.config, `asking`), which is what the settings' own rows
-            // would have said of them.
+            // What the card's three dots hold: thinking, how hard it is
+            // asked to think, and the large settings. Thinking and effort
+            // set how every answer in every conversation is asked for from
+            // now on (pchat.config, `asking`), which the settings' own rows
+            // would also have said.
             [&](const toggle_editor_menu &) { editor_menu_ = !editor_menu_; },
             // The card of faces above the face beside the clip: opened by a
-            // press on it, and put away by another press anywhere else in
-            // the room, which is what nothing measured asks for
-            // (src/ui/window.cc).
+            // press on it, put away by another press anywhere else in the
+            // room, which nothing measured asks for (src/ui/window.cc).
             [&](const toggle_faces &) { faces_ = !faces_; },
-            // One face pressed: to the front of the ones pressed most
-            // lately, wherever in them it stood before, and no longer a row
-            // than the card draws. Kept as they were pressed and not as
-            // often, so that what comes first is the one that was wanted
-            // last and not the one that was wanted most often.
+            // One face pressed: moved to the front of the ones pressed
+            // lately, wherever it stood before, and no longer a row than the
+            // card draws. Kept in press order, not by count, so the first is
+            // the one wanted last, not the one wanted most often.
             [&](const face_written &asking) {
               if (asking.face.empty()) return;
               std::erase(faces_lately_, asking.face);
@@ -236,7 +228,7 @@ public:
             [&](const set_thinking &asking) { how_.thinking = asking.on; },
             [&](const set_effort &asking) { how_.how_hard = asking.how_hard; },
             // What every model is told before anything is said to it: read
-            // and written whole, the conversation keeping it as it is typed.
+            // and written whole, kept by the conversation as it is typed.
             [&](const set_system_prompt &asking) {
               for (conversation &one : root_.conversations)
                 if (one.id == asking.chat)
@@ -249,15 +241,15 @@ public:
             [&](const close_system_prompt &) { system_ = false; },
             // Read where it is asked for, over the room and over nothing
             // else: the page it was asked from is put away under it, so
-            // that putting the design away leaves the conversation and not
-            // a page the reader had already gone on from.
+            // putting the design away leaves the conversation and not a page
+            // the reader had left.
             [&](const open_design &) {
               settings_ = false;
               design_ = true;
             },
             [&](const close_design &) { design_ = false; },
-            // What the seed is: every colour grown again out of it, and the
-            // page staying open to be looked at.
+            // What the seed is: every colour grown again from it, and the
+            // page staying open to look at.
             [&](const pick_seed &asking) {
               shown_.preset = asking.preset;
               recolour();
@@ -267,19 +259,18 @@ public:
               recolour();
             },
             // What the drawer's rows are then drawn with: no colour grows
-            // out of either of these, and so nothing is grown again.
+            // out of either of these, so nothing is grown again.
             [&](const set_avatars &asking) { shown_.avatars = asking.enabled; },
             [&](const set_row_times &asking) {
               shown_.row_times = asking.enabled;
             },
-            // A test notification: nothing of the program's own knows whether
-            // the machine it runs on will show it, so all this does is ask the
-            // platform and go on.
+            // A test notification: nothing here can know whether the machine
+            // will show it, so this only asks the platform and goes on.
             [&](const send_test_notification &) {
               platform::notified::say("progressive-chat",
                                       "This is a test notification.");
             },
-            // Larger type: every size drawn in the body of a message is asked
+            // Larger type: every size drawn in a message's body is asked
             // for again with this multiply in it, so what is set larger is
             // what the answers are written in.
             [&](const set_font_scale &asking) {
@@ -292,8 +283,7 @@ public:
               recolour();
             },
             // How an answer is asked for: the one of the five a row was
-            // pressed for, kept inside the lines it is said to have
-            // (pchat.config, `asking`).
+            // pressed for, kept inside its lines (pchat.config, `asking`).
             [&](const set_generation &asking) { how(asking.field, asking.value); },
             // A tool switched: one of the three this program owns, and what
             // it is switched to.
@@ -306,16 +296,16 @@ public:
               how_ = set_of(how_, asking.which, asking.on);
             },
             // The archive asked for: which files are kept where is the
-            // machine's own to say, and all this says is the name the file
-            // goes under -- the bytes are written when a path comes back
-            // (write_archive, through the program).
+            // machine's own to say; this only names the file. The bytes are
+            // written when a path comes back (write_archive, through the
+            // program).
             [&](const save_archive &) {
               if (dialogs_)
                 dialogs_->choose_save_path("progressive-chat.prgrssv");
             },
-            // An answerer put into the conversation open, or taken out of
-            // it: what the window then writes to is the first one left, and
-            // how much room it has to answer into is that one's own.
+            // An answerer put into the open conversation or taken out of
+            // it: the window then writes to the first one left, and its
+            // window is that model's own.
             [&](const set_answerer &asking) {
               conversation *open = opened_conversation();
               if (!open)
@@ -339,11 +329,10 @@ public:
   void before_frame(double) {
     for (const request &one : asked_.drain())
       take(one);
-    // A link pressed in a message since the last frame: skiff says which
-    // ones were pressed, standing in whatever text they were drawn in, and
-    // each is handed to the machine to open -- a browser of its own on a
-    // desk and a phone, another tab where this is a page. Nothing of what
-    // opens then is this program's to know.
+    // A link pressed in a message since the last frame: skiff names the
+    // ones pressed, as they stand in the text they were drawn in, and each
+    // goes to the machine to open -- a browser on a desk and a phone, a
+    // new tab where this is a page. What opens is not this program's to know.
     for (const std::string &place : std::exchange(scene::hostWork().links, {}))
       platform::opened::open(place);
     read_what_arrived();
@@ -362,36 +351,36 @@ public:
   [[nodiscard]] const chats_root &root() const noexcept { return root_; }
   [[nodiscard]] bool dark() const noexcept { return dark_; }
 
-  // Where the machine's own file dialogs are asked for: the program holds
-  // them (they answer on its thread), and this screen is the one that knows a
-  // save is wanted and what the file is called. Nothing here is a dialog --
-  // the chosen path comes back through the program (save_path_chosen).
+  // Where the machine's file dialogs are asked for: the program holds them
+  // (they answer on its thread), and this screen knows a save is wanted and
+  // what the file is called. Nothing here is a dialog -- the chosen path
+  // comes back through the program (save_path_chosen).
   void dialogs_from(skiff::platform::dialogs::dialogs &one) {
     dialogs_ = &one;
   }
 
-  // Where the machine said the archive stands: the bytes built whole and given
-  // to the platform once -- a page turns the file written there into a
-  // download under its own name, a desk leaves it where it was asked to stand
-  // (skiff.platform.storage).
+  // Where the machine said the archive stands: the bytes built whole and
+  // given to the platform once -- a page turns the file written there into a
+  // download under its own name, a desk leaves it where it was asked to
+  // stand (skiff.platform.storage).
   void write_archive(const std::string &path) {
     skiff::platform::storage::write_file(
         path, prgrssv::archive_of(root_, shown_, how_));
   }
 
 private:
-  // Given to the machine's own clipboard: what copy, share and giving a
-  // conversation away all do with what they took, each of them asking for
-  // no more than that. The host carries it from the scene to wherever the
-  // window's own clipboard is asked for (skiff::scene::setClipboardText).
+  // Given to the machine's clipboard: what copy, share and giving a
+  // conversation away all do with what they took, each asking no more than
+  // that. The host carries it from the scene to the window's own clipboard
+  // (skiff::scene::setClipboardText).
   void give(const std::string &text) {
     if (text.empty())
       return;
     scene::setClipboardText(text);
   }
 
-  // What asked it is the model asked: which is to say nothing of what any of
-  // this is, only the wire it is spoken through.
+  // The moment, taken from the system clock: milliseconds since the epoch,
+  // the only wire time this knows.
   [[nodiscard]] static moment now_ms() {
     return static_cast<moment>(
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -399,19 +388,17 @@ private:
             .count());
   }
 
-  // One answer asked of a model, and the message it is being written into:
-  // what asked it, what carries the bytes, and when it began, which is how
+  // One answer asked of a model, and the message it is written into: what
+  // asked it, what carries the bytes, and when it began -- the last is how
   // long an answer is said to have taken.
   //
-  // Nothing outside this class knows of any of it. The window is drawn again
-  // every frame from `root()`, so an answer arriving is only ever a message
-  // whose text is longer than it was.
+  // Nothing outside this class knows of any of it. The window is drawn
+  // again every frame from `root()`, so an arriving answer is only ever a
+  // message whose text is longer than it was.
   //
-  // What asked it, what carries the bytes, what of it is ours to answer, and
-  // when it began, which is how long an answer is said to have taken. An
-  // answer may take more than one asking: a model may stop to ask for
-  // something this program owns, be answered, and go on -- so the question is
-  // a loop and what is being carried now is one round of it.
+  // An answer may take more than one asking: a model may stop to ask for
+  // something this program owns, be answered, and go on. The question is
+  // then a loop, and what is being carried now is one round of it.
   struct answer_coming {
     conversation_id chat;
     message_id said;
@@ -420,17 +407,17 @@ private:
     platform::carrying carried;
     tools::owned mine;
     moment began;
-    // Every call this answer has stopped to ask for so far, and what each of
-    // them was answered: kept here, over every round of the asking, because
-    // what asked for them and what answered them are two ends of a wire and
-    // neither of them is the loop between.
+    // Every call this answer has stopped to ask for so far, and what each
+    // was answered: kept here across every round, because what asked for
+    // them and what answered them are two ends of a wire and neither is the
+    // loop between.
     std::vector<call_made> calls{};
   };
   std::optional<answer_coming> answering_;
 
-  // Asked of a model, where anything here can carry the asking. Today nothing
-  // can anywhere but a page -- that is what `carrying::any` says -- and where
-  // nothing can, nothing is asked and no answer comes, as it was before.
+  // Asked of a model, where anything here can carry the asking. Today only
+  // a page can -- that is what `carrying::any` says -- and where nothing
+  // can, nothing is asked and no answer comes.
   void ask_a_model(const conversation_id &chat) {
     if (answering_)
       return;
@@ -440,21 +427,20 @@ private:
     const provider::endpoint at{.base = opened_.base,
                                 .model = ending_of(chat),
                                 .told = told_of(chat)};
-    // Not const: a view over messages asked of more than once is read more
-    // than once, and reading it again is not a thing a const view of it says
-    // yes to.
+    // Not const: a view over messages is asked of more than once and read
+    // more than once, and a const view says no to a second reading.
     auto turns = root_.messages |
                        std::views::filter([&chat](const message &one) {
                          return one.chat == chat;
                        });
-    // What is ours to answer goes in the asking, so a model knows it may stop
-    // and ask; and it is kept here, because answering those calls later is
-    // this program's and nobody else's.
+    // What is ours to answer goes in the asking, so a model knows it may
+    // stop and ask; it is kept here because answering those calls later is
+    // this program's alone.
     tools::owned mine{turns, now_ms()};
     // Put where it will stay before anything is given to it: what a platform
-    // carries for is answerable at the address it was given, and a carrying
-    // that is moved afterwards answers into what was left behind -- it came,
-    // it answered, it was done, and the one asking never heard a word of it.
+    // carries for answers at the address it was given, and a carrying moved
+    // afterwards answers into what was left behind. It came, it answered, it
+    // was done, and the one asking never heard of it.
     answer_coming &coming = answering_.emplace(
         answer_coming{.chat = chat,
                       .said = message_id{chat.value + "-" +
@@ -478,13 +464,12 @@ private:
                                      .state = delivery::writing});
   }
 
-  // One round of the asking given to whatever carries it here.
+  // One round of the asking given to what carries it here.
   void carry(answer_coming &one) {
     one.asked = one.going.answering();
-    // Told that it is being carried before it is carried: nothing of an
-    // answer is taken by an asking that has not been told it is going, and
-    // everything that came was being dropped because nobody had said it was
-    // being carried at all.
+    // Told it is being carried before it is carried: no answer is taken by
+    // an asking that was never told it is going. Everything that came used
+    // to be dropped because nothing said it was being carried.
     one.asked->carried();
     one.carried.begin(one.asked->wants().url, one.asked->wants().headers,
                       one.asked->wants().body);
@@ -514,7 +499,7 @@ private:
       carry(one);
       if (message *there = found(one.said))
         there->text = std::string(one.going.said());
-      return;   // and it is not over yet
+      return;   // the answer is not over yet
     }
     const moment ended = now_ms();
     if (message *there = found(one.said)) {
@@ -523,8 +508,8 @@ private:
                                                     .author = ending_of(one.chat),
                                                     .sent = ended,
                                                     .took_ms = ended - one.began});
-      // Those calls are the thought's to keep, once there is a thought: what
-      // it wrote to itself is read beside them.
+      // Those calls are the thought's to keep, once there is a thought:
+      // what it wrote to itself is read beside them.
       if (there->before)
         there->before->calls = one.calls;
     }
@@ -534,7 +519,7 @@ private:
 
   // Every call it stopped to ask for, answered by whoever owns it -- here,
   // now, by this program -- and the question asked again with what they said.
-  // False where there is nothing left to ask, which is when the answer is put
+  // False when nothing is left to ask: that is when the answer is put
   // where it belongs.
   [[nodiscard]] bool asked_again(answer_coming &one) {
     std::vector<provider::call_answered> answered;
@@ -543,8 +528,8 @@ private:
           one.mine.answered(call.name, call.arguments)
               .value_or("nothing here answers that call");
       answered.push_back(provider::call_answered{.own = call.id, .said = said});
-      // Said for the fold above the answer too, and not only for the wire
-      // that asked again: what it stopped to ask for, and what came of it.
+      // Said for the fold above the answer too, not only for the wire that
+      // asked again: what it stopped to ask for, and what came of it.
       one.calls.push_back(
           call_made{.tool = call.name, .asked = call.arguments, .answered = said});
     }
@@ -570,23 +555,23 @@ private:
     look_.size = ui::body_size * static_cast<float>(shown_.font_scale);
   }
 
-  // Where in the messages one said is -- one past its own place, so that a
-  // fork copies everything said before it.
+  // Where in the messages one said is -- one past its own place, so a fork
+  // copies everything said before it.
   [[nodiscard]] std::size_t said_at(const message_id &said) const {
     for (std::size_t at = 0; at < root_.messages.size(); ++at)
       if (root_.messages[at].id == said)
         return at + 1;
     return 0;
   }
-  // What one said reads, or nothing where there is no such said.
+  // The text of that message, empty when there is no such message.
   [[nodiscard]] std::string text_of(const message_id &said) const {
     for (const message &one : root_.messages)
       if (one.id == said)
         return one.text;
     return {};
   }
-  // The conversation this window has open, where one of them is open: what
-  // a press that is about the open chat changes, and nothing else.
+  // The conversation this window has open, where one is open: what a press
+  // about the open chat changes, and nothing else.
   [[nodiscard]] conversation *opened_conversation() {
     if (!root_.opened)
       return nullptr;
@@ -609,9 +594,9 @@ private:
         return one.told_for();
     return std::string(default_told);
   }
-  // What this chat has spent of the room its answerer has: said again whole
-  // after any message enters or leaves it, and after the window changes, so
-  // that what the foot's circle reads is the messages added up.
+  // What this chat has spent of its answerer's room: said again whole after
+  // any message enters or leaves it, and after the window changes, so the
+  // foot's circle reads the messages added up.
   void recount(const conversation_id &chat) {
     conversation *one = nullptr;
     for (conversation &each : root_.conversations)
@@ -644,7 +629,7 @@ private:
     return out;
   }
   // This one away, and every one after it in its chat: what rub out and ask
-  // again both come down to, the one leaving the question above it to be
+  // again both come down to, the question above the message open to be
   // answered again.
   void cut_away(const message_id &said) {
     const std::size_t found = said_at(said);
@@ -662,9 +647,9 @@ private:
   }
 
   // The door a model is spoken through, while this is only a client: the
-  // server that served the page is the one expected to answer it, which is
-  // why the way in is written relative and why there is no key in it -- whose
-  // a key is, is that server's own to know.
+  // server that served the page is expected to answer it, which is why the
+  // way in is relative and why there is no key in it. Whose a key is is
+  // that server's own to know.
   const provider::endpoint opened_{
       .base = "/v1",
       .told = "You are answering in Progressive Chat, briefly and plainly."};
@@ -674,18 +659,18 @@ private:
   asking how_;
   ui::paints look_;
   requests asked_;
-  // The machine's own file dialogs, where they are asked for: the program's,
+  // The machine's file dialogs, where they are asked for: the program's,
   // put here when it is made (dialogs_from), and null until then.
   skiff::platform::dialogs::dialogs *dialogs_ = nullptr;
   std::string query_;
   bool dark_ = true;
   bool settings_ = false;
-  // The drawer is beside the messages, where the window has room for both,
-  // and it comes over them only where it is asked for with the pill. It was
-  // asked for from the first frame onwards, which a wide window answered by
-  // showing it beside them -- and a narrower one, or a phone, by showing it
-  // over them and the conversation not at all: nothing was left in the middle
-  // of the window but the drawer's own ground.
+  // The drawer is beside the messages where the window has room for both,
+  // and comes over them only where the pill asks for it. It was asked for
+  // from the first frame onwards: a wide window answered by showing it
+  // beside them, a narrower one or a phone by showing it over them and the
+  // conversation not at all, leaving nothing in the middle of the window
+  // but the drawer's own ground.
   bool drawer_ = false;
   // Whether the design said in the room is being read.
   bool design_ = false;
@@ -701,10 +686,10 @@ private:
   bool editor_menu_ = false;
   // Whether the card of faces above the face beside the clip is out.
   bool faces_ = false;
-  // The faces pressed most lately, newest first, and no more of them than
-  // the card's own row holds: drawn above the rest of them, which is what
-  // they were kept for (and what `pchat.config`'s `recent_emoji` is for,
-  // once there are runs to keep them between).
+  // The faces pressed most lately, newest first, no more than the card's
+  // own row holds: drawn above the rest, which is what they were kept for
+  // (and what `pchat.config`'s `recent_emoji` is for, once there are runs
+  // to keep them between).
   std::vector<std::string> faces_lately_{};
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;

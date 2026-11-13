@@ -3,10 +3,9 @@
 // into values of its own and written out of them again -- no part of the
 // program looks at a brace itself.
 //
-// Two halves and no more than the two need: a reader that says where it gave
-// up (so that a bad answer can be said as a bad answer at its own place in
-// it), and a writer that keeps its commas to itself, so nothing that builds a
-// body has to count them.
+// Two halves, and no more than two are needed: a reader that says where it
+// gave up, so a bad answer is reported at its own place, and a writer that
+// keeps its commas to itself, so nothing that builds a body counts them.
 export module pchat.json;
 
 import splice;
@@ -21,9 +20,9 @@ struct list;
 struct thing;
 
 // One value: nothing, a truth, a number, a string, a list or a thing. The two
-// that hold others are held through a shared pointer -- not because they are
-// shared, but because a value cannot be written out in full inside itself, and
-// this is the only way it says "a list" without already knowing what one is.
+// holding others are held through a shared pointer, not because they are
+// shared: a value cannot be written out in full inside itself, and a shared
+// pointer lets it say "a list" without knowing what one is.
 struct value {
   spl::variant<std::monostate, bool, double, std::string, std::shared_ptr<list>,
                std::shared_ptr<thing>>
@@ -45,9 +44,9 @@ struct member {
   friend bool operator==(const member &, const member &) = default;
 };
 
-// A thing, its members in the order they were written: kept as a list and not
-// as a map, because two members of one name are allowed to arrive and nothing
-// here decides what that means -- what asked for it does.
+// A thing, its members in the order they were written: kept as a list, not a
+// map, because two members of one name may arrive and nothing here decides
+// what that means -- what asked for it does.
 struct thing {
   std::vector<member> members;
   friend bool operator==(const thing &, const thing &) = default;
@@ -55,8 +54,8 @@ struct thing {
 
 enum class kind { nothing, truth, number, text, list, thing };
 
-// Which kind it is, said by visiting: one callable per alternative, so that
-// the kinds are never a number an alternative happens to sit at.
+// Which kind it is, by visiting: one callable per alternative, so a kind is
+// never a number an alternative sits at.
 [[nodiscard]] inline kind which(const value &one) {
   return spl::visit(spl::overloaded{
       [](nothing) { return kind::nothing; },
@@ -69,8 +68,8 @@ enum class kind { nothing, truth, number, text, list, thing };
 
 // ---- reading what is already written -------------------------------------
 
-// Where reading gave up, and why: the place in the text is said so that what
-// sent it can be told which of its own characters it was.
+// Where reading gave up, and why: the place in the text, so what sent it can
+// be told which of its characters it was.
 struct read_error {
   std::size_t at = 0;
   std::string said;
@@ -258,8 +257,8 @@ private:
     return out;
   }
 
-  // Four hex figures, written as UTF-8. What they said is said again as bytes
-  // and not as code units: the C++ string every other part reads is UTF-8.
+  // Four hex figures, written as UTF-8: the C++ string every other part reads
+  // is UTF-8, so the code point is encoded as bytes, not code units.
   [[nodiscard]] std::expected<std::string, read_error> four() {
     char32_t point = 0;
     for (int at = 0; at < 4; ++at) {
@@ -278,7 +277,7 @@ private:
       point = point * 16 + figure;
     }
     std::string out;
-    // Written out by hand: a bit at a time, as UTF-8 says it.
+    // Written by hand: a bit at a time, as UTF-8 says it.
     auto put = [&out](unsigned char byte) { out += static_cast<char>(byte); };
     if (point < 0x80) {
       put(static_cast<unsigned char>(point));
@@ -331,8 +330,8 @@ private:
 
 } // namespace reading
 
-// A whole text read. What it throws away is nothing: the place it gave up is
-// said, because a bad answer is only bad where it is bad.
+// A whole text read. Nothing is thrown away: the place it gave up is said,
+// for a bad answer is only bad where it is bad.
 [[nodiscard]] inline std::expected<value, read_error> read(std::string_view text) {
   return reading::over(text).whole();
 }
@@ -360,7 +359,7 @@ private:
       [](const auto &) -> std::optional<bool> { return std::nullopt; }},
       one.held);
 }
-// The member of a thing by its name, its first one where two share a name.
+// The member of a thing by its name, the first where two share a name.
 [[nodiscard]] inline const value *member_of(const value &one, std::string_view name) {
   return spl::visit(spl::overloaded{
       [name](const std::shared_ptr<thing> &said) -> const value * {
@@ -382,7 +381,7 @@ private:
       [](const auto &) -> const value * { return nullptr; }}, one.held);
 }
 // Where a member's own member is, and its member's after it: no path is
-// spelled out by a part that only wants one thing out of an answer.
+// spelled out by a part wanting only one thing out of an answer.
 [[nodiscard]] inline const value *said(const value &one, std::string_view name) {
   return member_of(one, name);
 }
@@ -441,7 +440,7 @@ private:
 }
 
 // One body being built: the commas, the nesting and the quotes are this one's
-// to keep, so what asks for the body says only what it wants said in it.
+// to keep, so what asks for the body says only what it wants in it.
 class writing {
 public:
   writing &thing() { return open('{'); }
@@ -455,7 +454,7 @@ public:
     first_.pop_back();
     return *this;
   }
-  // A member of the thing being written: the name now, and its value next.
+  // A member of the thing being written: the name now, its value next.
   writing &name(std::string_view member) {
     before();
     said_ += '"';
@@ -471,9 +470,9 @@ public:
     said_ += '"';
     return *this;
   }
-  // A value written as it was given: JSON that is already JSON. Quoting it
-  // would make it a string, and parsing it only to write it again would say
-  // the same thing twice.
+  // A value written as given: JSON that is already JSON. Quoting makes it a
+  // string, and parsing it only to write it again would say the same thing
+  // twice.
   writing &raw(std::string_view json_text) {
     before();
     said_ += json_text;

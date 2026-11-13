@@ -4,10 +4,9 @@
 // text, what it thought, the tools it asked for, what it cost, and why it
 // stopped.
 //
-// Nothing here knows what carried the bytes. feed() takes whatever came, in
-// whatever sizes it came in, so a transport is a thing that hands bytes over
-// and nothing more; take() hands back what they said. A test feeds a file and
-// reads an answer.
+// Nothing here knows what carried the bytes. feed() takes the bytes as they
+// arrive, in any size, so a transport only hands bytes over; take() hands back
+// what they said. A test feeds a file and reads an answer.
 module;
 #include "anthropic/wire.h"
 #include "gemini/wire.h"
@@ -44,8 +43,8 @@ public:
       gemini_state_.reset(gemini_open());
   }
 
-  // A piece of the wire, in whatever sizes the transport hands it over in: a
-  // line may be cut in two here and is put back together before it is read.
+  // A piece of the wire, in the size the transport hands it over: a line may
+  // be cut in two here and is put back together before it is read.
   void feed(std::string_view bytes) {
     kept_.append(bytes);
     for (;;) {
@@ -214,12 +213,13 @@ private:
       }
     }
 
-      // One line of SSE: a comment, a field, or the blank line that ends a frame.
+      // One line of SSE: a comment, a field, or the blank line that ends
+      // a frame.
   void line_said(const std::string &one) {
     if (one.empty() || one.front() == ':')
       return;
     if (!one.starts_with("data:"))
-      return; // event:, id:, retry: and whatever else a wire adds to itself
+      return; // event:, id:, retry: and the other fields a wire adds
     std::string_view data(one);
     data.remove_prefix(5);
     if (!data.empty() && data.front() == ' ')
@@ -231,9 +231,9 @@ private:
   // in JSON.
   void frame_said(std::string_view data) {
     if (data == "[DONE]") {
-      // Nothing more is coming, so whatever the lexer was still holding on
-      // to -- a tag cut in two, or a thought it never saw closed -- is said
-      // as what it was part of and nothing is lost at the edge of a stream.
+      // Nothing more is coming, so what the lexer still held -- a tag cut in
+      // two, or a thought never closed -- is said as what it was part of, and
+      // nothing is lost at the edge of a stream.
       content_ended();
       // Where a wire says it is done without saying why it stopped first --
       // it happens -- it stopped because it said it was done.
@@ -273,8 +273,8 @@ private:
     if (delta) {
       if (const std::string_view piece = text_in(delta, "content"); !piece.empty())
         content_said(piece);
-      // Thinking comes under a name of its own on every wire that has it, and
-      // under another on the others.
+      // Thinking comes under its own field name on every wire that has one,
+      // and under another on the others.
       std::string_view piece = text_in(delta, "reasoning_content");
       if (piece.empty())
         piece = text_in(delta, "reasoning");
@@ -297,18 +297,15 @@ private:
     }
   }
 
-  // What a model wrote thinking, where its wire has no field of its own for
-  // it: a tag round it -- <think>, <thinking>, <reasoning>, <analysis>,
-  // <thought>, or the channels a local template writes -- or, where it began
-  // thinking without opening one at all, everything up to the first tag that
-  // closes one. Kept apart from the answer, as every wire that does have a
-  // field for it keeps it apart.
+  // Thinking text on a wire that has no field for it: what stands inside
+  // <think>, <thinking>, <reasoning>, <analysis>, <thought>, or a local
+  // template's channel -- or, with no tag opened, everything before the first
+  // tag that closes one. Kept apart from the answer, as a wire with a field
+  // for it keeps it apart.
   //
-  // Nothing is said until it is known which side of the tag it falls on: a
-  // piece may end in the first half of a tag, and "let me thi" is not thinking
-  // and neither is it the whole of "<think>" until the rest of it comes. What
-  // may yet grow into a tag is held back here and said when the next piece
-  // settles it, or when the stream ends.
+  // Nothing is said until it is known which side of a tag the text falls on: a
+  // piece may end inside a tag, so what may yet grow into one is held back and
+  // said when the next piece settles it, or when the stream ends.
   struct tag_pair {
     std::string_view open;
     std::string_view shut;
@@ -534,8 +531,8 @@ private:
   }
 
   // What stands after "arguments":, whole -- as far as the brace or bracket
-  // it opened, whichever that was, and no account taken of anything inside
-  // a string of its own.
+  // it opened, whichever that was, and nothing inside a string literal
+  // counted.
   [[nodiscard]] static std::string_view said_value_of(std::string_view text,
                                                      std::size_t at) {
     while (at < text.size() &&
@@ -596,7 +593,7 @@ private:
   }
 
   // The frame where it stopped to ask for tools: each call it asked for is
-  // said once now, whole, and written into the thought above the answer as
+  // said now, whole, and written into the thought above the answer as
   // its greentext.
   void tools_done() {
     for (tool_call &kept : partial_) {
@@ -614,7 +611,7 @@ private:
   }
 
   // A member that is text, or nothing: every field a wire may leave out is
-  // read through this one, so that none is read as a number's zero.
+  // read through this one, so none is read as a number's zero.
   [[nodiscard]] static std::string_view text_in(const json::value *one,
                                                 std::string_view name) {
     const json::value *said = json::said(one, name);

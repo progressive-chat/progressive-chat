@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-name: Setup — Emscripten
+name: Setup -- Emscripten
 
 description: >-
   The Emscripten SDK, at one pinned revision. Its own clang is what compiles

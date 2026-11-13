@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.platform.jni -- What an Android backend calls Java through: the JNI
-// environment of this thread, and text given to Java as UTF-8. From whichever
-// thread asks: SDL attaches it to the virtual machine.
+// environment of this thread, and text given to Java as UTF-8. Taken on
+// whichever thread asks: SDL attaches it to the virtual machine.
 module;
 #include <SDL3/SDL.h>
 #include <jni.h>
@@ -13,9 +13,9 @@ import std;
 export namespace pchat::platform {
 
 // The JNI environment of this thread, with a frame the local references made
-// inside it are let go with, and whatever exception a call threw cleared as it
-// goes: an exception left standing throws again at the next call, which is not
-// where it came from.
+// inside it are let go with, and any exception a call threw cleared as it
+// goes: an exception left standing throws again at the next call, which is
+// not where it came from.
 class jni_frame {
  public:
   jni_frame() : env_(static_cast<JNIEnv *>(SDL_GetAndroidJNIEnv())) {
@@ -34,9 +34,9 @@ class jni_frame {
   bool ready_ = false;
 };
 
-// UTF-8 as a java.lang.String: through new String(bytes, "UTF-8"), and not
-// through NewStringUTF, whose modified UTF-8 is not UTF-8 for what is past the
-// basic plane -- a title or a body with an emoji in it would come out wrong.
+// UTF-8 as a java.lang.String: through new String(bytes, "UTF-8"), not
+// through NewStringUTF, whose modified UTF-8 is not UTF-8 past the basic
+// plane -- a title or a body with an emoji in it would come out wrong.
 [[nodiscard]] inline jstring string_of(JNIEnv *env, std::string_view text) {
   std::vector<jbyte> bytes;
   bytes.reserve(text.size());

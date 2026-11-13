@@ -3,7 +3,7 @@
 // before anything else is said to it, read and written where the conversation
 // is: a card over the room, one field in it, and the words the field keeps
 // going into the conversation as they are typed -- not when the card is put
-// away, which would keep two copies of what is only said once.
+// away, which would keep two copies of a message sent only once.
 //
 // What every answer is given where a conversation has said nothing of its own
 // stands in the field as its hint, and is never written in: what is told for
@@ -36,7 +36,7 @@ struct prompt_sink {
   conversation_id chat;
 };
 // What every edit of the field asks for: this conversation told this instead,
-// whole, as it is typed. Enter is nothing here but another line -- what is
+// whole, as it is typed. Enter is nothing here but another line: what is
 // told before an answer is not sent anywhere.
 struct prompt_told {
   std::shared_ptr<prompt_sink> sink;
@@ -64,7 +64,7 @@ inline constexpr int prompt_field_lines = 3;
 // The card over the room: its own colour whole underneath, the card in the
 // middle of it said in the drawer's, a head and what the head means, the
 // field under them, what is told where nothing is written said small at the
-// foot, and the only press besides the field -- put away, leaving what was
+// foot, and the only press besides the field: put away, leaving what was
 // written where the field put it.
 struct prompt_screen : scene::Node {
   nodes::Box<> fPaper{0u};
@@ -75,8 +75,8 @@ struct prompt_screen : scene::Node {
   widgets::TextArea<prompt_told> fField{widgets::Theme{}, std::string(default_told),
                                         prompt_told{fSink}};
   press_box fClose{};
-  // Which conversation the field is writing into, so that opening it on
-  // another one puts that one's words in the field and not the last one's.
+  // Which conversation the field is writing into; opening it on another one
+  // puts that one's words in the field, not the last one's.
   std::string fShown;
   conversation_id fShownChat;
 
@@ -122,8 +122,8 @@ struct prompt_screen : scene::Node {
     fSink->chat = chat ? chat->id : conversation_id{};
     // What the conversation says, put in the field where the field has not
     // said it: another conversation opened, or another card's words left in
-    // it. Editing is never answered by putting them in again -- what is in
-    // the field then is what put them there.
+    // it. Editing is never answered by putting them in again: what is in the
+    // field then is what put them there.
     const std::string said = chat ? chat->told : std::string{};
     if (said != fShown || fSink->chat != fShownChat) {
       if (said != fField.text())

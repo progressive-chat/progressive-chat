@@ -5,8 +5,8 @@
 // long ago where that is asked for, and a badge for what is unread -- and the
 // settings at the foot of the list.
 //
-// A row is a node of its own, made with the drawer and filled in again
-// whenever the model moves: the tree's shape is fixed, what it says is not.
+// A row is one node, made with the drawer and filled in again whenever the
+// model moves: the tree's shape is fixed, what it says is not.
 //
 // The field above the rows searches: what it is given is asked for as a
 // request, the program keeps it, and the rows shown here are the ones that
@@ -32,14 +32,13 @@ namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 namespace widgets = skiff::widgets;
 
-// What the field is told through: the field is made once, so what it asks for
-// goes by this -- which the drawer keeps -- and not by anything of its own.
+// What the field is told through: the field is made once, so what it asks
+// for goes by this, which the drawer keeps, and not by anything inside it.
 struct search_sink {
   app::requests *asked = nullptr;
 };
-// What the field gives back at every edit of it: the search asked for, as a
-// request, so that the rows are what is being typed and not what Enter last
-// said of it.
+// What the field gives back at every edit: the typed text, as a request, so
+// the rows follow what is being typed and not what Enter last said of it.
 struct search_given {
   std::shared_ptr<search_sink> sink;
   // Nothing to give back to the scene: what is being typed is asked of the
@@ -52,9 +51,8 @@ struct search_given {
   }
 };
 
-// One row of the panel's own: what it is called, with its mark before the
-// name, on a ground of its own and rounded as it is told to be. Pressed, it
-// asks for the one thing it stands there for.
+// One row of the panel: its name, its mark before it, its own ground,
+// rounded as told. Pressed, it asks for what it stands for.
 struct ask_row : scene::Node {
   nodes::Icon fMark{shape::menu(), 0u};
   nodes::Text fName{"", drawer_row_size, 0u, true};
@@ -97,8 +95,8 @@ struct ask_row : scene::Node {
     this->apply({.background = look.field});
     fMark.setColour(look.text);
     fName.setColour(look.text);
-    // One line, cut where the row ends: a name that wrapped stood its second
-    // line over whatever stood under it.
+    // Cut to one line at the row's edge: a wrapped name would put its second
+    // line over what stands under it.
     fName.apply({.maxWidth = std::max(
                      0.0f, this->bounds().width() - 2.0f * drawer_margin -
                                drawer_mark - gap)});
@@ -188,8 +186,8 @@ struct conversation_row : scene::Node {
     // painted in its own rounded box: nothing else in the panel has one, and
     // none of the rows that are not open is painted over the panel at all.
     this->apply({.background = chosen ? look.raised : 0u});
-    // A circle for its name, where one is asked for at all, and everything
-    // named in the row standing over by it where there is one.
+    // An avatar circle where one is asked for; the row's text begins beside
+    // it when there is one.
     fAvatar.setVisible(shown.avatars);
     fAvatar.setColour(look.avatar);
     const float begins = shown.avatars ? edge + avatar + gap : edge;
@@ -234,8 +232,8 @@ struct drawer_screen : scene::Node {
   // Said where the search kept nothing at all: the drawer standing empty
   // says less than a line saying why.
   nodes::Text fNone{"No conversation is named that, or says it.", 13.0f, 0u};
-  // The magnifier, in the field's own ground and before what it says: the
-  // field is a control of its own kind, and nothing else is drawn in it.
+  // The magnifier, in the field's ground and before what it says: the field
+  // is a control of another kind, and nothing else is drawn in it.
   nodes::Icon fSearchMark{shape::search(), 0u};
   std::shared_ptr<search_sink> fSink = std::make_shared<search_sink>();
   widgets::TextArea<search_given> fSearch{
@@ -281,12 +279,12 @@ struct drawer_screen : scene::Node {
   // for and kept once made: nothing here is said two ways for being asked
   // for twice, and no conversation is left out for there being many.
   std::vector<std::unique_ptr<conversation_row>> fRows;
-  // Where the rows begin: under the new chat, said once here because the
-  // rows are put out from it and the settings stand at the foot of them.
+  // Where the rows begin: under the new chat. Kept here because the rows are
+  // put out from it and the settings stand at the foot of them.
   float rows_top = 0.0f;
 
-  // The row for this place down the drawer, made there where there is none:
-  // every row says where it stands, told the place it was asked for.
+  // The row at this place down the drawer, made if there is none yet: every
+  // row is told where it stands.
   [[nodiscard]] conversation_row &row_at(std::size_t place, float text) {
     while (fRows.size() <= place)
       fRows.push_back(std::make_unique<conversation_row>());
@@ -401,8 +399,7 @@ struct drawer_screen : scene::Node {
                                    clock_of(chat.last_activity),
                                    chat.id.value == opened);
     }
-    // At the foot of them, whatever the list came to, the row the settings
-    // are opened from.
+    // At the foot of the rows, the row the settings are opened from.
     fSettings.apply({.anchor = scene::anchor::kTopLeft,
                      .x = edge,
                      .y = rows_top + static_cast<float>(rows.size()) *

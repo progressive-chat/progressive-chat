@@ -56,15 +56,15 @@ before a check has built it.
 
 ## The words
 
-- **the room** — the whole window: the drawer, the messages, the card.
-- **the card** — the field at the foot, and what is said about the answer.
-- **the glass** — what a probe reads: the page's mirror of the scene.
-- **a plate** — the rounded surface a thing stands on; a press walks up to
+- **the room** -- the whole window: the drawer, the messages, the card.
+- **the card** -- the field at the foot, and what is said about the answer.
+- **the glass** -- what a probe reads: the page's mirror of the scene.
+- **a plate** -- the rounded surface a thing stands on; a press walks up to
   what answers.
-- **a stub** — a press that asks nothing, a field nothing holds, a colour
+- **a stub** -- a press that asks nothing, a field nothing holds, a colour
   written outside `theme.cc`: anything named as though it were there that
   answers nobody.
-- **a wire** — one of the three shapes a conversation is spoken over
+- **a wire** -- one of the three shapes a conversation is spoken over
   (`chat/completions`, `responses`, `messages`), known by how its base ends
   and by nothing else.
-- **an answerer** — a model on a wire, put into one conversation.
+- **an answerer** -- a model on a wire, put into one conversation.

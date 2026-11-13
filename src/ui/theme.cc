@@ -37,7 +37,8 @@ struct paints {
   Colour scrim_top = 0x000c160cu; // see-through, the top of the messages
   // Nothing at all, painted whole: what takes a press away from a card that
   // came out of three dots, seen nowhere and answered everywhere else in the
-  // room -- the press that puts the card away and asks nothing more of it.
+  // room. It is the press that puts the card away and asks nothing more of
+  // it.
   Colour away = 0x00000000u;
   Colour search_bar = 0xd9162616u; // the pills over the list
   Colour scrim =
@@ -69,9 +70,9 @@ struct paints {
   out.badge_text = scheme.on_primary;
   out.avatar = scheme.primary_container;
   out.on_avatar = scheme.on_primary_container;
-  // Green of its own, whatever the seed is: the tertiary of a scheme, which
-  // no other part on the screen borrows, so that thinking read above an
-  // answer is never mistaken for the answer.
+  // A green kept apart from the seed: the tertiary, which no
+  // other part of the screen borrows, so thinking above an answer reads as
+  // thinking and not as the answer.
   out.thought = scheme.tertiary;
   // A link is drawn in the colour everything pressed is drawn in: it is the
   // one thing in a message that answers a press.

@@ -20,8 +20,8 @@ struct composer_state {
   friend bool operator==(const composer_state&, const composer_state&) = default;
 };
 
-// Whether there is anything to send: a message with nothing in it and nothing
-// on it says nothing, and the button that sends it stays dark.
+// Whether there is anything to send: a message with nothing in it and
+// nothing on it sends nothing, and the send button stays dark.
 [[nodiscard]] inline bool can_send(const composer_state& field) {
   return !field.attachments.empty()
       || !std::ranges::all_of(field.text, [](char unit) {
@@ -37,8 +37,8 @@ struct sending_request {
   std::optional<message_id> replies_to;
 };
 
-// The id a new message gets: its own number in nanoseconds, which is what
-// nothing else could have handed out for it yet.
+// The id a new message gets: its own number in nanoseconds, a value nothing
+// else could have handed out yet.
 [[nodiscard]] inline std::string new_message_id(moment when) { return std::to_string(when); }
 
 // Sent: the message it becomes, still going out, and the field as it was
@@ -57,8 +57,8 @@ struct sent_message {
                .sent = when,
                .state = delivery::sending,
                .replies_to = std::move(asking.replies_to)};
-    // What the reader asked for, worth what Agora's counter says it is worth,
-    // counted where it is written rather than at some later projection.
+    // What the reader asked for, worth what Agora's counter says it is
+    // worth, counted as it is written rather than at some later projection.
     said.tokens = static_cast<std::uint32_t>(pchat::tokens::of(said.text));
   if (said.text.empty() && asking.attachments.empty()) said.text = std::string{};
   return {.said = std::move(said), .cleared = composer_state{}};

@@ -182,8 +182,7 @@ namespace shape {
            {marks::line{-7.0f, 0.0f, 4.0f, 0.0f}, 1.7f},
            {marks::line{-7.0f, 5.0f, 7.0f, 5.0f}, 1.7f}}};
 }
-// Three dots in a row: what stands behind one press, where there is no room
-// for what it holds to stand by itself.
+// Three dots in a row: one press holding what has no room to stand open.
 [[nodiscard]] inline IconShape more() {
   return {{{marks::circle{-6.0f, 0.0f, 1.6f}, 0.0f, true},
            {marks::circle{0.0f, 0.0f, 1.6f}, 0.0f, true},

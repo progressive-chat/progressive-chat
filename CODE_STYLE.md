@@ -3,9 +3,9 @@
 How progressive-chat is written. A change that does not follow this is not
 done.
 
-The stack is the one `j4niwzis/mux` uses — C++26 modules, clang 23, CMake 4
+The stack is the one `j4niwzis/mux` uses -- C++26 modules, clang 23, CMake 4
 with Ninja, every dependency pinned through cmake-everywhere, drawing with
-skiff over Skia — and this document says how that stack is used here.
+skiff over Skia -- and this document says how that stack is used here.
 
 ## Language and build
 
@@ -22,8 +22,10 @@ skiff over Skia — and this document says how that stack is used here.
 
 ## Types at the boundary
 
-- Everything is typed. Whatever comes in — JSON, XML, a protocol's fields, a
-  config file, a name, a key — is read **once**, where it comes in, into
+Drawn as a schema: [docs/boundary-schema.svg](docs/boundary-schema.svg).
+
+- Everything is typed. What comes in -- JSON, XML, a protocol's fields, a
+  config file, a name, a key -- is read **once**, where it comes in, into
   structs, enums and variants. Code past that boundary works on the types.
   No generic trees and no raw strings to dig through.
 - What the program does not understand is kept opaque (the raw JSON text, for
@@ -33,8 +35,8 @@ skiff over Skia — and this document says how that stack is used here.
 
 ## No branching on strings
 
-- A name, a tag, a type, a kind — anything that comes in as text and decides
-  what the code does — is read into a `std::variant` (or `spl::variant`) of
+- A name, a tag, a type, a kind -- anything that comes in as text and decides
+  what the code does -- is read into a `std::variant` (or `spl::variant`) of
   types at the boundary, through a `*_of` function with a table. No
   `name == "..."` chains anywhere past it.
 
@@ -42,7 +44,7 @@ skiff over Skia — and this document says how that stack is used here.
 
 - Work on a variant with `visit` and an overload set (`spl::overloaded{...}`,
   one callable per alternative), or with members and overloads on the
-  alternative types themselves, so that every alternative is handled and a
+  alternative types themselves, so every alternative is handled and a
   new one cannot be forgotten.
 - `std::holds_alternative`, `std::get_if` chains and
   `if constexpr (std::same_as<...>)` dispatch are not used. Where visiting is
@@ -81,28 +83,31 @@ skiff over Skia — and this document says how that stack is used here.
 
 ## The UI (skiff)
 
-- Reuse the nodes that exist: where there is already a node for something (a
-  reply bar, a header, a button, a list row), use it — made a template on
+- Reuse the nodes that exist: when a node already exists for something (a
+  reply bar, a header, a button, a list row), use it -- made a template on
   what differs, never a copy.
 - A node's children are a `parts` aggregate walked as a binding pack, not a
   hand-written child list.
 - Drawing is declarative: fills, borders and corner radii in the node's
-  spec; skiff and skiff-widgets nodes for pictures, avatars and icons — not
+  spec; skiff and skiff-widgets nodes for pictures, avatars and icons -- not
   `drawSelf` in the app.
 - The look is Agora's: a drawer of conversations, one conversation beside it,
   a top bar over them, a composer under them, and settings in the same shell.
   It is re-drawn here from its idea, in this stack; nothing of Agora's own
   sources is in this tree.
-- How the library actually lays things out — what sizes it reads, what it
-  throws away, what a press reaches — is written down as it is learned in
+- How the library actually lays things out -- what sizes it reads, what it
+  throws away, what a press reaches -- is written down as it is learned in
   `docs/skiff-notes.md`. Read it before drawing anything new, and add to it
   when a screen comes out somewhere other than where it was put.
 
 ## Comments, names and commits
 
 - Comments say what a thing is and why it is so, in plain English sentences.
-  Where code works around something, the comment says what happened without
-  it.
+  They are terse and literal: state the fact, no metaphor, no aside, no
+  colon-that-turns-into-a-lesson. `// Ids are opaque strings: compared and
+  sorted, never parsed.` not `// whatever a protocol calls one, it is
+  compared, sorted and used as a key, never read into parts.` Where code works
+  around something, the comment says what happened without it.
 - English everywhere: code, comments, commits, documents.
 - **A name is not a sentence.** What a function, a type or a variable is
   called says what it is, in four words at most: `pending_calls`,
@@ -113,52 +118,10 @@ skiff over Skia — and this document says how that stack is used here.
   a signature. `check.yml` refuses any name of five words or more, so that
   this is not a thing remembered but a thing built.
 - A commit message says what changed and why: a short first line, then the
-  reason. The first line is read most -- in `git log`, beside a build, in a
-  file's own name -- so there is a rule for how it is written.
+  reason.
 - **A push is not rewritten.** Pushed commits are read by CI, by the build
   names, and by anyone who fetched: rewriting them with `--force` replaces what
   everyone already has with something else under the same branch. Force push is
   done only when it is really needed -- a branch nobody has read yet, or a
   mistake that must not stand at all -- and never to tidy a name, to rebase, or
   to resume work. What is pushed stays pushed.
-
-### How a commit is named
-
-A name finishes one sentence, always the same one:
-
-    After this commit, <the name>.
-
-Everything wanted of a name comes of asking that, and nothing else has to be
-remembered:
-
-- **It begins lower case.** It is not a sentence of its own, but the tail of
-  another. "After this commit, where there is no GL it draws in software
-  instead." A name that starts with a capital begins a sentence it never
-  finishes.
-- **It says what is true afterwards, not what was done.** Not "add arm64 to
-  the desktop build" but "the desktop is built for arm64 as well": no
-  imperative -- no `add`, `fix`, `update`, `remove` -- because the imperative
-  answers a different question, and reads in a log as a thing still to be
-  done.
-- **It is about the program, not about the files.** "what the first frame
-  began after is said apart", not "program.cc: log first frame". The body
-  names the files freely, and usually should.
-- **Nothing comes in front of it.** No `feat:`, no `fix:`, no number. What
-  sort of change it is, it says by what it says is true.
-- **No full stop.** The sentence it is the tail of ends where the name does,
-  and it is not the name that ends it.
-- **One thing.** A name that needs "and" twice is two commits. Nor is it said
-  in the name what went wrong on the way there: the name is what came of it,
-  and what was tried is what the body is for.
-- **Short.** No more than 72 characters, and fewer wherever they can be
-  spared. A name that will not fit is two things said as one, or one thing
-  said at too much length; and these names are put into the names of builds.
-
-Two that came out of it:
-
-    where there is no GL it draws in software instead
-    why it is called Progressive Chat, said
-
-`tools/commit.py` refuses the beginning of the rule -- a capital letter, a
-full stop, a prefix, an imperative, or more than 96 characters -- and says
-which of them it was. The rest is read by whoever writes it.

@@ -26,13 +26,13 @@ namespace nodes = skiff::nodes;
 namespace widgets = skiff::widgets;
 
 // What the field is told through: kept by the composer, and read as Enter is
-// pressed in it. The field is made once -- with nothing of a conversation in
-// it -- so what it asks for goes by this, not by anything of its own.
+// pressed in it. The field is made once with nothing of a conversation in
+// it, so what it asks for goes by this.
 struct message_sink {
   app::requests *asked = nullptr;
   conversation_id chat;
-  // Said once something written in the field has been sent from it, and
-  // said false again as soon as the field is left empty: nothing keeps a
+  // Set once something written in the field has been sent from it, and
+  // false again as soon as the field is left empty: nothing keeps a
   // message it has already given away, and the two ways out of the field --
   // Enter pressed in it, and the round button beside it -- leave it the
   // same.
@@ -46,7 +46,7 @@ struct message_given {
     // Whether there is anything to send is asked of
     // `pchat.logic.composer` and not said here a second time: a field of
     // nothing but spaces and newlines has been written in and says
-    // nothing, which is one rule said in one place.
+    // nothing. One rule, in one place.
     if (sink && sink->asked &&
         logic::can_send(logic::composer_state{.text = std::string(text)})) {
       sink->asked->ask(app::send_message{sink->chat, std::string(text)});
@@ -69,7 +69,7 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
 }
 
 // One press with a mark painted in the middle of it, standing for the round
-// button beside the field: what the mark is for is not kept here -- it is
+// button beside the field: what the mark is for is not kept here. It is
 // read out of the field at the press, which is why this is its own node and
 // not the press-box the other marks of its kind share (`src/ui/base.cc`).
 struct send_circle : scene::Node {
@@ -89,8 +89,8 @@ struct send_circle : scene::Node {
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
-  // Pressed: what Enter pressed in the field asks for, asked the same way,
-  // which is nothing at all while there is nothing written in it.
+  // Pressed: what Enter pressed in the field asks for, asked the same way.
+  // Nothing while there is nothing written in it.
   [[nodiscard]] bool onClick(float, float) {
     if (field && sink)
       message_given{sink}(field->plainText());
@@ -127,8 +127,8 @@ inline constexpr float dots_room = dots_size + 14.0f;
 inline constexpr std::size_t face_columns = 7u;
 // How many of the ones pressed most lately stand in the row above them: a
 // row of the card's own breadth, no more. Kept by the screen and said to it
-// as `face_written`, which is also what `pchat.config`'s `recent_emoji`
-// is to be read out of once there are runs to keep it between.
+// as `face_written`. `pchat.config`'s `recent_emoji`
+// is read into it once there are runs to keep it between.
 inline constexpr std::size_t faces_lately_kept = face_columns;
 inline constexpr std::size_t face_rows = 4u;
 inline constexpr float face_cell = 36.0f;
@@ -219,13 +219,12 @@ struct editor_menu : scene::Node {
     this->setVisible(true);
     this->apply(where);
     fCard.setColour(look.drawer);
-    // Thinking, and how hard it is asked to think said beside it: the word
-    // for nothing at all where it is not asked to think in the first place.
+    // Thinking, and how hard it is asked to think, said beside it: the
+    // word for nothing at all where it is not asked to think.
     fRows[0].again(sink, look, edge, "Thinking",
                    how.thinking ? said_by(how.how_hard) : "off",
                    app::set_thinking{.on = !how.thinking});
-    // And the same again on its own row, for saying it is one press away
-    // from being another: each press asks for the next of the four.
+    // The same on its own row: each press asks for the next of the four.
     fRows[1].again(sink, look, edge + editor_row_height, "Effort",
                    said_by(how.how_hard),
                    app::set_effort{.how_hard = next_of(how.how_hard)});
@@ -241,9 +240,8 @@ struct editor_menu : scene::Node {
 };
 
 // One of the faces: the character itself, in its own square, rounded, and
-// nothing more. Pressed, it is written where the card keeps what was said to
-// it and not asked for anywhere else -- what a face is put into is the
-// field, and the field is this card's own to write in, which is why a press
+// nothing more. Pressed, it is written into the field and not asked for
+// anywhere else -- the field is this card's own to write in, so a press
 // here answers itself rather than asking the program.
 struct face_chip : scene::Node {
   nodes::Box<> fPlate{0u};
@@ -373,45 +371,43 @@ struct composer : scene::Node {
   // but in that card, it puts it away again.
   press_box fFace{shape::smile()};
   // Three dots after the ring: what they open every answer of this chat is
-  // asked with. They are a plate under a mark and both take the press, for
-  // the same reason every other mark of theirs does -- what a page says was
-  // pressed in the middle of them is the mark painted last there, and a walk
-  // up from the mark reaches the node that answers for the plate.
+  // asked with. A plate under a mark, and both take the press: what a page
+  // says was pressed in the middle of them is the mark painted last there,
+  // and a walk up from the mark reaches the node that answers for the plate.
   press_box fDots{shape::menu()};
-  // The round button that sends what has been written. It is a plate under
-  // a mark and both of them take the press, for the same reason every other
-  // mark of theirs does: what a page says was pressed in the middle of the
-  // button is the mark painted last there, and a walk up from the mark
-  // reaches this node, which answers for the plate. What it asks for is
-  // read at the press and not when it is drawn, because what is written is
-  // the field's to keep and not this node's.
+  // The round button that sends what has been written. A plate under a
+  // mark, and both take the press: what a page says was pressed in the
+  // middle of the button is the mark painted last there, and a walk up from
+  // the mark reaches this node, which answers for the plate. What it asks
+  // for is read at the press and not when it is drawn, because what is
+  // written is the field's to keep and not this node's.
   send_circle fSend{};
   // What was being written to each conversation when its reader left it, and
   // what is given back to the field when that reader comes back: nothing
   // written for one conversation is read in another, and nothing written in
-  // one is lost by going to look at another. Kept beside the field itself,
-  // which is where what is written already is.
+  // one is lost by going to look at another. Kept beside the field, where
+  // what is written already is.
   logic::drafts fDrafts{};
   // Which conversation what is in the field belongs to: said again every
   // frame, and what the field is read against to know when it changed.
   conversation_id fShown{};
   // What the three dots open, said over everything else drawn here and put
   // away again by one press of what opened it. It stands above the card and
-  // not inside it, and nothing is clipped by the card's own edges: what a
-  // node draws outside itself is drawn just the same.
+  // not inside it; nothing is clipped by the card's own edges. What a
+  // node draws outside itself is drawn the same.
   editor_menu fMenu{};
   // What the face opens: twenty-eight faces in four rows of seven, and what
   // one of them pressed is written into. The string it is written into is
-  // the card's own and not the program's, for what a face is added to is a
-  // field no request reaches: the card reads it empty again before the next
+  // the card's own, not the program's: no request reaches it. The card
+  // reads it empty again before the next
   // frame, and puts what is in it where the pen stands.
   faces_card fFaces{};
   std::shared_ptr<std::string> fTyped = std::make_shared<std::string>();
 
   composer() {
     // One line, which is what makes Enter send rather than put a line break
-    // in: what is written here is said once, as a message, and what it keeps
-    // of its shape is kept by the room and not by this field.
+    // in: the text here is sent once as a message, and its shape is kept
+    // by the room, not by this field.
     fField.setSingleLine(true);
     fSend.field = &fField;
     fSend.sink = fSink;
@@ -471,8 +467,8 @@ struct composer : scene::Node {
     // it was written, and is kept to it before another one is opened; what
     // belongs to the one being opened comes back into the field. Nothing is
     // said of this to the program -- whose field it is and what is written
-    // in it have never been anything but this card's own -- and nothing in
-    // it survives the window's going, which nothing in the field did either.
+    // in it are this card's own -- and nothing in
+    // it survives the window's going, as nothing in the field did either.
     if (fShown.value != chat.id.value) {
       if (!fShown.value.empty())
         fDrafts.write(fShown, std::string(fField.plainText()));
@@ -481,7 +477,7 @@ struct composer : scene::Node {
     fShown = chat.id;
     fSink->chat = chat.id;
     // A face pressed in the card above this one: written at the end of what
-    // has been written here, and nowhere else, for it is what its reader
+    // has been written here, and nowhere else. It is what its reader
     // would have typed, and nothing else here knows where the pen was.
     if (!fTyped->empty()) {
       std::string whole{fField.plainText()};
@@ -513,8 +509,8 @@ struct composer : scene::Node {
     fDots.mark_colour(look.text);
     // Lit only when there is something written to send: what it is given to
     // say is nothing at all otherwise, and a press on it asks for nothing.
-    // Asked of `logic::can_send`, which is the same rule the field's own
-    // Enter is asked of, so that the two ways out of it never disagree
+    // Asked of `logic::can_send`, the same rule the field's own
+    // Enter is asked of, so the two ways out of it never disagree
     // about whether they have anything to give.
     const bool written =
         logic::can_send(logic::composer_state{.text = fField.plainText()});
@@ -534,8 +530,8 @@ struct composer : scene::Node {
       this->clear();
     }
     // Which model, and the circle read by how much of it is drawn: its whole
-    // ring said in the outline's colour, and as much of it as this chat has
-    // taken said in the primary one, from the top and clockwise.
+    // ring in the outline's colour, and as much of it as this chat has
+    // taken in the primary one, from the top and clockwise.
     const float used = std::clamp(chat.context_used, 0.0f, 1.0f);
     const std::string model = chat.leading_model();
     fModel.setText(said_as_a_model(model));
@@ -561,10 +557,10 @@ struct composer : scene::Node {
       fMenu.hide();
     // The faces, over the messages and above the face that opened them: as
     // far to the right as that face is, and its own height plus theirs above
-    // it, so that no press in one card is ever a press in the other.
+    // it, so no press in one card is ever a press in the other.
     if (faces_open) {
       // One row more where there are faces that were pressed lately: they
-      // stand above the rest of them, and the card is a row taller for it.
+      // stand above the rest, and the card is a row taller for it.
       const std::size_t rows = face_rows + (faces_lately.empty() ? 0u : 1u);
       const float high = static_cast<float>(rows) * face_cell + 2.0f * edge;
       fFaces.again(asked, fTyped, look,

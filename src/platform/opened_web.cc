@@ -16,10 +16,10 @@ export namespace pchat::platform::opened {
 bool open(std::string_view target) {
   if (target.empty())
     return false;
-  // A "_blank" whose name is forgotten, so that every link opens a tab of
-  // its own and two links do not share one; and "noopener", without which
-  // the page opened is given the window this one was opened from -- this
-  // program's whole tree -- and could reach into it.
+  // A "_blank" whose name is forgotten, so every link opens a tab of its own
+  // and two links do not share one; and "noopener", without which the page
+  // opened is given the window this one was opened from -- this program's
+  // whole tree -- and could reach into it.
   const int asked = EM_ASM_INT(
       {
         const place = UTF8ToString($0);

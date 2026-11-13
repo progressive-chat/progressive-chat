@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-name: Setup — clang 23, CMake 4, Ninja, gn
+name: Setup -- clang 23, CMake 4, Ninja, gn
 
 description: >-
   The toolchain a build of progressive-chat has to have: clang 23 with its

@@ -5,10 +5,10 @@
 //
 // Nothing here carries anything, and nothing here is called into by a
 // transport. A transport takes the asking -- the place, its headers, the
-// body -- because that is data; it hands the bytes back here because that is
-// data too; and it says when it has finished carrying them. Which is what
-// lets one answer be said whole by a test with no network under it, and the
-// same answer later be carried by a page's fetch, a socket, or fibers.
+// body -- as data, hands the bytes back here as data, and says when it has
+// finished carrying them. That is what lets one answer be said whole by a
+// test with no network under it, and the same answer be carried later by a
+// page's fetch, a socket, or fibers.
 export module pchat.provider.run;
 
 import std;
@@ -28,9 +28,9 @@ enum class standing { ready, going, done };
 enum class over { none, complete, stopped, failed };
 
 // Everything a transport is given to carry: where, with what headers, and
-// what body. Written out when the run is made and not when something asks, so
-// that what is sent is the same bytes whoever carries them, and so that a
-// test can read them without carrying them anywhere.
+// what body. Written out when the run is made, not when something asks, so
+// the sent bytes are the same whoever carries them and a test can read them
+// without carrying them anywhere.
 struct asking {
   std::string url;
   std::vector<std::pair<std::string, std::string>> headers;
@@ -48,9 +48,9 @@ struct put_in {
 };
 
 // One answer written into a message, wherever the answer came from: one run,
-// or one question that had to be asked again before it was answered. Whose it
-// is written as, where it was said, how long it took, and failed where nothing
-// of it came -- said once here so that it is said the same way twice.
+// or one question asked again before it was answered. Author, place, duration
+// and failed where nothing of it came, set here so both callers say the same
+// thing twice.
 [[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
                                        std::string_view thinking,
                                        std::size_t asking, usage cost,
@@ -72,14 +72,14 @@ struct put_in {
   return out;
 }
 
-// One answer. It owns the body that was asked with and the stream that comes
-// back, and it is the only thing between them: what the screens read while an
-// answer is arriving -- what it has said so far, what it thought, what it
-// cost, why it is over -- they read from here, and nowhere else.
+// One answer. It owns the body asked with and the stream that comes back,
+// and is the only thing between them. The screens read from here and nowhere
+// else while an answer arrives: what it has said so far, what it thought,
+// what it cost, why it is over.
 class run {
 public:
-  // The turns as any range that holds them, for the body that is written once
-  // and never again.
+  // The turns as any range that holds them, for a body written once and
+  // never again.
   template <std::ranges::forward_range Turns>
     requires std::same_as<std::ranges::range_value_t<Turns>, turn>
   run(endpoint at, Turns &&turns, const wanted &wants = {})
@@ -92,15 +92,15 @@ public:
 
   [[nodiscard]] const asking &wants() const { return asking_; }
 
-  // It is being carried now. Nothing comes before this is said, and saying it
-  // twice is the same as saying it once.
+  // It is being carried now. Nothing comes before this is said, and saying
+  // it twice is the same as saying it once.
   void carried() {
     if (now_ == standing::ready)
       now_ = standing::going;
   }
 
-  // A piece of the answer, in whatever sizes it arrives in. Nothing of an
-  // answer that has been stopped -- or of one that is over -- is taken.
+  // A piece of the answer, in any size it arrives in. Nothing is taken of
+  // an answer that was stopped, or of one that is over.
   void arrive(std::string_view bytes) {
     if (now_ != standing::going)
       return;
@@ -122,8 +122,8 @@ public:
   }
 
   // The reader has stopped it: what is wanted of the answer is no longer
-  // wanted, so nothing more of it is taken, and nothing of it after this is
-  // said as having been read.
+  // wanted, so nothing more of it is taken, and nothing after this is said
+  // as read.
   void stopped() {
     if (now_ == standing::going)
       stop_over(over::stopped, std::nullopt);
@@ -143,7 +143,7 @@ public:
   [[nodiscard]] usage cost() const { return coming_.cost(); }
   [[nodiscard]] std::size_t tool_calls() const { return coming_.calls().size(); }
   // Every tool it stopped to ask for, whole, in the order it asked. Read out
-  // of here and answered nowhere in particular: this does not run anything.
+  // of here and answered nowhere in particular: this runs nothing.
   [[nodiscard]] const std::vector<tool_call> &called() const {
     return coming_.calls();
   }
@@ -165,8 +165,8 @@ public:
   }
 
 private:
-  // Over, one way or the other, said once: everything after that is what has
-  // already come and nothing more.
+  // Over, one way or the other, set once: after that, only what already
+  // came, nothing more.
   void stop_over(over how, std::optional<std::string> why) {
     now_ = standing::done;
     ended_ = how;

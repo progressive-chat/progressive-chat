@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// pchat.logic.doc -- The design, read into lines each of which knows what it
-// is: how many hashes stand in front of it saying how large it is to be
-// said, whether it is one of a list, or nothing but the room it leaves
-// between two others.
+// pchat.logic.doc -- The design, read into lines each knowing what it is: how
+// many hashes stand in front of it, saying how large it is to be read,
+// whether it is one of a list, or nothing but the room it leaves between two
+// others.
 //
-// Read once, out of the string the build wrote out of design-doc.md, so that
-// what the room draws can be read against what was written -- and read on
-// this side of nothing but its own words, so that it is said by tests with
-// no window under them.
+// Read once, out of the string the build wrote from design-doc.md, so what
+// the room draws reads against what was written. It is read from its own
+// words, so tests can say it with no window under them.
 module;
 #include <pchat/design.h>
 export module pchat.logic.doc;
@@ -16,8 +15,8 @@ import std;
 
 export namespace pchat::logic {
 
-// What a line is said as: the largest of them is a title, and a line of
-// nothing is the room between two others, which is a kind too.
+// What a line is read as: the largest is a title, and a line of nothing is
+// the room between two others -- a kind too.
 enum class doc_kind {
   title,
   heading,
@@ -32,17 +31,17 @@ struct doc_line {
   std::string said;
 };
 
-// How many hashes a line may open with, and still be one of three sizes:
-// more than three hashes is said as small as three was.
+// How many hashes a line may open with and still be one of three sizes: more
+// than three hashes reads as small as three.
 inline constexpr std::size_t doc_deepest = 3;
 
-// The list of them, read out of the whole of a document: every line of it
-// kept in the order it was written, because a design read out of order is
-// not the design that was written.
+// The list of them, read out of a whole document: every line kept in the
+// order it was written, for a design read out of order is not the design
+// written.
 [[nodiscard]] inline std::vector<doc_line> read_doc(std::string_view text) {
   std::vector<doc_line> out;
   while (!text.empty()) {
-    // One line: up to the next break, and that break put behind it.
+    // One line: up to the next break, that break left behind it.
     const std::size_t broken = text.find('\n');
     std::string_view said = broken == std::string_view::npos
                                 ? text
@@ -58,7 +57,7 @@ inline constexpr std::size_t doc_deepest = 3;
       continue;
     }
     if (said[begun] == '#') {
-      // How many hashes: a line of them, counted, and nothing else in front.
+      // How many hashes: a run of them, counted, nothing else in front.
       std::size_t hashes = 0u;
       while (begun + hashes < said.size() && said[begun + hashes] == '#')
         ++hashes;
@@ -88,7 +87,7 @@ inline constexpr std::size_t doc_deepest = 3;
 }
 
 // The design itself, as this build was made with it: what stands at the top
-// of the tree, said in the room as well.
+// of the tree, shown in the room as well.
 [[nodiscard]] inline std::string_view the_design() { return design_doc; }
 
 } // namespace pchat::logic

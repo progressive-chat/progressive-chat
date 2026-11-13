@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// pchat.provider -- What one conversation asks of a model, put into words a
-// provider's own wire answers to: the turns, the body, the place it is sent.
+// pchat.provider -- What one conversation asks of a model, in the words a
+// provider's wire answers to: the turns, the body, the place it is sent.
 //
-// Nothing here opens anything. It writes the bytes that would go out and reads
-// the bytes that would come back (see pchat.provider.stream); what carries
-// them is the platform's to do, later, and a test's -- so every part of it can
-// be said without a network, which is the only way a protocol is worth
-// writing at all.
+// Nothing here opens anything. It writes the bytes that would go out and
+// reads the bytes that would come back (see pchat.provider.stream). What
+// carries them is the platform's job later and a test's, so every part of it
+// can be exercised with no network.
 module;
 #include "provider/anthropic/wire.h"
 
@@ -21,7 +20,7 @@ export namespace pchat::provider {
 
 // ---- what is said --------------------------------------------------------
 
-// Who said a turn, in the only four ways a wire allows it.
+// Who said a turn, in the four ways a wire allows.
 enum class role { system, user, assistant, tool };
 
 [[nodiscard]] inline std::string_view said_by(role one) {
@@ -38,12 +37,11 @@ enum class role { system, user, assistant, tool };
   return "user";
 }
 
-// One thing said: by whom, and what. Where thinking came before an answer it
-// is kept here too -- said back to nobody yet, because the wires that take it
-// back are few and the ones that refuse it are many.
-// A tool the model asked for on its way: gathered out of deltas that arrive
-// one key at a time, some of which name it and some of which are a piece of
-// one argument.
+// One thing said: by whom, and what. Thinking that came before an answer is
+// kept here too, sent back to nobody for now: few wires take it back and many
+// refuse it. A tool the model asked for on its way: gathered out of deltas
+// arriving one key at a time, some naming it and some a piece of one
+// argument.
 struct tool_call {
   std::string id;
   std::string name;
@@ -55,12 +53,12 @@ struct turn {
   role who = role::user;
   std::string text;
   std::string thought;
-  // The tools it stopped to ask for, where it stopped to ask for any: they
-  // are given back with the asking, because a wire answers an answer of a
-  // call against the call and nothing else.
+  // The tools it stopped to ask for, where it stopped to ask for any: given
+  // back with the asking, a wire answering a call against that call and
+  // nothing else.
   std::vector<tool_call> calls;
   // Which call this turn answers, where it answers one: named as the wire
-  // named it, which is how what a tool said is read against what asked it.
+  // named it, so what a tool said reads against what asked it.
   std::string own;
   friend bool operator==(const turn &, const turn &) = default;
 };
@@ -84,23 +82,20 @@ struct endpoint {
 };
 
 // Two wires wear OpenAI's shape: the chat one everyone answers and the
-// responses one only some do. Which is which is said by how the base ends,
-// the same way their own docs put it.
-// Two wires wear OpenAI's shape: the chat one everyone answers and the
-// responses one only some do -- which of those two is said by how the base
-// ends, the same way their own docs put it. A third shape is Anthropic's own,
-// and no base ending says where that one is asked: the family does, named by
-// the answerer the model is.
+// responses one only some do. Which of the two is told by how the base ends,
+// the way their own docs put it. A third shape is Anthropic's own, and no
+// base ending says where that one is asked: the family does, named by the
+// answerer the model is.
 enum class wire { chat, responses, anthropic, gemini };
 
 [[nodiscard]] inline wire wire_of(const endpoint &one) {
-  // Who is asked speaks before the base's ending does: Anthropic's family
-  // keeps its own wire wherever its base stands, suffixes and all.
+  // Who is asked speaks before the base's ending: Anthropic's family keeps
+  // its own wire wherever its base stands, suffixes and all.
   if (family_of(one.model) == "anthropic")
     return wire::anthropic;
   // The family before the base's ending here too: a base ending in /v1beta is
   // OpenAI's words under a Google name, and which words the model reads is
-  // asked of the model and not of the base's suffix.
+  // asked of the model, not of the base's suffix.
   if (family_of(one.model) == "gemini")
     return wire::gemini;
   const std::string_view base(one.base);
@@ -125,9 +120,9 @@ enum class wire { chat, responses, anthropic, gemini };
 }
 
 [[nodiscard]] inline std::string url_of(const endpoint &one) {
-  // Gemini's method carries the model inside it and asks for the answer as
-  // the stream of events it is made of: base, model, method, and the form
-  // that says the events are the stream and not one blob.
+  // Gemini's method carries the model inside it and asks for the answer as a
+  // stream of events: base, model, method, and the form saying the events are
+  // the stream and not one blob.
   if (wire_of(one) == wire::gemini) {
     std::string out = one.base;
     out += "/models/";
@@ -140,24 +135,23 @@ enum class wire { chat, responses, anthropic, gemini };
   return out;
 }
 
-// What goes with the body, and nothing that is anybody's secret said twice:
-// the key once, in the header a wire asks for it in.
+// What goes with the body, and no secret said twice: the key once, in the
+// header a wire asks for it in.
 [[nodiscard]] inline std::vector<std::pair<std::string, std::string>>
 headers_of(const endpoint &one) {
   std::vector<std::pair<std::string, std::string>> out{
       {"Content-Type", "application/json"}};
   if (wire_of(one) == wire::anthropic) {
-    // Where its own wire asks for the key, and its own date beside it: a wire
-    // that has a version says so, and this one does.
+    // Where its own wire asks for the key, and its date beside it: this
+    // versioned wire says its version.
     if (!one.key.empty())
       out.emplace_back("x-api-key", one.key);
     out.emplace_back("anthropic-version", "2023-06-01");
     return out;
   }
   if (wire_of(one) == wire::gemini) {
-    // Where Google's own wire asks for the key: its header's own name and
-    // nothing beside it -- which version this wire is has gone into the base
-    // of its URL with its method.
+    // Where Google's own wire asks for the key: its header's name and nothing
+    // beside it. The wire's version went into the URL base with the method.
     if (!one.key.empty())
       out.emplace_back("x-goog-api-key", one.key);
     return out;
@@ -170,10 +164,9 @@ headers_of(const endpoint &one) {
 // ---- the turns of a conversation -----------------------------------------
 
 // What the model keeps of one conversation, as turns a wire is given: what
-// the reader wrote asked, and what the model answered, in the order it was
-// said and nothing of what the screens know about either. Any range that
-// holds messages is given -- a conversation's own vector, a piece of it, a
-// view over one -- and not one container of one type.
+// the reader wrote asked and what the model answered, in order, none of what
+// the screens know. Any range of messages is accepted -- a conversation's
+// vector, a piece of it, a view over one -- not one container type.
 template <std::ranges::forward_range Said>
   requires std::same_as<std::ranges::range_value_t<Said>, message>
 [[nodiscard]] std::vector<turn> turns_of(Said &&said) {
@@ -190,29 +183,28 @@ template <std::ranges::forward_range Said>
 }
 
 // What a model may be told it can ask for on its way to answering: named,
-// told what it does, and told what each thing it takes is -- all of it in the
-// shape a wire reads it back in, and none of it anything this tree runs.
+// told what it does, and told what each thing it takes is, in the shape a
+// wire reads it back in. Nothing here runs anything.
 struct offered {
   std::string name;
   std::string told;
-  // What it takes, each of them named and said about, and every one of them
-  // a string: nothing here asks a model to write JSON that is more than text.
+  // What it takes, each named and said about, every one a string: no JSON
+  // here beyond text.
   std::vector<std::pair<std::string, std::string>> taken;
 };
 
 // What a body is written with besides the turns: that it streams, what tools
-// it may ask for on its way, and how it is to choose every word it writes.
+// it may ask for on its way, and how it chooses every word it writes.
 //
-// Every one of the five is kept as it was asked for and said only where it was
-// asked for: a wire keeps its own for each, and a program that has not been
-// told one has nothing to say about it.
+// Every one of the five is kept as asked for and said only where it was asked
+// for: a wire keeps its own for each, and a program told nothing has nothing
+// to say about it.
 struct wanted {
   bool stream = true;
   // That it thinks before it answers, and how hard: written as the family
-  // being spoken to names it, because no two of them do -- openai's own wire
-  // takes a reasoning effort, the relays that carry many take a thing of that
-  // name inside one, and deepseek takes nothing at all, thinking whenever it
-  // answers and never asked to.
+  // spoken to names it, for no two name it alike. openai's wire takes a
+  // reasoning effort, relays carrying many take a field of that name inside
+  // one, deepseek takes nothing: it thinks whenever it answers.
   bool thinking = false;
   std::optional<effort> how_hard;
   std::vector<offered> tools;
@@ -227,8 +219,8 @@ struct wanted {
 
 // How the program asks, in the words a wire takes it in: the five things an
 // answer is chosen by (pchat.config, `asking`), read out of where the reader
-// keeps them and into what a body is written with. Nothing of the two is
-// lost going either way, and nothing is said for one that was never set.
+// keeps them into what a body is written with. Nothing is lost going either
+// way, and nothing is said for one never set.
 [[nodiscard]] inline wanted wants_of(const asking &how) {
   return wanted{.stream = true,
                 .thinking = how.thinking,
@@ -241,11 +233,11 @@ struct wanted {
                 .frequency_penalty = how.often};
 }
 
-// What an anthropic wire wants said to it: the same things in its own words --
-// the turns as content blocks, what it is told as a field named `system`, and
-// the choices written in the order its own writer writes them (port
-// anthropic_request.cpp, write_request_body). What this shape has no field for
-// is not said: thinking arrives with budgets only where the asking carries them
+// What an anthropic wire wants said to it: the same things in its own words
+// -- the turns as content blocks, what it is told as a field named `system`,
+// and the choices written in the order its own writer writes them (port
+// anthropic_request.cpp, write_request_body). Fields this shape lacks are
+// omitted: thinking arrives with budgets only where the asking carries them
 // through the preparation this tree does not do yet, and the penalties a chat
 // wire takes are not Anthropic's.
 template <std::ranges::forward_range Turns>
@@ -266,8 +258,8 @@ template <std::ranges::forward_range Turns>
     }
     out.thing().name("role").text(said_by(said.who)).name("content").list();
     if (said.who == role::tool && !said.own.empty()) {
-      // One answered call, as the wire reads it back: against the call it
-      // answers, and nothing else in this message.
+      // One answered call, as the wire reads it back: tied to the call it
+      // answers, nothing else in this message.
       out.thing()
           .name("type").text("tool_result")
           .name("tool_use_id").text(said.own)
@@ -332,11 +324,10 @@ template <std::ranges::forward_range Turns>
 // the turns as contents of parts, what it is told as a systemInstruction
 // beside them, and every choice an answer is made by under one
 // generationConfig of this wire's own naming (Gemini's generateContent body).
-// What this shape has no field for is not said: the penalties a chat wire
-// takes are not Google's, and thinking is a budget of tokens here -- named
-// in the thousands when the reader asked for thinking, and named zero when
-// they did not, because this wire thinks on by itself where no budget says
-// otherwise and this tree says otherwise.
+// Fields this shape lacks are omitted: the penalties a chat wire takes are
+// not Google's, and thinking is a token budget here -- in the thousands when
+// the reader asked for thinking, zero when not: no budget says otherwise and
+// this tree says otherwise.
 template <std::ranges::forward_range Turns>
   requires std::same_as<std::ranges::range_value_t<Turns>, turn>
 [[nodiscard]] inline std::string gemini_body_of(const endpoint &one, Turns &&turns,
@@ -346,8 +337,8 @@ template <std::ranges::forward_range Turns>
   out.name("contents").list();
   std::string system;
   // What each call went out under, kept as it is answered: a functionResponse
-  // answers by the name of the call, and a turn carries only the id of the
-  // one it answers.
+  // answers by the call's name, and a turn carries only the id of the call it
+  // answers.
   std::vector<std::pair<std::string, std::string>> asked;
   for (const turn &said : turns) {
     if (said.who == role::system) {
@@ -359,8 +350,8 @@ template <std::ranges::forward_range Turns>
     for (const tool_call &call : said.calls)
       asked.emplace_back(call.id, call.name);
     // What a person wrote is a user's and what the model answered is a
-    // model's; an answer to a call goes back as a user's part against the
-    // call it answers, which is this wire's own word for it.
+    // model's. An answer to a call goes back as a user's part against the
+    // call it answers, this wire's word for it.
     const std::string_view speaks =
         said.who == role::assistant ? "model" : std::string_view("user");
     out.thing().name("role").text(speaks).name("parts").list();
@@ -432,13 +423,13 @@ template <std::ranges::forward_range Turns>
 }
 
 // What a chat wire wants said to it: the model, that it is asked to stream,
-// the turns, and that it says what it cost at the end of the stream and not
-// only in the answer no stream gives.
+// the turns, and that it says what it cost at the end of the stream, not only
+// in the answer a stream never gives.
 template <std::ranges::forward_range Turns>
   requires std::same_as<std::ranges::range_value_t<Turns>, turn>
 [[nodiscard]] std::string body_of(const endpoint &one, Turns &&turns,
                                   const wanted &wants = {}) {
-  // The first shape is this one; where the family asks for Anthropic's own
+  // The first shape is this one. Where the family asks for Anthropic's own
   // words instead, they are what go out.
   if (wire_of(one) == wire::anthropic)
     return anthropic_body_of(one, turns, wants);
@@ -482,9 +473,9 @@ template <std::ranges::forward_range Turns>
     }
     out.shut();
   }
-  // How it is to write, where anything was said about that: five numbers a
-  // wire reads whether it streams or not, and none of them written for a wire
-  // that was told nothing about how to choose.
+  // How it writes, where anything was said about that: five numbers a wire
+  // reads whether it streams or not, none written for a wire told nothing
+  // about how to choose.
   if (wants.thinking && wants.how_hard) {
     const std::string hard = std::string(said_by(*wants.how_hard));
     const std::string_view base(one.base);
@@ -503,8 +494,8 @@ template <std::ranges::forward_range Turns>
     out.name("presence_penalty").number(*wants.presence_penalty);
   if (wants.frequency_penalty)
     out.name("frequency_penalty").number(*wants.frequency_penalty);
-  // What it cost comes at the end of the stream too: the last frame of one has
-  // no choice in it, and without this there would be nothing in it to read.
+  // What it cost comes at the end of the stream too: the last frame of one
+  // has no choice in it, and without this it has nothing to read.
   if (wants.stream)
     out.name("stream_options").thing().name("include_usage").truth(true).shut();
   if (!wants.tools.empty()) {

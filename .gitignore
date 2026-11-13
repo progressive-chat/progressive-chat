@@ -20,3 +20,6 @@ session.db
 session.db-shm
 session.db-wal
 *.log
+
+# downloaded CI artifacts (github-pages build), never source
+art5/

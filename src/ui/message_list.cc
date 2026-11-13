@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// pchat.ui:message_list -- The messages of one conversation, one under the
-// other in a view that scrolls: what the reader wrote in a bubble on the
-// right, its corner at the bottom right squarer than its other three, and
-// what a model answered in text the whole breadth of the room, with what it
-// thought first folded above it and six things to do with it at its foot.
+// pchat.ui:message_list -- The messages of one conversation, one per row in a
+// scrolling view: the reader's in a bubble on the right, with its bottom
+// right corner squarer than its other three; a model's in full-breadth text,
+// with its thought folded above it and six chips at its foot.
 //
-// Nothing here says how tall anything is. A bubble is as wide as the words in
-// it wrap to -- never wider than three quarters of the room -- and as tall as
-// the lines they made and the time under them; an answer is as tall as its
-// folded history, its words and the row under them; the list is the rows
-// stacked, one under the last at the height it came to, which is also the
-// reach the scroll view measures. Three flows, and skiff's own measurement of
-// the words in each: no window counts characters, and no bubble is ever the
+// Nothing here says how tall anything is. A bubble is as wide as its words
+// wrap to, never past three quarters of the room, and as tall as its lines
+// plus the time under them; an answer is as tall as its folded history, its
+// words and the row under them; the list is the rows stacked at the height
+// each came to, which is the reach the scroll view measures. Skiff measures
+// the words in each: no window counts characters, and no bubble comes out the
 // wrong size for what it says.
 export module pchat.ui:message_list;
 
@@ -58,12 +56,10 @@ inline constexpr std::size_t foot_count = 6;
   }
   return std::to_string(took_ms) + " ms";
 }
-// What a line says of a place in it: every link, said as a place named in
-// the line or written in it as writing writes one, each in the order they
-// stand. Given to the text that says the line, which draws each in the
-// colour links are drawn in, underlines it, and opens the place when a press
-// lands on it and nowhere else -- a press that moves is a selection first,
-// and a link is opened by one that does not.
+// Every link in a line, in the order it stands: each named in the line or
+// written in it. Given to the text that says the line, which draws it in the
+// link colour, underlines it, and opens the place on a press that does not
+// move; a press that moves is a selection first.
 [[nodiscard]] std::vector<scene::TextLink> links_in(const logic::drawn &line) {
   std::vector<scene::TextLink> links;
   for (const logic::place &one : logic::links_of(line.said))
@@ -74,17 +70,16 @@ inline constexpr std::size_t foot_count = 6;
   return links;
 }
 
-// What the marks meant, said as the text draws them: bold, slanted, code.
-// Read out of the line once (`pchat.logic.formatting`), along with the line
-// as it is drawn without them, so that what stands at an offset here stands
-// at the same offset in what the reader sees.
+// What the marks meant, as the text draws them: bold, slanted, code. Read
+// out of the line once (`pchat.logic.formatting`), along with the line as it
+// is drawn without them, so offsets here match what the reader sees.
 [[nodiscard]] std::vector<scene::TextStyled> styles_in(
     const std::vector<logic::run_place> &runs) {
   std::vector<scene::TextStyled> styles;
   for (const logic::run_place &one : runs) {
-    // A heading, drawn on its line of its own in the size of its level: the
-    // marks that said it are already out of the text, and the level is the
-    // one bit of h1..h6 that stands on the run.
+    // A heading, on its own line, in the size of its level. The marks that
+    // said it are already out of the text; the level is the h1..h6 bit set on
+    // the run.
     float scale = 1.0f;
     if (one.style & logic::heading) {
       static constexpr float kHeadings[] = {2.0f, 1.5f, 1.3f, 1.1f, 1.0f,
@@ -108,10 +103,9 @@ inline constexpr std::size_t foot_count = 6;
   return styles;
 }
 
-// One line of a message drawn, which three places in the room want and want
-// alike: what it says with its marks taken out of it, what those marks
-// meant, and every place said in it, which a press that lands and does not
-// move goes to.
+// One line of a message drawn, which three places want alike: what it says
+// with its marks taken out, what those marks meant, and every place said in
+// it, which a press that lands and does not move goes to.
 void say(nodes::Text &body, std::string_view said, const paints &look) {
   const logic::drawn line = logic::drawn_of(said);
   body.setText(line.said);
@@ -122,19 +116,17 @@ void say(nodes::Text &body, std::string_view said, const paints &look) {
 
 // ---- the reader's bubble --------------------------------------------------
 
-// A bubble: its own colour and corners behind two lines -- what was said, and
-// when -- which are the flow that gives it its size. Wide as its words wrap
-// to, and no wider than three quarters of the room.
+// A bubble: its own colour and corners behind two lines -- what was said and
+// when -- whose flow gives it its size. Wide as its words wrap to, no wider
+// than three quarters of the room.
 struct bubble : nodes::Stack {
   nodes::Text fBody{"", 15.0f, 0u};
   nodes::Text fTime{"", 11.0f, 0u};
 
   bubble() {
-    // The colour is the bubble's own, not a plate's behind its lines: a
-    // plate, to be the size they came to without being one of the things
-    // measured, has to be put out of their flow, and out of the flow it is
-    // then over them -- a colour where the words are, in the browser, which
-    // draws what is out of the flow above what still is in it.
+    // The colour is the bubble's own, not a plate's behind its lines. A
+    // plate put out of their flow sits over them, the size they came to, and
+    // the browser draws what is out of the flow above what still is in it.
     this->apply({.autoSize = scene::axes::kBoth,
                  .cornerRadius = bubble_radius,
                  .padding = scene::Margin{bubble_pad_y, bubble_pad_x,
@@ -146,8 +138,8 @@ struct bubble : nodes::Stack {
   void blank() {
     this->setVisible(false);
     fBody.setText("");
-    // No links either once nothing is said: none of them stands anywhere in
-    // a line that is not there.
+    // No links either once nothing is said: no link stands in a line that is
+    // not there.
     fBody.setLinks({}, 0u);
     fBody.setStyles({}, 0u);
     fTime.setText("");
@@ -156,9 +148,8 @@ struct bubble : nodes::Stack {
   void again(const paints &look, std::string_view said, std::string_view when,
              float widest) {
     this->setVisible(true);
-    // Two ways at once that this one is the reader's: it stands on the right,
-    // and the corner of it on that side, at its foot, is squarer than the
-    // three it turns away from them.
+    // Two marks that this one is the reader's: it stands on the right, and
+    // its bottom right corner is squarer than the other three.
     this->apply({.autoSize = scene::axes::kBoth,
                  .maxWidth = widest,
                  .background = look.sent,
@@ -182,9 +173,9 @@ struct bubble : nodes::Stack {
 
 // ---- what an answer is asked for at its foot ------------------------------
 
-// One of the six: a plate, its mark and what it is called, pressed either to
-// ask the program for something or to be left down -- which is what the one
-// that tells about an answer is, and no asking at all.
+// One of the six: a plate, its mark and its name, pressed to ask the program
+// for something or to be left down. The one that tells about an answer only
+// is left down and asks nothing.
 struct foot_chip : scene::Node {
   nodes::Box<> fPlate{0u};
   nodes::Icon fMark{shape::copy(), 0u};
@@ -199,7 +190,7 @@ struct foot_chip : scene::Node {
                  .cornerRadius = 9.0f,
                  .padding = scene::Margin{4.0f, 8.0f, 4.0f, 6.0f}});
     // What the chip is rounded by: its own plate, which fills by the radius
-    // it was told itself and not by the chip's.
+    // set on it, not by the chip's.
     fPlate.apply({.fill = true, .cornerRadius = 9.0f});
     fMark.apply({.width = 14.0f,
                  .height = 14.0f,
@@ -222,8 +213,8 @@ struct foot_chip : scene::Node {
     }
     return true;
   }
-  // Left down or not: what the one that tells about an answer answers with,
-  // and what its row reads to know whether to show what it knows.
+  // Left down or not: what the tell-only chip answers with, and what its row
+  // reads to know whether to show what it knows.
   [[nodiscard]] bool down() const noexcept { return fDown; }
 
   void again(app::requests *sink, app::request asking, const paints &look,
@@ -297,9 +288,9 @@ struct foot_row : nodes::Stack {
 
 // ---- what was thought before an answer -----------------------------------
 
-// Every call a thought stopped to ask for, said the same way it was made:
-// which tool, what it asked it for, and what that tool answered it, one line
-// under the other. Nothing at all where there were none.
+// Every call a thought stopped to ask for, in the order it was made: which
+// tool, what it asked it for, what that tool answered, one line under the
+// other. Nothing at all where there were none.
 [[nodiscard]] inline std::string
 calls_said(const std::vector<call_made> &calls) {
   std::string out;
@@ -313,9 +304,8 @@ calls_said(const std::vector<call_made> &calls) {
 
 
 // Folded above an answer: how long it was thinking, how many tool calls it
-// made, and -- once it is pressed open -- what it wrote to itself while it
-// was, and each thing it stopped to ask for on the way, in green, the way a
-// thread writes it.
+// made, and -- once pressed open -- what it wrote to itself and each thing it
+// stopped to ask for on the way, in green.
 struct history_fold : nodes::Stack {
   nodes::Text fSummary{"", 12.0f, 0u};
   nodes::Text fThought{"", 12.0f, 0u};
@@ -360,11 +350,11 @@ struct history_fold : nodes::Stack {
     fSummary.apply(
         { .maxWidth = widest - 24.0f});
     // What it wrote to itself, greentext: shown while it is pressed open.
-    // Said with its marks taken out of it, as anything a model wrote is.
+    // Said with its marks taken out, as anything a model wrote is.
     const logic::drawn thinking = logic::drawn_of(before.said);
     fThought.setText(thinking.said);
-    // A quote in what a model thought is drawn in the colour thinking is
-    // drawn in, and not in the dim one every other quote is.
+    // A quote in what a model thought is drawn in the thinking colour, not
+    // the dim one every other quote gets.
     fThought.setStyles(styles_in(thinking.runs), look.thought);
     fThought.setColour(look.thought);
     fThought.setMonospace(true);
@@ -391,9 +381,9 @@ struct history_fold : nodes::Stack {
 
 // ---- the two rows --------------------------------------------------------
 
-// What the reader wrote: one bubble, put on the right of the room and no
-// wider than three of its four quarters. No name over it, because whose it is
-// is what standing there says.
+// What the reader wrote: one bubble, on the right of the room, no wider than
+// three of its four quarters. No name over it: standing there says whose it
+// is.
 struct reader_row : nodes::Stack {
   bubble fBubble;
 
@@ -470,7 +460,7 @@ struct answer_row : nodes::Stack {
     // What About tells: what answered, and what this answer came to -- the
     // model that keeps this chat, then how long it thought, how often it
     // reached for a tool, what it was worth, and when. Nothing else names a
-    // model anywhere on the screen, so this is the place it is said.
+    // model on the screen, so this is where it is said.
     std::string info;
     if (!model.empty())
       info += std::string(model) + " · ";
@@ -493,7 +483,7 @@ struct answer_row : nodes::Stack {
 };
 
 // One row of either kind, kept in the same place in the list: which of the
-// two it is has nothing to do with the order they come in.
+// two it is does not depend on the order they come in.
 struct message_row : nodes::Stack {
   reader_row fReader;
   answer_row fAnswer;
@@ -530,24 +520,24 @@ struct message_row : nodes::Stack {
 };
 
 // The messages of one conversation, in a column of their own: the rows' own
-// flow, so each begins under the height the one before it came to.
+// flow, each beginning under the height the one before it came to.
 struct message_screen : nodes::Stack {
   // Said on the screen while the widths are being looked into: what room the
   // column has, what widest the bubbles were given of it, and what the first
   // row, its bubble and the text in it came to.
 
-  // One row for every message there is, made as they are asked for and kept
-  // once made: a column of thirty-two of them was a third of a thousand
-  // nodes, and as a member of this node -- where it was made, and again
-  // where it was moved to -- it was not a thing a machine's stack was asked
-  // to hold. What it is built on, a browser's megabyte and an activity's
-  // thread alike, went before the first frame was drawn.
+  // One row for every message there is, made as asked for and kept once
+  // made: thirty-two of them were a third of a thousand nodes, and as a
+  // member of this node -- where it was made, and again where it was moved
+  // to -- it was not on a machine's stack. What it is built on, a browser's
+  // megabyte and an activity's thread alike, went before the first frame was
+  // drawn.
   std::vector<std::unique_ptr<message_row>> fRows;
 
   message_screen() {
     // What is said begins below the band the bar fades out in: the band is
     // over the top of the column, so the first thing said would otherwise
-    // stand under it, dimmed by the paper's own colour over it.
+    // stand under it, dimmed by the paper's colour over it.
     this->apply({.fillX = true,
                  .autoSize = scene::axes::kY,
                  .padding = scene::Margin{top_scrim - top_bar_height + edge,
@@ -557,9 +547,9 @@ struct message_screen : nodes::Stack {
               .wrap = false};
   }
 
-  // The row for this place in the column, made there where there is none:
-  // every message said has one, and none of them is said a second time for
-  // being asked for again.
+  // The row at this place in the column, made if there is none:
+  // every message said has one, and none is said a second time for being
+  // asked for again.
   [[nodiscard]] message_row &at(std::size_t place) {
     while (fRows.size() <= place)
       fRows.push_back(std::make_unique<message_row>());

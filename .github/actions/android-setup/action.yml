@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-name: Setup — an Android toolchain made of this clang
+name: Setup -- an Android toolchain made of this clang
 
 description: >-
   The NDK Android's own builds will not give: `import std` and modules need

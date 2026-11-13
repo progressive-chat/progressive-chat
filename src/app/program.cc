@@ -41,8 +41,8 @@ struct program {
   // hooks find these by name (skiff.platform.window, window_hooks).
   skiff::platform::dialogs::dialogs system_dialogs;
   // What a message is worth is counted through the vocabulary this build
-  // carries rather than through the heuristic under it -- said once here, when
-  // the program is made, and not asked of every count that follows.
+  // carries rather than through the heuristic under it -- counted once here,
+  // when the program is made, and not asked of every count that follows.
   program() {
     tokens::vocabulary(tokens::o200k());
     // The dialogs are the screens' to ask for when the settings page offers

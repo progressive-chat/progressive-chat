@@ -6,7 +6,7 @@
 //
 // Nothing here runs a tool and nothing here is ever given a way to run one.
 // What a model asked for comes out as data, what the tools answered goes back
-// in as data, and what comes out next is the asking to carry. Which is why a
+// in as data, and what comes out next is the asking to carry. That is why a
 // whole loop can be said by a test with no tools and no wire under it, and
 // why nothing above this has to know that a second answer ever happened --
 // one answer arriving still looks like one answer arriving.
@@ -20,8 +20,8 @@ import pchat.provider.run;
 export namespace pchat::provider {
 
 // What one call answered, said against the call that asked it: named as the
-// answer named it, which is the wire's own name for the call, or the one this
-// made for it where the wire gave none.
+// answer named it, the wire's own name for the call, or the one this made
+// for it where the wire gave none.
 struct call_answered {
   std::string own;
   std::string said;
@@ -30,9 +30,9 @@ struct call_answered {
 class loop {
 public:
   // The question, as any range that holds the messages said so far; and how
-  // many times it may be asked again before this stops asking, which is here
-  // so that a model that always asks for one more thing is still answered in
-  // this lifetime.
+  // many times it may be asked again before this stops asking. The cap
+  // exists so a model that always asks for one more thing is still answered
+  // in this lifetime.
   template <std::ranges::forward_range Said>
     requires std::same_as<std::ranges::range_value_t<Said>, message>
   loop(endpoint at, Said &&said, std::size_t rounds_at_most = 4,
@@ -43,11 +43,11 @@ public:
   // What is to be carried now: the question asked whole, or asked again.
   [[nodiscard]] run answering() const { return run{at_, turns_, wants_}; }
 
-  // One carried answer, over: what it said kept, what it thought too, what it
-  // cost added to what the rounds before it cost, and the tools it stopped to
-  // ask for read out of it.
+  // One carried answer, over: what it said kept, what it thought too, what
+  // it cost added to the rounds before it, and the tools it stopped to ask
+  // for read out of it.
   void came_back(const run &one) {
-    // What it said over every round, one under the other: it is one answer to
+    // What it said over every round, one under the other: one answer to
     // whoever asked the question, however many answers it took the model.
     if (!said_.empty() && !one.said().empty())
       said_.append("\n");
@@ -62,10 +62,9 @@ public:
     asked_ = named(one.called(), rounds_);
   }
 
-  // Asked again, with what the tools answered. False where there is nothing
-  // left to ask: because it stopped on its own, because it asked for nothing,
-  // because it could not be had, or because it has been asked as many times
-  // as it may be.
+  // Asked again, with what the tools answered. False with nothing left to
+  // ask: it stopped on its own, it asked for nothing, it could not be had,
+  // or it has been asked as many times as it may be.
   [[nodiscard]] bool again(std::vector<call_answered> answered) {
     if (ended_ != provider::over::complete || asked_.empty())
       return false;
@@ -73,7 +72,7 @@ public:
       return false;
     // What the model said when it stopped, and the calls themselves: a wire
     // reads what a tool answered against the call that asked it, and against
-    // nothing else, so both have to go back.
+    // nothing else, so both go back.
     turns_.push_back(
         turn{.who = role::assistant, .text = said_now_, .calls = asked_});
     for (const call_answered &one : answered)
@@ -88,7 +87,7 @@ public:
   // ---- what the screens read --------------------------------------------
 
   // Whether it is over for good: it stopped on its own, or it could not be
-  // had. Nothing about whether it may still be asked again.
+  // had. Says nothing about whether it may still be asked again.
   [[nodiscard]] bool over() const { return ended_ != provider::over::none; }
   [[nodiscard]] std::size_t rounds() const { return rounds_; }
   // What it asked for in the answer that came back last, whole, and empty
@@ -105,7 +104,7 @@ public:
 
   // One message of the model's, from every round of this question: what it
   // said in all of them, what it thought, how many tools it asked for, what
-  // all of it cost -- and failed where it could not be had at all.
+  // all of it cost, and failed where it could not be had at all.
   [[nodiscard]] message answer_of(const put_in &into) const {
     return provider::answer_of(into, said_, thinking_, calls_, cost_,
                                ended_ == provider::over::failed);
@@ -114,7 +113,7 @@ public:
 private:
   // Every call named, one way or the other: a wire that named them is
   // answered by its own names, and one that did not is answered by the names
-  // this made for them out of the round and the place they were asked in.
+  // this made for them from the round and the place they were asked in.
   [[nodiscard]] static std::vector<tool_call> named(
       const std::vector<tool_call> &calls, std::size_t round) {
     std::vector<tool_call> out = calls;

@@ -45,8 +45,8 @@ struct gemini_state {
 gemini_state *gemini_open();
 void gemini_close(gemini_state *state);
 
-// One payload -- whatever the `data:` lines of one frame said -- read whole:
-// what the wire's events decided, and the end of it where it said there was one.
+// One payload, the `data:` lines of one frame, read whole: the events the
+// wire decided, and its end where it said there was one.
 std::vector<gemini_frame> gemini_step(gemini_state *state, std::string_view payload);
 
 }  // namespace pchat::provider

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.platform.opened -- A place opened where this machine opens places: a
-// link said in a message or an answer, given to whatever the machine has for
-// one -- a browser of its own on a desk and a phone, another of this page's
+// link said in a message or an answer, given to what the machine has for
+// one -- a browser on a desk and a phone, another of this page's
 // tabs in a browser. What was opened is not this program's to know about
 // afterwards; whether the machine was asked is all it is told.
 //

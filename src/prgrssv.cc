@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.prgrssv -- Everything the program holds, written whole into one file:
-// a ZIP archive under the extension .prgrssv, so that what was said here can be
+// a ZIP archive under the extension .prgrssv, so what was said here can be
 // kept, carried, and read where this program is not running.
 //
 // Three kinds of file stand in it: a manifest saying what the archive is and
@@ -21,7 +21,7 @@ import pchat.theme;
 import pchat.json;
 
 // What each of the model's own words is called in an archive: one enumerator
-// to one name, so that nothing written here reads back as something else.
+// to one name, so nothing written here reads back as something else.
 // Said beside the export and not inside it: what an exported definition
 // reaches for may not be translation-unit local, and an anonymous namespace
 // cannot be exported at all.
@@ -131,7 +131,7 @@ namespace pchat::prgrssv {
 
 // What the tools and the switches are called, in the order their rows ask for
 // them (pchat.config): the same words a settings row says and the program
-// keeps, so that an archive read back lines up with what the page shows.
+// keeps, so an archive read back lines up with what the page shows.
 inline constexpr std::array<std::string_view, tools_owned> tool_names{
     "conversation_search", "how_much", "when_it_is"};
 inline constexpr std::array<std::string_view, switches_owned> switch_names{
@@ -143,7 +143,7 @@ inline constexpr std::array<std::string_view, switches_owned> switch_names{
 export namespace pchat::prgrssv {
 
 // What every archive calls itself, and how far it has got: said in the
-// manifest, so that anything reading one file knows what the rest of them are
+// manifest, so anything reading one file knows what the rest of them are
 // written as.
 inline constexpr std::string_view format = "prgrssv";
 inline constexpr std::int64_t version = 1;
@@ -157,7 +157,7 @@ inline constexpr std::int64_t version = 1;
 
   // The manifest: what this archive is, whose program wrote it, who its
   // conversations were spoken through, and how much of everything stands in
-  // it -- the index anything reading the file opens first.
+  // it: the index anything reading the file opens first.
   json::writing out;
   out.thing();
   out.name("format").text(format);
@@ -179,7 +179,7 @@ inline constexpr std::int64_t version = 1;
   files.push_back(stored{"manifest.json", out.take()});
 
   // One file per conversation: the row of the drawer whole, and every message
-  // in it in the order it was said -- what said each, what thought an answer
+  // in it in the order it was said: what said each, what thought an answer
   // before it, and what each of that thought's calls asked and got.
   for (const conversation &room : root.conversations) {
     json::writing written;
@@ -240,7 +240,7 @@ inline constexpr std::int64_t version = 1;
   }
 
   // The settings the rows of the page have set: how it looks and how an answer
-  // is asked for, each said whole -- what was on the switches and the knobs
+  // is asked for, each said whole: what was on the switches and the knobs
   // when this archive was written.
   json::writing settings;
   settings.thing();

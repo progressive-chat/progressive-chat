@@ -62,8 +62,8 @@ struct open_settings {};
 struct close_settings {};
 // The two rows the drawer keeps beside its search: what the program has been
 // told to do on its own, and what another machine is spoken to through.
-// Neither stands behind either row in the program yet; asking for one is
-// answered by nothing until what it names is.
+// Neither stands behind either row yet; asking for one is answered by
+// nothing until what it names is.
 struct open_tasks {};
 struct open_remote {};
 // What the top edge asks for: another answerer in this same conversation,
@@ -95,11 +95,11 @@ struct toggle_editor_menu {};
 // them pressed writes itself into the field (src/ui/composer.cc), which is
 // why nothing the program keeps is asked for it.
 struct toggle_faces {};
-// One face pressed, said to the program so that it is one of the ones
-// pressed most lately and drawn first in the card: what the press writes
-// into the field is still not asked of it -- whose field it is has never
-// been anything but the card's own -- but which ones were pressed, and in
-// what order, is what the program keeps, for this run and the runs after.
+// One face pressed, sent to the program so it is one of the ones pressed
+// most lately and drawn first in the card: what the press writes into the
+// field is still not asked of it -- the field is the card's own -- but which
+// ones were pressed, and in what order, the program keeps, for this run and
+// the runs after.
 struct face_written { std::string face; };
 // What a row behind them says (design-doc.md, "The editor's row"): whether
 // what answers here is asked to think at all before it answers, and how hard
@@ -128,9 +128,9 @@ struct set_avatars {
 struct set_row_times {
   bool enabled;
 };
-// What the Notifications page asks for: one notification of the program's
-// own, shown by the machine it runs on, so that it can be seen whether it is
-// let show any. A test, and nothing it pretends is a message.
+// What the Notifications page asks for: one test notification, shown by the
+// machine it runs on, so it can be seen whether it is let show any. Nothing
+// it pretends is a message.
 struct send_test_notification {};
 // What the Appearance page asks for: which seed the colours grow out of,
 // whether the type is set larger, and whose face it is set in. Each row asks
@@ -179,8 +179,8 @@ struct set_answerer {
 // back through the program (pchat.app.program, save_path_chosen).
 struct save_archive {};
 
-// What is asked, as one value: spl::variant, so that every kind of it is
-// handled where it is read and a new one cannot be forgotten.
+// What is asked, as one value: spl::variant, so every kind of it is handled
+// where it is read and a new one cannot be forgotten.
 using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
                              share_answer, delete_answer, set_query,
