@@ -792,7 +792,16 @@ ImportResult DataImporter::import(
                 conversations = static_cast<int>(headers.conversations.size());
                 tasks = static_cast<int>(headers.tasks.size());
                 loops = static_cast<int>(headers.loops.size());
+                // The semantic snapshot the reference hands the graph import: the active
+                // embedding model and every configured one, so the import can reconcile
+                // their indexes as it writes the graph.
                 semantic_index::SemanticModelSnapshot snapshot;
+                if (settings_.active_embedding_model_id)
+                    snapshot.active_model_id = settings_.active_embedding_model_id();
+                if (settings_.embedding_models) {
+                    for (const auto& model : settings_.embedding_models())
+                        snapshot.configured_model_ids.push_back(model.id);
+                }
                 pending_transfer_id = graph_importer_.import_graph(source, graph_strategy, headers,
                                                                   native_graph_import::RestoredMedia{},
                                                                   manifest.version, snapshot);

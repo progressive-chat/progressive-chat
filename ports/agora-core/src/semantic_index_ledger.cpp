@@ -776,13 +776,11 @@ void with_semantic_graph_mutation(SemanticIndexDao& dao,
                                   bool /*clear_all_embeddings*/,
                                   std::int64_t updated_at,
                                   const std::function<void()>& block) {
-    // Kotlin (@Suppress("UNUSED_PARAMETER")): admit the snapshot's ledger rows, then run the
-    // block — the public graph writes maintain their own metadata, so there is no clear or
-    // reconcile tail anymore.
-    run_in_transaction(dao, [&] {
-        admit_snapshot_models(dao, snapshot, updated_at);
-        block();
-    });
+    // Kotlin: run the block, then requestSemanticReconcile for every configured model --
+    // the public graph writes maintain their own metadata, so there is no clear tail, and
+    // each reconcile admits and advances the model's ledger row.
+    block();
+    request_semantic_reconcile(dao, snapshot, updated_at);
 }
 
 void with_semantic_eligibility_mutation(SemanticIndexDao& dao,

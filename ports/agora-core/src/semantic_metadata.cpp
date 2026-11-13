@@ -48,11 +48,10 @@ int code_point_count(std::string_view text) {
 
 void insert_ledger_row(ledger::SemanticIndexDao& dao, std::string_view model_id,
                        std::int64_t updated_at) {
-    ledger::LedgerEntry entry;
-    entry.model_id = std::string(model_id);
-    entry.updated_at = updated_at;
-    entry.validate();
-    dao.insert_ledger(entry);
+    // The reference's requestSemanticReconcile: admit the model and advance it to a
+    // fresh reconcile (NEEDS_RECONCILE at the next revision), which is what the graph
+    // import leaves behind for every configured model.
+    dao.request_reconcile(model_id, updated_at);
 }
 
 }  // namespace
