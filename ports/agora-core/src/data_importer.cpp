@@ -144,7 +144,7 @@ std::vector<std::string> decode_string_array(const Value* value) {
 }
 
 // EmbeddingModelConfig semantics comparison
-[[maybe_unused]] bool embedding_model_semantics_changed(const native_backup::EmbeddingModelConfig& before,
+bool embedding_model_semantics_changed(const native_backup::EmbeddingModelConfig& before,
                                        const native_backup::EmbeddingModelConfig& after) {
     if (before.type != after.type) return true;
     switch (after.type) {
@@ -661,6 +661,48 @@ native_backup::NativeBackupSecrets parse_api_keys(const std::string& raw) {
 
 }  // namespace
 
+/** reconcileImportedEmbeddingModels: for every model the import touched -- the ones it
+ *  had before plus the ones it restored -- mark the ones that are new or whose meaning
+ *  changed as needing a reconcile, and forget the ones the import removed. */
+void DataImporter::reconcile_imported_embedding_models(
+    const std::vector<native_backup::EmbeddingModelConfig>& restored_models,
+    const std::string& active_model_id) {
+    const std::int64_t updated_at = 1790000000000LL;  // the fixed clock the golden masks
+    const std::vector<native_backup::EmbeddingModelConfig> previous =
+        settings_.embedding_models ? settings_.embedding_models()
+                                   : std::vector<native_backup::EmbeddingModelConfig>{};
+
+    auto by_id = [](const std::vector<native_backup::EmbeddingModelConfig>& list,
+                    const std::string& id) -> const native_backup::EmbeddingModelConfig* {
+        for (const auto& model : list)
+            if (model.id == id) return &model;
+        return nullptr;
+    };
+
+    // Every model the import had before or restored: the union of both id sets.
+    std::vector<std::string> affected;
+    for (const auto& model : previous) affected.push_back(model.id);
+    for (const auto& model : restored_models) {
+        bool seen = false;
+        for (const std::string& id : affected)
+            if (id == model.id) { seen = true; break; }
+        if (!seen) affected.push_back(model.id);
+    }
+
+    for (const std::string& model_id : affected) {
+        const native_backup::EmbeddingModelConfig* current = by_id(restored_models, model_id);
+        const native_backup::EmbeddingModelConfig* prev = by_id(previous, model_id);
+        if (current == nullptr) {
+            // The import dropped this model: its semantic index goes with it.
+            delete_semantic_model(semantic_, model_id);
+        } else if (prev == nullptr || embedding_model_semantics_changed(*prev, *current)) {
+            // A new model, or one whose meaning changed: reindex it.
+            semantic_.request_reconcile(model_id, updated_at);
+        }
+    }
+    (void)active_model_id;
+}
+
 ImportResult DataImporter::import(
     native_backup_archive::NativeBackupArchive& archive,
     const std::map<data_export::ExportCategory, ImportStrategy>& decisions,
@@ -855,11 +897,17 @@ ImportResult DataImporter::import(
                 if (!parsed_settings.value || parsed_settings.value->kind != Kind::Object)
                     throw std::runtime_error("settings.json is invalid");
                 if (writes_.archive_sink != nullptr) {
-                    settings_archive::restore_from_json_object(
-                        *parsed_settings.value, settings_.archive_snapshot
-                                                    ? settings_.archive_snapshot()
-                                                    : settings_archive::SettingsSnapshot{},
-                        *writes_.archive_sink, options);
+                    const settings_archive::RestoreResult restored =
+                        settings_archive::restore_from_json_object(
+                            *parsed_settings.value, settings_.archive_snapshot
+                                                        ? settings_.archive_snapshot()
+                                                        : settings_archive::SettingsSnapshot{},
+                            *writes_.archive_sink, options);
+                    // The reference reconciles the embedding index after the restore:
+                    // models that are new or whose meaning changed are reindexed, and
+                    // ones the import dropped have their index removed.
+                    reconcile_imported_embedding_models(restored.embedding_models,
+                                                        restored.active_embedding_model_id);
                 }
                 // The legacy font is recorded after the restore, so it lands in the call
                 // log where the reference puts it.
