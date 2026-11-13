@@ -9,6 +9,9 @@
 // finished carrying them. That is what lets one answer be said whole by a
 // test with no network under it, and the same answer be carried later by a
 // page's fetch, a socket, or fibers.
+module;
+#include "retry/retry.h"
+
 export module pchat.provider.run;
 
 import std;
@@ -111,7 +114,8 @@ public:
       return;
     coming_.feed(bytes);
     if (coming_.failed())
-      stop_over(over::failed, std::string(coming_.why()));
+      stop_over(over::failed, std::string(coming_.why()),
+                coming_.why_failed());
   }
 
   // What carried it has finished: `why` is its own words where it could not
@@ -142,6 +146,10 @@ public:
   [[nodiscard]] over ended() const { return ended_; }
   // Why it could not be had, whole, where it could not.
   [[nodiscard]] std::optional<std::string> trouble() const { return trouble_; }
+  // Why it failed, the way Agora says it: the kind of it, and what came with
+  // it. Set only where it failed, and read by whoever decides whether to ask
+  // again.
+  [[nodiscard]] const failure &why_failed() const { return failed_why_; }
 
   [[nodiscard]] std::string_view said() const { return coming_.text(); }
   [[nodiscard]] std::string_view thought() const { return coming_.thought(); }
@@ -172,10 +180,12 @@ public:
 private:
   // Over, one way or the other, set once: after that, only what already
   // came, nothing more.
-  void stop_over(over how, std::optional<std::string> why) {
+  void stop_over(over how, std::optional<std::string> why,
+                 const failure &why_failed = {}) {
     now_ = standing::done;
     ended_ = how;
     trouble_ = std::move(why);
+    failed_why_ = why_failed;
   }
 
   asking asking_;
@@ -183,6 +193,7 @@ private:
   standing now_ = standing::ready;
   over ended_ = over::none;
   std::optional<std::string> trouble_;
+  failure failed_why_;
 };
 
 } // namespace pchat::provider

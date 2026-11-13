@@ -12,6 +12,8 @@
 
 #include <cstdint>
 #include <string>
+
+#include "../retry/retry.h"
 #include <string_view>
 #include <vector>
 
@@ -34,6 +36,9 @@ struct gemini_frame {
   std::uint32_t output_tokens = 0;
   // Why it stopped, as the wire said it: empty only where it did not say.
   std::string stop_reason;
+  // Why it failed, the way Agora says it -- the kind of it and what came with
+  // it -- set only on a frame whose kind is failed.
+  failure why_failed;
 };
 
 // The reader, one per stream: the wire's own router held behind a pointer so
