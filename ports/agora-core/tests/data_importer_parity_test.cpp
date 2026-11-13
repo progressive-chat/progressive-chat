@@ -274,6 +274,8 @@ Value json_literal(std::string_view token) {
     return v;
 }
 
+Value json_null() { return json_literal("null"); }
+
 Value json_array(std::vector<Value> elements) {
     Value v;
     v.kind = Kind::Array;
@@ -1824,6 +1826,225 @@ archive::SettingsSnapshot read_snapshot(const Value& root) {
     return snapshot;
 }
 
+
+// ---- table dump: the database state the import leaves, as the golden pins it ----
+
+json::Value cell_text(const SqlRow& row, std::size_t index) {
+    const std::optional<std::string> value = row[index].text_or_null();
+    return value.has_value() ? json_string(*value) : json_null();
+}
+
+json::Value cell_long(const SqlRow& row, std::size_t index) {
+    const std::optional<std::int64_t> value = row[index].integer_or_null();
+    return value.has_value() ? json_long(*value) : json_null();
+}
+
+/** Kotlin getObject(i) as? Number — null stays null, anything numeric truncates to an int. */
+json::Value cell_optional_int(const SqlRow& row, std::size_t index) {
+    if (row[index].is_null()) return json_null();
+    if (row[index].kind == SqlValue::Kind::Integer) return json_long(row[index].integer);
+    if (row[index].kind == SqlValue::Kind::Real) {
+        return json_long(static_cast<std::int64_t>(row[index].real));
+    }
+    return json_null();
+}
+
+json::Value cell_optional_long(const SqlRow& row, std::size_t index) {
+    if (row[index].is_null()) return json_null();
+    if (row[index].kind == SqlValue::Kind::Real) {
+        return json_long(static_cast<std::int64_t>(row[index].real));
+    }
+    return cell_long(row, index);
+}
+
+/** Kotlin getInt(i) != 0 — a NULL reads as 0, so null is false. */
+json::Value cell_bool(const SqlRow& row, std::size_t index) {
+    if (row[index].is_null()) return json_bool(false);
+    if (row[index].kind == SqlValue::Kind::Real) {
+        return json_bool(static_cast<std::int64_t>(row[index].real) != 0);
+    }
+    return json_bool(row[index].integer != 0);
+}
+
+json::Value query_rows(SqlExecutor& sql, const std::string& statement,
+                       const std::function<json::Value(const SqlRow&)>& render) {
+    std::vector<json::Value> rows;
+    for (const SqlRow& row : sql.query(statement, {})) rows.push_back(render(row));
+    return json_array(std::move(rows));
+}
+
+json::Value dump_tables(SqlExecutor& sql) {
+    return json_object({
+        {"conversations", query_rows(
+            sql,
+            "SELECT id, title, lastUpdated, dataChangedAt, selectedBranchesJson, systemPromptId, "
+            "modelId, taskId, origin, graduated, draftText, draftAttachments, "
+            "selectedRunBranchesJson, hasUnreadGeneration, isPinned FROM conversations ORDER BY id",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"id", cell_text(row, 0)},
+                    {"title", cell_text(row, 1)},
+                    {"lastUpdated", cell_long(row, 2)},
+                    {"dataChangedAt", cell_long(row, 3)},
+                    {"selectedBranchesJson", cell_text(row, 4)},
+                    {"systemPromptId", cell_text(row, 5)},
+                    {"modelId", cell_text(row, 6)},
+                    {"taskId", cell_text(row, 7)},
+                    {"origin", cell_text(row, 8)},
+                    {"graduated", cell_bool(row, 9)},
+                    {"draftText", cell_text(row, 10)},
+                    {"draftAttachments", cell_text(row, 11)},
+                    {"selectedRunBranchesJson", cell_text(row, 12)},
+                    {"hasUnreadGeneration", cell_bool(row, 13)},
+                    {"isPinned", cell_bool(row, 14)},
+                });
+            })},
+        {"runs", query_rows(
+            sql,
+            "SELECT id, conversationId, parentRunId, status, activeSlot, startedAt, "
+            "lastCheckpointAt, stopRequestedAt, endedAt, endReason, currentPass, legacyAmbiguous "
+            "FROM runs ORDER BY id",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"id", cell_text(row, 0)},
+                    {"conversationId", cell_text(row, 1)},
+                    {"parentRunId", cell_text(row, 2)},
+                    {"status", cell_text(row, 3)},
+                    {"activeSlot", cell_optional_int(row, 4)},
+                    {"startedAt", cell_long(row, 5)},
+                    {"lastCheckpointAt", cell_long(row, 6)},
+                    {"stopRequestedAt", cell_optional_long(row, 7)},
+                    {"endedAt", cell_optional_long(row, 8)},
+                    {"endReason", cell_text(row, 9)},
+                    {"currentPass", cell_long(row, 10)},
+                    {"legacyAmbiguous", cell_bool(row, 11)},
+                });
+            })},
+        {"messages", query_rows(
+            sql,
+            "SELECT id, conversationId, parentId, text, images, tokenCount, status, participant, "
+            "timestamp, modelName, attachmentMeta, runId, runSequence, consumedAtPass, "
+            "sourceJson, toolCallJson FROM messages ORDER BY id",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"id", cell_text(row, 0)},
+                    {"conversationId", cell_text(row, 1)},
+                    {"parentId", cell_text(row, 2)},
+                    {"text", cell_text(row, 3)},
+                    {"images", cell_text(row, 4)},
+                    {"tokenCount", cell_long(row, 5)},
+                    {"status", cell_text(row, 6)},
+                    {"participant", cell_text(row, 7)},
+                    {"timestamp", cell_long(row, 8)},
+                    {"modelName", cell_text(row, 9)},
+                    {"attachmentMeta", cell_text(row, 10)},
+                    {"runId", cell_text(row, 11)},
+                    {"runSequence", cell_long(row, 12)},
+                    {"consumedAtPass", cell_optional_int(row, 13)},
+                    {"sourceJson", cell_text(row, 14)},
+                    {"toolCallJson", cell_text(row, 15)},
+                });
+            })},
+        {"tasks", query_rows(
+            sql,
+            "SELECT id, name, prompt, systemPrompt, systemPromptId, modelId, cronExpr, runAt, "
+            "nextRunAt, enabled, createdAt, lastRunAt FROM tasks ORDER BY id",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"id", cell_text(row, 0)},
+                    {"name", cell_text(row, 1)},
+                    {"prompt", cell_text(row, 2)},
+                    {"systemPrompt", cell_text(row, 3)},
+                    {"systemPromptId", cell_text(row, 4)},
+                    {"modelId", cell_text(row, 5)},
+                    {"cronExpr", cell_text(row, 6)},
+                    {"runAt", cell_optional_long(row, 7)},
+                    {"nextRunAt", cell_long(row, 8)},
+                    {"enabled", cell_bool(row, 9)},
+                    {"createdAt", cell_long(row, 10)},
+                    {"lastRunAt", cell_optional_long(row, 11)},
+                });
+            })},
+        {"loops", query_rows(
+            sql,
+            "SELECT conversationId, intervalMs, prompt, nextFireAt, cycleCount, maxCycles, active, "
+            "revision FROM loops ORDER BY conversationId",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"conversationId", cell_text(row, 0)},
+                    {"intervalMs", cell_long(row, 1)},
+                    {"prompt", cell_text(row, 2)},
+                    {"nextFireAt", cell_long(row, 3)},
+                    {"cycleCount", cell_long(row, 4)},
+                    {"maxCycles", cell_optional_int(row, 5)},
+                    {"active", cell_bool(row, 6)},
+                    {"revision", cell_long(row, 7)},
+                });
+            })},
+        {"embeddings", query_rows(
+            sql,
+            "SELECT id, messageId, modelId, chunkText, dimension FROM embeddings ORDER BY id",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"id", cell_long(row, 0)},
+                    {"messageId", cell_text(row, 1)},
+                    {"modelId", cell_text(row, 2)},
+                    {"chunkText", cell_text(row, 3)},
+                    {"dimension", cell_long(row, 4)},
+                });
+            })},
+        {"conversation_settings_transfer", query_rows(
+            sql,
+            "SELECT conversationId, settingsJson FROM conversation_settings_transfer "
+            "ORDER BY conversationId",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"conversationId", cell_text(row, 0)},
+                    {"settingsJson", cell_text(row, 1)},
+                });
+            })},
+        {"conversation_settings_import_transfer", query_rows(
+            sql,
+            "SELECT id, transferId, settingsJson, mode FROM conversation_settings_import_transfer "
+            "ORDER BY id",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"id", cell_long(row, 0)},
+                    {"transferId", cell_text(row, 1)},
+                    {"settingsJson", cell_text(row, 2)},
+                    {"mode", cell_text(row, 3)},
+                });
+            })},
+        {"maintenance_debt", query_rows(
+            sql,
+            "SELECT kind, identity, state, revision, updatedAt FROM maintenance_debt "
+            "ORDER BY kind, identity",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"kind", cell_text(row, 0)},
+                    {"identity", cell_text(row, 1)},
+                    {"state", cell_text(row, 2)},
+                    {"revision", cell_long(row, 3)},
+                    {"updatedAt", cell_long(row, 4)},
+                });
+            })},
+        {"semantic_index_ledger", query_rows(
+            sql,
+            "SELECT modelId, state, sourceRevision, completedRevision, reconcileRevision, updatedAt "
+            "FROM semantic_index_ledger ORDER BY modelId",
+            [](const SqlRow& row) {
+                return json_object({
+                    {"modelId", cell_text(row, 0)},
+                    {"state", cell_text(row, 1)},
+                    {"sourceRevision", cell_long(row, 2)},
+                    {"completedRevision", cell_long(row, 3)},
+                    {"reconcileRevision", cell_long(row, 4)},
+                    {"updatedAt", cell_long(row, 5)},
+                });
+            })},
+    });
+}
+
 void run_scenario(const std::filesystem::path& path) {
     const std::string stem = path.stem().string();
     const json::ParseResult parsed = json::parse(read_file(path));
@@ -1837,6 +2058,16 @@ void run_scenario(const std::filesystem::path& path) {
 
     const std::filesystem::path stand(AGORA_FIXTURE_DATA_IMPORTER_DIR);
     SqliteExecutor sql(stand / "platform" / "schema.sql");
+
+    // The database state the import starts from: the scenario's seedSql runs before
+    // any step, so a scenario that begins with existing rows has them.
+    if (const Value* seeds = field(root, "seedSql"); seeds != nullptr) {
+        if (seeds->kind != Kind::Array) scenario_fail(stem + ": seedSql must be an array");
+        for (const Value& seed : seeds->elements) {
+            if (seed.kind != Kind::String) scenario_fail(stem + ": seedSql entries must be strings");
+            sql.execute(seed.text, {});
+        }
+    }
 
     // The importer's dependencies. A preview reads only the archive and the
     // graph counter, so these stand empty; the import steps drive them for
@@ -2129,6 +2360,17 @@ void run_scenario(const std::filesystem::path& path) {
             } else if (!json_equal(actual_calls, *golden_calls)) {
                 scenario_diff(stem + "\n  settingsCalls actual:   " + excerpt(actual_calls) +
                               "\n  settingsCalls expected: " + excerpt(*golden_calls));
+            }
+
+            // The database state the import left: every table the golden pins, with the
+            // generated clocks masked.
+            const Value actual_tables = masked(dump_tables(sql));
+            const Value* golden_tables = field(golden_step, "tables");
+            if (golden_tables == nullptr) {
+                scenario_diff(stem + ": golden has no tables");
+            } else if (!json_equal(actual_tables, *golden_tables)) {
+                scenario_diff(stem + "\n  tables actual:   " + excerpt(actual_tables) +
+                              "\n  tables expected: " + excerpt(*golden_tables));
             }
             continue;
         }

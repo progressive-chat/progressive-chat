@@ -310,6 +310,10 @@ struct RestoreOptions {
 
 struct RestoreResult {
     std::vector<std::string> warnings;
+    /** The embedding state the restore left behind: the models it wrote and the active
+     *  model id it settled on, so the caller can reconcile them. */
+    std::vector<EmbeddingModelConfig> embedding_models;
+    std::string active_embedding_model_id;
 };
 
 /** java.lang.IllegalArgumentException from the archive's `require(...)` guards. */
