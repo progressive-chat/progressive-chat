@@ -78,7 +78,7 @@ struct endpoint {
   std::string base;   // as far as its version: https://api.openai.com/v1
   std::string key;
   std::string model;
-  std::string told;   // what the model is told about itself
+  std::string system_prompt;  // what the model is told about itself
 };
 
 // Two wires wear OpenAI's shape: the chat one everyone answers and the
@@ -187,7 +187,8 @@ template <std::ranges::forward_range Said>
 // wire reads it back in. Nothing here runs anything.
 struct offered {
   std::string name;
-  std::string told;
+  // What the model is told it does, in the words a tool is documented by.
+  std::string description;
   // What it takes, each named and said about, every one a string: no JSON
   // here beyond text.
   std::vector<std::pair<std::string, std::string>> taken;
@@ -302,7 +303,7 @@ template <std::ranges::forward_range Turns>
     for (const offered &one_tool : wants.tools) {
       out.thing();
       out.name("name").text(one_tool.name);
-      out.name("description").text(one_tool.told);
+      out.name("description").text(one_tool.description);
       out.name("input_schema").thing().name("type").text("object");
       out.name("properties").thing();
       for (const auto &[takes, said] : one_tool.taken)
@@ -402,7 +403,7 @@ template <std::ranges::forward_range Turns>
     for (const offered &one_tool : wants.tools) {
       out.thing();
       out.name("name").text(one_tool.name);
-      out.name("description").text(one_tool.told);
+      out.name("description").text(one_tool.description);
       out.name("parameters").thing().name("type").text("object");
       out.name("properties").thing();
       for (const auto &[takes, said] : one_tool.taken)
@@ -442,14 +443,14 @@ template <std::ranges::forward_range Turns>
   out.name("model").text(one.model);
   out.name("stream").truth(wants.stream);
   const bool any_turn = std::ranges::begin(turns) != std::ranges::end(turns);
-  if (!one.told.empty() || any_turn) {
+  if (!one.system_prompt.empty() || any_turn) {
     out.name("messages").list();
     // What it is told goes in as the first turn and nowhere else: a wire
     // takes one system turn, and this body is written once for one answer.
-    if (!one.told.empty())
+    if (!one.system_prompt.empty())
       out.thing()
           .name("role").text(said_by(role::system))
-          .name("content").text(one.told)
+          .name("content").text(one.system_prompt)
           .shut();
     for (const turn &said : turns) {
       out.thing().name("role").text(said_by(said.who));
@@ -503,7 +504,7 @@ template <std::ranges::forward_range Turns>
     for (const offered &one_tool : wants.tools) {
       out.thing().name("type").text("function").name("function").thing();
       out.name("name").text(one_tool.name);
-      out.name("description").text(one_tool.told);
+      out.name("description").text(one_tool.description);
       out.name("parameters").thing().name("type").text("object");
       out.name("properties").thing();
       for (const auto &[takes, said] : one_tool.taken)

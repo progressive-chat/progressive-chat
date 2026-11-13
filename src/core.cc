@@ -52,7 +52,7 @@ struct account {
 // A conversation: one row of the drawer.
 // The system prompt used when the conversation sets none: brief, plain, and
 // named for the program.
-inline constexpr std::string_view default_told =
+inline constexpr std::string_view default_system_prompt =
     "You are answering in Progressive Chat, briefly and plainly.";
 
 struct conversation {
@@ -69,7 +69,9 @@ struct conversation {
   // answerer's window.
   std::vector<std::string> models;
   // The system prompt this conversation sets; empty means the default.
-  std::string told;
+  // What the model is told about itself before it is asked anything: the
+  // conversation's system prompt.
+  std::string system_prompt;
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
   float context_used = 0.0f;
@@ -78,8 +80,8 @@ struct conversation {
     return models.empty() ? std::string{} : models.front();
   }
   // The system prompt actually sent: this conversation's, else the default.
-  [[nodiscard]] std::string told_for() const {
-    return told.empty() ? std::string(default_told) : told;
+  [[nodiscard]] std::string system_prompt_for() const {
+    return system_prompt.empty() ? std::string(default_system_prompt) : system_prompt;
   }
   friend bool operator==(const conversation &, const conversation &) = default;
 };

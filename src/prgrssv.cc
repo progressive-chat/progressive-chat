@@ -196,7 +196,7 @@ inline constexpr std::int64_t version = 1;
     for (const std::string &model : room.models)
       written.text(model);
     written.shut();
-    written.name("told").text(room.told);
+    written.name("system_prompt").text(room.system_prompt);
     written.name("tokens").number(static_cast<std::int64_t>(room.tokens));
     written.name("window").number(static_cast<std::int64_t>(room.window));
     written.name("context_used").number(static_cast<double>(room.context_used));

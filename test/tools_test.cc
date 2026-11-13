@@ -39,7 +39,7 @@ SAID(tools, what_is_owned_is_said_in_the_shape_a_wire_reads) {
   EXPECT_EQ(said.front().name, std::string("look_up_in_this_conversation"));
   // Nothing is offered without being told what it does and what it takes.
   for (const provider::offered &one_tool : said) {
-    EXPECT_FALSE(one_tool.told.empty());
+    EXPECT_FALSE(one_tool.description.empty());
     EXPECT_FALSE(one_tool.name.empty());
   }
 }

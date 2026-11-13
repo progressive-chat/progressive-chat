@@ -72,7 +72,7 @@ struct prompt_screen : scene::Node {
   nodes::Text fHead{"", prompt_head_size, 0u, true};
   nodes::Text fSaid{"", prompt_words_size, 0u};
   std::shared_ptr<prompt_sink> fSink = std::make_shared<prompt_sink>();
-  widgets::TextArea<prompt_told> fField{widgets::Theme{}, std::string(default_told),
+  widgets::TextArea<prompt_told> fField{widgets::Theme{}, std::string(default_system_prompt),
                                         prompt_told{fSink}};
   press_box fClose{};
   // Which conversation the field is writing into; opening it on another one
@@ -124,7 +124,7 @@ struct prompt_screen : scene::Node {
     // said it: another conversation opened, or another card's words left in
     // it. Editing is never answered by putting them in again: what is in the
     // field then is what put them there.
-    const std::string said = chat ? chat->told : std::string{};
+    const std::string said = chat ? chat->system_prompt : std::string{};
     if (said != fShown || fSink->chat != fShownChat) {
       if (said != fField.text())
         fField.setText(said);

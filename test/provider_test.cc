@@ -47,7 +47,7 @@ constexpr std::string_view one_stream =
 SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
   const provider::endpoint at{.base = "https://api.openai.com/v1",
                               .model = "o4-mini",
-                              .told = "You are brief."};
+                              .system_prompt = "You are brief."};
   EXPECT_EQ(provider::wire_of(at), provider::wire::chat);
   EXPECT_EQ(provider::url_of(at),
             std::string("https://api.openai.com/v1/chat/completions"));

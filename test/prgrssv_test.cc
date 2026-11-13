@@ -102,7 +102,7 @@ SAID(prgrssv, everything_held_comes_back_as_it_was) {
                     .kind = conversation_kind::direct,
                     .last_activity = 12};
   room.models.push_back("haiku-4");
-  room.told = "Answer briefly.";
+  room.system_prompt = "Answer briefly.";
   room.tokens = 9;
   room.window = 1000000;
   room.context_used = 0.25f;

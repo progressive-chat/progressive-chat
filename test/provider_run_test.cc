@@ -37,7 +37,7 @@ constexpr std::string_view rest =
 [[nodiscard]] provider::endpoint an_endpoint() {
   return provider::endpoint{.base = "https://api.openai.com/v1",
                             .model = "o4-mini",
-                            .told = "You are brief."};
+                            .system_prompt = "You are brief."};
 }
 
 }  // namespace
