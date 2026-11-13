@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.tools -- What this program itself will answer for a model that asks
 // it to look something up: nothing leaves this machine to be answered,
-// nothing here is anybody else's to run, and a model is told what these are
+// and nothing here is anybody else's to run. A model is told what these are
 // and may ask for them on its way to answering.
 //
-// A tool is no more than a name, what it takes, and what it says when it is
-// given what it takes: asked for as data, answered as data, and neither of
-// them anything a transport or a wire knows anything about. Nothing runs
-// anything. Which is why a model asking for a tool and being answered is a
-// thing tests can say whole, with no model in them at all.
+// A tool is no more than a name, what it takes, and what it says when it
+// is given what it takes: asked for as data, answered as data, and neither
+// is anything a transport or a wire knows about. Nothing runs anything.
+// That is why a model asking for a tool and being answered is a thing tests
+// can say whole, with no model in them at all.
 export module pchat.tools;
 
 import std;
@@ -44,7 +44,7 @@ export namespace pchat::tools {
 }
 
 // Which of them is which, in the order they are named above: the same three
-// `tool_choice` names (pchat.config) in the same order, so that a switch in
+// `tool_choice` names (pchat.config) in the same order, so a switch in
 // the settings and a body written for a wire mean the same one by either.
 [[nodiscard]] inline std::string_view name_of(tool_choice one) {
   switch (one) {
@@ -85,14 +85,14 @@ public:
       : said_(std::ranges::to<std::vector<message>>(said)), now_(now) {}
 
   // What a model may be told it can ask for: every one of them. Whether one
-  // of them is offered at all is not this owner's to say -- that is said
+  // is offered at all is not this owner's to say; that is said
   // below, against what the reader asked for.
   [[nodiscard]] std::vector<provider::offered> offered() const {
     return every_offered();
   }
 
   // One call answered: whole, and nothing where no tool of ours is called
-  // that -- what it answered is what a wire is given back, and what a wire
+  // that. What it answered is what a wire is given back; what a wire
   // does with an answer it never asked for is not ours to say.
   [[nodiscard]] std::optional<std::string> answered(std::string_view name,
                                                     std::string_view asked_for) const {
@@ -160,7 +160,7 @@ private:
 
 // What one answer is asked with, whole: the five numbers come from how the
 // program asks (pchat.provider, `wants_of`), and into them go the tools that
-// were left on. This is the one place both halves are said together.
+// were left on. Both halves are said together here.
 [[nodiscard]] inline provider::wanted wanted_of(const asking &how) {
   provider::wanted out = provider::wants_of(how);
   out.tools = tools_of(how);

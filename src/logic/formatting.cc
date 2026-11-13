@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.logic.formatting -- A message's text as the runs it is drawn in:
-// bold, italic, struck, code, underlined, a link. Read once here, and the
+// bold, italic, struck, code, underlined, a link. Read once here; the
 // screen draws runs and never looks at a star again.
 export module pchat.logic.formatting;
 
@@ -8,8 +8,8 @@ import std;
 
 export namespace pchat::logic {
 
-// What a run is. They are bits, because a run can be more than one of them
-// at once -- bold italic, a bold link.
+// A run is bits, because a run can be more than one
+// at once: bold italic, a bold link.
 using run_style = unsigned;
 inline constexpr run_style plain = 0u;
 inline constexpr run_style bold = 1u << 0;
@@ -18,8 +18,8 @@ inline constexpr run_style code = 1u << 2;
 inline constexpr run_style link = 1u << 3;
 inline constexpr run_style struck = 1u << 4;
 inline constexpr run_style underline = 1u << 5;
-// A block of code: what stands between two fences of three backticks, said
-// in the face code is said in and as it stands, marks and all.
+// A block of code: what stands between two fences of three backticks,
+// in the face code is said in, marks and all.
 inline constexpr run_style block = 1u << 6;
 // What a line is made of at its head, read out of the marks that say it and
 // drawn without them: a heading (`#` to `######`) in the size of its level,
@@ -47,7 +47,7 @@ struct run {
 };
 
 // One run and where it stands: where it begins and ends in the line as it is
-// drawn, which is what the screen is told, and nothing is looked up by
+// drawn, what the screen is told. Nothing is looked up by
 // counting marks again.
 struct run_place {
   std::size_t first = 0;
@@ -78,7 +78,7 @@ inline constexpr mark marks[] = {
 
 [[nodiscard]] inline std::optional<std::pair<std::size_t, run_style>> opening_at(
     std::string_view text, std::size_t at, run_style open) {
-  // What stands inside code is said as it stands: a star in it is a star and
+  // What stands inside code is said as it stands: a star in it is a star,
   // not the beginning of slanted, so nothing opens there but the backtick
   // that ends it.
   if (open & code) {
@@ -92,7 +92,7 @@ inline constexpr mark marks[] = {
 }
 
 // A link written the way writing writes one: [what it is called](where it
-// goes), and nothing after either of them is part of it. What it is called
+// goes); nothing after either of them is part of it. What it is called
 // is drawn as it stands, one run of the line, and nothing in it is read for
 // marks of its own.
 [[nodiscard]] inline std::optional<std::tuple<std::string_view, std::string_view, std::size_t>>
@@ -105,8 +105,8 @@ link_written_at(std::string_view text, std::size_t at) {
                     text.substr(shut + 2, gone - shut - 2), gone + 1 - at};
 }
 
-// What begins a place said in a line, longest first so that https:// is read
-// as itself and not as http:// with an s left over.
+// What begins a place said in a line, longest first: https:// is read
+// as itself, not as http:// with an s left over.
 inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "www."};
 // Marks no place runs past: what wraps one in writing, and what a line is
 // made of.
@@ -122,8 +122,8 @@ inline constexpr std::string_view place_begun_by[] = {"https://", "http://", "ww
 }
 
 // How deep in quotes a line stands, said by stops of quote at the head of
-// it -- one more of them for every line quoted inside the last -- and how
-// much of the line they took to say it. None of them is drawn, as no mark
+// it -- one more for every line quoted inside the last -- and how
+// much of the line they took. None of them is drawn, as no mark
 // is; what stands in their place is quoted.
 [[nodiscard]] inline std::pair<std::size_t, int>
 quoted_at(std::string_view text, std::size_t at) {
@@ -139,8 +139,8 @@ quoted_at(std::string_view text, std::size_t at) {
 
 // What a line is made of at its head, read out of its marks: a heading of
 // one to six `#` each followed by a space, or a list begun by `-`, `*`, `+`
-// or a number and a dot, each followed by a space. How much of the line the
-// marks took to say it, and the run they say the line stands in. A mark that
+// or a number and a dot, each followed by a space. It says how much of the
+// line the marks took, and the run the line stands in. A mark that
 // does not say all of that is not one: `#nospace` is a word, `--` is two
 // dashes, `1.` at the end of a line is a number. None of the marks is drawn.
 [[nodiscard]] inline std::pair<std::size_t, run_style>
@@ -180,8 +180,8 @@ line_head_at(std::string_view text, std::size_t at) {
 
 }  // namespace formatting_detail
 
-// The runs of one message's text. A mark that never closes is text, which is
-// what any other reader of it would show, too.
+// The runs of one message's text. A mark that never closes is text, as any
+// other reader would show it.
 [[nodiscard]] inline std::vector<run> runs_of(std::string_view text) {
   using formatting_detail::marks;
   std::vector<run> runs;
@@ -189,7 +189,7 @@ line_head_at(std::string_view text, std::size_t at) {
   int quoted = 0;
   std::size_t from = 0;
   for (std::size_t at = 0; at < text.size();) {
-    // A run never crosses a line, for how deep a line stands in quotes is
+    // A run never crosses a line: how deep a line stands in quotes is
     // said of that line and of no other, and what a run would carry across
     // two is not one thing to carry.
     if (text[at] == '\n') {
@@ -206,8 +206,8 @@ line_head_at(std::string_view text, std::size_t at) {
       continue;
     }
     // A fence of three backticks at the head of a line: what stands between
-    // it and the next fence is one block, said in the face code is said in
-    // and as it stands, marks and all -- no star in it is read as a mark --
+    // it and the next fence is one block, in the face code is said in,
+    // marks and all -- no star in it is read as a mark --
     // and neither fence is said. What stood before it on the line it stands
     // on is said as it was.
     if ((!(open & code) || (open & block)) &&
@@ -238,7 +238,7 @@ line_head_at(std::string_view text, std::size_t at) {
         continue;
       }
       // What the line is made of at its head: a heading or a list, its marks
-      // taken out and the run they say the line stands in standing for them.
+      // taken out, the run they say the line stands in standing for them.
       // A list keeps a bullet where its mark stood, as the doc draws one
       // (`src/ui/doc.cc`), so the words are drawn and the mark is not.
       const auto [head_taken, head_style] =
@@ -277,7 +277,7 @@ line_head_at(std::string_view text, std::size_t at) {
         continue;
       }
     }
-    // What a block is said in no mark opens: a star in it is a star.
+    // In a block no mark opens: a star in it is a star.
     const auto found = !(open & block)
         ? formatting_detail::opening_at(text, at, open)
         : decltype(formatting_detail::opening_at(text, at, open)){};
@@ -304,11 +304,11 @@ line_head_at(std::string_view text, std::size_t at) {
   return runs;
 }
 
-// Where a link stands in a line, called a place as the writing here calls
-// it: the first unit of it, one past its last, and where it goes. Read as a
-// reader reads one -- begun by http://, https:// or www., and running until
-// something no place goes in -- with what a sentence says after a place left
-// out of it. (`link` is the bit a run carries, which is why this is not.)
+// Where a link stands in a line, a place as this writing calls it: the first
+// unit of it, one past its last, and where it goes. Read as a reader reads
+// one -- begun by http://, https:// or www., running until something no
+// place goes in -- with what a sentence says after a place left out.
+// (`link` is the bit a run carries; this is not.)
 struct place {
   std::size_t first = 0;
   std::size_t last = 0;
@@ -317,9 +317,9 @@ struct place {
 };
 
 // The line as the screen draws it: what is said with every mark that said it
-// taken out of it, and where each run stands in what is left. A star and a
+// taken out, and where each run stands in what is left. A star and a
 // backtick are how a model says bold and code: the screen draws what they
-// said, and says none of them.
+// said and says none of them.
 struct drawn {
   std::string said;
   std::vector<run_place> runs;     // each stretch that is not plain

@@ -1,10 +1,10 @@
-# 📈 progressive-chat
+# 📈 Progressive Chat
 
 A client for talking to a model: the conversations of one account, the
 messages in one of them, and the appearance of both. It is a **new front end
 for the Agora look**, written from nothing on the stack
 [mux](https://github.com/j4niwzis/mux) uses -- C++26 modules, clang, CMake,
-Ninja, SDL3 and Skia through skiff -- so that it builds for the desktop, for
+Ninja, SDL3 and Skia through skiff -- so it builds for the desktop, for
 the web and for Android from one set of files.
 
 Started **3 November 2026, 21:07 UTC** -- the repository's first commit.
@@ -31,7 +31,7 @@ Roughly: the main concepts are expected to take **about a year**. The hope is
 that it is already amazing in **half** of that -- somewhere in, or a little
 before, **summer**. Until then what is in this repository is **not yet a
 product**: it is a test bench. Everything in it may be rewritten, and what it
-draws today is here so that the next thing has something to be drawn over.
+draws today is here so the next thing has something to be drawn over.
 
 ## Why this project exists
 
@@ -82,7 +82,7 @@ model, an agent or a script on its own.
 
 10th November… The project is halfway to its first useful function. My first
 experimental iOS builds are successful. Since yesterday: +2,104 lines of code,
-+30 commits. Counted to `370d09e`.
++30 commits.
 
 ### 2026-11-09
 
@@ -126,26 +126,26 @@ app.
 
 ## What it is made of
 
-```
-src/core.cc              the model: ids, accounts, conversations, messages
-src/config.cc            what is kept on disk: the looks, the account
-src/theme*.cc            eight preset palettes, in Material's own terms
-src/logic/*.cc           what the screens read out of the model
-src/app/*.cc             the program, the screens, and today's sample
-src/provider.cc          what one conversation asks of a model, and the body
-src/provider/stream.cc   one answer arriving a frame at a time
-src/provider/run.cc      one answer whole: why it is over, the message it leaves
-src/provider/loop.cc     one question asked again with what its tools answered
-src/tools.cc             what this program answers itself, and nothing else
-src/platform/carry.cc    what hands a body over, per platform: a page's fetch
-src/ui.cc, src/ui/*.cc   the window: every screen, drawn with skiff
+```mermaid
+flowchart LR
+  entry["main_desktop.cc · main_web.cc · main_android.cc"] --> app["pchat_app<br/>src/app: program, screens, sample"]
+  app --> ui["pchat_ui<br/>src/ui.cc, src/ui/* -- skiff over Skia"]
+  app --> requests["pchat_requests<br/>src/app/requests.cc"]
+  app --> provider["pchat_provider<br/>anthropic · gemini · http<br/>stream, run, loop, budget"]
+  app --> platform["pchat_platform<br/>src/platform/carry.cc<br/>curl · fetch · HttpURLConnection"]
+  app --> tools["pchat_tools<br/>src/tools.cc"]
+  ui --> core["pchat_core<br/>core, config, theme, tokens, json"]
+  requests --> core
+  provider --> core
+  tools --> core
+  core --> agora["agora_core_lib<br/>ports/agora-core"]
 ```
 
 Three targets, one program:
 
 | target  | how it is built                         | what it is                             |
 | ------- | --------------------------------------- | -------------------------------------- |
-| desktop | `cmake` + Ninja, clang 23, SDL3         | a window of its own: x86_64 and arm64  |
+| desktop | `cmake` + Ninja, clang 23, SDL3         | its own window: x86_64 and arm64  |
 | web     | the same cmake through Emscripten       | a page served by GitHub Pages          |
 | android | the same cmake through a self-built NDK | an APK                                 |
 
@@ -234,14 +234,14 @@ resource package, and has the activity's classes written out by a script of the
 SDL fork's -- no Java is compiled here, that script emits a dex itself --
 `tools/android_apk.py` puts those two and every library they load with into an
 archive, which `zipalign` lines up and `apksigner` signs. One key of this
-build's own is made for it, so that what an Android refuses -- an APK no key
+build's own is made for it, so what an Android refuses -- an APK no key
 was put to -- is not what comes out. There is one installable per ABI, and
 each named with the commit it was built from: 64-bit ARM, and the 32-bit ARM
 a great many phones still are. They are the `progressive-chat-android-*` artifact of the newest android run:
 
 <https://github.com/progressive-chat/progressive-chat/actions/workflows/android.yml>
 
-The page is four files of its own beside the linked client: `web/index.html`,
+The page is its own four files beside the linked client: `web/index.html`,
 the element skiff writes the window into, `web/bootstrap.js`, which isolates
 the page and loads the client, and `web/worker.js`, the service worker that
 answers the isolation headers -- the client is linked with threads, and threads

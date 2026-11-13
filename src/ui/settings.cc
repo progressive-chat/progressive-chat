@@ -45,22 +45,20 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
     {scheme_preset::ocean, "Ocean"},
 }};
 
-// The nine groups the page is made of, and what each holds, said once in
-// the order they are said in (design-doc.md, "The settings"). Every one of
-// them has what it is named for drawn under one of its items: Appearance,
-// under Appearance & Language; what answers in a chat, under Services;
-// Generation, under Responses; the three tools this program owns, under
-// Tools; a switch to each of the seven under Multimodal, Network and
-// Memory & Data; a press that asks for one notification, under
-// Notifications; and what this build is, under About.
+// The nine groups the page is made of, and what each holds
+// (design-doc.md, "The settings"). Each draws what it is named for under
+// one of its items: Appearance under Appearance & Language; what answers
+// in a chat under Services; Generation under Responses; the three tools
+// this program owns under Tools; a switch to each of the seven under
+// Multimodal, Network and Memory & Data; a press that asks for one
+// notification under Notifications; and what this build is under About.
 //
-// Not one row here says what a group would do when it is pressed: none of
-// them is pressed, because there is nothing behind any of them yet to be
-// shown.
+// No row here says what a group would do when pressed: nothing stands
+// behind any of them yet to be shown.
 
 // What one of them draws under the item it stands under, where it draws
-// anything: one of these six, and never two of them, because no two of
-// them are what one place in the page is made of.
+// anything: one of these six, never two; no two of them are what one place
+// in the page is made of.
 enum class group_rows { none, appearance, generation, tools, switches,
                         answerers, notified, about };
 
@@ -68,14 +66,14 @@ struct settings_group {
   std::string_view name;
   std::array<std::string_view, max_settings_items> items{};
   std::size_t said = 0u;
-  // And what, where it draws any at all, stands under it: which item they
-  // stand under, and which rows they are. No item is ever at
-  // `max_settings_items`, so that is what a group with none says.
+  // What stands under it, where it draws any: which item they stand under,
+  // and which rows they are. `max_settings_items` is the value for a group
+  // with none.
   std::size_t drawn_at = max_settings_items;
   group_rows drawn = group_rows::none;
-  // And where the seven begin for it, and how many of them are its own:
-  // each of the three groups they are said under holds a run of them, and
-  // no run is said twice.
+  // Where the seven begin for it, and how many it holds: each of the three
+  // groups they are said under holds a run of them, and no run is said
+  // twice.
   std::size_t switch_from = 0u;
   std::size_t switches_said = 0u;
 };
@@ -113,8 +111,8 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
     {"About", {{"About"}}, 1u, 0u, group_rows::about},
 }};
 // How much room the page leaves over and under its card, and how wide the
-// card ever is: a page wider than this would ask its rows to stretch over
-// a breadth no one reads across.
+// card ever is: a wider page would stretch its rows over a breadth nobody
+// reads across.
 inline constexpr float settings_card_room = 12.0f;
 inline constexpr float settings_card_widest = 720.0f;
 // What a row in the page is, and how one row stands from the next: one
@@ -147,8 +145,9 @@ struct switch_row : scene::Node {
 
   switch_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
-    // The plate is what is seen of the row, and it fills by its own corner
-    // radius alone: told the row's, the ground under it is rounded too.
+    // The plate is what is seen of the row; it fills by its own corner
+    // radius alone. With the row's radius it would round the ground under
+    // it too.
     fPlate.apply({.fill = true, .cornerRadius = 14.0f});
     fName.setElided(true);
     fName.apply({.anchor = scene::anchor::kCentreLeft,
@@ -170,8 +169,8 @@ struct switch_row : scene::Node {
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
-  // Pressed: what it asks for is the way it is not put now, whichever way
-  // that is -- a switch does not know itself what it would be turning on.
+  // Pressed: it asks for the way it is not put now, whichever that is. A
+  // switch does not know what it would be turning on.
   [[nodiscard]] bool onClick(float, float) {
     if (asked)
       asked->ask(one);
@@ -328,13 +327,13 @@ struct knob_row : scene::Node {
 };
 
 // What the card holds: the seeds, the switches, and what else is said in
-// the page. Of its own node, and not drawn straight into the page, so that
-// what scrolls is these and not the card they are said in -- a page that
-// grows past its room has to be scrolled where the words run out, as the
-// column of messages is, and not pushed down into nothing.
-// A line of About: what it is called, and what is said of it, either of
-// them given whole to the machine's clipboard by a press -- nothing in this
-// group is anything but told.
+// the page. It is its own node, not drawn straight into the page: what
+// scrolls is these and not the card they are said in. A page past its room
+// scrolls where the words run out, as the column of messages does, and is
+// not pushed down into nothing.
+// A line of About: what it is called, and what is said of it; either given
+// whole to the machine's clipboard by a press. Nothing in this group is
+// anything but told.
 struct about_row : scene::Node {
   ask_box fPlate{};
   nodes::Text fName{"", 15.0f, 0u};
@@ -390,8 +389,8 @@ struct about_row : scene::Node {
 };
 
 // One row of the Notifications page: pressed, it asks the machine this
-// program runs on to show one notification of the program's own -- a test,
-// whether it is let show any at all, and nothing that stands for a message.
+// program runs on to show one test notification, whether it is let show
+// any at all. It does not stand for a message.
 struct test_row : scene::Node {
   ask_box fPlate{};
   nodes::Text fName{"", 15.0f, 0u};
@@ -434,14 +433,13 @@ struct test_row : scene::Node {
 };
 
 struct settings_rows : scene::Node {
-  // Said while the page is being looked into: the first two things said in
-  // it that stand on one another, by the name each is known by in the code
-  // and the room each came to stand in. Nothing is read of a page that says
-  // "no two stand on another".
+  // The heading: the first two things said in the page that stand on one
+  // another, by the name each is known by in the code and the room each
+  // came to stand in. The page says "no two stand on another".
   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
-  // One line to a text, kept on the heap and not as a member: sixty of them,
-  // each with a size it is said in, is not what a machine's stack was asked
-  // to hold -- and every one of them is made whether it is said in or not.
+  // One line to a text, kept on the heap and not as a member: sixty of
+  // them, each with a size it is said in, is not what a machine's stack was
+  // asked to hold. Every one of them is made whether it is said in or not.
   struct group_name {
     nodes::Text name{"", 16.0f, 0u, true};
     group_name() { name.setElided(true); }
@@ -488,10 +486,10 @@ struct settings_rows : scene::Node {
   nodes::Text fRead{"Read the design", 15.0f, 0u};
   // The archive, offered under what this build is made of: a plate like the
   // design's, pressed to write everything this program holds into one .prgrssv
-  // file where the machine keeps files. Said the way every other label of this
-  // page is said -- empty until the row says it, elided within its room -- and
-  // not held as words from the moment it was made: a label written once and
-  // never again is laid out by nobody.
+  // file where the machine keeps files. Its label is set the way every other
+  // label of this page is -- empty until the row says it, elided within its
+  // room -- and not held as words from the moment it was made: a label
+  // written once and never again is laid out by nobody.
   ask_box fArchive{};
   nodes::Text fArchiveText{"", 15.0f, 0u};
   settings_rows() {
@@ -519,8 +517,8 @@ struct settings_rows : scene::Node {
     for (std::size_t at = 0; at < max_seeds; ++at)
       fSeeds[at].blank();
     // Hidden until the group that holds them is said: whatever is not
-    // drawn under any name stays the way a card it was never given leaves
-    // it, and each of these says it is drawn when it is.
+    // drawn under any name stays hidden, as a card it was never given
+    // leaves it, and each of these says it is drawn when it is.
     for (knob_row &one : fKnobs)
       one.setVisible(false);
     for (switch_row &one : fTools)
@@ -540,8 +538,8 @@ struct settings_rows : scene::Node {
   }
 
   // The answerers offered (pchat.config), as a row each: which of them
-  // answers in the conversation this window has open, and a press on one of
-  // them putting it in or taking it back out of it.
+  // answers in the conversation this window has open; a press on one puts it
+  // in or takes it back out.
   [[nodiscard]] float say_answerers(app::requests *asked, const paints &look,
                                     std::span<const std::string> answerers,
                                     float row_width, float base) {
@@ -592,11 +590,12 @@ struct settings_rows : scene::Node {
       at += settings_row_stride;
     }
     // The archive, offered under the three: a plate the breadth of them with
-    // its own words over it, pressed to ask where the machine keeps files --
-    // and the bytes follow when a path is said back (screens, save_archive).
-    // The words are laid out the way the page's other words are: a width to be
-    // laid out against first, then where they stand -- an anchored text with no
-    // width of its own is measured to none and drawn where nothing shows it.
+    // its own words over it, pressed to ask where the machine keeps files;
+    // the bytes follow when a path is said back (screens, save_archive).
+    // The words are laid out the way the page's other words are: a width to
+    // be laid out against first, then where they stand. An anchored text with
+    // no width of its own is measured to none and drawn where nothing shows
+    // it.
     fArchive.again(asked, app::save_archive{}, look.raised);
     fArchive.apply({.anchor = scene::anchor::kTopLeft,
                     .origin = scene::anchor::kTopLeft,
@@ -623,8 +622,8 @@ struct settings_rows : scene::Node {
   }
 
   // One group's rows, said by which they are: every one of them kept by the
-  // group that says it, and said here so that the page's layout has nothing
-  // to know of which is which.
+  // group that says it, so the page's layout has nothing to know of which
+  // is which.
   [[nodiscard]] float say_rows(group_rows rows, app::requests *asked,
                                const paints &look, const looks &shown,
                                const asking &how,
@@ -655,7 +654,7 @@ struct settings_rows : scene::Node {
 
   // Notifications, drawn: one row under the group's own item, pressed to ask
   // the machine this program runs on for a test notification. Nothing here is
-  // told whether one was shown -- asking is all a row does, and whether this
+  // told whether one was shown: asking is all a row does, and whether this
   // program is let show any is the system's own to answer.
   [[nodiscard]] float say_notified(app::requests *asked, const paints &look,
                                    float row_width, float base) {
@@ -700,7 +699,7 @@ struct settings_rows : scene::Node {
   }
 
   // The three tools, drawn: a switch to each, standing under the name of the
-  // group's third row, which is the one that is about looking things up.
+  // group's third row, the one about looking things up.
   [[nodiscard]] float say_tools(app::requests *asked, const paints &look,
                                 const asking &how, float row_width,
                                 float base) {
@@ -724,8 +723,8 @@ struct settings_rows : scene::Node {
   }
 
   // Generation, drawn: one row to each of the five, under the name the page
-  // had left standing for it alone, and told to say where the page goes on
-  // from the last of them.
+  // had left standing for it alone, told to say where the page goes on from
+  // the last of them.
   [[nodiscard]] float say_generation(app::requests *asked, const paints &look,
                                      const asking &how, float row_width,
                                      float base) {
@@ -749,8 +748,8 @@ struct settings_rows : scene::Node {
   }
 
   // Appearance, drawn: the seeds to choose between, and the three switches.
-  // Said from wherever the list of groups has got to, and told to say where
-  // the page goes on from here.
+  // Said from wherever the list of groups has got to, told to say where the
+  // page goes on from here.
   [[nodiscard]] float say_appearance(app::requests *asked, const paints &look,
                                      const looks &shown, bool dark,
                                      float breadth, float row_width,
@@ -847,8 +846,8 @@ struct settings_rows : scene::Node {
     // The design, offered under the switches: a plate the whole breadth of
     // the rows, and what it is called written in it.
     const float row_height = row.height.value_or(48.0f);
-    // Where it stands: under every switch above it, which is as far as the
-    // last of them reaches and no counting by hand.
+    // Where it stands: under every switch above it, as far as the last of
+    // them reaches; no counting by hand.
     const float read_at = 5.0f * settings_row_stride;
     fReadPlate.again(asked, app::open_design{}, look.raised);
     fReadPlate.apply({.anchor = row.anchor,
@@ -860,7 +859,7 @@ struct settings_rows : scene::Node {
                       .relativeSize = scene::axes::kNone,
                       .cornerRadius = row.cornerRadius});
     // Where the design stands, and what it says in the plate: anchored the way
-    // a heading of this page is anchored -- a kCentreLeft with the row's own
+    // a heading of this page is anchored. A kCentreLeft with the row's own
     // y here would add the centre of the whole column to it and lay the words
     // out past the column, where nothing draws them (the archive's label stood
     // the same way; src/ui/settings.cc, say_about).
@@ -875,8 +874,8 @@ struct settings_rows : scene::Node {
              const asking &how, std::span<const std::string> answerers,
              bool dark, float breadth) {
     // Where the next thing said stands: every row in here says where it
-    // stands, so the page is laid out as it is read -- one group after the
-    // last, and nothing left to count by hand.
+    // stands, so the page is laid out as it is read. One group after the
+    // last, nothing left to count by hand.
     float at = 76.0f;
     const float row_width = breadth - 32.0f;
     fHeading.setColour(look.text);
@@ -908,7 +907,7 @@ struct settings_rows : scene::Node {
         // Top left, as the group's own heading stands: an item asked for its
         // centre here was given the column's centre along with its row's and
         // was laid out past the column, where no item of this page has ever
-        // been drawn (the sum skiff's anchoredBox makes -- see say_about).
+        // been drawn (the sum skiff's anchoredBox makes; see say_about).
         item.name.apply({.anchor = scene::anchor::kTopLeft,
                          .x = 32.0f,
                          .y = at + (settings_row_height - 19.0f) / 2.0f,
@@ -926,11 +925,11 @@ struct settings_rows : scene::Node {
     // At the end of a switch is said what this build is, where it names one
     // thing and this is the only one it can name.
     // How tall, then: as far as the layout reached, and the room left under
-    // it. This is what scrolls, and it scrolls no further than the last thing
-    // said in it. Its own top is the top of that: a column this tall is put
-    // by its top and read downwards, and stood by its middle instead it put
-    // half of itself above where it began -- every row before the middle
-    // read nowhere, and pressed by nothing.
+    // it. This is what scrolls, no further than the last thing said in it.
+    // Its own top is the top of that: a column this tall is put by its top
+    // and read downwards. Stood by its middle instead it put half of itself
+    // above where it began, so every row before the middle read nowhere and
+    // was pressed by nothing.
     this->apply({.anchor = scene::anchor::kTopLeft,
                  .origin = scene::anchor::kTopLeft,
                  .x = 0.0f,
@@ -981,7 +980,7 @@ struct settings_screen : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Box<> fCard{0u};
   // Put away again: the one control the page has that is not a row of its
-  // own kind, and so drawn outside what scrolls, over the card's own corner.
+  // own kind, drawn outside what scrolls, over the card's own corner.
   press_box fClose{};
   nodes::ScrollContainer<settings_rows> fRows{settings_rows{}};
   // Whether the page was open: what is read in it is read from its first
@@ -1006,7 +1005,7 @@ struct settings_screen : scene::Node {
     // Opened anew, it is read from its beginning. Left alone it stood at
     // its end: the column is taller than the room, and while it was still
     // being made -- short, before its rows were said -- the view followed
-    // what end there was, and stayed where that had put it.
+    // what end there was and stayed where that had put it.
     if (!fShown) {
       fShown = true;
       fRows.scrollToStart();
@@ -1016,7 +1015,7 @@ struct settings_screen : scene::Node {
     fCard.setColour(look.drawer);
     // One card, standing in the middle of the room and reaching almost its
     // whole height: what is read in a page this size is read across its
-    // breadth and not down its whole length, which is what scrolls for.
+    // breadth and not down its whole length; length is what scrolls.
     fCard.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
                  .x = 0.0f,

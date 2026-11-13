@@ -23,9 +23,12 @@ namespace nodes = skiff::nodes;
 // enough to keep it beside the messages instead of over them, how tall the
 // bar over the list, how far the bubbles may reach.
 inline constexpr float drawer_width = 360.0f;
-// How much of the messages is left in sight beside a drawer come over them:
-// the panel never takes the whole of the room, and what is left of the
-// messages beside it is what the reader presses to put it away.
+// How much of the messages is left in sight beside a drawer come over them.
+// Word by word: `inline` = one shared copy in the program; `constexpr` = the
+// number is fixed at build time, never computed at run time; `float` = a
+// decimal number; `48.0f` = 48 points, the `f` marks it a float. 48 points of
+// the messages stay visible beside the overlaid drawer, and that strip is what
+// the reader taps to close the drawer.
 inline constexpr float drawer_open_room = 48.0f;
 // What the panel keeps between itself and its own parts: its heading further
 // in than the field and the rows under it.
@@ -39,7 +42,7 @@ inline constexpr float drawer_row_height = 44.0f;
 inline constexpr float drawer_row_size = 15.0f;
 inline constexpr float drawer_row_radius = 14.0f;
 // Where two rows meet: the corners between them are rounded only barely, so
-// that the two of them read as one row cut in two.
+// the two read as one row cut in two.
 inline constexpr float drawer_row_corner = 4.0f;
 inline constexpr float drawer_row_gap = 4.0f;
 // How much wider a conversation's row keeps its right margin than its left.
@@ -87,11 +90,10 @@ struct ask_box : scene::Node {
     asked = sink;
     one = std::move(asking);
     // Its ground said of itself and not of a plate inside it: a plate fills
-    // by the corner radius it was told itself, and none was told it one, so
-    // every round press in the program was painted square. Declared of the
-    // node, the ground is painted in the node's own rounded box -- however
-    // the corners were given it where it stands, all four alike or each its
-    // own -- and what it holds is clipped by the same.
+    // by the corner radius set on it, and none was set, so every round press
+    // in the program was painted square. Declared on the node, the ground is
+    // painted in the node's own rounded box and what it holds is clipped by
+    // the same.
     this->apply({.background = colour});
   }
 
@@ -100,12 +102,11 @@ struct ask_box : scene::Node {
 
 // One press with a mark painted in the middle of it: what closes a card, put
 // away at the corner of it. The mark is painted after the plate, and what a
-// page says was pressed there is the mark -- a walk from it climbs to this
+// page says was pressed there is the mark: a walk from it climbs to this
 // node and no higher, and a node that answers nothing answers nothing for
 // the plate either. So this one answers for the plate too, wherever in its
 // own box the press came, and nowhere else: the box is no wider than the
-// plate is, which is the same thing said twice for every press in the bar
-// over the messages (`docs/skiff-notes.md`).
+// plate (`docs/skiff-notes.md`).
 struct press_box : scene::Node {
   ask_box fPlate{};
   nodes::Icon fMark{shape::close(), 0u};
@@ -138,12 +139,19 @@ struct press_box : scene::Node {
 };
 
 // What the window gives the screens: its size, and what that size asks for.
+// Word by word: `struct` = a bundle of related values; `metrics` = the name;
+// each `float width/height/scale` is one measurement the window reports every
+// frame. `scale = 1.0f` is only the default -- unlike the fixed constants
+// above, these are filled in at run time from the real window, so they are
+// fields, not `constexpr`.
 struct metrics {
   float width = 0.0f;
   float height = 0.0f;
+  // Device pixel ratio: 1.0 on a normal screen, 2.0 or 3.0 on a high-DPI phone.
+  // This is why it is not a constant -- it changes with the screen it runs on.
   float scale = 1.0f;
-  // Wide enough for the drawer to stay beside the messages -- a phone keeps
-  // one at a time.
+  // Wide enough for the drawer to stay beside the messages: a phone keeps one
+  // at a time.
   [[nodiscard]] bool wide() const noexcept {
     return width >= side_by_side_from;
   }
@@ -155,6 +163,12 @@ struct metrics {
 // ---- the shapes --------------------------------------------------------
 
 // A plate: one colour rounded, a bubble, a pill, a card.
+// Word by word: `[[nodiscard]]` = the caller must use the returned value;
+// `inline` = one shared copy; `nodes::Box<>` = the rectangle node type from
+// skiff (the drawing library); `scene::Spec` = a struct of layout hints (size,
+// position, corner radius); `scene::Colour` = an RGBA colour. The body just
+// asks skiff to build a Box from the spec and colour it -- so `plate` is a one
+// line factory for any rounded rectangle the UI needs.
 [[nodiscard]] inline nodes::Box<> plate(const scene::Spec &spec,
                                         scene::Colour colour) {
   return scene::make<nodes::Box>(spec, colour);
@@ -213,6 +227,11 @@ pen(const scene::Spec &spec, nodes::IconShape shape, scene::Colour colour) {
   return scene::make<nodes::Icon>(spec, std::move(shape), colour);
 }
 // A circle of one colour, its own size, for what stands in the icon's place.
+// Word by word: `scene::Spec made = spec;` copies the incoming layout hints;
+// `std::max(a, b)` takes the larger of the two; `spec.width.value_or(avatar)`
+// means "the width if one was given, otherwise `avatar` (44 points)". Setting
+// the corner radius to half the larger side rounds a square into a circle, so
+// this builds a filled circle of the given colour.
 [[nodiscard]] inline nodes::Box<> round(const scene::Spec &spec,
                                         scene::Colour colour) {
   scene::Spec made = spec;

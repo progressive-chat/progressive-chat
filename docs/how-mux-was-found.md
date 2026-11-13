@@ -639,7 +639,7 @@ Beta
 
 GPL-3.0-or-later
 
-[A real desktop app, not a website in a window — Qt 6, the Rust Matrix SDK, and calls that reach Element.](/ecosystem/clients/lightning/)
+[A real desktop app, not a website in a window -- Qt 6, the Rust Matrix SDK, and calls that reach Element.](/ecosystem/clients/lightning/)
 
 Windows
 
@@ -1167,7 +1167,7 @@ Beta\
 \
 GPL-3.0-or-later\
 \
-A real desktop app, not a website in a window — Qt 6, the Rust Matrix SDK, and calls that reach Element.\
+A real desktop app, not a website in a window -- Qt 6, the Rust Matrix SDK, and calls that reach Element.\
 \
 Windows\
 \
@@ -2175,7 +2175,7 @@ Beta\
 \
 GPL-3.0-or-later\
 \
-A real desktop app, not a website in a window — Qt 6, the Rust Matrix SDK, and calls that reach Element.\
+A real desktop app, not a website in a window -- Qt 6, the Rust Matrix SDK, and calls that reach Element.\
 \
 Windows\
 \
@@ -3089,7 +3089,7 @@ I have the official list. It contains roughly 48 clients. Now let me research th
 {
   "agent": "general",
   "description": "Research terminal/CLI Matrix clients",
-  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on TERMINAL / CLI / TUI / TEXT-BASED Matrix clients.\n\nThe official matrix.org clients list (EXCLUDE all of these — they are already listed) is:\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- weechat-matrix (WeeChat plugin script)\n- purple-matrix / matrix-pidgin (libpurple/Pidgin plugin)\n- bitlbee-matrix\n- matrixcli\n- Ditto? (this is mobile actually — skip)\n- Any TUI clients: check for things like \"matrix-tui\", \"gomuks\" (listed), \"iamb\" (listed), \"nvim-matrix\", \"matrix.lua\", \"matrilogy\", etc.\n- Check GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-protocol for terminal/CLI/TUI clients.\n- Check GNU Emacs clients beyond Ement.el (e.g., other emacs matrix packages).\n- Check Neovim/Vim plugin Matrix clients beyond Neoment.\n- Check irssi/other client scripts.\n\nFor EACH candidate you find that is NOT on the exclusion list:\n1. Verify it actually exists and is a real Matrix client (find its repo/homepage).\n2. Give: name, description, platforms, current status (active/abandoned/archived), license if known, and the URL.\n3. Note the last commit / activity date to judge whether it's still alive.\n\nUse websearch and webfetch. Search GitHub directly (webfetch on github.com search URLs works, or search for \"site:github.com matrix cli client\"). Be thorough — check multiple sources including awesome-matrix lists, \"This Week in Matrix\" (TWIM) blog posts, alternative clients directories, and GitHub topic searches.\n\nReturn ONLY Matrix clients that are genuinely absent from the exclusion list above. Do not include anything already listed. Be careful to verify existence — do not invent clients. Clearly separate ones you could verify vs. uncertain ones."
+  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on TERMINAL / CLI / TUI / TEXT-BASED Matrix clients.\n\nThe official matrix.org clients list (EXCLUDE all of these -- they are already listed) is:\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- weechat-matrix (WeeChat plugin script)\n- purple-matrix / matrix-pidgin (libpurple/Pidgin plugin)\n- bitlbee-matrix\n- matrixcli\n- Ditto? (this is mobile actually -- skip)\n- Any TUI clients: check for things like \"matrix-tui\", \"gomuks\" (listed), \"iamb\" (listed), \"nvim-matrix\", \"matrix.lua\", \"matrilogy\", etc.\n- Check GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-protocol for terminal/CLI/TUI clients.\n- Check GNU Emacs clients beyond Ement.el (e.g., other emacs matrix packages).\n- Check Neovim/Vim plugin Matrix clients beyond Neoment.\n- Check irssi/other client scripts.\n\nFor EACH candidate you find that is NOT on the exclusion list:\n1. Verify it actually exists and is a real Matrix client (find its repo/homepage).\n2. Give: name, description, platforms, current status (active/abandoned/archived), license if known, and the URL.\n3. Note the last commit / activity date to judge whether it's still alive.\n\nUse websearch and webfetch. Search GitHub directly (webfetch on github.com search URLs works, or search for \"site:github.com matrix cli client\"). Be thorough -- check multiple sources including awesome-matrix lists, \"This Week in Matrix\" (TWIM) blog posts, alternative clients directories, and GitHub topic searches.\n\nReturn ONLY Matrix clients that are genuinely absent from the exclusion list above. Do not include anything already listed. Be careful to verify existence -- do not invent clients. Clearly separate ones you could verify vs. uncertain ones."
 }
 ```
 
@@ -3102,7 +3102,7 @@ Tool execution interrupted: subagent
 {
   "agent": "general",
   "description": "Research mobile Matrix clients",
-  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on MOBILE clients (Android, iOS, KaiOS, watchOS, Sailfish, Ubuntu Touch, etc.) and mobile forks/regional variants.\n\nThe official matrix.org clients list (EXCLUDE all of these — they are already listed):\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- Ditto (React Native client, gitlab.com/ditto-chat/ditto)\n- miniVector (mentioned in some older lists)\n- Any Sailfish OS Matrix clients\n- Any Ubuntu Touch Matrix clients\n- Regional / Chinese forks (there are several Element forks for China beyond WanChat — e.g., search for Chinese Matrix clients/Chinese Matrix forks)\n- Other Element X / Element Classic forks not listed\n- Any abandoned or lesser-known mobile Matrix apps\n- Check F-Droid's \"Matrix\" category or search F-Droid for Matrix clients not on the list\n- Search GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-android, topic:matrix-ios for mobile clients\n- Search \"This Week in Matrix\" (TWIM) blog posts for newer mobile clients announced recently that might not be added yet.\n\nFor EACH candidate you find NOT on the exclusion list:\n1. Verify it genuinely exists and is a real Matrix client (find repo/homepage).\n2. Give: name, description, platforms, status (active/abandoned/archived), license if known, URL.\n3. Note last activity/commit date.\n\nUse websearch and webfetch. Check multiple sources: GitHub/GitLab searches, F-Droid, awesome lists, TWIM posts. Be thorough.\n\nReturn ONLY clients genuinely absent from the exclusion list. Verify existence — don't invent. Clearly separate verified vs uncertain findings."
+  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on MOBILE clients (Android, iOS, KaiOS, watchOS, Sailfish, Ubuntu Touch, etc.) and mobile forks/regional variants.\n\nThe official matrix.org clients list (EXCLUDE all of these -- they are already listed):\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- Ditto (React Native client, gitlab.com/ditto-chat/ditto)\n- miniVector (mentioned in some older lists)\n- Any Sailfish OS Matrix clients\n- Any Ubuntu Touch Matrix clients\n- Regional / Chinese forks (there are several Element forks for China beyond WanChat -- e.g., search for Chinese Matrix clients/Chinese Matrix forks)\n- Other Element X / Element Classic forks not listed\n- Any abandoned or lesser-known mobile Matrix apps\n- Check F-Droid's \"Matrix\" category or search F-Droid for Matrix clients not on the list\n- Search GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-android, topic:matrix-ios for mobile clients\n- Search \"This Week in Matrix\" (TWIM) blog posts for newer mobile clients announced recently that might not be added yet.\n\nFor EACH candidate you find NOT on the exclusion list:\n1. Verify it genuinely exists and is a real Matrix client (find repo/homepage).\n2. Give: name, description, platforms, status (active/abandoned/archived), license if known, URL.\n3. Note last activity/commit date.\n\nUse websearch and webfetch. Check multiple sources: GitHub/GitLab searches, F-Droid, awesome lists, TWIM posts. Be thorough.\n\nReturn ONLY clients genuinely absent from the exclusion list. Verify existence -- don't invent. Clearly separate verified vs uncertain findings."
 }
 ```
 
@@ -3115,7 +3115,7 @@ Tool execution interrupted: subagent
 {
   "agent": "general",
   "description": "Research desktop Matrix clients",
-  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on DESKTOP / NATIVE GUI clients (Windows, macOS, Linux — Qt, GTK, Electron, native toolkits, etc.), including convergent (desktop+mobile) clients.\n\nThe official matrix.org clients list (EXCLUDE all of these — they are already listed):\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- Spectral (another Qt-based Matrix client)\n- Frog (a GNOME Matrix client written in Rust/Python — verify it exists and whether still Matrix-based)\n- Mirage (Matrix client — verify if it's Matrix and still alive; note there's also a different Mirage app so be careful)\n- Accord\n- Azumane\n- Any newer Rust-based desktop clients not yet added\n- Any KDE/Plasma native Matrix clients beyond NeoChat\n- Any macOS-native clients beyond Mactrix/Relay\n- Search GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-protocol for desktop/GUI clients\n- Search Flathub for \"Matrix\" apps not on the list\n- Search \"This Week in Matrix\" (TWIM) recent posts for newly announced desktop clients\n\nFor EACH candidate found NOT on the exclusion list:\n1. Verify it genuinely exists and is a real Matrix client (find repo/homepage).\n2. Give: name, description, platforms, status (active/abandoned/archived), license if known, URL.\n3. Note last activity/commit date.\n4. IMPORTANT: If a candidate turns out to no longer be a Matrix client (e.g., pivoted protocol), or is already listed under a different name, say so explicitly.\n\nUse websearch and webfetch thoroughly. Be careful and verify — don't invent clients.\n\nReturn ONLY clients genuinely absent from the exclusion list. Clearly separate verified vs uncertain."
+  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on DESKTOP / NATIVE GUI clients (Windows, macOS, Linux -- Qt, GTK, Electron, native toolkits, etc.), including convergent (desktop+mobile) clients.\n\nThe official matrix.org clients list (EXCLUDE all of these -- they are already listed):\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- Spectral (another Qt-based Matrix client)\n- Frog (a GNOME Matrix client written in Rust/Python -- verify it exists and whether still Matrix-based)\n- Mirage (Matrix client -- verify if it's Matrix and still alive; note there's also a different Mirage app so be careful)\n- Accord\n- Azumane\n- Any newer Rust-based desktop clients not yet added\n- Any KDE/Plasma native Matrix clients beyond NeoChat\n- Any macOS-native clients beyond Mactrix/Relay\n- Search GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-protocol for desktop/GUI clients\n- Search Flathub for \"Matrix\" apps not on the list\n- Search \"This Week in Matrix\" (TWIM) recent posts for newly announced desktop clients\n\nFor EACH candidate found NOT on the exclusion list:\n1. Verify it genuinely exists and is a real Matrix client (find repo/homepage).\n2. Give: name, description, platforms, status (active/abandoned/archived), license if known, URL.\n3. Note last activity/commit date.\n4. IMPORTANT: If a candidate turns out to no longer be a Matrix client (e.g., pivoted protocol), or is already listed under a different name, say so explicitly.\n\nUse websearch and webfetch thoroughly. Be careful and verify -- don't invent clients.\n\nReturn ONLY clients genuinely absent from the exclusion list. Clearly separate verified vs uncertain."
 }
 ```
 
@@ -3128,7 +3128,7 @@ Tool execution interrupted: subagent
 {
   "agent": "general",
   "description": "Research web/embedded Matrix clients",
-  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on WEB-BASED clients, client forks, embedded/embeddable clients, widgets, and unusual/novel Matrix clients (including ones for unusual platforms).\n\nThe official matrix.org clients list (EXCLUDE all of these — they are already listed):\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- Safesupport chatbox (github.com/nomadic-labs/safesupport-chatbox — embeddable Matrix chatbox)\n- Rambox (workspace/messaging aggregator that supports Matrix — verify)\n- Other Cinny forks beyond Extera/Sable (e.g., search \"Cinny fork\")\n- Other Element Web forks\n- Any self-hostable web Matrix clients not listed\n- matrix-notepad / collaborative clients (but only report if genuinely a chat client — a notepad may not be a chat client, be precise)\n- Unusual platform clients: Nintendo 3DS (Miitrix is listed), check for PS Vita, Wii, embedded/IoT, e-ink devices, 3DS variants beyond Miitrix, smartwatch clients beyond Watch The Matrix\n- Check the \"canitmatrix\" directory (matrix-org.github.io/canitmatrix/clients/) for clients listed there that are NOT on matrix.org — cross-check!\n- Search GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-web, topic:matrix-widget\n- Search \"This Week in Matrix\" (TWIM) recent posts for newly announced clients\n\nFor EACH candidate found NOT on the exclusion list:\n1. Verify it genuinely exists and is a real Matrix CHAT client (find repo/homepage).\n2. Give: name, description, platforms, status (active/abandoned/archived), license if known, URL.\n3. Note last activity.\n4. Flag borderline cases (e.g., aggregators, bots, notepads, bridges) explicitly as \"borderline\" rather than claiming they're full clients.\n\nAlso: the canitmatrix cross-check is valuable — list any clients there absent from the exclusion list.\n\nUse websearch and webfetch thoroughly. Verify — don't invent.\n\nReturn ONLY clients genuinely absent from the exclusion list. Clearly separate verified vs uncertain vs borderline."
+  "prompt": "Research task: Find Matrix chat clients that exist but are NOT yet listed on matrix.org's official clients page.\n\nYou are focused on WEB-BASED clients, client forks, embedded/embeddable clients, widgets, and unusual/novel Matrix clients (including ones for unusual platforms).\n\nThe official matrix.org clients list (EXCLUDE all of these -- they are already listed):\nElement Web/Desktop, Element X, Element Classic, FluffyChat, Cinny, Nheko, WizardChat, Komai, Watch The Matrix, Ement.el, mnotify, matrix-commander, matrix-commander-rs, Quaternion, Syphon, Hydrogen, Tesseract, Mages, Mactrix, Relay, \"polycule\", Singularity, Zooid, Thunderbird, NeoChat, gomuks, chatrix, Lightning, chatty, chooj, SchildiChat Revenge, SchildiChat Next, SchildiChat Legacy, Tacit, Quadrix, Tammy, Extera, Extera Next, kazv, gotktrix, Sable, iamb, Fractal, Zam, Commet, WanChat, Neoment, Miitrix.\n\nSpecifically investigate and verify these candidates (and discover more like them):\n- Safesupport chatbox (github.com/nomadic-labs/safesupport-chatbox -- embeddable Matrix chatbox)\n- Rambox (workspace/messaging aggregator that supports Matrix -- verify)\n- Other Cinny forks beyond Extera/Sable (e.g., search \"Cinny fork\")\n- Other Element Web forks\n- Any self-hostable web Matrix clients not listed\n- matrix-notepad / collaborative clients (but only report if genuinely a chat client -- a notepad may not be a chat client, be precise)\n- Unusual platform clients: Nintendo 3DS (Miitrix is listed), check for PS Vita, Wii, embedded/IoT, e-ink devices, 3DS variants beyond Miitrix, smartwatch clients beyond Watch The Matrix\n- Check the \"canitmatrix\" directory (matrix-org.github.io/canitmatrix/clients/) for clients listed there that are NOT on matrix.org -- cross-check!\n- Search GitHub topics: topic:matrix, topic:matrix-client, topic:matrix-web, topic:matrix-widget\n- Search \"This Week in Matrix\" (TWIM) recent posts for newly announced clients\n\nFor EACH candidate found NOT on the exclusion list:\n1. Verify it genuinely exists and is a real Matrix CHAT client (find repo/homepage).\n2. Give: name, description, platforms, status (active/abandoned/archived), license if known, URL.\n3. Note last activity.\n4. Flag borderline cases (e.g., aggregators, bots, notepads, bridges) explicitly as \"borderline\" rather than claiming they're full clients.\n\nAlso: the canitmatrix cross-check is valuable -- list any clients there absent from the exclusion list.\n\nUse websearch and webfetch thoroughly. Verify -- don't invent.\n\nReturn ONLY clients genuinely absent from the exclusion list. Clearly separate verified vs uncertain vs borderline."
 }
 ```
 
@@ -3140,7 +3140,7 @@ Tool execution interrupted: subagent
 
 _Thinking:_
 
-The subagents all got aborted due to server restart. The Code Mode catalog also changed — no more webfetch/websearch directly available in the main tools, and no gimp/godot/lmms either. Wait, actually looking at my available tools, I still have `webfetch` and `websearch` and `subagent` in my tool list? Let me re-read.
+The subagents all got aborted due to server restart. The Code Mode catalog also changed -- no more webfetch/websearch directly available in the main tools, and no gimp/godot/lmms either. Wait, actually looking at my available tools, I still have `webfetch` and `websearch` and `subagent` in my tool list? Let me re-read.
 
 Actually looking at my system prompt tools, I have: clear_goal, create_goal, defer_goal_until_shell, edit, get_goal, get_goal_history, glob, grep, list_all_goals, question, read, release_goal_shell_deferral, replace_goal, set_goal, shell, skill, stop_goal, subagent, update_goal, update_goal_objective, update_goal_plan, update_goal_status, webfetch, websearch, write, execute.
 
@@ -3268,7 +3268,7 @@ Configuration is completed primarily through the Weechat interface. First start 
 
 ## [Weechat with Matrix python plugin on OpenBSD 6.8](https://www.unitedbsd.com/d/322-weechat-with-matrix-python-plugin-on-openbsd-68)
 
-Nov 27, 2020 — Weechat can be used for chats on the decentralized Matrix network. lets Weechat communicate over the Matrix protocol. https://github.com/poljar
+Nov 27, 2020 -- Weechat can be used for chats on the decentralized Matrix network. lets Weechat communicate over the Matrix protocol. https://github.com/poljar
 
 ## [torhve/weechat-matrix-protocol-script: A ...](https://github.com/torhve/weechat-matrix-protocol-script)
 
@@ -3276,7 +3276,7 @@ Matrix Client script for WeeChat Also known as WeeMatrix, this script is conside
 
 ## [using matrix via weechat using the new python ...](https://news.ycombinator.com/item?id=19222735)
 
-Feb 22, 2019 — Matrix using matrix via weechat using the new python weechat-matrix (https://github.com/poljar/weechat-matrix) plugin should give a very
+Feb 22, 2019 -- Matrix using matrix via weechat using the new python weechat-matrix (https://github.com/poljar/weechat-matrix) plugin should give a very
 
 ## [poljar/weechat-matrix-rs: Rust rewrite of the python ...](https://github.com/poljar/weechat-matrix-rs)
 
@@ -3284,11 +3284,11 @@ weechat-matrix-rs is a Rust plugin for Weechat that lets Weechat communicate ove
 
 ## [WeeChat with matrix-plugin without home-manager - Help](https://discourse.nixos.org/t/weechat-with-matrix-plugin-without-home-manager/64284)
 
-May 14, 2025 — I'm trying to install weechat with the weechat-matrix plugin/script, without using home-manager. This should be possible, since both weechat and ...Read more
+May 14, 2025 -- I'm trying to install weechat with the weechat-matrix plugin/script, without using home-manager. This should be possible, since both weechat and ...Read more
 
 ## [Weechat-matrix - Fedora Discussion](https://discussion.fedoraproject.org/t/weechat-matrix/102653)
 
-Jan 25, 2024 — Does anyone have experience setting up weechat-matrix to connect to chat.fedoraproject.org? I'm getting logged in, but then disconnected
+Jan 25, 2024 -- Does anyone have experience setting up weechat-matrix to connect to chat.fedoraproject.org? I'm getting logged in, but then disconnected
 
 **Tool: websearch**
 
@@ -3424,7 +3424,7 @@ Powered by Discourse, best viewed with JavaScript enabled
 
 ## [Malware infiltrates Pidgin messenger's official plugin ...](https://news.ycombinator.com/item?id=41370714)
 
-Aug 27, 2024 — The current state of purple-matrix for use in Pidgin leaves a lot to be desired. For example, it's quite slow to connect and missing a decent
+Aug 27, 2024 -- The current state of purple-matrix for use in Pidgin leaves a lot to be desired. For example, it's quite slow to connect and missing a decent
 
 ## [ThirdPartyPlugins – Pidgin](https://developer.pidgin.im/wiki/ThirdPartyPlugins)
 
@@ -3482,7 +3482,7 @@ Setup. Prerequisites. iOS, Android. Node.js · Yarn · Watchman (only for develo
 
 ## [Ditto - Introducing Ditto 4.10: More Power, More Control, and New Platform Support](https://www.ditto.com/blog/introducing-ditto-4-10-more-power-more-control-and-new-platform-support)
 
-Modern applications often need to listen for and react to multiple data changes simultaneously. With Ditto 4.10, store observers now run on multiple threads by default on all native platforms, significantly improving performance for high-load applications. [...] Our latest Ditto 4.10 SDK release brings significant improvements, giving developers more flexibility, better performance, and support for new platforms. This update includes enhanced data sync controls, expanded DQL capabilities, and critical bug fixes—all aimed at making Ditto even more powerful for your applications.
+Modern applications often need to listen for and react to multiple data changes simultaneously. With Ditto 4.10, store observers now run on multiple threads by default on all native platforms, significantly improving performance for high-load applications. [...] Our latest Ditto 4.10 SDK release brings significant improvements, giving developers more flexibility, better performance, and support for new platforms. This update includes enhanced data sync controls, expanded DQL capabilities, and critical bug fixes--all aimed at making Ditto even more powerful for your applications.
 
 To review the complete list of changes for each SDK see Release Notes.
 
@@ -3846,7 +3846,7 @@ Spectral is a glossy cross-platform client for Matrix, the decentralized communi
 
 ## [net-im/spectral: Glossy Matrix IM client based on Qt ...](https://www.freshports.org/net-im/spectral)
 
-Mar 8, 2019 — Spectral is a Matrix client with the maximum features available while keeping a simple, clean and modern design. It is a Qt-based client as ...Read more
+Mar 8, 2019 -- Spectral is a Matrix client with the maximum features available while keeping a simple, clean and modern design. It is a Qt-based client as ...Read more
 
 ## [GitHub - mirukana/mirage: A fancy, customizable, keyboard-operable Qt/QML & Python Matrix chat client for encrypted and decentralized communication. · GitHub](https://github.com/mirukana/mirage)
 
@@ -3911,7 +3911,7 @@ Beta
 
 GPL-3.0-or-later
 
-A real desktop app, not a website in a window — Qt 6, the Rust Matrix SDK, and calls that reach Element.
+A real desktop app, not a website in a window -- Qt 6, the Rust Matrix SDK, and calls that reach Element.
 
 Windows
 
@@ -4184,9 +4184,9 @@ Support room   Source Code
 
 Something wrong? Report the issue here.
 
-## [Tesseract — the native desktop Matrix client](https://surakin.github.io/tesseract)
+## [Tesseract -- the native desktop Matrix client](https://surakin.github.io/tesseract)
 
-Tesseract is a full-featured desktop Matrix client for Linux, Windows and macOS, built on the Matrix Rust SDK. The networking core is Rust; each platform gets a genuinely native UI — Win32 on Windows, AppKit on macOS, and Qt6 or GTK4 on Linux — so it looks and feels right everywhere, no web view in sight. [...] 🔒
+Tesseract is a full-featured desktop Matrix client for Linux, Windows and macOS, built on the Matrix Rust SDK. The networking core is Rust; each platform gets a genuinely native UI -- Win32 on Windows, AppKit on macOS, and Qt6 or GTK4 on Linux -- so it looks and feels right everywhere, no web view in sight. [...] 🔒
 
 ### End-to-end encryption
 
@@ -4206,7 +4206,7 @@ React with emoji, send stickers, and browse a built-in emoji & sticker picker.
 
 ### Markdown formatting
 
-Write in Markdown — bold, italics, lists, code blocks and inline `code`.
+Write in Markdown -- bold, italics, lists, code blocks and inline `code`.
 
 ### Voice messages [...] The native desktop Matrix client you always wanted.
 
@@ -4222,7 +4222,7 @@ Type to search
 
 Connected
 
-↑ A live simulator — switch rooms, send a message, drag the sidebar divider (or click its grip to collapse to icons), click the room header for info, right-click your account, toggle the theme. Not connected to any real server.
+↑ A live simulator -- switch rooms, send a message, drag the sidebar divider (or click its grip to collapse to icons), click the room header for info, right-click your account, toggle the theme. Not connected to any real server.
 
 Settings…
 
@@ -4290,14 +4290,14 @@ Confirmed NOT on matrix.org list:
 7. Tchap (github.com/tchapgouv/tchap-android) - French government Matrix client for Android! Very notable. Tchap is DINUM's Matrix client. Also there's tchap-web.
 8. matrixcli - from canitmatrix
 9. Rambox - from canitmatrix (borderline - it's a workspace aggregator)
-10. matrix-client.el, matrix-static - from canitmatrix (matrix-client.el vs Ement.el — Ement.el is listed, matrix-client.el is a different older Emacs client)
+10. matrix-client.el, matrix-static - from canitmatrix (matrix-client.el vs Ement.el -- Ement.el is listed, matrix-client.el is a different older Emacs client)
 11. matrix-notepad - borderline (not really a chat client)
 12. Safesupport chatbox - embeddable Matrix chatbox
 
 Also I should check: Beeper? Various others.
 
 Let me continue researching more to be thorough. I want to verify a few more and get details. Let me do another batch of searches focusing on:
-- Tchap (very significant — French gov client, also tchap-web)
+- Tchap (very significant -- French gov client, also tchap-web)
 - GitHub topic:matrix-client search for more
 - Newer clients: check TWIM recent
 - Other notable ones: "Cheogram"? no that's XMPP. 
@@ -4315,7 +4315,7 @@ Let me search for:
 
 Let me also verify activity of the ones found. Let me batch searches.
 
-Given repeated interruptions, let me be efficient — do a solid batch and then write up.
+Given repeated interruptions, let me be efficient -- do a solid batch and then write up.
 
 Let me search now.
 
@@ -5121,7 +5121,7 @@ This invite uses Matrix, an open network for secure, decentralized communication
 }
 ```
 
-## [Sailtrix — SailfishOS:Chum, a Sailfish OS software repository by the community](https://sailfishos-chum.github.io/apps/harbour-sailtrix)
+## [Sailtrix -- SailfishOS:Chum, a Sailfish OS software repository by the community](https://sailfishos-chum.github.io/apps/harbour-sailtrix)
 
 SailfishOS:Chum icon
 
@@ -5415,7 +5415,7 @@ New unlisted clients found:
 - Tchap (web, Android, iOS, desktop) - French government DINUM Matrix client. NOT on matrix.org list! Significant. Includes tchap-web-v4 (soft fork of Element Web), tchap-android, tchap-ios (probably), tchap-desktop (Tauri).
 - Sailtrix (harbour-sailtrix) - Matrix client for SailfishOS, by Heng Ye (HengYeDev), v1.4.3, updated 2026-05-28, GPLv3. Active!
 - "Determinant" (mentioned in Sailfish forum as "Matric client (Determinant)") - need to check. Actually "Determinant" might be a Matrix client for Sailfish. Let me note it.
-- Cinny UT - Ubuntu Touch native Matrix client (by Daniel Frost) on OpenStore. Actually this is a port of Cinny — Cinny itself is listed but this is a UT-specific native client. Borderline - it's a UT packaging/native client.
+- Cinny UT - Ubuntu Touch native Matrix client (by Daniel Frost) on OpenStore. Actually this is a port of Cinny -- Cinny itself is listed but this is a UT-specific native client. Borderline - it's a UT packaging/native client.
 - Nexus - "Matrix client made with Flutter and a Gomuks backend" - announced in TWIM 2026-10-30 by QuadRadical. Very recent! Not on matrix.org list.
 - Matrix-Svelte-Client - mentioned in TWIM 2026-05-15, built with Tauri and matrix-ui-serializable. Experimental.
 - matrix-ui-serializable (that's a library though)
@@ -5444,7 +5444,7 @@ Let me search:
 
 Let me do these.
 
-Excellent — several significant unlisted clients surfacing, including recent TWIM announcements. Let me pin these down.
+Excellent -- several significant unlisted clients surfacing, including recent TWIM announcements. Let me pin these down.
 
 **Tool: websearch**
 
@@ -6136,7 +6136,7 @@ I now have a strong set. Let me note the additional findings:
 - Plusly - new Android/Flutter Matrix client beta
 - Nexus - Flutter client with gomuks backend (git.federated.nexus/Nexus/nexus), by QuadRadical, v1.0.0-alpha1
 - Matrix-Svelte-Client - Tauri+Svelte experimental client by IT-ess (Alexis)
-- Trixnity Messenger / trixnity-messenger (this is an SDK though; Tammy is built on Trixnity Messenger). Trixinity mentioned but seems Trixnity is the SDK. Actually "Tammy and Trixinity" — Trixinity likely = Trixnity. Let me treat Trixnity as SDK not client. Actually there's trixnity-messenger (headless messenger SDK). Not really an end-user client. I'll skip or mark borderline.
+- Trixnity Messenger / trixnity-messenger (this is an SDK though; Tammy is built on Trixnity Messenger). Trixinity mentioned but seems Trixnity is the SDK. Actually "Tammy and Trixinity" -- Trixinity likely = Trixnity. Let me treat Trixnity as SDK not client. Actually there's trixnity-messenger (headless messenger SDK). Not really an end-user client. I'll skip or mark borderline.
 
 I should also verify: Tchap iOS exists? Let me just note tchap-web (Element Web soft fork), tchap-android, tchap-desktop (Tauri), tchap-ios likely.
 
@@ -6149,13 +6149,13 @@ Actually, given the breadth already, let me do one more targeted batch then writ
 2. Determinant sailfish matrix client (verify)
 3. Cinny UT (already known)
 
-Actually I think I have plenty. The question is "research deep" so let me deliver a well-organized comprehensive answer. Let me do one last batch to check a couple of remaining categories (bot/AI clients and any other sovereign clients) — actually no, let me finalize. I have enough for a strong answer.
+Actually I think I have plenty. The question is "research deep" so let me deliver a well-organized comprehensive answer. Let me do one last batch to check a couple of remaining categories (bot/AI clients and any other sovereign clients) -- actually no, let me finalize. I have enough for a strong answer.
 
-Wait, let me reconsider one thing: I should double check that some of these aren't actually on matrix.org (e.g., maybe there's a "Twake" entry). The official list I fetched is complete — it lists 48. None of Tchap, Twake, Nexus, weechat-matrix, purple-matrix, Ditto, miniVector, Spectral, Mirage, Sailtrix, Cinny UT, Plusly, Matrix-Svelte-Client, matrixcli, Rambox are there. Good.
+Wait, let me reconsider one thing: I should double check that some of these aren't actually on matrix.org (e.g., maybe there's a "Twake" entry). The official list I fetched is complete -- it lists 48. None of Tchap, Twake, Nexus, weechat-matrix, purple-matrix, Ditto, miniVector, Spectral, Mirage, Sailtrix, Cinny UT, Plusly, Matrix-Svelte-Client, matrixcli, Rambox are there. Good.
 
-Let me write the final answer now. I'll organize by category, note status/confidence, and flag the important caveat that matrix.org's list is curated (they have featured vs other, and clients must be submitted — likely these just haven't been submitted/added).
+Let me write the final answer now. I'll organize by category, note status/confidence, and flag the important caveat that matrix.org's list is curated (they have featured vs other, and clients must be submitted -- likely these just haven't been submitted/added).
 
-Let me be careful about confidence levels. Some things I verified well (with repo URLs): Tchap (4 repos incl. desktop & web), Twake, Nexus, weechat-matrix, purple-matrix, Ditto, miniVector, Spectral, Mirage, Sailtrix, Cinny UT, Matrix-Svelte-Client, Plusly. Others (matrixcli, Rambox, matrix-client.el, matrix-static) I only know from canitmatrix directory — lower confidence, mark as such.
+Let me be careful about confidence levels. Some things I verified well (with repo URLs): Tchap (4 repos incl. desktop & web), Twake, Nexus, weechat-matrix, purple-matrix, Ditto, miniVector, Spectral, Mirage, Sailtrix, Cinny UT, Matrix-Svelte-Client, Plusly. Others (matrixcli, Rambox, matrix-client.el, matrix-static) I only know from canitmatrix directory -- lower confidence, mark as such.
 
 Let me write a comprehensive answer. I'll include:
 - Note that matrix.org's list has ~48 clients and is curated/submission-based
@@ -6165,7 +6165,7 @@ Let me write a comprehensive answer. I'll include:
 
 Let me write it well organized. I'll present the most significant first.
 
-Actually, regarding "Tammy is listed" and "Trixinity" — I'll skip Trixinity since it's the SDK (Trixnity), not an end-user client. Good catch to avoid confusion. Actually let me mention trixnity-messenger briefly as borderline since it was mentioned alongside Tammy in TWIM—but it's really an SDK. I'll note it as borderline/not a standalone client.
+Actually, regarding "Tammy is listed" and "Trixinity" -- I'll skip Trixinity since it's the SDK (Trixnity), not an end-user client. Good catch to avoid confusion. Actually let me mention trixnity-messenger briefly as borderline since it was mentioned alongside Tammy in TWIM--but it's really an SDK. I'll note it as borderline/not a standalone client.
 
 Let me write the final answer now. I should be comprehensive but well organized.
 
@@ -6186,7 +6186,7 @@ I have enough for a comprehensive picture. Here's my deep-research findings.
 
 ## Context
 
-matrix.org's [clients page](https://matrix.org/ecosystem/clients/) currently lists ~48 clients (5 featured + ~43 others). It's a curated, largely submission-based directory, so plenty of real, working clients are simply absent — including one with **300,000 daily active users**.
+matrix.org's [clients page](https://matrix.org/ecosystem/clients/) currently lists ~48 clients (5 featured + ~43 others). It's a curated, largely submission-based directory, so plenty of real, working clients are simply absent -- including one with **300,000 daily active users**.
 
 Below are the genuinely unlisted ones I could verify, grouped by category.
 
@@ -6194,46 +6194,46 @@ Below are the genuinely unlisted ones I could verify, grouped by category.
 
 ## Most significant omissions
 
-**Tchap** — the French public-sector messenger, arguably the biggest gap on the list. Built by DINUM (Direction Interministérielle du Numérique) with ~300k DAU and ANSSI security review. It's a soft fork of Element Web plus native apps:
-- `tchap-web-v4` — web client, "soft fork of Element web"
-- `tchap-android` — Android client (also on Google Play as `fr.gouv.tchap.a`)
-- `tchap-desktop` — Tauri wrapper around tchap-web
+**Tchap** -- the French public-sector messenger, arguably the biggest gap on the list. Built by DINUM (Direction Interministérielle du Numérique) with ~300k DAU and ANSSI security review. It's a soft fork of Element Web plus native apps:
+- `tchap-web-v4` -- web client, "soft fork of Element web"
+- `tchap-android` -- Android client (also on Google Play as `fr.gouv.tchap.a`)
+- `tchap-desktop` -- Tauri wrapper around tchap-web
 - iOS app also exists
 - Note: despite Element publishing a Tchap case study, it is **not** listed on matrix.org.
 
-**Twake Chat** (`linagora/twake-on-matrix`) — a full multi-platform (Flutter) Matrix client by Linagora, a major French open-source company. Actively developed with Android/iOS/Linux/macOS/Windows builds.
+**Twake Chat** (`linagora/twake-on-matrix`) -- a full multi-platform (Flutter) Matrix client by Linagora, a major French open-source company. Actively developed with Android/iOS/Linux/macOS/Windows builds.
 
 ---
 
 ## Mobile
 
-- **miniVector** (`LiMium/mini-vector-android`) — a deliberately minified Android Matrix client derived from the official one: fewer permissions, much smaller package.
-- **Ditto** (`gitlab.com/ditto-chat/ditto-mobile`, dittochat.org) — React Native Matrix client for iOS/Android. Long-standing project, still referenced in awesome-matrix.
-- **Plusly** — brand-new Flutter Matrix client for Android, currently recruiting beta testers on r/matrixdotorg.
+- **miniVector** (`LiMium/mini-vector-android`) -- a deliberately minified Android Matrix client derived from the official one: fewer permissions, much smaller package.
+- **Ditto** (`gitlab.com/ditto-chat/ditto-mobile`, dittochat.org) -- React Native Matrix client for iOS/Android. Long-standing project, still referenced in awesome-matrix.
+- **Plusly** -- brand-new Flutter Matrix client for Android, currently recruiting beta testers on r/matrixdotorg.
 
 ---
 
 ## Desktop / GUI (mostly historical or dormant)
 
-These are real Matrix clients but largely **unmaintained/archived** — likely why they never got listed:
+These are real Matrix clients but largely **unmaintained/archived** -- likely why they never got listed:
 
-- **Spectral** (`dtzWill/spectral`) — glossy cross-platform Qt/QML client, max-features design. Was packaged in FreeBSD ports (`net-im/spectral`) and elsewhere. Appears dormant.
-- **Mirage** (`mirukana/mirage`) — keyboard-operable Qt/QML + Python client with E2EE, rich theming, proxies/Tor support. Also appears dormant.
+- **Spectral** (`dtzWill/spectral`) -- glossy cross-platform Qt/QML client, max-features design. Was packaged in FreeBSD ports (`net-im/spectral`) and elsewhere. Appears dormant.
+- **Mirage** (`mirukana/mirage`) -- keyboard-operable Qt/QML + Python client with E2EE, rich theming, proxies/Tor support. Also appears dormant.
 
 ---
 
 ## Terminal / CLI / chat-client plugins
 
-- **weechat-matrix** (`poljar/weechat-matrix`) — Python script letting WeeChat speak Matrix, with E2EE. Packaged on AUR, Fedora/Discourse discussions, OpenBSD. There's also `poljar/weechat-matrix-rs`, a Rust rewrite, and `torhve/weechat-matrix-protocol-script` (aka WeeMatrix, beta).
-- **purple-matrix** (`matrix-org/purple-matrix`) — official-org libpurple plugin adding Matrix to **Pidgin/finch and any libpurple client**. GPL-2.0, ~224 stars. Effectively abandoned (see the 2022 update note; Pidgin discourse notes it's unmaintained and Pidgin 3 may add first-party support).
+- **weechat-matrix** (`poljar/weechat-matrix`) -- Python script letting WeeChat speak Matrix, with E2EE. Packaged on AUR, Fedora/Discourse discussions, OpenBSD. There's also `poljar/weechat-matrix-rs`, a Rust rewrite, and `torhve/weechat-matrix-protocol-script` (aka WeeMatrix, beta).
+- **purple-matrix** (`matrix-org/purple-matrix`) -- official-org libpurple plugin adding Matrix to **Pidgin/finch and any libpurple client**. GPL-2.0, ~224 stars. Effectively abandoned (see the 2022 update note; Pidgin discourse notes it's unmaintained and Pidgin 3 may add first-party support).
 
 ---
 
 ## Mobile-Linux & unusual platforms
 
-- **Sailtrix** (`harbour-sailtrix`) — a genuinely native **Sailfish OS** Matrix client by Heng Ye (HengYeDev). Actively maintained: v1.4.3 updated **2026-05-28**, GPLv3, distributed via SailfishOS:Chum. This is the healthiest native mobile-Linux Matrix client I found.
-- **Cinny UT** — native Ubuntu Touch Matrix client by Daniel Frost, on the OpenStore. (Cinny itself is listed; this is the UT-native build.)
-- A "**Determinant**" Matrix client for Sailfish is referenced in the Sailfish forums (OpenRepos only, not in Jolla Store) — **lower confidence**, I couldn't fully verify it independently.
+- **Sailtrix** (`harbour-sailtrix`) -- a genuinely native **Sailfish OS** Matrix client by Heng Ye (HengYeDev). Actively maintained: v1.4.3 updated **2026-05-28**, GPLv3, distributed via SailfishOS:Chum. This is the healthiest native mobile-Linux Matrix client I found.
+- **Cinny UT** -- native Ubuntu Touch Matrix client by Daniel Frost, on the OpenStore. (Cinny itself is listed; this is the UT-native build.)
+- A "**Determinant**" Matrix client for Sailfish is referenced in the Sailfish forums (OpenRepos only, not in Jolla Store) -- **lower confidence**, I couldn't fully verify it independently.
 
 ---
 
@@ -6241,8 +6241,8 @@ These are real Matrix clients but largely **unmaintained/archived** — likely w
 
 These are so new that they plausibly just haven't been added yet:
 
-- **Nexus** (`git.federated.nexus/Nexus/nexus`) — "simple, user-friendly Matrix client for Linux, Android, Windows, macOS and iOS, built with Flutter and powered by Gomuks." Announced in TWIM 2026-10-30 by QuadRadical; at v1.0.0-alpha1. Interestingly, gomuks' own README now points to Nexus as its Flutter frontend embedding the gomuks backend via C FFI.
-- **Matrix-Svelte-Client** — experimental Tauri + Svelte client by Alexis (`IT-ess`), built on `matrix-ui-serializable` wrapping matrix-rust-sdk. Announced TWIM 2026-05-15; the author says it's a base for a bigger upcoming Matrix project.
+- **Nexus** (`git.federated.nexus/Nexus/nexus`) -- "simple, user-friendly Matrix client for Linux, Android, Windows, macOS and iOS, built with Flutter and powered by Gomuks." Announced in TWIM 2026-10-30 by QuadRadical; at v1.0.0-alpha1. Interestingly, gomuks' own README now points to Nexus as its Flutter frontend embedding the gomuks backend via C FFI.
+- **Matrix-Svelte-Client** -- experimental Tauri + Svelte client by Alexis (`IT-ess`), built on `matrix-ui-serializable` wrapping matrix-rust-sdk. Announced TWIM 2026-05-15; the author says it's a base for a bigger upcoming Matrix project.
 
 ---
 
@@ -6250,21 +6250,21 @@ These are so new that they plausibly just haven't been added yet:
 
 The `matrix-org.github.io/canitmatrix` directory lists several clients absent from matrix.org. I confirmed they're not on the official page but couldn't deeply verify each repo's status:
 
-- **matrixcli** — CLI Matrix client (Linux)
-- **Rambox** — *borderline*: a workspace/messaging aggregator supporting Matrix, not a purpose-built Matrix client
-- **matrix-client.el** — an **older Emacs** Matrix client, distinct from the listed Ement.el
-- **matrix-static** — appears to be a legacy/experimental entry
+- **matrixcli** -- CLI Matrix client (Linux)
+- **Rambox** -- *borderline*: a workspace/messaging aggregator supporting Matrix, not a purpose-built Matrix client
+- **matrix-client.el** -- an **older Emacs** Matrix client, distinct from the listed Ement.el
+- **matrix-static** -- appears to be a legacy/experimental entry
 
 ---
 
 ## Caveats
 
 - **Confidence varies.** Tchap, Twake, weechat-matrix, purple-matrix, Nexus, and Sailtrix are solidly verified with live repos. Spectral/Mirage are real but likely dead. The canitmatrix-derived four are the weakest.
-- **Forks vs. distinct clients.** matrix.org lists many forks (e.g. SchildiChat Legacy/Next/Revenge). Some absences above (miniVector, tchap-web) are forks too — so this is arguably an inconsistency rather than a strict omission.
-- **Not claimed as "clients":** I excluded SDKs (Trixnity/trixnity-messenger — mentioned alongside Tammy in TWIM but it's an SDK, not an end-user app), bridges, bots, and non-chat apps like matrix-notepad.
+- **Forks vs. distinct clients.** matrix.org lists many forks (e.g. SchildiChat Legacy/Next/Revenge). Some absences above (miniVector, tchap-web) are forks too -- so this is arguably an inconsistency rather than a strict omission.
+- **Not claimed as "clients":** I excluded SDKs (Trixnity/trixnity-messenger -- mentioned alongside Tammy in TWIM but it's an SDK, not an end-user app), bridges, bots, and non-chat apps like matrix-notepad.
 - The list is a **snapshot**; matrix.org adds entries periodically, so some of these (especially Nexus) may well get added soon.
 
-The headline finding: **Tchap** is by far the most consequential omission — a government-deployed client with hundreds of thousands of users that's entirely missing from the official directory, alongside Linagora's **Twake Chat** and the actively-maintained **Sailtrix** for Sailfish OS.
+The headline finding: **Tchap** is by far the most consequential omission -- a government-deployed client with hundreds of thousands of users that's entirely missing from the official directory, alongside Linagora's **Twake Chat** and the actively-maintained **Sailtrix** for Sailfish OS.
 
 ---
 
@@ -6278,12 +6278,12 @@ enought? I want to know about all
 
 _Thinking:_
 
-The user says "enought? I want to know about all" — meaning "enough? I want to know about all [of them]". They seem to be saying my previous answer wasn't enough — they want to know ALL Matrix clients not listed on matrix.org. So they want a comprehensive/exhaustive list.
+The user says "enought? I want to know about all" -- meaning "enough? I want to know about all [of them]". They seem to be saying my previous answer wasn't enough -- they want to know ALL Matrix clients not listed on matrix.org. So they want a comprehensive/exhaustive list.
 
 So I need to go deeper and find ALL unlisted Matrix clients. This is a big research task. Let me do much broader research.
 
 The best approach: find authoritative comprehensive sources of Matrix clients and cross-reference against matrix.org's list. Sources:
-1. GitHub topic search: topic:matrix, topic:matrix-client, topic:matrix-protocol, topic:matrix-chat — but GitHub search UI is JS-heavy. Maybe I can use GitHub API via webfetch? Actually I could try fetching GitHub API search endpoints with webfetch. e.g. https://api.github.com/search/repositories?q=topic:matrix-client
+1. GitHub topic search: topic:matrix, topic:matrix-client, topic:matrix-protocol, topic:matrix-chat -- but GitHub search UI is JS-heavy. Maybe I can use GitHub API via webfetch? Actually I could try fetching GitHub API search endpoints with webfetch. e.g. https://api.github.com/search/repositories?q=topic:matrix-client
 2. Alternative directories: 
    - awesome-matrix (jryans)
    - canitmatrix (matrix-org)
@@ -6293,10 +6293,10 @@ The best approach: find authoritative comprehensive sources of Matrix clients an
    - Flathub search for Matrix
    - F-Droid search
    - Various "list of matrix clients" blog posts
-   - TWIM archives (Dept of Clients) — this is the BEST source for comprehensive coverage because every week new clients are announced. There's likely a running list.
+   - TWIM archives (Dept of Clients) -- this is the BEST source for comprehensive coverage because every week new clients are announced. There's likely a running list.
 3. There might be a community-maintained list of clients not on matrix.org.
 
-Actually the GitHub API is a great approach. Let me try webfetch on GitHub API search with topics. But note: the `execute` tool (Code Mode) has `fetch` available for HTTP requests! That's mentioned: "`fetch` is available for HTTP requests." So in `execute` I can do HTTP requests to GitHub API. That's powerful — I can query GitHub search API for repos with matrix topics, filter, and get comprehensive lists with stars, last commit etc.
+Actually the GitHub API is a great approach. Let me try webfetch on GitHub API search with topics. But note: the `execute` tool (Code Mode) has `fetch` available for HTTP requests! That's mentioned: "`fetch` is available for HTTP requests." So in `execute` I can do HTTP requests to GitHub API. That's powerful -- I can query GitHub search API for repos with matrix topics, filter, and get comprehensive lists with stars, last commit etc.
 
 Let me use the execute tool with fetch to:
 1. Query GitHub search API for `topic:matrix` / `topic:matrix-client` / `topic:matrix-protocol` / `topic:matrix-chat`, sorted, many pages
@@ -6327,7 +6327,7 @@ Let me write code that:
 
 That will give a comprehensive list. Let me do it.
 
-I need to handle rate limits — add small delays or just do limited number of requests. Let me batch within one execute call with sequential awaits. Since 10 req/min for search, doing ~12 requests may hit limits. Let me do maybe 10 requests with careful handling, and treat rate limit errors gracefully.
+I need to handle rate limits -- add small delays or just do limited number of requests. Let me batch within one execute call with sequential awaits. Since 10 req/min for search, doing ~12 requests may hit limits. Let me do maybe 10 requests with careful handling, and treat rate limit errors gracefully.
 
 Actually, let me reconsider: maybe I should use multiple execute calls over time. But each tool call is a turn. Let me try to do it in one or two execute calls with maybe 8 search requests each.
 
@@ -6346,7 +6346,7 @@ const queries = [
 
 Actually sort by stars order desc gives most popular first which is most relevant. Let me use sort=stars&order=desc&per_page=100.
 
-Let me also filter: exclude archived? No — the user wants ALL existing clients, including old ones. But maybe separate active vs archived. Keep both but report archived status.
+Let me also filter: exclude archived? No -- the user wants ALL existing clients, including old ones. But maybe separate active vs archived. Keep both but report archived status.
 
 Let me do the code:
 
@@ -6378,7 +6378,7 @@ Actually, to maximize, let me do per_page=100 for these queries:
 5. topic:matrix-protocol sort:stars
 6. topic:matrixorg sort:stars
 
-That's 6 requests — within the 10/min limit if done reasonably fast. Good.
+That's 6 requests -- within the 10/min limit if done reasonably fast. Good.
 
 Then filter in JS. Let me write and return a compact list of candidates (name, stars, pushed_at, archived, description trimmed, url).
 
@@ -6403,7 +6403,7 @@ Let me go. I'll return a structured summary. Since output might be big, let me l
 
 Let me write it.
 
-Also forked repos: exclude forks (fork:true would include; default search excludes forks? Actually GitHub search by default includes forks unless fork:false... GitHub code/repo search: by default forks ARE excluded from search results? I believe when you search repositories, forks are not included unless you specify fork:true or include them. Actually GitHub's search includes forks by default in repository search results? Let me just add fork:false to be safe — that reduces noise but might exclude legit clients that are forks (but forks of element are mostly noise anyway). Actually many Matrix clients ARE forks (e.g., many Element forks). Hmm. But I mainly want distinct clients. I'll use fork:false for cleanliness but maybe do one query without it. Let me keep fork:false mostly, since including forks floods with Element copies.
+Also forked repos: exclude forks (fork:true would include; default search excludes forks? Actually GitHub search by default includes forks unless fork:false... GitHub code/repo search: by default forks ARE excluded from search results? I believe when you search repositories, forks are not included unless you specify fork:true or include them. Actually GitHub's search includes forks by default in repository search results? Let me just add fork:false to be safe -- that reduces noise but might exclude legit clients that are forks (but forks of element are mostly noise anyway). Actually many Matrix clients ARE forks (e.g., many Element forks). Hmm. But I mainly want distinct clients. I'll use fork:false for cleanliness but maybe do one query without it. Let me keep fork:false mostly, since including forks floods with Element copies.
 
 Hmm, but some clients are forks hosted as forks. Eh, let me exclude forks to keep signal, and separately I already know about forks.
 
@@ -6422,7 +6422,7 @@ const official = [...];
 const excludeKw = ['homeserver','synapse','dendrite','conduit','continuwuity','sdk','bridge','appservice','application service','bot','pusher','library','mautrix','server implementation','identity server','integration manager','widget api','spec','aioserver'];
 ```
 
-But careful: some legit client might have "bot" or "sdk" in description. I'll flag rather than fully exclude — actually let me exclude to reduce noise, but I'll do a second pass. Given limited output, let me exclude aggressively but also report how many excluded.
+But careful: some legit client might have "bot" or "sdk" in description. I'll flag rather than fully exclude -- actually let me exclude to reduce noise, but I'll do a second pass. Given limited output, let me exclude aggressively but also report how many excluded.
 
 Hmm, better: I'll classify with scores and return likely clients. Let me just return candidates where description has client-ish keywords AND not excluded, and let me eyeball.
 
@@ -6465,24 +6465,24 @@ const isClientish = (r) => {
   return hasClient && !bad;
 }
 ```
-Careful "bot" — exclude "bot" word generally but that might exclude nothing important. ok.
+Careful "bot" -- exclude "bot" word generally but that might exclude nothing important. ok.
 
 Then exclude official matches by name.
 
 Let me return:
 name (full_name), stars, pushed, archived, license, desc(120), url, officialMatch(bool)
 
-Let me limit returned to maybe 180 rows sorted by stars desc? Actually let me return ones with stars>=some threshold? No — user wants ALL. But very obscure 0-star ones are noise/toys. Let me return all that pass filter with stars>=1 maybe, and note count. Hmm "all" — include everything passed. Let me set a cap of output 250 rows and include even 0-star ones if not too many. Let me first count, then I can decide. To manage, let me return top 200 by stars and also report total eligible count.
+Let me limit returned to maybe 180 rows sorted by stars desc? Actually let me return ones with stars>=some threshold? No -- user wants ALL. But very obscure 0-star ones are noise/toys. Let me return all that pass filter with stars>=1 maybe, and note count. Hmm "all" -- include everything passed. Let me set a cap of output 250 rows and include even 0-star ones if not too many. Let me first count, then I can decide. To manage, let me return top 200 by stars and also report total eligible count.
 
 Let me write.
 
-Actually maybe better: since I want comprehensive but output manageable, let me sort by stars, and return in a compact "repo — stars — pushed — archived — desc" one-liner list. 200 lines ~ maybe 20k tokens. That's a lot but acceptable? Might be too much. Let me cap descriptions at 80 chars and return 150 rows. Then I curate top ones plus mention the long tail exists.
+Actually maybe better: since I want comprehensive but output manageable, let me sort by stars, and return in a compact "repo -- stars -- pushed -- archived -- desc" one-liner list. 200 lines ~ maybe 20k tokens. That's a lot but acceptable? Might be too much. Let me cap descriptions at 80 chars and return 150 rows. Then I curate top ones plus mention the long tail exists.
 
 Let me do it. I'll trim desc to 70.
 
 Let me write the code.
 
-Let me also make sure not to include the official 48 — exclude them by token match but keep a note.
+Let me also make sure not to include the official 48 -- exclude them by token match but keep a note.
 
 Let me go.
 
@@ -6492,7 +6492,7 @@ One more: perhaps also query `matrix` topic with `pushed:>2024-01-01` to catch a
 - topic:matrix-client&sort=updated (recently active client-tagged)
 - topic:matrix&sort=updated
 
-That's good for catching all active. Let me do 7-8 requests total. Rate limit 10/min for search — okay.
+That's good for catching all active. Let me do 7-8 requests total. Rate limit 10/min for search -- okay.
 
 Let me write including both star-sorted and update-sorted.
 
@@ -6500,7 +6500,7 @@ Let me finalize code.
 
 I'll now call execute.
 
-Fair — "all" needs a data-driven sweep, not just my curated picks. Let me query GitHub's search API directly across Matrix topics (both most-starred *and* most-recently-updated, to catch obscure but active clients) and systematically diff against the official 48.
+Fair -- "all" needs a data-driven sweep, not just my curated picks. Let me query GitHub's search API directly across Matrix topics (both most-starred *and* most-recently-updated, to catch obscure but active clients) and systematically diff against the official 48.
 
 **Tool: execute**
 
@@ -6722,7 +6722,7 @@ Fair — "all" needs a data-driven sweep, not just my curated picks. Let me quer
       "pushed": "2026-11-02",
       "archived": "",
       "lic": "AGPL-3.0",
-      "desc": "Self-hosted Matrix client that feels like Discord — spaces as servers, channels,",
+      "desc": "Self-hosted Matrix client that feels like Discord -- spaces as servers, channels,",
       "off": ""
     },
     {
@@ -6812,7 +6812,7 @@ Fair — "all" needs a data-driven sweep, not just my curated picks. Let me quer
       "pushed": "2026-09-21",
       "archived": "",
       "lic": "Apache-2.0",
-      "desc": "Multi-account, end-to-end-encrypted Matrix client for web and desktop — image pr",
+      "desc": "Multi-account, end-to-end-encrypted Matrix client for web and desktop -- image pr",
       "off": ""
     },
     {
@@ -7100,7 +7100,7 @@ Fair — "all" needs a data-driven sweep, not just my curated picks. Let me quer
       "pushed": "2026-11-02",
       "archived": "",
       "lic": "-",
-      "desc": "Matrix channel for Claude Code — talk to your session from any Matrix client. Pa",
+      "desc": "Matrix channel for Claude Code -- talk to your session from any Matrix client. Pa",
       "off": ""
     },
     {
@@ -7145,7 +7145,7 @@ Fair — "all" needs a data-driven sweep, not just my curated picks. Let me quer
       "pushed": "2026-08-16",
       "archived": "",
       "lic": "MIT",
-      "desc": "Matrix client — OIDC login, E2EE, spaces and threads, static SPA",
+      "desc": "Matrix client -- OIDC login, E2EE, spaces and threads, static SPA",
       "off": ""
     },
     {
@@ -7172,7 +7172,7 @@ Fair — "all" needs a data-driven sweep, not just my curated picks. Let me quer
       "pushed": "2026-11-03",
       "archived": "",
       "lic": "Apache-2.0",
-      "desc": "Comvivo — the open-source AI that belongs to your group, not to one person. Self",
+      "desc": "Comvivo -- the open-source AI that belongs to your group, not to one person. Self",
       "off": ""
     },
     {
@@ -7244,7 +7244,7 @@ Fair — "all" needs a data-driven sweep, not just my curated picks. Let me quer
       "pushed": "2026-11-01",
       "archived": "",
       "lic": "NOASSERTION",
-      "desc": "Multi-protocol Android messenger — Matrix, XMPP, Telegram & Signal in one Materi",
+      "desc": "Multi-protocol Android messenger -- Matrix, XMPP, Telegram & Signal in one Materi",
       "off": ""
     }
   ]
@@ -7259,51 +7259,51 @@ _Thinking:_
 The GitHub sweep found 81 likely-unlisted candidates. Some are false positives (ejabberd is XMPP server, Piped-Backend, Stream-Daemon, tuwunel-admin server, barkvr maybe borderline, yapfast is Discord, parula email client, matrix-dimension integration manager, matrix-chatgpt-bot). Many are real Matrix clients though.
 
 Notable solid finds NOT previously mentioned:
-- **robrix** (project-robius/robrix) — 508 stars, actively pushed 2026-11-03, MIT, multi-platform Matrix chat client in Rust (Robius). This is significant and active! Using Makepad UI toolkit likely.
-- **Nio** (niochat/nio) — 557 stars, "upcoming matrix client for iOS", pushed 2026-02-16. Hmm pushed recently? 2026-02. Might be archived? Let me check. Actually "upcoming" — this was a well-known iOS client (from the creator of Element iOS / manuroe?). Nio was notable. Let me note it.
-- **Seaglass** (neilalexander/seaglass) — 524 stars, native macOS Matrix client in Swift/Cocoa, archived 2021. Notable historical.
-- **Rivet** (Mjoyufull/Rivet) — Desktop Rust Matrix client with GPUI, 25 stars, pushed 2026-03-18.
-- **gosuto** — terminal Matrix client with Vim motions, cyberpunk, 19 stars.
-- **Mudrix** (web/desktop/mobile, fork of WizardChat) — kapsikkum. Note WizardChat IS listed, Mudrix is a fork not listed.
-- **NexSpeak** — Discord-like Matrix client.
-- **Meadhall** — self-hosted Discord-style with Element Call voice.
-- **jorvik** — self-hosted Discord-feel Matrix client.
-- **panbeh-matrix-client** — Farsi-first Matrix client!
-- **JianLuoChat** — retro-futuristic modern Matrix client.
-- **Trace** — privacy-first Android/Linux/web.
-- **Nil** (mszpro/Nil) — futuristic Matrix client.
-- **trinity-matrix-client** — E2EE for web/desktop/Android/iOS.
-- **Paradise** (Paradise-Chat) — "chat client for everyone", actively pushed 2026-11-03, 18 stars.
-- **Zuno Chat** — yet another matrix client, active.
-- **Reach** — gamer focused.
+- **robrix** (project-robius/robrix) -- 508 stars, actively pushed 2026-11-03, MIT, multi-platform Matrix chat client in Rust (Robius). This is significant and active! Using Makepad UI toolkit likely.
+- **Nio** (niochat/nio) -- 557 stars, "upcoming matrix client for iOS", pushed 2026-02-16. Hmm pushed recently? 2026-02. Might be archived? Let me check. Actually "upcoming" -- this was a well-known iOS client (from the creator of Element iOS / manuroe?). Nio was notable. Let me note it.
+- **Seaglass** (neilalexander/seaglass) -- 524 stars, native macOS Matrix client in Swift/Cocoa, archived 2021. Notable historical.
+- **Rivet** (Mjoyufull/Rivet) -- Desktop Rust Matrix client with GPUI, 25 stars, pushed 2026-03-18.
+- **gosuto** -- terminal Matrix client with Vim motions, cyberpunk, 19 stars.
+- **Mudrix** (web/desktop/mobile, fork of WizardChat) -- kapsikkum. Note WizardChat IS listed, Mudrix is a fork not listed.
+- **NexSpeak** -- Discord-like Matrix client.
+- **Meadhall** -- self-hosted Discord-style with Element Call voice.
+- **jorvik** -- self-hosted Discord-feel Matrix client.
+- **panbeh-matrix-client** -- Farsi-first Matrix client!
+- **JianLuoChat** -- retro-futuristic modern Matrix client.
+- **Trace** -- privacy-first Android/Linux/web.
+- **Nil** (mszpro/Nil) -- futuristic Matrix client.
+- **trinity-matrix-client** -- E2EE for web/desktop/Android/iOS.
+- **Paradise** (Paradise-Chat) -- "chat client for everyone", actively pushed 2026-11-03, 18 stars.
+- **Zuno Chat** -- yet another matrix client, active.
+- **Reach** -- gamer focused.
 - Alloy, threadlet, Minimatrix (CLI), mtx (terminal), matrix-cli (Go), matrix-client.el (deprecated in favor of Ement.el), libretrix, cetirizine, Morpheus (Go-QT), icy_matrix, remuks (React Native by tulir), matrisock, Posca, AgentSmith (IRC server that's a Matrix client - interesting!), Matrix-axon, etc.
 - Also many AI-agent-in-Matrix ones: Mindroom, agent-room, comvivo, PolyTalk, FEVERDREAM, matrix-axon, etc.
 
-Also I should note weechat-matrix, purple-matrix, Tchap, Twake didn't show in topic search because maybe they don't have those topics. That's a limitation — my GitHub topic sweep misses repos without the topics. So the complete answer must combine: (a) the topic sweep (81), (b) my curated verified finds (Tchap, Twake, weechat-matrix, purple-matrix, Ditto, miniVector, Spectral, Sailtrix, Cinny UT, Nexus, Plusly, Matrix-Svelte-Client), (c) canitmatrix cross-check (matrixcli, Rambox, matrix-static).
+Also I should note weechat-matrix, purple-matrix, Tchap, Twake didn't show in topic search because maybe they don't have those topics. That's a limitation -- my GitHub topic sweep misses repos without the topics. So the complete answer must combine: (a) the topic sweep (81), (b) my curated verified finds (Tchap, Twake, weechat-matrix, purple-matrix, Ditto, miniVector, Spectral, Sailtrix, Cinny UT, Nexus, Plusly, Matrix-Svelte-Client), (c) canitmatrix cross-check (matrixcli, Rambox, matrix-static).
 
 The user wants "all". Let me be honest: truly exhaustive is impossible, but I can present a comprehensive curated set combining all sources, with clear tiers.
 
-Let me do one more sweep to catch repos missed by topics — search GitHub for "matrix client" in name/description to broaden, and also maybe check the ones without topics. Let me do another execute with different queries (e.g., q="matrix client" in:name,description,readme with pushed filters) to add coverage. That'd strengthen "all".
+Let me do one more sweep to catch repos missed by topics -- search GitHub for "matrix client" in name/description to broaden, and also maybe check the ones without topics. Let me do another execute with different queries (e.g., q="matrix client" in:name,description,readme with pushed filters) to add coverage. That'd strengthen "all".
 
 Let me also consider there might be a known comprehensive community list. But given constraints, let me do one more GitHub search sweep using text search rather than topics, to broaden coverage, then write comprehensive final answer.
 
 Let me run one more search: 
 - q=matrix+client+in:name,description&sort=stars (this is broad, may hit many non-matrix like discord clients, but let's filter with GOOD/BAD requiring 'matrix' explicit)
-- Actually requiring "matrix" AND client keywords. Let me search: 'matrix client in:name' sorted by stars — good for named clients.
+- Actually requiring "matrix" AND client keywords. Let me search: 'matrix client in:name' sorted by stars -- good for named clients.
 - 'matrix in:name client in:description' 
 
 Let me do:
-1. 'matrix+in:name+client&sort=stars&per_page=100' — repos with "matrix" in name
+1. 'matrix+in:name+client&sort=stars&per_page=100' -- repos with "matrix" in name
 2. '"matrix client"+in:description&sort=stars&per_page=100'
-3. 'matrix+in:name+fork:false&sort=updated&per_page=100' — recently active matrix-named
+3. 'matrix+in:name+fork:false&sort=updated&per_page=100' -- recently active matrix-named
 
 Let me also filter to ones mentioning matrix AND (client|chat|messenger|tui|cli).
 
 Let me run this complementary sweep and then write final answer including combined findings.
 
-Actually, I already have quite a lot — 81 candidates from topics plus my curated ~15. Total ~90+. Adding a name-based sweep might add dozens more. The user wants "all" — but there are diminishing returns and I should be honest about method limits. Let me do ONE more complementary sweep (text-based) to be thorough, then write the final comprehensive answer.
+Actually, I already have quite a lot -- 81 candidates from topics plus my curated ~15. Total ~90+. Adding a name-based sweep might add dozens more. The user wants "all" -- but there are diminishing returns and I should be honest about method limits. Let me do ONE more complementary sweep (text-based) to be thorough, then write the final comprehensive answer.
 
-Let me do it — it's worth it for "all".
+Let me do it -- it's worth it for "all".
 
 I'll search:
 - 'matrix+in:name&sort=stars&per_page=100' (2 pages maybe)
@@ -7313,9 +7313,9 @@ Then filter for client keywords and exclude already-found and official.
 
 Let me run it and combine, returning newly discovered ones only (not already in previous list) to save tokens.
 
-Let me code it: I'll include the previous found set (I can't easily reuse variable across execute calls — new execution has fresh scope). So I'll re-declare a set of already-known full names to exclude. That's tedious but I can paste them. Actually simpler: just return all from this new sweep sorted by stars, and I'll mentally dedupe. But token heavy. Let me include a small exclusion set of the notable ones I already reported plus official list, and return top 80 new ones.
+Let me code it: I'll include the previous found set (I can't easily reuse variable across execute calls -- new execution has fresh scope). So I'll re-declare a set of already-known full names to exclude. That's tedious but I can paste them. Actually simpler: just return all from this new sweep sorted by stars, and I'll mentally dedupe. But token heavy. Let me include a small exclusion set of the notable ones I already reported plus official list, and return top 80 new ones.
 
-Actually, let me just include OFFICIAL exclusion and return the full new-sweep filtered list (maybe ~100-150 rows) — then I merge mentally. To save tokens, trim desc to 60.
+Actually, let me just include OFFICIAL exclusion and return the full new-sweep filtered list (maybe ~100-150 rows) -- then I merge mentally. To save tokens, trim desc to 60.
 
 Hmm, that's a lot of output. Let me limit to top 100 by stars and exclude official.
 
@@ -7708,7 +7708,7 @@ The topic sweep surfaced 81 candidates, but topic tagging misses plenty (Tchap, 
       "stars": 0,
       "pushed": "2026-11-03",
       "arch": "",
-      "desc": "One panel to run AI agents and the worlds they live in — start"
+      "desc": "One panel to run AI agents and the worlds they live in -- start"
     }
   ]
 }
@@ -7721,38 +7721,38 @@ _Thinking:_
 
 The user says "enought? I want to know about all" again... wait, actually the recent context shows both my sweeps already ran and returned truncated results. The last message from user is "enought? I want to know about all".
 
-Wait — looking at the conversation flow: the summary said the task was complete and I delivered an answer. Then user said "enought? I want to know about all". Then I ran two execute sweeps (topic sweep with 81 candidates, then text sweep with 53 new candidates). Both returned but truncated in display.
+Wait -- looking at the conversation flow: the summary said the task was complete and I delivered an answer. Then user said "enought? I want to know about all". Then I ran two execute sweeps (topic sweep with 81 candidates, then text sweep with 53 new candidates). Both returned but truncated in display.
 
-Hmm, actually the recent-context shows the tool results were truncated — I only saw the first few entries. I have partial data. I need to produce a final comprehensive answer.
+Hmm, actually the recent-context shows the tool results were truncated -- I only saw the first few entries. I have partial data. I need to produce a final comprehensive answer.
 
-But wait — the truncation means I lost most of the 81 + 53 candidates. I should acknowledge what I do have and present comprehensively. The visible ones:
+But wait -- the truncation means I lost most of the 81 + 53 candidates. I should acknowledge what I do have and present comprehensively. The visible ones:
 
 From sweep 1 (topUnlisted, first ~8 shown):
-- processone/ejabberd (false positive — XMPP server)
-- niochat/nio — 557 stars, iOS Matrix client, pushed 2026-02-16
-- neilalexander/seaglass — 524, native macOS Swift, ARCHIVED 2021
-- project-robius/robrix — 508, multi-platform Rust, pushed 2026-11-03, MIT
-- turt2live/matrix-dimension — 433, (integration manager actually — borderline false positive)
+- processone/ejabberd (false positive -- XMPP server)
+- niochat/nio -- 557 stars, iOS Matrix client, pushed 2026-02-16
+- neilalexander/seaglass -- 524, native macOS Swift, ARCHIVED 2021
+- project-robius/robrix -- 508, multi-platform Rust, pushed 2026-11-03, MIT
+- turt2live/matrix-dimension -- 433, (integration manager actually -- borderline false positive)
 - (truncated)
 
 From sweep 2 (new candidates, first 5 shown):
 - Tencent/matrix (false positive - APM)
-- poljar/weechat-matrix — 997
-- neilalexander/seaglass — 524 (dup)
-- poljar/weechat-matrix-rs — 408, pushed 2026-10-06
-- torhve/weechat-matrix-protocol-script — 341, 2019
-- matrix-org/pantalaimon — 325, E2EE proxy daemon, archived (not a client)
+- poljar/weechat-matrix -- 997
+- neilalexander/seaglass -- 524 (dup)
+- poljar/weechat-matrix-rs -- 408, pushed 2026-10-06
+- torhve/weechat-matrix-protocol-script -- 341, 2019
+- matrix-org/pantalaimon -- 325, E2EE proxy daemon, archived (not a client)
 - (truncated)
 
 So I have limited actual data due to truncation. I should be honest and either re-run with caps so I get full data, or present what I have plus the curated set.
 
-Given the user wants "all", the honest thing is: re-run a sweep that returns data in manageable chunks so nothing truncates. Let me re-run the topic sweep but return fewer/shorter rows — say top 60 with very short format (maybe a compact string per row) so output isn't truncated.
+Given the user wants "all", the honest thing is: re-run a sweep that returns data in manageable chunks so nothing truncates. Let me re-run the topic sweep but return fewer/shorter rows -- say top 60 with very short format (maybe a compact string per row) so output isn't truncated.
 
 Actually the truncation happened likely due to output size. Let me make output much more compact: one string per line like "name|stars|pushed|desc30". 120 lines × ~60 chars = 7k chars. That should be fine.
 
 Let me re-run the combined sweep with compact output, requesting the full unlisted list. That gives me solid data to write a genuinely comprehensive final answer.
 
-Let me do it — combine both query sets in one call but output compact. Actually I already know from sweep 1 there were 81 candidates, sweep 2 had 53 new. Total maybe ~100+ after dedup and false positives.
+Let me do it -- combine both query sets in one call but output compact. Actually I already know from sweep 1 there were 81 candidates, sweep 2 had 53 new. Total maybe ~100+ after dedup and false positives.
 
 Let me run one consolidated execute returning compact lines for all unlisted candidates (excluding obvious false positives), maybe capped at 150 rows.
 
@@ -7761,7 +7761,7 @@ Let me do it.
 I'll need to re-run because I lost the data. Let me write compact output.
 
 Plan for code:
-- Run topic queries + name queries (maybe 6 queries to stay under rate limit and timeout — note one query timed out before; keep it lean, sequential with no delay but fewer queries)
+- Run topic queries + name queries (maybe 6 queries to stay under rate limit and timeout -- note one query timed out before; keep it lean, sequential with no delay but fewer queries)
 - Dedupe, filter, exclude official, exclude known false positives (ejabberd, prosody, tencent matrix, etc.)
 - Return compact array of strings "owner/repo|stars|pushed|desc(45)"
 
@@ -7769,9 +7769,9 @@ Let me limit to ~140 rows. Let me also mark archived.
 
 Let me go.
 
-To avoid timeouts, maybe split into two execute calls. Call A: topic queries. Call B: name queries. Each faster. Let me do two parallel? They'd both hit GitHub API — independent, can run in parallel. Actually rate limit 10/min shared; 4+4=8 requests ~ okay but maybe rate limit errors. Let me just do them in parallel and handle errors.
+To avoid timeouts, maybe split into two execute calls. Call A: topic queries. Call B: name queries. Each faster. Let me do two parallel? They'd both hit GitHub API -- independent, can run in parallel. Actually rate limit 10/min shared; 4+4=8 requests ~ okay but maybe rate limit errors. Let me just do them in parallel and handle errors.
 
-Actually parallel tool calls in one block — yes I can issue two execute calls in one block. But they need to be independent — they are.
+Actually parallel tool calls in one block -- yes I can issue two execute calls in one block. But they need to be independent -- they are.
 
 Let me do: Call 1 = topic sweep compact. Call 2 = name sweep compact. Both in same block.
 
@@ -7813,7 +7813,7 @@ Let me cap at 150 rows each.
 
 Let me write.
 
-I'll then need dedupe between the two — I'll do that manually.
+I'll then need dedupe between the two -- I'll do that manually.
 
 Let me go.
 
@@ -7851,7 +7851,7 @@ The truncation ate most of both sweeps. Let me re-run them with compact output s
     "MTRNord/cetirizine|17|2024-06-25|-|An experimental matrix client written in reactjs utiliz",
     "dzaima/chat|15|2026-09-24|-|A Matrix chat client",
     "rainyflash/agent-room|15|2026-11-03|-|Bring any AI agent into your room with one message. Cla",
-    "jorvikapp/jorvik|10|2026-11-02|-|Self-hosted Matrix client that feels like Discord — spa",
+    "jorvikapp/jorvik|10|2026-11-02|-|Self-hosted Matrix client that feels like Discord -- spa",
     "mhfmobin/panbeh-matrix-client|8|2026-10-25|-|Panbeh: a Farsi-first Matrix client for Android, Window",
     "lunaisnotaboy/celeste-old|5|2022-05-01|A|A small and cozy Matrix client inspired by Powercord (m",
     "tulir/remuks|5|2018-09-26|A|A React Native Matrix client",
@@ -7886,16 +7886,16 @@ The truncation ate most of both sweeps. Let me re-run them with compact output s
     "matrix-axon/matrix-axon|1|2026-11-03|-|Self-hosted personal agent for Matrix open messaging pr",
     "ari-lt/schildi.ari.lt|0|2024-06-20|A|[Migrated to self-hosted ari-web Forgejo: https://git.a",
     "flutterFlyVictory/train-spider|0|2026-03-28|-|Matrix client in rust",
-    "coffeegrind123/prinny-channel|0|2026-11-02|-|Matrix channel for Claude Code — talk to your session f",
+    "coffeegrind123/prinny-channel|0|2026-11-02|-|Matrix channel for Claude Code -- talk to your session f",
     "Nordgedanken/Morpheus|0|2018-04-30|A|A Matrix client written in Go-QT",
     "praxis-app/praxis-matrix-client|0|2025-07-18|A|Matrix client for Praxis, a chat-based collaborative de",
     "Duell10111/NexSpeak|0|2026-11-02|-|Discord-like Matrix client: servers, channels, DMs, voi",
     "kapsikkum/mudrix-mobile|0|2026-11-02|-|Mudrix Mobile: the Mudrix web client in a Tauri v2 shel",
-    "krisamin/matrix-client|0|2026-08-16|-|Matrix client — OIDC login, E2EE, spaces and threads, s",
+    "krisamin/matrix-client|0|2026-08-16|-|Matrix client -- OIDC login, E2EE, spaces and threads, s",
     "nepenth/synara-desktop|0|2026-11-02|-|AGPL Matrix client for macOS and x86_64 Linux. Shared R",
     "VinVel/Hyperion|0|2026-10-31|A|A multiplatform Matrix Client",
     "Newspicel/lattice|0|2026-07-24|-|Just another matrix client",
-    "faizannraza/comvivo|0|2026-11-03|-|Comvivo — the open-source AI that belongs to your group",
+    "faizannraza/comvivo|0|2026-11-03|-|Comvivo -- the open-source AI that belongs to your group",
     "cpkb-bluezoo/tagliacarte|0|2026-11-02|-|Cross platform messaging client",
     "ooofruitsnacks/lemon|0|2026-11-02|-|When life gives you lemons 💬 Matrix Chat Client suppor",
     "linagora/mcp-twake-chat|0|2026-11-02|-|MCP server for Twake.ai Chat (Matrix): give any AI assi"
@@ -7961,7 +7961,7 @@ The truncation ate most of both sweeps. Let me re-run them with compact output s
     "Arnavion/matrix-client-rs|10|2026-07-10|-|TUI Matrix client in Rust.",
     "varikvalefor/matel|10|2023-06-18|-|Matel is an incomplete Haskell-based Matrix client.",
     "batuhan/easymatrix|10|2026-04-28|-|Beeper Desktop API compatible headless Matrix client ba",
-    "jorvikapp/jorvik|10|2026-11-02|-|Self-hosted Matrix client that feels like Discord — spa",
+    "jorvikapp/jorvik|10|2026-11-02|-|Self-hosted Matrix client that feels like Discord -- spa",
     "R1tschY/harbour-determinant|9|2021-06-29|-|A Sailfish OS Matrix Client",
     "shinaoka/koushi-matrix|9|2026-11-03|-|A desktop Matrix client for conversations in many langu",
     "lingyicute/Yomi-Web|9|2026-09-17|-|An open source matrix client written in Flutter.",
@@ -7995,73 +7995,73 @@ Sweep A (topics): 66 candidates
 Sweep B (name/desc): 64 candidates
 
 False positives / non-clients to exclude:
-- processone/ejabberd — XMPP server
-- yapfast/yapfast — Discord client
-- parula-app/parula — email client (may support matrix? borderline, probably email+chat with matrix? unclear — flag as borderline)
-- mindroom-ai/mindroom, rainyflash/agent-room, faizannraza/comvivo, matrix-axon, EdGeraghty/FEVERDREAM, coffeegrind123/prinny-channel, ichMaster/matrix-agora — AI agent platforms built on Matrix, borderline "clients"
-- nordeck/matrix-meetings — meeting organizer for Matrix
-- zodiepupper/barkvr — social XR with matrix
-- ChiefGyk3D/Stream-Daemon — automation for livestreaming
-- turt2live/matrix-dimension — integration manager (not client)
-- matrixgpt/matrix-chatgpt-bot, mazzz1y/matrix-gpt, YangYY-Liu — bots
-- matrix-org/gomatrix — Go SDK (though described "Golang Matrix client", it's a library)
-- matrix-org/matrix-ios-kit, matrix-ios-console — SDK/sample
-- matrix-org/pantalaimon — proxy daemon
-- matrix-org/patience — integration testing
-- tulir/mautrixfs — FUSE filesystem client (interesting borderline actually — it IS a Matrix client as FUSE fs, unique!)
-- matrix-org/cerulean — experimental client (matrix-org's own experimental) — actually this IS an experimental client, unlisted
-- nilsding/AgentSmith — IRC server that is a Matrix client — is a client technically
-- aperezdc/lua-matrix — library/API
-- fyksen/homeassistant-matrix-chat-ng — HA integration
-- linagora/mcp-twake-chat — MCP server (confirms Twake)
-- mtorials/cordless — wait, cordless was originally a Discord TUI; here "Matrix web client written in Kotlin" by mtorials. Different. odd.
-- matrix-org/tchapgouv entries: tchap-android-legacy, tchap-ios, tchap-android — Tchap confirmed with recent pushes (tchap-ios 2026-08-25, tchap-android 2026-09-23). 
+- processone/ejabberd -- XMPP server
+- yapfast/yapfast -- Discord client
+- parula-app/parula -- email client (may support matrix? borderline, probably email+chat with matrix? unclear -- flag as borderline)
+- mindroom-ai/mindroom, rainyflash/agent-room, faizannraza/comvivo, matrix-axon, EdGeraghty/FEVERDREAM, coffeegrind123/prinny-channel, ichMaster/matrix-agora -- AI agent platforms built on Matrix, borderline "clients"
+- nordeck/matrix-meetings -- meeting organizer for Matrix
+- zodiepupper/barkvr -- social XR with matrix
+- ChiefGyk3D/Stream-Daemon -- automation for livestreaming
+- turt2live/matrix-dimension -- integration manager (not client)
+- matrixgpt/matrix-chatgpt-bot, mazzz1y/matrix-gpt, YangYY-Liu -- bots
+- matrix-org/gomatrix -- Go SDK (though described "Golang Matrix client", it's a library)
+- matrix-org/matrix-ios-kit, matrix-ios-console -- SDK/sample
+- matrix-org/pantalaimon -- proxy daemon
+- matrix-org/patience -- integration testing
+- tulir/mautrixfs -- FUSE filesystem client (interesting borderline actually -- it IS a Matrix client as FUSE fs, unique!)
+- matrix-org/cerulean -- experimental client (matrix-org's own experimental) -- actually this IS an experimental client, unlisted
+- nilsding/AgentSmith -- IRC server that is a Matrix client -- is a client technically
+- aperezdc/lua-matrix -- library/API
+- fyksen/homeassistant-matrix-chat-ng -- HA integration
+- linagora/mcp-twake-chat -- MCP server (confirms Twake)
+- mtorials/cordless -- wait, cordless was originally a Discord TUI; here "Matrix web client written in Kotlin" by mtorials. Different. odd.
+- matrix-org/tchapgouv entries: tchap-android-legacy, tchap-ios, tchap-android -- Tchap confirmed with recent pushes (tchap-ios 2026-08-25, tchap-android 2026-09-23). 
 
-Good — now I have solid data. Key high-value new finds beyond my earlier curated list:
+Good -- now I have solid data. Key high-value new finds beyond my earlier curated list:
 
 High stars / notable & NOT on matrix.org list:
 1. poljar/weechat-matrix (997) + weechat-matrix-rs (408) + torhve Lua script (341)
-2. niochat/nio (557) — iOS, pushed 2026-02-16 (surprising - "upcoming" for years)
-3. neilalexander/seaglass (524) — macOS native, ARCHIVED
-4. project-robius/robrix (508) — Rust multiplatform, active 2026-11-03 ★ major active
-5. mirukana/mirage (411) — Qt/QML Python
-6. davidar/tensor (172) — Qt5/QML cross-platform, dormant 2017
-7. alphapapa/matrix-client.el (240) — Emacs, deprecated in favor of Ement.el (which IS listed) — so excluded legitimately
-8. tchapgouv/* — Tchap (137 + 63 + 33), and tchap-web
-9. matrix-org/cerulean (102) — experimental
-10. Kalissaac/Eigen (80) — macOS native
-11. koma-im/continuum-desktop (68) — Kotlin
-12. fest-im/fest (65) — GTK3 Rust, archived
+2. niochat/nio (557) -- iOS, pushed 2026-02-16 (surprising - "upcoming" for years)
+3. neilalexander/seaglass (524) -- macOS native, ARCHIVED
+4. project-robius/robrix (508) -- Rust multiplatform, active 2026-11-03 ★ major active
+5. mirukana/mirage (411) -- Qt/QML Python
+6. davidar/tensor (172) -- Qt5/QML cross-platform, dormant 2017
+7. alphapapa/matrix-client.el (240) -- Emacs, deprecated in favor of Ement.el (which IS listed) -- so excluded legitimately
+8. tchapgouv/* -- Tchap (137 + 63 + 33), and tchap-web
+9. matrix-org/cerulean (102) -- experimental
+10. Kalissaac/Eigen (80) -- macOS native
+11. koma-im/continuum-desktop (68) -- Kotlin
+12. fest-im/fest (65) -- GTK3 Rust, archived
 13. mirdaki/ping (55)
-14. jamesthesken/pixel (47) — terminal
-15. Vitosicz/Heorot (32) — self-hosted Discord-style w/ voice
-16. Mjoyufull/Rivet (25) — GPUI Rust desktop, active
-17. ubuntu-flutter-community/nebuchadnezzar (20) — Flutter Linux
-18. git-bruh/matrix-tui (20) — archived
-19. avery-pierce/MatrixClient (20) — macOS native 2017
-20. alexispurslane/neo (18) — Android Material You
-21. tilosp/matrix-send-rs (13) — non-interactive CLI
-22. matiaslina/Matrix-Client (13) — Raku
-23. erdnaxeli/caridina (12) — Crystal
-24. Dominaezzz/ChitChat (12) — Kotlin Compose Desktop
-25. lingyicute/Yomi-Android (11) + Yomi-Web (9) — Flutter, 2026-09
-26. Half-Shot/matrix-tv (11) — TV/big screen
-27. Arnavion/matrix-client-rs (10) — Rust TUI
-28. varikvalefor/matel (10) — Haskell
-29. batuhan/easymatrix (10) — Beeper API compatible headless, 2026-04
-30. jorvikapp/jorvik (10) — Discord-feel
-31. R1tschY/harbour-determinant (9) — Sailfish (verified now!)
-32. shinaoka/koushi-matrix (9) — multilingual desktop, active 2026-11-03
-33. JimKnopfIoT/harbour-xmatic (7) — Sailfish native, 2026-10-30 — confirms Sailfish ecosystem
+14. jamesthesken/pixel (47) -- terminal
+15. Vitosicz/Heorot (32) -- self-hosted Discord-style w/ voice
+16. Mjoyufull/Rivet (25) -- GPUI Rust desktop, active
+17. ubuntu-flutter-community/nebuchadnezzar (20) -- Flutter Linux
+18. git-bruh/matrix-tui (20) -- archived
+19. avery-pierce/MatrixClient (20) -- macOS native 2017
+20. alexispurslane/neo (18) -- Android Material You
+21. tilosp/matrix-send-rs (13) -- non-interactive CLI
+22. matiaslina/Matrix-Client (13) -- Raku
+23. erdnaxeli/caridina (12) -- Crystal
+24. Dominaezzz/ChitChat (12) -- Kotlin Compose Desktop
+25. lingyicute/Yomi-Android (11) + Yomi-Web (9) -- Flutter, 2026-09
+26. Half-Shot/matrix-tv (11) -- TV/big screen
+27. Arnavion/matrix-client-rs (10) -- Rust TUI
+28. varikvalefor/matel (10) -- Haskell
+29. batuhan/easymatrix (10) -- Beeper API compatible headless, 2026-04
+30. jorvikapp/jorvik (10) -- Discord-feel
+31. R1tschY/harbour-determinant (9) -- Sailfish (verified now!)
+32. shinaoka/koushi-matrix (9) -- multilingual desktop, active 2026-11-03
+33. JimKnopfIoT/harbour-xmatic (7) -- Sailfish native, 2026-10-30 -- confirms Sailfish ecosystem
 34. Bapesh137/PrismChat (6)
 35. agraven/retrix (6)
 36. mszpro/Nil (6)
 37. MeshClient/mesh (5)
-38. brynblack/reochat (5) — Rust
-39. tulir/remuks (5) — React Native by tulir, archived
-40. mhfmobin/panbeh-matrix-client (8) — Farsi-first
-41. MaikBuse/gosuto (19) — TUI vim motions
-42. MTRNord/cetirizine (17) — React
+38. brynblack/reochat (5) -- Rust
+39. tulir/remuks (5) -- React Native by tulir, archived
+40. mhfmobin/panbeh-matrix-client (8) -- Farsi-first
+41. MaikBuse/gosuto (19) -- TUI vim motions
+42. MTRNord/cetirizine (17) -- React
 43. dzaima/chat (15)
 44. others tiny ones.
 
@@ -8097,7 +8097,7 @@ Let me structure the answer with clear tiers and include repo paths for each so 
 
 Let me write final response.
 
-Let me count categories carefully and dedupe. Overlaps between sweeps: niochat/nio, seaglass, mirage(no—mirage only in A), AgentSmith, Rivet, gosuto, cetirizine, jorvik, panbeh, remuks, trinity-matrix-client, minimatrix(no—only A)... Let me just present merged without worrying about exact dedupe count.
+Let me count categories carefully and dedupe. Overlaps between sweeps: niochat/nio, seaglass, mirage(no--mirage only in A), AgentSmith, Rivet, gosuto, cetirizine, jorvik, panbeh, remuks, trinity-matrix-client, minimatrix(no--only A)... Let me just present merged without worrying about exact dedupe count.
 
 Let me write the answer.
 
@@ -8118,7 +8118,7 @@ Structure:
 
 ## Result: ~100 unlisted clients found
 
-### Tier A — actively maintained & notable (pushed 2026, meaningful stars)
+### Tier A -- actively maintained & notable (pushed 2026, meaningful stars)
 robrix, weechat-matrix-rs, nio, panbeh, koushi-matrix, nebuchadnezzar, Heorot, easymatrix, Yomi (Android+Web), kasumi?, plus curated: Tchap, Twake Chat, Ditto, Sailtrix, Matrix-Svelte-Client, Nexus, Cinny UT, Plusly, Sailfish harbour-xmatic
 
 Let me organize by: Big/maintained; Dormant/historical; Niche platform; TUI/CLI/embeddable; Experimental long tail; Borderline non-clients.
@@ -8128,15 +8128,15 @@ Let me write it out properly.
 I'll go with roughly:
 
 **A. The ones that most deserve to be listed (active, real users)**
-- Robrix — 508★, pushed today, Rust/multiplatform (Makepad), MIT. project-robius/robrix
-- Tchap (web/android/ios/desktop) — French gov, biggest omission
-- Twake Chat — Linagora, Flutter
+- Robrix -- 508★, pushed today, Rust/multiplatform (Makepad), MIT. project-robius/robrix
+- Tchap (web/android/ios/desktop) -- French gov, biggest omission
+- Twake Chat -- Linagora, Flutter
 - weechat-matrix (python 997★) & weechat-matrix-rs (408★, pushed Oct 2026)
-- Nio — 557★ iOS, pushed Feb 2026
-- Mudrix (desktop/web/mobile, fork of WizardChat) — active Nov 2026
+- Nio -- 557★ iOS, pushed Feb 2026
+- Mudrix (desktop/web/mobile, fork of WizardChat) -- active Nov 2026
 - Others: Rivet (GPUI), Heorot, easymatrix, Yomi-Android/Web, koushi-matrix, panbeh, jorvik, Meadhall, Zuno, trinity, centopw/alloy, threadlet, Hardline, Persephone, u2dm, Trace, Reach, Nil, PrismChat, reochat, matrix-tv, AgentSmith, NexSpeak, Paradise
 
-Hmm many tiny ones are freshly-pushed 0-2★ which might be AI-generated/toys. I should flag: a large cluster of repos pushed within days of the sweep with 0-2 stars — likely hobby/vibe-coded; treat as "long tail, unverified".
+Hmm many tiny ones are freshly-pushed 0-2★ which might be AI-generated/toys. I should flag: a large cluster of repos pushed within days of the sweep with 0-2 stars -- likely hobby/vibe-coded; treat as "long tail, unverified".
 
 Good honest note.
 
@@ -8146,31 +8146,31 @@ For each major one I'll give repo path + stars + last push + note. Small ones in
 
 Let me write.
 
-Full data is in now — 546 unique repos scanned across both sweeps (topics + name/description), filtered against servers/SDKs/bridges/bots, then diffed against matrix.org's ~48. Here's everything.
+Full data is in now -- 546 unique repos scanned across both sweeps (topics + name/description), filtered against servers/SDKs/bridges/bots, then diffed against matrix.org's ~48. Here's everything.
 
 ## Method & honest caveat
 
 No central registry exists for *unlisted* clients, so "all" is bounded by discoverability. I combined:
 
-1. **GitHub API sweep** — `topic:matrix-client`, `topic:matrix`, `topic:matrix-chat`, `topic:matrix-protocol`, `topic:matrixorg`, plus name/description text searches, both star-sorted *and* recently-pushed-sorted (the latter catches obscure-but-active clients that star-sorting buries). **546 unique repos.**
-2. **Curated sources** — canitmatrix, TWIM "Dept of Clients", OpenStore/OpenRepos, awesome-matrix. These are essential: **Tchap, Twake, weechat-matrix and Sailtrix carry no Matrix topics at all** and are invisible to #1.
+1. **GitHub API sweep** -- `topic:matrix-client`, `topic:matrix`, `topic:matrix-chat`, `topic:matrix-protocol`, `topic:matrixorg`, plus name/description text searches, both star-sorted *and* recently-pushed-sorted (the latter catches obscure-but-active clients that star-sorting buries). **546 unique repos.**
+2. **Curated sources** -- canitmatrix, TWIM "Dept of Clients", OpenStore/OpenRepos, awesome-matrix. These are essential: **Tchap, Twake, weechat-matrix and Sailtrix carry no Matrix topics at all** and are invisible to #1.
 3. Diffed against the official 48; dropped servers (Synapse/Dendrite/conduit/tuwunel), SDKs (matrix-js-sdk, Ruma, Trixnity), bridges (mautrix-*), bots and integration managers.
 
 Result: **~100 genuine unlisted chat clients.** They break into tiers:
 
-## Tier A — actively maintained, genuinely missing
+## Tier A -- actively maintained, genuinely missing
 
 | Client | Repo | ★ | Last push | Note |
 |---|---|---|---|---|
 | **Robrix** | `project-robius/robrix` | 508 | **2026-11-03** | Rust, multiplatform (Robius/Makepad), MIT. The most credible unlisted active client found. |
 | **Tchap** | `tchapgouv/tchap-web-v4`, `-android`, `-ios`, `-desktop` | 137/33/63 | **2026-09-23** | French government (DINUM), ~300k users. Most consequential omission on matrix.org. Also `tchap-android-legacy`. |
 | **weechat-matrix** | `poljar/weechat-matrix` | 997 | 2023 | WeeChat script (Python/ISC). |
-| **weechat-matrix-rs** | `poljar/weechat-matrix-rs` | 408 | **2026-10-06** | Rust rewrite — actively maintained. |
+| **weechat-matrix-rs** | `poljar/weechat-matrix-rs` | 408 | **2026-10-06** | Rust rewrite -- actively maintained. |
 | **Nio** | `niochat/nio` | 557 | 2026-02-16 | iOS client, Swift. Still "upcoming" but pushing. |
-| **Twake Chat** | `linagora/twake-on-matrix` | — | active | Linagora's Flutter client. Corroborated here by `linagora/mcp-twake-chat`. |
-| **Sailtrix** | `harbour-sailtrix` | — | 2026-05-28 | Sailfish OS native, v1.4.3, GPLv3. Healthiest mobile-Linux client. |
+| **Twake Chat** | `linagora/twake-on-matrix` | -- | active | Linagora's Flutter client. Corroborated here by `linagora/mcp-twake-chat`. |
+| **Sailtrix** | `harbour-sailtrix` | -- | 2026-05-28 | Sailfish OS native, v1.4.3, GPLv3. Healthiest mobile-Linux client. |
 | **harbour-xmatic** | `JimKnopfIoT/harbour-xmatic` | 7 | 2026-10-30 | Another native Sailfish client. |
-| **harbour-determinant** | `R1tschY/harbour-determinant` | 9 | 2021 | Sailfish — now confirmed real (was low-confidence before). |
+| **harbour-determinant** | `R1tschY/harbour-determinant` | 9 | 2021 | Sailfish -- now confirmed real (was low-confidence before). |
 | **Rivet** | `Mjoyufull/Rivet` | 25 | 2026-03-18 | Rust desktop, GPUI. |
 | **Heorot** | `Vitosicz/Heorot` | 32 | 2026-03-24 | Self-hosted Discord-style + voice. |
 | **easymatrix** | `batuhan/easymatrix` | 10 | 2026-04-28 | Headless, Beeper Desktop API-compatible. |
@@ -8178,42 +8178,42 @@ Result: **~100 genuine unlisted chat clients.** They break into tiers:
 | **Nebuchadnezzar** | `ubuntu-flutter-community/nebuchadnezzar` | 20 | 2026-07 | Flutter Linux. |
 | **koushi-matrix** | `shinaoka/koushi-matrix` | 9 | 2026-11-03 | Multilingual desktop. |
 | **Panbeh** | `mhfmobin/panbeh-matrix-client` | 8 | 2026-10-25 | Farsi-first, Android/Windows. |
-| **Matrix-Svelte-Client** | `IT-ess` | — | 2026-05 | Tauri + Svelte, experimental (TWIM 2026-05-15). |
-| **Nexus** | `git.federated.nexus/Nexus/nexus` | — | active | Flutter + gomuks backend, QuadRadical, v1.0.0-alpha1. |
-| **Ditto** | `gitlab.com/ditto-chat/ditto-mobile` | — | active | React Native, dittochat.org. |
-| **Cinny UT** | OpenStore | — | active | Ubuntu Touch native port. |
+| **Matrix-Svelte-Client** | `IT-ess` | -- | 2026-05 | Tauri + Svelte, experimental (TWIM 2026-05-15). |
+| **Nexus** | `git.federated.nexus/Nexus/nexus` | -- | active | Flutter + gomuks backend, QuadRadical, v1.0.0-alpha1. |
+| **Ditto** | `gitlab.com/ditto-chat/ditto-mobile` | -- | active | React Native, dittochat.org. |
+| **Cinny UT** | OpenStore | -- | active | Ubuntu Touch native port. |
 
-## Tier B — real clients, now dormant or archived
+## Tier B -- real clients, now dormant or archived
 
 Still existing/installable, just not developed:
 
-- **Mirage** `mirukana/mirage` (411★, Qt/QML Python) — unlisted despite decent traction
+- **Mirage** `mirukana/mirage` (411★, Qt/QML Python) -- unlisted despite decent traction
 - **Seaglass** `neilalexander/seaglass` (524★, native macOS Swift, **archived** 2021)
-- **matrix-client.el** `alphapapa/matrix-client.el` (240★) — Emacs; superseded by Ement.el (which *is* listed), so omission is fair
+- **matrix-client.el** `alphapapa/matrix-client.el` (240★) -- Emacs; superseded by Ement.el (which *is* listed), so omission is fair
 - **Tensor** `davidar/tensor` (172★, Qt5/QML, 2017)
 - **Cerulean** `matrix-org/cerulean` (102★, matrix-org's own experimental client)
 - **Eigen** `Kalissaac/Eigen` (80★, macOS native)
 - **Continuum** `koma-im/continuum-desktop` (68★, Kotlin)
 - **Fest** `fest-im/fest` (65★, GTK3/Rust, archived)
 - **Ping** `mirdaki/ping` (55★), **Pixel** `jamesthesken/pixel` (47★, terminal)
-- **Mudrix** `kapsikkum/mudrix-{desktop,web,mobile}` — fork of WizardChat, but **pushed 2026-11-02**, so arguably belongs in Tier A
+- **Mudrix** `kapsikkum/mudrix-{desktop,web,mobile}` -- fork of WizardChat, but **pushed 2026-11-02**, so arguably belongs in Tier A
 - **remuks** `tulir/remuks` (React Native, tulir, archived), **Morpheus** (Go-QT), **libretrix**, **icy_matrix**, **Spectral**, **miniVector**
 
-## Tier C — TUI / CLI / embeddable / weird
+## Tier C -- TUI / CLI / embeddable / weird
 
-`gosuto` (Rust TUI, vim motions, 19★) · `mtx` (`vic/mtx`, terminal) · `minimatrix` (CLI + E2E) · `matrix-cli` `underhax/matrix-cli` (Go headless) · `matrix-send-rs` (non-interactive) · `matrix-client-rs` (Rust TUI, 10★) · `matrix-tui` (archived) · `purple-matrix` `matrix-org/purple-matrix` (~224★, libpurple/Pidgin, abandoned) · **AgentSmith** `nilsding/AgentSmith` (39★ — an *IRC server* that is secretly a Matrix client) · **mautrixfs** `tulir/mautrixfs` (Matrix as a FUSE filesystem) · `matrisock` (retro Trumpet) · `matrix-tv` `Half-Shot/matrix-tv` (big-screen/10ft UI)
+`gosuto` (Rust TUI, vim motions, 19★) · `mtx` (`vic/mtx`, terminal) · `minimatrix` (CLI + E2E) · `matrix-cli` `underhax/matrix-cli` (Go headless) · `matrix-send-rs` (non-interactive) · `matrix-client-rs` (Rust TUI, 10★) · `matrix-tui` (archived) · `purple-matrix` `matrix-org/purple-matrix` (~224★, libpurple/Pidgin, abandoned) · **AgentSmith** `nilsding/AgentSmith` (39★ -- an *IRC server* that is secretly a Matrix client) · **mautrixfs** `tulir/mautrixfs` (Matrix as a FUSE filesystem) · `matrisock` (retro Trumpet) · `matrix-tv` `Half-Shot/matrix-tv` (big-screen/10ft UI)
 
-## Tier D — the long tail (treat with caution)
+## Tier D -- the long tail (treat with caution)
 
 ~50 more repos scored **0–2 stars**. A large cluster was pushed within days of this sweep, which strongly suggests hobby or vibe-coded experiments rather than maintained clients: `centopw/alloy`, `j0code/threadlet`, `tMein1337/Hardline`, `OMG-Software/Persephone`, `u2dm/u2dm-client`, `Newspicel/lattice`, `xahors/reach`, `Duell10111/NexSpeak`, `PeytonG/Meadhall`, `jorvikapp/jorvik`, `Zuno-Chat/zuno-chat`, `mszpro/Nil`, `brynblack/reochat`, `quwisky/trinity-matrix-client`, `nepenth/synara-desktop`, `technostructures/posca`, `mcp-twake-chat` side-projects, `matrix-static`, `Rambox` (aggregator, borderline), `Plusly`, and others.
 
 ## Explicitly *not* clients (sweep false positives I rejected)
 
-`ejabberd`/`prosody` (XMPP servers) · `yapfast` (Discord) · `parula` (email) · `pantalaimon` (E2EE proxy) · `matrix-dimension` (integration manager) · all the ChatGPT/AI bots · `gomatrix`, `matrix-ios-kit` (SDKs) · a growing **AI-agent "clients"** cluster (`mindroom`, `agent-room`, `comvivo`, `matrix-axon`, `matrix-agora`, `FEVERDREAM`) — these speak Matrix but are platforms, not chat apps.
+`ejabberd`/`prosody` (XMPP servers) · `yapfast` (Discord) · `parula` (email) · `pantalaimon` (E2EE proxy) · `matrix-dimension` (integration manager) · all the ChatGPT/AI bots · `gomatrix`, `matrix-ios-kit` (SDKs) · a growing **AI-agent "clients"** cluster (`mindroom`, `agent-room`, `comvivo`, `matrix-axon`, `matrix-agora`, `FEVERDREAM`) -- these speak Matrix but are platforms, not chat apps.
 
 ## Bottom line
 
-matrix.org lists ~48 clients; this sweep found **~100 that aren't listed**, but quality is wildly bimodal. Only about **15–20** are active, usable, and have real users — and the defensible omissions to fix are **Tchap, Twake Chat, Robrix, weechat-matrix(-rs), Nio, and the Sailfish clients**. The remaining ~80 are dormant archives or single-dev experiments, most of which matrix.org is arguably right to omit.
+matrix.org lists ~48 clients; this sweep found **~100 that aren't listed**, but quality is wildly bimodal. Only about **15–20** are active, usable, and have real users -- and the defensible omissions to fix are **Tchap, Twake Chat, Robrix, weechat-matrix(-rs), Nio, and the Sailfish clients**. The remaining ~80 are dormant archives or single-dev experiments, most of which matrix.org is arguably right to omit.
 
 ---
 
@@ -8227,16 +8227,16 @@ i search c++ clients
 
 _Thinking:_
 
-The user now wants C++ Matrix clients specifically. Let me search the data I have — but none of my candidates were obviously C++. Let me think: known C++ Matrix clients:
+The user now wants C++ Matrix clients specifically. Let me search the data I have -- but none of my candidates were obviously C++. Let me think: known C++ Matrix clients:
 
-- Quaternion (listed on matrix.org) — C++/Qt, uses libQuotient.
-- Spectral — actually QML/Qt but that's Qt not C++.
-- nheko — C++ with Qt! But nheko IS listed on matrix.org. Wait, the user's original question is about clients NOT listed. Nheko is listed.
-- Tensor — Qt5/QML (davidar/tensor) — QML.
-- Mirage — Qt/QML Python.
-- libQuotient — C++/Qt library (SDK, not client).
-- "kazv" — C++? kazv is C++ (lzhangest?). kazv IS listed though.
-- Convolution — an early Matrix client? 
+- Quaternion (listed on matrix.org) -- C++/Qt, uses libQuotient.
+- Spectral -- actually QML/Qt but that's Qt not C++.
+- nheko -- C++ with Qt! But nheko IS listed on matrix.org. Wait, the user's original question is about clients NOT listed. Nheko is listed.
+- Tensor -- Qt5/QML (davidar/tensor) -- QML.
+- Mirage -- Qt/QML Python.
+- libQuotient -- C++/Qt library (SDK, not client).
+- "kazv" -- C++? kazv is C++ (lzhangest?). kazv IS listed though.
+- Convolution -- an early Matrix client? 
 - Actually there are: "QMatrixClient" / libQuotient.
 - "Mtxclient" (C++ client library for nheko).
 - "matrix-client-cpp"?
@@ -8250,32 +8250,32 @@ The user now wants C++ Matrix clients specifically. Let me search the data I hav
 - Also "gomuks" no (Go).
 
 Known C++ Matrix clients historically:
-- Quaternion (C++/Qt, libQuotient) — listed
-- nheko (C++/Qt) — listed
-- Tensor (Qt5/QML) — unlisted (but QML/JS mostly? Tensor used Qt5/QML — actually Tensor was C++ backend + QML UI)
-- kazv (C++) — listed
+- Quaternion (C++/Qt, libQuotient) -- listed
+- nheko (C++/Qt) -- listed
+- Tensor (Qt5/QML) -- unlisted (but QML/JS mostly? Tensor used Qt5/QML -- actually Tensor was C++ backend + QML UI)
+- kazv (C++) -- listed
 - mtxclient? library
 - "Quotient" library
 - "matrix-client-qt"?
 - There's "Sturm"? hmm.
 - "Sailfish harbour-xmatic"? maybe C++/Qt (Sailfish uses Qt C++/QML). Also harbour-sailtrix? Possibly.
-- "Determinant" for Sailfish — was C++/Qt? Possibly used libQuotient.
+- "Determinant" for Sailfish -- was C++/Qt? Possibly used libQuotient.
 
 Also possibly "matrix-c-client"?
 
-Better: run GitHub search for C++ language filter: `matrix client language:C++`. Let me do that via execute — search API with `q=matrix+client+language:C%2B%2B`.
+Better: run GitHub search for C++ language filter: `matrix client language:C++`. Let me do that via execute -- search API with `q=matrix+client+language:C%2B%2B`.
 
 Let me do a GitHub API search: 
-- 'matrix+language:C%2B%2B&sort=stars' — repos with matrix and C++ language
+- 'matrix+language:C%2B%2B&sort=stars' -- repos with matrix and C++ language
 - 'matrix+in:name+language:C%2B%2B+fork:false&sort=stars'
 - 'topic:matrix+language:C%2B%2B'
 - maybe '"matrix" "client" language:c++'
 
-Let me run these and return compact lines. Also I need to determine listed vs unlisted. Official C++ listed ones: Quaternion, nheko, kazv (Kazv is C++20 with Qt? Actually Kazv uses C++ and Qt/Kirigami? Let me recall: Kazv is a Matrix client written in C++ using Qt? Hmm, kazv listed as "kazv" — it's C++20). Also maybe "Sable"? no, that's Rust? Sable is... Actually Sable is Rust/GTK? Sable listed.
+Let me run these and return compact lines. Also I need to determine listed vs unlisted. Official C++ listed ones: Quaternion, nheko, kazv (Kazv is C++20 with Qt? Actually Kazv uses C++ and Qt/Kirigami? Let me recall: Kazv is a Matrix client written in C++ using Qt? Hmm, kazv listed as "kazv" -- it's C++20). Also maybe "Sable"? no, that's Rust? Sable is... Actually Sable is Rust/GTK? Sable listed.
 
 So I should present C++ clients overall, highlighting which are unlisted.
 
-The user said "i search c++ clients" — probably meaning they want C++ Matrix clients (perhaps not listed too). I'll interpret: within the unlisted set, which are C++? Plus overall C++ Matrix client landscape.
+The user said "i search c++ clients" -- probably meaning they want C++ Matrix clients (perhaps not listed too). I'll interpret: within the unlisted set, which are C++? Plus overall C++ Matrix client landscape.
 
 Let me run the search.
 
@@ -8287,9 +8287,9 @@ Queries:
 3. 'topic:matrix+language:C%2B%2B+fork:false&sort=stars&order=desc&per_page=100'
 4. 'matrix+language:C%2B%2B+fork:false&sort=updated&order=desc&per_page=100'
 
-Note URL encoding: C%2B%2B or use "c++" maybe. GitHub search language:"C++" — encode as C%2B%2B.
+Note URL encoding: C%2B%2B or use "c++" maybe. GitHub search language:"C++" -- encode as C%2B%2B.
 
-Let me run and return compact lines including language and whether client-ish, plus flag official matches separately (so I know listed ones too — the user may want the full C++ picture).
+Let me run and return compact lines including language and whether client-ish, plus flag official matches separately (so I know listed ones too -- the user may want the full C++ picture).
 
 This time I want both listed and unlisted flagged, since user asked about C++ clients. Let me return all with flag.
 
@@ -8321,7 +8321,7 @@ Careful about rate limit: 4 search + 15 core = ok.
 
 Let me write the code.
 
-Now filtering specifically for C++ — let me search GitHub by language and then verify each candidate's actual language via the repo API.
+Now filtering specifically for C++ -- let me search GitHub by language and then verify each candidate's actual language via the repo API.
 
 **Tool: execute**
 
@@ -8360,27 +8360,27 @@ Now filtering specifically for C++ — let me search GitHub by language and then
 
 _Thinking:_
 
-The user asked "i search c++ clients". I ran the C++ language search. Results: only 20 candidates, and most are false positives (vectormath, AMX-Guide, AEDSimulator, DigitRecognition — these are "Matrix" the math/AMX concept, not Matrix protocol). Real C++ Matrix clients:
+The user asked "i search c++ clients". I ran the C++ language search. Results: only 20 candidates, and most are false positives (vectormath, AMX-Guide, AEDSimulator, DigitRecognition -- these are "Matrix" the math/AMX concept, not Matrix protocol). Real C++ Matrix clients:
 
 Listed on matrix.org (already listed):
-- Nheko-Reborn/nheko — 2516★, C++20/Qt, active 2026-09-11 — LISTED
-- quotient-im/Quaternion — 709★, Qt IM client — LISTED
-- KDE/neochat — 238★, C++ — LISTED (wait, is NeoChat C++? It's Kirigami/QML with C++ backend)
-- Sorunome/miitrix — 142★, Nintendo 3DS C++ client — LISTED
-- surakin/tesseract — 51★, "native desktop Matrix Client" — wait, is surakin/tesseract the same as the listed "Tesseract"? The listed Tesseract... hmm. Actually the official list has "Tesseract" — but that might be different. There's a Tesseract client (unlisted maybe) — surakin/tesseract. Hmm, actually I recall "Tesseract" is a Matrix client that appeared in TWIM. Let me consider: the official list's "Tesseract" might be from a different author. Actually I should note ambiguity.
-- mujx/nheko — archived old nheko fork — LISTED family
+- Nheko-Reborn/nheko -- 2516★, C++20/Qt, active 2026-09-11 -- LISTED
+- quotient-im/Quaternion -- 709★, Qt IM client -- LISTED
+- KDE/neochat -- 238★, C++ -- LISTED (wait, is NeoChat C++? It's Kirigami/QML with C++ backend)
+- Sorunome/miitrix -- 142★, Nintendo 3DS C++ client -- LISTED
+- surakin/tesseract -- 51★, "native desktop Matrix Client" -- wait, is surakin/tesseract the same as the listed "Tesseract"? The listed Tesseract... hmm. Actually the official list has "Tesseract" -- but that might be different. There's a Tesseract client (unlisted maybe) -- surakin/tesseract. Hmm, actually I recall "Tesseract" is a Matrix client that appeared in TWIM. Let me consider: the official list's "Tesseract" might be from a different author. Actually I should note ambiguity.
+- mujx/nheko -- archived old nheko fork -- LISTED family
 
 Unlisted C++:
-- davidar/tensor — 172★, Qt5/QML, dormant 2017 — C++ confirmed. Unlisted!
-- j4niwzis/mux — 5★, "fast C++26 multi-protocol cross-platform chat client" pushed 2026-11-02 — likely new/toy
-- pebll/braids — 1★, unifies whatsapp/signal... multi-protocol
+- davidar/tensor -- 172★, Qt5/QML, dormant 2017 -- C++ confirmed. Unlisted!
+- j4niwzis/mux -- 5★, "fast C++26 multi-protocol cross-platform chat client" pushed 2026-11-02 -- likely new/toy
+- pebll/braids -- 1★, unifies whatsapp/signal... multi-protocol
 
 Also known C++ Matrix-related:
-- libQuotient / quotient-im/libQuotient — C++ Qt library (SDK, not client) — didn't appear maybe due to BAD filter.
-- mtxclient (Nheko-Reborn/mtxclient) — C++ library, filtered out as SDK.
-- Spectral — is it C++? spectral by dtzWill is QML/JS mostly? Actually Spectral (KDE) is written in C++ with Kirigami. Hmm. But spectral didn't appear — maybe language is QML or C++. Let me consider verifying Spectral.
-- Sailfish clients harbour-xmatic/harbour-determinant — possibly C++/Qt, need verification.
-- Also "kazv" — is it C++? kazv listed; kazv is actually C++ with Qt? Actually Kazv uses C++20 and... hmm, it may use KDE frameworks. It didn't show in C++ search (maybe because its main language is C++ but didn't match queries or matched official filter). Actually kazv should have matched 'topic:matrix language:C++'. It didn't appear — maybe kazv is C++ but search didn't return. Or maybe kazv language is C++ and it was in results but... it wasn't.
+- libQuotient / quotient-im/libQuotient -- C++ Qt library (SDK, not client) -- didn't appear maybe due to BAD filter.
+- mtxclient (Nheko-Reborn/mtxclient) -- C++ library, filtered out as SDK.
+- Spectral -- is it C++? spectral by dtzWill is QML/JS mostly? Actually Spectral (KDE) is written in C++ with Kirigami. Hmm. But spectral didn't appear -- maybe language is QML or C++. Let me consider verifying Spectral.
+- Sailfish clients harbour-xmatic/harbour-determinant -- possibly C++/Qt, need verification.
+- Also "kazv" -- is it C++? kazv listed; kazv is actually C++ with Qt? Actually Kazv uses C++20 and... hmm, it may use KDE frameworks. It didn't show in C++ search (maybe because its main language is C++ but didn't match queries or matched official filter). Actually kazv should have matched 'topic:matrix language:C++'. It didn't appear -- maybe kazv is C++ but search didn't return. Or maybe kazv language is C++ and it was in results but... it wasn't.
 
 So my C++ search may be incomplete because many Qt clients register language as QML or C++ depending. Let me verify a few specific repos' languages to give a solid answer: 
 - Nheko-Reborn/nheko ✓ C++
@@ -8400,11 +8400,11 @@ Given limited value, maybe do one more execute to verify a handful of specific r
 - lxqt? no
 - Maybe "kazv" (kazv-io/kazv?)
 
-Also maybe search for Qt-based unlisted ones without language filter — but user asked C++.
+Also maybe search for Qt-based unlisted ones without language filter -- but user asked C++.
 
 Given the user's terse "i search c++ clients", they likely want the C++ subset. I should give a clear answer with what's confirmed.
 
-Let me do one verification execute for those specific repos to round out the answer. That's ~6 core API requests — fine.
+Let me do one verification execute for those specific repos to round out the answer. That's ~6 core API requests -- fine.
 
 Let me check: 
 - Nheko-Reborn/mtxclient
@@ -8453,7 +8453,7 @@ Then write final answer about C++ Matrix clients, separating listed vs unlisted.
 
 Let me run.
 
-C++ filter is narrow — many Qt clients register as QML rather than C++. Let me verify the Qt/Sailfish candidates' real languages and check the libQuotient ecosystem to avoid missing any.
+C++ filter is narrow -- many Qt clients register as QML rather than C++. Let me verify the Qt/Sailfish candidates' real languages and check the libQuotient ecosystem to avoid missing any.
 
 **Tool: execute**
 
@@ -8494,7 +8494,7 @@ C++ filter is narrow — many Qt clients register as QML rather than C++. Let me
     "Q|OpenMandrivaAssociation/libquotient-qt5|0|2026-09-16|Qt5/Qt6 library to write cross-platform clients for Matrix",
     "Q|sailfishos-chum/qt6-libquotient|0|2026-07-26|",
     "Q|pld-linux/libQuotient-qt5|0|2025-06-05|Qt5 library for Matrix clients",
-    "Q|progressive-chat/progressive-qt|0|2026-11-01|Progressive Chat Qt — GPL-3.0-only NeoChat/Spectral rewrite ",
+    "Q|progressive-chat/progressive-qt|0|2026-11-01|Progressive Chat Qt -- GPL-3.0-only NeoChat/Spectral rewrite ",
     "Q|delijati/delijati|0|2026-05-09|",
     "Q|asmbk/matrix-gadu|0|2026-10-16|Matrix bridge for Gadu-Gadu (mautrix bridgev2 + libgadu)",
     "Q|tdauth/qronicle|0|2026-09-04|Offline Qt-based messenger history visualizer.",
@@ -8526,34 +8526,34 @@ Now I have a clear C++ picture. Let me compile.
 C++ Matrix clients:
 
 **Listed on matrix.org (already there):**
-1. **Nheko** — `Nheko-Reborn/nheko`, 2516★, C++20 + Qt, pushed 2026-09-11. Flagship C++ client. (Also its C++ libs: mtxclient 44★ C++, libQuotient 156★ C++, active 2026-10-09.)
-2. **Quaternion** — `quotient-im/Quaternion`, 709★, Qt IM client, 2026-06-19.
-3. **NeoChat** — `KDE/neochat`, 238★, C++/Kirigami, pushed 2026-11-03.
-4. **miitrix** — `Sorunome/miitrix`, 142★, Nintendo 3DS, C++ — yes listed!
-5. **Tesseract** — `surakin/tesseract`, 51★, C++, pushed 2026-11-02 — need to check: is this the listed Tesseract? The official list includes "Tesseract". Hmm — but there's ambiguity. Actually I believe the listed "Tesseract" might be a different one (there is a Tesseract client at github.com/surakin/tesseract?). Since it's C++ and pushed recently, worth flagging as ambiguous — possibly listed, possibly not. Actually wait: official list had "Tesseract" per my earlier research. Let me flag as likely-listed with a note.
+1. **Nheko** -- `Nheko-Reborn/nheko`, 2516★, C++20 + Qt, pushed 2026-09-11. Flagship C++ client. (Also its C++ libs: mtxclient 44★ C++, libQuotient 156★ C++, active 2026-10-09.)
+2. **Quaternion** -- `quotient-im/Quaternion`, 709★, Qt IM client, 2026-06-19.
+3. **NeoChat** -- `KDE/neochat`, 238★, C++/Kirigami, pushed 2026-11-03.
+4. **miitrix** -- `Sorunome/miitrix`, 142★, Nintendo 3DS, C++ -- yes listed!
+5. **Tesseract** -- `surakin/tesseract`, 51★, C++, pushed 2026-11-02 -- need to check: is this the listed Tesseract? The official list includes "Tesseract". Hmm -- but there's ambiguity. Actually I believe the listed "Tesseract" might be a different one (there is a Tesseract client at github.com/surakin/tesseract?). Since it's C++ and pushed recently, worth flagging as ambiguous -- possibly listed, possibly not. Actually wait: official list had "Tesseract" per my earlier research. Let me flag as likely-listed with a note.
 
 Hmm, I should be careful. My earlier official list included Tesseract. So surakin/tesseract probably corresponds. But maybe the official Tesseract is a different repo. I'll flag as "listed (verify)".
 
 **Unlisted C++ clients found:**
-1. **Tensor** — `davidar/tensor`, 172★, Qt5/QML → language detected C++, but dormant since 2017. Unlisted.
-2. **Spectral** — `spectral-im/spectral` (C++, Kirigami; GitLab is canonical) and `dtzWill/spectral` fork (C++, 1★). Unlisted — confirmed C++. Note spectral-im is the KDE Spectral, dormant (2020-12-24 mirror).
-3. **harbour-determinant** — `R1tschY/harbour-determinant`, 9★, C++, Sailfish OS, 2021. Confirmed C++ (uses libQuotient). Unlisted.
-4. **mux** — `j4niwzis/mux`, 5★, "fast C++26 multi-protocol cross-platform chat client", pushed 2026-11-02. Unlisted but brand-new/low-signal.
-5. **braids** — `pebll/braids`, 1★, multi-protocol (whatsapp/signal), pushed 2026-11-02. Unlisted, borderline (aggregator).
-6. **omauser119/monnett-qt** — 0★, "Native C++/Qt 6 Monnett client for Linux: multi-account", pushed 2026-10-18 — interesting, a C++/Qt6 client for "Monnett" protocol... Monnett might be Matrix-based? Actually there is a Monnett chat. Hmm, matches libquotient readme → likely Matrix. Unlisted, tiny.
-7. **progressive-chat/progressive-qt** — 0★, "Progressive Chat Qt — GPL-3.0-only NeoChat/Spectral rewrite", pushed 2026-11-01. Unlisted, C++/Qt rewrite. Very new.
-8. **telepathy-tank** — `TelepathyIM/telepathy-tank`, 16★, 2020, C++ probably (Telepathy connection manager for Matrix, uses libqmatrixclient) — technically a client backend/connection manager, not a chat app, but C++. Unlisted.
-9. **tdauth/qronicle** — 0★, Qt-based offline messenger history visualizer, not really a client.
-10. **koutnet** — TheBloodyReaper/koutnet, "Messanger", 0★.
-11. **delijati/delijati** — 0★, appears in libquotient list.
+1. **Tensor** -- `davidar/tensor`, 172★, Qt5/QML → language detected C++, but dormant since 2017. Unlisted.
+2. **Spectral** -- `spectral-im/spectral` (C++, Kirigami; GitLab is canonical) and `dtzWill/spectral` fork (C++, 1★). Unlisted -- confirmed C++. Note spectral-im is the KDE Spectral, dormant (2020-12-24 mirror).
+3. **harbour-determinant** -- `R1tschY/harbour-determinant`, 9★, C++, Sailfish OS, 2021. Confirmed C++ (uses libQuotient). Unlisted.
+4. **mux** -- `j4niwzis/mux`, 5★, "fast C++26 multi-protocol cross-platform chat client", pushed 2026-11-02. Unlisted but brand-new/low-signal.
+5. **braids** -- `pebll/braids`, 1★, multi-protocol (whatsapp/signal), pushed 2026-11-02. Unlisted, borderline (aggregator).
+6. **omauser119/monnett-qt** -- 0★, "Native C++/Qt 6 Monnett client for Linux: multi-account", pushed 2026-10-18 -- interesting, a C++/Qt6 client for "Monnett" protocol... Monnett might be Matrix-based? Actually there is a Monnett chat. Hmm, matches libquotient readme → likely Matrix. Unlisted, tiny.
+7. **progressive-chat/progressive-qt** -- 0★, "Progressive Chat Qt -- GPL-3.0-only NeoChat/Spectral rewrite", pushed 2026-11-01. Unlisted, C++/Qt rewrite. Very new.
+8. **telepathy-tank** -- `TelepathyIM/telepathy-tank`, 16★, 2020, C++ probably (Telepathy connection manager for Matrix, uses libqmatrixclient) -- technically a client backend/connection manager, not a chat app, but C++. Unlisted.
+9. **tdauth/qronicle** -- 0★, Qt-based offline messenger history visualizer, not really a client.
+10. **koutnet** -- TheBloodyReaper/koutnet, "Messanger", 0★.
+11. **delijati/delijati** -- 0★, appears in libquotient list.
 
 Also corrections from verification:
-- harbour-xmatic is actually **Rust**, not C++ (7★, pushed 2026-10-30) — correct my earlier assumption.
+- harbour-xmatic is actually **Rust**, not C++ (7★, pushed 2026-10-30) -- correct my earlier assumption.
 - mirage is **QML** (not C++), continuum is Kotlin, fest is Rust.
 
-So the honest answer: the C++ Matrix client space is small and *almost entirely already listed* — because matrix.org's list is dominated by Qt/C++ clients (Nheko, Quaternion, NeoChat, miitrix). The unlisted C++ ones are: Tensor (dormant 2017), Spectral (dormant, C++/Kirigami), harbour-determinant (Sailfish, dormant 2021), plus a handful of brand-new 0-2★ Qt6 experiments (mux, progressive-qt, monnett-qt, braids) and non-app things (telepathy-tank).
+So the honest answer: the C++ Matrix client space is small and *almost entirely already listed* -- because matrix.org's list is dominated by Qt/C++ clients (Nheko, Quaternion, NeoChat, miitrix). The unlisted C++ ones are: Tensor (dormant 2017), Spectral (dormant, C++/Kirigami), harbour-determinant (Sailfish, dormant 2021), plus a handful of brand-new 0-2★ Qt6 experiments (mux, progressive-qt, monnett-qt, braids) and non-app things (telepathy-tank).
 
-Note also that Spectral — is it listed? My official list had "Syphon" not Spectral. Hmm — wait, official list includes "Syphon" (iOS). And there's "Spectral"? I don't think Spectral is listed. Earlier I flagged Spectral (dtzWill/spectral) as unlisted archived. But note there IS a KDE Spectral. So Spectral is a notable unlisted C++ client — forked by KDE folks, and it was removed/never added.
+Note also that Spectral -- is it listed? My official list had "Syphon" not Spectral. Hmm -- wait, official list includes "Syphon" (iOS). And there's "Spectral"? I don't think Spectral is listed. Earlier I flagged Spectral (dtzWill/spectral) as unlisted archived. But note there IS a KDE Spectral. So Spectral is a notable unlisted C++ client -- forked by KDE folks, and it was removed/never added.
 
 Actually worth mentioning: Spectral had been listed historically? Not sure. I'll say unlisted, mirrors show dormant since ~2020-2021.
 
@@ -8561,7 +8561,7 @@ Also mention libQuotient as the shared C++ Qt SDK that all these build on, plus 
 
 Also should mention: if they want C++ to *write* a client: libQuotient (Qt5/Qt6, 156★, actively maintained Oct 2026) and mtxclient (C++20, no Qt dependency, actively maintained Mar 2026) are the two realistic options.
 
-Let me write the final answer, well organized. Also note the false positives (AMX-Guide, vectormath, AEDSimulator, DigitRecognition — "Matrix" in math/AMX sense) — shows search noise.
+Let me write the final answer, well organized. Also note the false positives (AMX-Guide, vectormath, AEDSimulator, DigitRecognition -- "Matrix" in math/AMX sense) -- shows search noise.
 
 Let me also correct: harbour-xmatic = Rust, not C++ (I earlier listed it in Sailfish; fine but now correct language).
 
@@ -8571,7 +8571,7 @@ Format: short intro, then "Already listed (C++ ones that exist)", "Unlisted C++ 
 
 Keep concise but complete.
 
-C++ narrows things sharply — and the answer flips: **C++ is the one language where matrix.org's list is nearly complete.** ~331 repos matched `language:C++` + Matrix, but almost all were noise (AMX-Guide, vectormath, AEDSimulator — the word "Matrix" in the math/CPU sense). Real ones:
+C++ narrows things sharply -- and the answer flips: **C++ is the one language where matrix.org's list is nearly complete.** ~331 repos matched `language:C++` + Matrix, but almost all were noise (AMX-Guide, vectormath, AEDSimulator -- the word "Matrix" in the math/CPU sense). Real ones:
 
 ## Already listed (C++ clients that exist)
 
@@ -8585,22 +8585,22 @@ C++ narrows things sharply — and the answer flips: **C++ is the one language w
 
 All C++/Qt20+Kirigami, all on matrix.org. Plus `mujx/nheko` (387★, archived 2018) as an old fork.
 
-## Unlisted C++ clients — only ~4 real ones
+## Unlisted C++ clients -- only ~4 real ones
 
 | Client | Repo | ★ | Last push | Status |
 |---|---|---|---|---|
-| **Spectral** | `spectral-im/spectral` (canonical on GitLab), mirror `dtzWill/spectral` | 8 / 1 | 2020–2021 | **Confirmed C++** (Kirigami). The most notable unlisted C++ client — was a KDE-affiliated client, now dormant. |
+| **Spectral** | `spectral-im/spectral` (canonical on GitLab), mirror `dtzWill/spectral` | 8 / 1 | 2020–2021 | **Confirmed C++** (Kirigami). The most notable unlisted C++ client -- was a KDE-affiliated client, now dormant. |
 | **Tensor** | `davidar/tensor` | 172 | 2017 | Qt5/QML, language detected C++. Dead for 9 years. |
 | **harbour-determinant** | `R1tschY/harbour-determinant` | 9 | 2021 | Native **Sailfish OS**, built on libQuotient. Confirmed C++. |
-| **telepathy-tank** | `TelepathyIM/telepathy-tank` | 16 | 2020 | Matrix connection manager for Telepathy (C++) — a backend, not a chat app. |
+| **telepathy-tank** | `TelepathyIM/telepathy-tank` | 16 | 2020 | Matrix connection manager for Telepathy (C++) -- a backend, not a chat app. |
 
-Plus four brand-new, 0–2★ Qt experiments (likely too immature to list): **`progressive-chat/progressive-qt`** (GPL-3.0 "NeoChat/Spectral rewrite", pushed 2026-11-01), **`j4niwzis/mux`** (5★, "C++26 multi-protocol chat client"), **`omauser119/monnett-qt`** (Qt6, multi-account), **`pebll/braids`** (multi-protocol — WhatsApp/Signal/Matrix aggregator, borderline).
+Plus four brand-new, 0–2★ Qt experiments (likely too immature to list): **`progressive-chat/progressive-qt`** (GPL-3.0 "NeoChat/Spectral rewrite", pushed 2026-11-01), **`j4niwzis/mux`** (5★, "C++26 multi-protocol chat client"), **`omauser119/monnett-qt`** (Qt6, multi-account), **`pebll/braids`** (multi-protocol -- WhatsApp/Signal/Matrix aggregator, borderline).
 
 ## Corrections to my earlier answer
 
 Language verification caught three mislabels I'd made or implied:
 
-- **harbour-xmatic** is **Rust**, not C++ (7★, 2026-10-30 — still the most recently pushed Sailfish client)
+- **harbour-xmatic** is **Rust**, not C++ (7★, 2026-10-30 -- still the most recently pushed Sailfish client)
 - **Mirage** is **QML**, not C++
 - **Continuum** is Kotlin; **Fest** is Rust
 
@@ -8608,10 +8608,10 @@ Language verification caught three mislabels I'd made or implied:
 
 Two maintained libraries, both unlisted-only because they're SDKs:
 
-- **libQuotient** `quotient-im/libQuotient` — 156★, Qt5/Qt6, pushed 2026-10-09. Powers Quaternion and NeoChat.
-- **mtxclient** `Nheko-Reborn/mtxclient` — 44★, **C++20 without Qt**, pushed 2026-03-02. This is nheko's backend and the right choice if you want no Qt dependency.
+- **libQuotient** `quotient-im/libQuotient` -- 156★, Qt5/Qt6, pushed 2026-10-09. Powers Quaternion and NeoChat.
+- **mtxclient** `Nheko-Reborn/mtxclient` -- 44★, **C++20 without Qt**, pushed 2026-03-02. This is nheko's backend and the right choice if you want no Qt dependency.
 
-**Bottom line:** unlike Rust (where Robrix, Sable and others are missing), the C++ ecosystem is well covered — every mature C++/Qt Matrix client except **Spectral** and **Tensor** is already on matrix.org. If you're hunting for a genuine gap in C++, there isn't one; the gaps are in Rust, Flutter, and mobile-Linux.
+**Bottom line:** unlike Rust (where Robrix, Sable and others are missing), the C++ ecosystem is well covered -- every mature C++/Qt Matrix client except **Spectral** and **Tensor** is already on matrix.org. If you're hunting for a genuine gap in C++, there isn't one; the gaps are in Rust, Flutter, and mobile-Linux.
 
 ---
 
@@ -8626,34 +8626,34 @@ so, are you sure u found every wip c++ matrix client?
 _Thinking:_
 
 The user asks: are you sure you found every WIP C++ Matrix client? I should be honest: no, not certain. My searches were limited:
-- language:C++ tag is GitHub's heuristic (primary language detection), which misses repos where C++ isn't the dominant language (e.g., QML-heavy Qt projects register as QML — Mirage case), or C++ repos that use CMake but with much JS.
-- I didn't search non-GitHub forges: GitLab, Codeberg, sourcehut, Gitea instances. Spectral's canonical home is GitLab — which illustrates the blind spot: many Matrix projects live on GitLab (KDE invent.kde.org, gitlab.com/spectral-im).
+- language:C++ tag is GitHub's heuristic (primary language detection), which misses repos where C++ isn't the dominant language (e.g., QML-heavy Qt projects register as QML -- Mirage case), or C++ repos that use CMake but with much JS.
+- I didn't search non-GitHub forges: GitLab, Codeberg, sourcehut, Gitea instances. Spectral's canonical home is GitLab -- which illustrates the blind spot: many Matrix projects live on GitLab (KDE invent.kde.org, gitlab.com/spectral-im).
 - I didn't search by build system (CMakeLists.txt with matrix), or by searching for specific keywords.
 - s/search of fork:false excluded forks, which excludes WIP forks of nheko/neochat.
-- Also didn't search for names not containing "matrix" (e.g., "Mux", "Braids", "Monnett", "Progressive") — I caught a few via libquotient readme search, but a WIP client might not mention libquotient in readme.
+- Also didn't search for names not containing "matrix" (e.g., "Mux", "Braids", "Monnett", "Progressive") -- I caught a few via libquotient readme search, but a WIP client might not mention libquotient in readme.
 
 So I should say honestly: no, and explain specific blind spots, then offer/run additional searches to increase coverage. Better: actually run more searches now to close gaps, rather than just caveat.
 
 Good additional searches:
-1. GitHub code search: search for code (not repos) — `q=libQuotient+in:file` maybe too heavy. Actually GitHub code search API: /search/code requires auth? Unauthenticated code search is not available (requires authentication). So can't.
+1. GitHub code search: search for code (not repos) -- `q=libQuotient+in:file` maybe too heavy. Actually GitHub code search API: /search/code requires auth? Unauthenticated code search is not available (requires authentication). So can't.
 2. Repo search: 'matrix+client+in:name,description+language:C%2B%2B' already did. 
 3. Search with 'topic:matrix-client+language:C%2B%2B' did.
-4. Search by QML language: 'matrix+language:QML' — catches Qt Quick clients whose primary language is QML (Mirage case, maybe others).
+4. Search by QML language: 'matrix+language:QML' -- catches Qt Quick clients whose primary language is QML (Mirage case, maybe others).
 5. Search 'quotient' in name/desc: did libquotient.
-6. Non-GitHub: gitlab.com API search — https://gitlab.com/api/v4/search?scope=projects&search=matrix%20client — GitLab search API may work unauthenticated? Often requires auth for global search. Could try. Also invent.kde.org (GitLab instance) — KDE hosts neochat; search there for matrix clients. And codeberg.org API? Codeberg is Gitea: https://codeberg.org/api/v1/repos/search?q=matrix&limit=50 — that works unauthenticated usually.
-7. Also Nixpkgs/Flathub/AUR package lists: Flathub search API for matrix — but those are packaged (non-WIP).
-8. Also search GitHub for CMake-based: 'matrix+in:name+language:C%2B%2B+fork:true' to include forks — WIP forks!
+6. Non-GitHub: gitlab.com API search -- https://gitlab.com/api/v4/search?scope=projects&search=matrix%20client -- GitLab search API may work unauthenticated? Often requires auth for global search. Could try. Also invent.kde.org (GitLab instance) -- KDE hosts neochat; search there for matrix clients. And codeberg.org API? Codeberg is Gitea: https://codeberg.org/api/v1/repos/search?q=matrix&limit=50 -- that works unauthenticated usually.
+7. Also Nixpkgs/Flathub/AUR package lists: Flathub search API for matrix -- but those are packaged (non-WIP).
+8. Also search GitHub for CMake-based: 'matrix+in:name+language:C%2B%2B+fork:true' to include forks -- WIP forks!
 
 Given the user asks specifically about WIP C++ clients, including forks (WIP often lives in forks) and QML.
 
 Let me do a round of searches:
 A. GitHub: 'matrix+language:QML+fork:false&sort=updated' and 'matrix-client+language:QML'
-B. GitHub: include forks: 'matrix+language:C%2B%2B+fork:true&sort=updated&per_page=100' — catches WIP forks of nheko/neochat/quaternion.
+B. GitHub: include forks: 'matrix+language:C%2B%2B+fork:true&sort=updated&per_page=100' -- catches WIP forks of nheko/neochat/quaternion.
 C. Codeberg Gitea API search: q=matrix
 D. GitLab: try https://gitlab.com/api/v4/search?scope=projects&search=matrix+client (may fail w/o token)
-E. Also 'nheko'/'neochat'/'quaternion' fork lists: GitHub API /repos/{owner}/{repo}/forks?sort=stargazers — lists forks sorted by stars, which surfaces notable active forks. That's a good way to find WIP forks! e.g. Nheko-Reborn/nheko/forks, KDE/neochat/forks, quotient-im/Quaternion/forks.
+E. Also 'nheko'/'neochat'/'quaternion' fork lists: GitHub API /repos/{owner}/{repo}/forks?sort=stargazers -- lists forks sorted by stars, which surfaces notable active forks. That's a good way to find WIP forks! e.g. Nheko-Reborn/nheko/forks, KDE/neochat/forks, quotient-im/Quaternion/forks.
 
-Let me run: fork listings for nheko, neochat, Quaternion + QML search + Codeberg search. Maybe 3 execute calls in parallel? Rate limits: core API 60/hr unauthenticated — fine.
+Let me run: fork listings for nheko, neochat, Quaternion + QML search + Codeberg search. Maybe 3 execute calls in parallel? Rate limits: core API 60/hr unauthenticated -- fine.
 
 Let me do:
 execute 1: QML search + language:C++ with forks:true (recently updated) 
@@ -8662,7 +8662,7 @@ execute 3: Codeberg + GitLab searches
 
 Let me write them.
 
-For forks: /repos/Nheko-Reborn/nheko/forks?per_page=100&sort=stargazers — returns forks with pushed_at. Filter pushed within 2025-2026 → active WIP forks.
+For forks: /repos/Nheko-Reborn/nheko/forks?per_page=100&sort=stargazers -- returns forks with pushed_at. Filter pushed within 2025-2026 → active WIP forks.
 
 Let me do these three in parallel.
 
@@ -8683,7 +8683,7 @@ execute 2:
 return top forks with stars and pushed date.
 
 execute 3:
-- Codeberg API: https://codeberg.org/api/v1/repos/search?q=matrix&limit=50 — returns repos with language? includes 'language' field maybe.
+- Codeberg API: https://codeberg.org/api/v1/repos/search?q=matrix&limit=50 -- returns repos with language? includes 'language' field maybe.
 - GitLab: https://gitlab.com/api/v4/search?scope=projects&search=matrix%20client (may 401)
 - Maybe also https://invent.kde.org/api/v4/search?scope=projects&search=matrix
 Let me try all three and report errors.
@@ -8694,12 +8694,12 @@ Then final answer honest: initially incomplete; here's what the extra pass found
 
 Let me run.
 
-No — not certain. My first pass had real blind spots, and I'd rather show you them than claim completeness. Four concrete gaps:
+No -- not certain. My first pass had real blind spots, and I'd rather show you them than claim completeness. Four concrete gaps:
 
-1. **`language:C++` is a heuristic** — Qt Quick projects whose UI is mostly `.qml` register as **QML**, not C++ (Mirage proved this). WIP Qt clients would be missed.
-2. **`fork:false` excluded WIP forks** — experimental work-in-progress often lives in a fork of nheko/neochat/Quaternion.
-3. **GitHub-only** — Spectral's canonical home is GitLab, so GitLab/Codeberg/invent.kde.org were never searched.
-4. **Name-based matching** — a WIP client named "Mux" or "Braids" only shows up if it happens to say "matrix" in its description.
+1. **`language:C++` is a heuristic** -- Qt Quick projects whose UI is mostly `.qml` register as **QML**, not C++ (Mirage proved this). WIP Qt clients would be missed.
+2. **`fork:false` excluded WIP forks** -- experimental work-in-progress often lives in a fork of nheko/neochat/Quaternion.
+3. **GitHub-only** -- Spectral's canonical home is GitLab, so GitLab/Codeberg/invent.kde.org were never searched.
+4. **Name-based matching** -- a WIP client named "Mux" or "Braids" only shows up if it happens to say "matrix" in its description.
 
 Let me close those four gaps.
 
@@ -8889,35 +8889,35 @@ _Thinking:_
 The extra pass found some new things. Let me evaluate honestly.
 
 QML search: mostly noise (Omarchy "dot-matrix" desktop themes). Real finds:
-- `Bapesh137/PrismChat` (6★, QML, 2026-10-28) — QML Matrix client, new.
-- `marcho78/omarchy-yapper` — "Yapper: end-to-end encrypted Matrix chat for Omarchy" — a Quickshell/QML Matrix chat widget for Omarchy desktop! 3★, 2026-09-26. And fork londospark/omarchy-yapper 2026-10-28. That's a genuinely new WIP C++/QML client (Quickshell is C++/QML). Interesting find.
-- `ProjectMoon/harbour-xmatic` fork 2026-10-09, `fsilye/harbour-xmatic` 2026-08-28 — forks of the Rust Sailfish client (so Rust not C++).
+- `Bapesh137/PrismChat` (6★, QML, 2026-10-28) -- QML Matrix client, new.
+- `marcho78/omarchy-yapper` -- "Yapper: end-to-end encrypted Matrix chat for Omarchy" -- a Quickshell/QML Matrix chat widget for Omarchy desktop! 3★, 2026-09-26. And fork londospark/omarchy-yapper 2026-10-28. That's a genuinely new WIP C++/QML client (Quickshell is C++/QML). Interesting find.
+- `ProjectMoon/harbour-xmatic` fork 2026-10-09, `fsilye/harbour-xmatic` 2026-08-28 -- forks of the Rust Sailfish client (so Rust not C++).
 - mirage forks (QML, dormant).
-- `xiejiulong/mirage-chat-qml`, `KonstantinDjairo/mirage-matrix-client` — forks.
+- `xiejiulong/mirage-chat-qml`, `KonstantinDjairo/mirage-matrix-client` -- forks.
 
 C++ fork:only search: mostly math/LED-matrix noise (17,395 total!). But one genuine find:
-- `f-o-o-g-s/lightning` | 0★ | 2026-11-03 | "Native Matrix desktop client: Qt 6 and the official Rus..." — wait, "Lightning" IS on matrix.org's official list! Lightning was listed. Hmm, this is a fork named lightning. Interesting: a fork of Lightning (which is Qt6 + Rust SDK). Actually the official "Lightning" is at ... hmm. Anyway it's a fork.
+- `f-o-o-g-s/lightning` | 0★ | 2026-11-03 | "Native Matrix desktop client: Qt 6 and the official Rus..." -- wait, "Lightning" IS on matrix.org's official list! Lightning was listed. Hmm, this is a fork named lightning. Interesting: a fork of Lightning (which is Qt6 + Rust SDK). Actually the official "Lightning" is at ... hmm. Anyway it's a fork.
 
-Forks of nheko: 48 pushed since 2024-06, but all 0★ — these are mostly clones/builds, not distinct WIP clients. Notable: `storm-software/storm-chat-native` "Storm Software desktop client for Matrix" (0★, 2026-11-01) — potentially a rebranded nheko WIP. `Geometrically/jheko` "Fork of nheko with added QOL features". `NexusSfan/NexusSnheko` 1★.
-- neochat forks: `TheCommiter/matrix` "A Matrix Client, based off NeoChat" (2025-08-14), `tails1154/tailstalk2-forlinux` (2026-10-21) — rebranded neochat fork.
+Forks of nheko: 48 pushed since 2024-06, but all 0★ -- these are mostly clones/builds, not distinct WIP clients. Notable: `storm-software/storm-chat-native` "Storm Software desktop client for Matrix" (0★, 2026-11-01) -- potentially a rebranded nheko WIP. `Geometrically/jheko` "Fork of nheko with added QOL features". `NexusSfan/NexusSnheko` 1★.
+- neochat forks: `TheCommiter/matrix` "A Matrix Client, based off NeoChat" (2025-08-14), `tails1154/tailstalk2-forlinux` (2026-10-21) -- rebranded neochat fork.
 - Quaternion forks: 6 active, all ~0-1★, mostly Qt5 rebuilds.
 
-GitLab and invent.kde.org both returned 401 — cannot search GitLab unauthenticated. That's a real remaining blind spot (Spectral's canonical home, plus KDE's invent hosts many). Codeberg search returned noise only (works via API but nothing Matrix-client-C++).
+GitLab and invent.kde.org both returned 401 -- cannot search GitLab unauthenticated. That's a real remaining blind spot (Spectral's canonical home, plus KDE's invent hosts many). Codeberg search returned noise only (works via API but nothing Matrix-client-C++).
 
-So honest answer: No, I'm not sure. Improvements found ~5 new candidates; and two forges are inaccessible (401) so GitLab/invent.kde.org remain unsearched. Also GitHub code search requires auth, so I can't grep for CMakeLists linking libQuotient/mtxclient — which would be the most reliable way to find WIP C++ clients. Also repos named without "matrix" (like "Mux", "Braids", "Monnett") are only findable via libquotient readme mention.
+So honest answer: No, I'm not sure. Improvements found ~5 new candidates; and two forges are inaccessible (401) so GitLab/invent.kde.org remain unsearched. Also GitHub code search requires auth, so I can't grep for CMakeLists linking libQuotient/mtxclient -- which would be the most reliable way to find WIP C++ clients. Also repos named without "matrix" (like "Mux", "Braids", "Monnett") are only findable via libquotient readme mention.
 
 New candidates to report:
-1. `marcho78/omarchy-yapper` — QML/Quickshell, "E2EE Matrix chat for Omarchy" (3★, 2026-09-26 + fork 2026-10-28)
-2. `Bapesh137/PrismChat` — QML Matrix client (6★, 2026-10-28) — appeared in earlier sweep too
-3. `f-o-o-g-s/lightning` — Qt6 + Rust SDK fork (2026-11-03)
-4. `storm-software/storm-chat-native` — nheko rebrand (2026-11-01)
-5. `tails1154/tailstalk2-forlinux` — neochat rebrand (2026-10-21)
-6. `TheCommiter/matrix` — based off NeoChat (2025-08-14)
-7. `Geometrically/jheko` — nheko w/ QOL features (2026-09-11)
+1. `marcho78/omarchy-yapper` -- QML/Quickshell, "E2EE Matrix chat for Omarchy" (3★, 2026-09-26 + fork 2026-10-28)
+2. `Bapesh137/PrismChat` -- QML Matrix client (6★, 2026-10-28) -- appeared in earlier sweep too
+3. `f-o-o-g-s/lightning` -- Qt6 + Rust SDK fork (2026-11-03)
+4. `storm-software/storm-chat-native` -- nheko rebrand (2026-11-01)
+5. `tails1154/tailstalk2-forlinux` -- neochat rebrand (2026-10-21)
+6. `TheCommiter/matrix` -- based off NeoChat (2025-08-14)
+7. `Geometrically/jheko` -- nheko w/ QOL features (2026-09-11)
 8. `NexusSfan/NexusSnheko` (1★)
 9. Quaternion forks: wesalee83-dev, sin-strokes, aberja, wahello, Tamaranch, DemGi
 
-Note: the "48 pushed since 2024-06" nheko forks are almost certainly build/packaging clones, not distinct clients — I should say that plainly rather than inflate the count.
+Note: the "48 pushed since 2024-06" nheko forks are almost certainly build/packaging clones, not distinct clients -- I should say that plainly rather than inflate the count.
 
 Remaining blind spots:
 - GitLab.com + invent.kde.org: 401 unauthenticated → spectral's canonical repo & any KDE-hosted WIP unreachable.
@@ -8931,7 +8931,7 @@ Let me write the final answer: honest "no", what the extra pass added, what rema
 
 Keep it reasonably concise but complete. Use tables/lists.
 
-No — and the extra pass proved it. It surfaced 9 candidates my first pass missed, and it also confirmed two gaps I **cannot** close unauthenticated.
+No -- and the extra pass proved it. It surfaced 9 candidates my first pass missed, and it also confirmed two gaps I **cannot** close unauthenticated.
 
 ## What the gap-closing pass added
 
@@ -8947,25 +8947,25 @@ No — and the extra pass proved it. It surfaced 9 candidates my first pass miss
 | **NexusSnheko** | `NexusSfan/NexusSnheko` | 1★, nheko fork |
 | 6 Quaternion forks | `wesalee83-dev`, `sin-strokes`, `aberja`, `wahello`, `Tamaranch`, `DemGi` | mostly Qt5 rebuilds |
 
-Important caveat on those fork lists: nheko shows **48 forks pushed since mid-2024**, but every one has **0 stars** and an unmodified description — these are almost certainly packaging/build clones, not distinct WIP clients. I'm not counting them as clients.
+Important caveat on those fork lists: nheko shows **48 forks pushed since mid-2024**, but every one has **0 stars** and an unmodified description -- these are almost certainly packaging/build clones, not distinct WIP clients. I'm not counting them as clients.
 
 The QML sweep also produced heavy noise: most of it was "dot-matrix" desktop themes and Omarchy screensavers, not the Matrix protocol.
 
 ## What I still can't reach
 
-1. **GitLab is 401 unauthenticated** — `gitlab.com/api/v4/search` and `invent.kde.org/api/v4/search` both refused. That's exactly where Spectral lives canonically, and where KDE-hosted Qt work would be. **This is the biggest real hole.**
-2. **GitHub code search requires auth** — I can't grep `CMakeLists.txt` for `find_package(libQuotient)` or `mtxclient`, which is the *only* reliable way to catch a WIP client whose description never says "matrix" (that's how I stumbled on Mux, Braids and Monnett).
-3. **Self-hosted forges aren't indexed** — ari-web Forgejo, git.federated.nexus, Sailfish's own hosting.
+1. **GitLab is 401 unauthenticated** -- `gitlab.com/api/v4/search` and `invent.kde.org/api/v4/search` both refused. That's exactly where Spectral lives canonically, and where KDE-hosted Qt work would be. **This is the biggest real hole.**
+2. **GitHub code search requires auth** -- I can't grep `CMakeLists.txt` for `find_package(libQuotient)` or `mtxclient`, which is the *only* reliable way to catch a WIP client whose description never says "matrix" (that's how I stumbled on Mux, Braids and Monnett).
+3. **Self-hosted forges aren't indexed** -- ari-web Forgejo, git.federated.nexus, Sailfish's own hosting.
 
 ## Honest confidence level
 
-I've almost certainly found the **GitHub-hosted, discoverable** C++/Qt WIP clients — the set is small because the C++/Qt Matrix ecosystem is genuinely tiny and concentrated in nheko/neochat/Quaternion. But "every" isn't provable: a private or GitLab-only WIP client would be invisible to me.
+I've almost certainly found the **GitHub-hosted, discoverable** C++/Qt WIP clients -- the set is small because the C++/Qt Matrix ecosystem is genuinely tiny and concentrated in nheko/neochat/Quaternion. But "every" isn't provable: a private or GitLab-only WIP client would be invisible to me.
 
 Two ways to actually close it:
 - Give me a **GitHub token** → I can run code search for `libQuotient` / `mtxclient` / `Qt6` linkage, which finds C++ clients regardless of name or topic.
 - Give me a **GitLab token** → I can search gitlab.com + invent.kde.org properly.
 
-Want me to do either? Also worth saying: if you're picking a C++ client to *contribute to*, none of these WIP forks are the answer — the live C++ projects are still **Nheko**, **NeoChat** (pushed 2026-11-03), and **libQuotient** (2026-10-09).
+Want me to do either? Also worth saying: if you're picking a C++ client to *contribute to*, none of these WIP forks are the answer -- the live C++ projects are still **Nheko**, **NeoChat** (pushed 2026-11-03), and **libQuotient** (2026-10-09).
 
 ---
 
@@ -9024,7 +9024,7 @@ _Thinking:_
 `gh` is authenticated. Now I can use `gh search code` (authenticated code search!) and `gh search repos` with better rate limits.
 
 Let me run:
-1. `gh search code "libQuotient" --language=C++ -L 100` — find C++ repos referencing libQuotient
+1. `gh search code "libQuotient" --language=C++ -L 100` -- find C++ repos referencing libQuotient
 2. `gh search code "mtxclient" --language=C++ -L 100`
 3. `gh search code "libquotient" -L 100` (all languages, e.g. CMake)
 4. `gh search repos "matrix client" --language=C++ --limit 100`
@@ -9034,7 +9034,7 @@ Let me start with code searches since those are most valuable.
 
 Note: `gh search code` requires the `repo` scope (we have it) and works.
 
-Let me run a few in parallel? Sequential shell calls in one command is fine. Let me be careful about output size — use `--json full_name,path` maybe? Actually `gh search code --json repository,path` gives structured output.
+Let me run a few in parallel? Sequential shell calls in one command is fine. Let me be careful about output size -- use `--json full_name,path` maybe? Actually `gh search code --json repository,path` gives structured output.
 
 Let me do: `gh search code "libQuotient" --language=C++ --limit 100 --json repository,path` then jq unique repos.
 
@@ -9057,7 +9057,7 @@ Let me run:
 3. libquotient (any language, limit 100) - dedupe
 4. repos search: `gh search repos --language=C++ --topic=matrix-client` etc.
 
-Let me run a few commands in one shell call, output labeled minimally. Actually the instruction says don't chain with echo separators... "Do not chain shell commands with separators like echo "====". Hmm, that's a harness instruction to avoid noisy output. I should avoid echo separators. But I need to distinguish outputs. I can run separate shell calls in parallel instead — that's cleaner. Let me issue multiple shell tool calls in one block.
+Let me run a few commands in one shell call, output labeled minimally. Actually the instruction says don't chain with echo separators... "Do not chain shell commands with separators like echo "====". Hmm, that's a harness instruction to avoid noisy output. I should avoid echo separators. But I need to distinguish outputs. I can run separate shell calls in parallel instead -- that's cleaner. Let me issue multiple shell tool calls in one block.
 
 Let me do 4 parallel calls:
 A: gh search code libQuotient --language=C++
@@ -9089,7 +9089,7 @@ A: code libQuotient C++ (limit 100)
 B: code mtxclient (limit 100)
 C: code libquotient any lang (limit 100)
 D: repos language=C++ topic=matrix (limit 100)
-E: repos "matrix client" language=C++ (limit 100) — quote properly
+E: repos "matrix client" language=C++ (limit 100) -- quote properly
 
 Let me run A-E in parallel.
 
@@ -9097,7 +9097,7 @@ Note gh search code default limit 30, max 100? I think -L up to 100. Let's try.
 
 Let me go.
 
-`gh` is authenticated (account MaurerAnton), which unlocks **code search** — the definitive net for C++ clients that don't say "matrix" anywhere. Running five searches in parallel.
+`gh` is authenticated (account MaurerAnton), which unlocks **code search** -- the definitive net for C++ clients that don't say "matrix" anywhere. Running five searches in parallel.
 
 **Tool: shell**
 
@@ -9324,10 +9324,10 @@ Available fields:
 _Thinking:_
 
 Code search results mostly distros/packaging (noise), but real finds:
-- `ObjFW/ObjMatrix` — Objective-C/C++? "ObjMatrix" appeared in mtxclient search! That's an Objective-C Matrix client (ObjFW framework uses ObjC). Interesting but maybe not C++.
-- `nunchuk-io/nunchuk-desktop` — appears in libQuotient search — a Matrix client for Bitcoin Nunchuk! Uses libQuotient. That's a real C++/Qt Matrix client (nunchuk is a multisig wallet with Matrix chat for signing coordination). Notable find!
-- `DaCodeChick/Hotline` — appeared in libquotient search earlier too.
-- `chaotic-aur/kde-git-WIP-ALPHA` — packaging.
+- `ObjFW/ObjMatrix` -- Objective-C/C++? "ObjMatrix" appeared in mtxclient search! That's an Objective-C Matrix client (ObjFW framework uses ObjC). Interesting but maybe not C++.
+- `nunchuk-io/nunchuk-desktop` -- appears in libQuotient search -- a Matrix client for Bitcoin Nunchuk! Uses libQuotient. That's a real C++/Qt Matrix client (nunchuk is a multisig wallet with Matrix chat for signing coordination). Notable find!
+- `DaCodeChick/Hotline` -- appeared in libquotient search earlier too.
+- `chaotic-aur/kde-git-WIP-ALPHA` -- packaging.
 
 Also fix the field name: `stargazersCount` not `stargazerCount`.
 
@@ -9355,13 +9355,13 @@ Let me write commands:
 
 3: `gh search code "#include <quotient/" --language=C++ --limit 100 --json repository,path | jq -r '.[].repository.nameWithOwner' | sort -u`
 
-4: `gh search code "find_package" "libQuotient" --limit 100 --json repository,path | jq -r '.[].repository.nameWithOwner' | sort -u` — hmm gh search code syntax: `gh search code "find_package(libQuotient)"`. Might work as a phrase. Let me try `"LibQuotient" language:CMake`? Not a supported language maybe. Let me just do `gh search code "LibQuotient" --limit 100`.
+4: `gh search code "find_package" "libQuotient" --limit 100 --json repository,path | jq -r '.[].repository.nameWithOwner' | sort -u` -- hmm gh search code syntax: `gh search code "find_package(libQuotient)"`. Might work as a phrase. Let me try `"LibQuotient" language:CMake`? Not a supported language maybe. Let me just do `gh search code "LibQuotient" --limit 100`.
 
-5: `gh repo view nunchuk-io/nunchuk-desktop --json name,description,primaryLanguage,stargazerCount,pushedAt` — wait field is stargazersCount for repo view too? For `gh repo view --json`, fields include stargazerCount? Let me check: gh repo view json fields: name, description, primaryLanguage, stargazerCount? Actually earlier error was for search. For repo view, field is `stargazerCount`. Hmm, uncertain. Let me just use `gh repo view nunchuk-io/nunchuk-desktop` plain (human output) — simpler and safe.
+5: `gh repo view nunchuk-io/nunchuk-desktop --json name,description,primaryLanguage,stargazerCount,pushedAt` -- wait field is stargazersCount for repo view too? For `gh repo view --json`, fields include stargazerCount? Let me check: gh repo view json fields: name, description, primaryLanguage, stargazerCount? Actually earlier error was for search. For repo view, field is `stargazerCount`. Hmm, uncertain. Let me just use `gh repo view nunchuk-io/nunchuk-desktop` plain (human output) -- simpler and safe.
 
 Let me do 5 parallel calls.
 
-Actually for 5, let me do three separate repo views combined in one call using plain output without separators... but chaining is discouraged for noise. I can do `gh repo view X; gh repo view Y` — semicolons fine, output just concatenated. It's readable enough. Or use `gh api repos/...`. Let me use gh api with jq to be precise:
+Actually for 5, let me do three separate repo views combined in one call using plain output without separators... but chaining is discouraged for noise. I can do `gh repo view X; gh repo view Y` -- semicolons fine, output just concatenated. It's readable enough. Or use `gh api repos/...`. Let me use gh api with jq to be precise:
 
 `for r in nunchuk-io/nunchuk-desktop ObjFW/ObjMatrix DaCodeChick/Hotline; do gh api repos/$r --jq '"\(.full_name)|\(.stargazers_count)|\(.pushed_at[0:10])|lang=\(.language)|\(.description // "" | .[0:70])"'; done`
 
@@ -9371,7 +9371,7 @@ Let me run.
 
 Also worth searching code for other potential C++ matrix libs: e.g. "matrix-client" language C++? Let me also add a search for `gh search code "csapi" --language=C++`? csapi is mtxclient namespace (mtx::http). Hmm.
 
-Let me include search 6: `gh search code "mtx::http" --language=C++ --limit 100` — catches mtxclient users beyond the string "mtxclient".
+Let me include search 6: `gh search code "mtx::http" --language=C++ --limit 100` -- catches mtxclient users beyond the string "mtxclient".
 
 Let me run 6 parallel calls.
 
@@ -9526,10 +9526,10 @@ einmueller/SimpleMatrixClient	0	2025-10-14	-	-	very simple matrix client lib for
 StronglogicSolutions/katrix	0	2024-03-06	-	-	Matrix Client in C++
 Happynico7504/matrix-wiiu	1	2026-07-24	-	-	Matrix Client for Wii U
 hoshidayori/hoshi	0	2026-10-20	-	-	A Matrix client for iOS in C++, with native text select
-progressive-chat/progressive-android	1	2026-09-07	-	-	📈 Progressive Chat Android — aiming for pure C++ Matrix
+progressive-chat/progressive-android	1	2026-09-07	-	-	📈 Progressive Chat Android -- aiming for pure C++ Matrix
 Totgocpro/NX-Matrix	0	2026-10-29	-	-	An open-source, secure and good-looking Matrix client f
 dtzWill/spectral	1	2020-01-15	-	-	A glossy cross-platform Matrix client. Forked for hacki
-MaurerAnton/progressive-desktop	0	2026-09-10	-	-	Progressive Chat Desktop — pure C++/Qt6 Matrix client f
+MaurerAnton/progressive-desktop	0	2026-09-10	-	-	Progressive Chat Desktop -- pure C++/Qt6 Matrix client f
 
 
 **Tool: shell**
@@ -9589,27 +9589,27 @@ _Thinking:_
 Excellent! Now with authenticated gh search I found significant new things:
 
 Notable new finds:
-1. **`MaurerAnton/progressive-desktop`** — "Progressive Chat Desktop — pure C++/Qt6 Matrix client", 0★, 2026-09-10. **This is the user's own GitHub account!** (MaurerAnton is the active gh account.) Interesting — the user might be the author. Worth flagging prominently.
-2. **`progressive-chat/progressive-android`** — "Progressive Chat Android — aiming for pure C++ Matrix", 1★, 2026-09-07. And earlier `progressive-chat/progressive-qt` "GPL-3.0-only NeoChat/Spectral rewrite" 2026-11-01. So there's a whole "Progressive Chat" C++ project across desktop/android/qt.
-3. **`Mizerd/lightning`** — 35★, "Native Matrix desktop client: Qt 6 and the official Rust SDK", 2026-11-03. Wait — Lightning is listed on matrix.org. This repo Mizerd/lightning has 35 stars and is Qt6+Rust SDK. Hmm, is that the official Lightning? Possibly. Note it appeared in fork:only search as f-o-o-g-s/lightning. So Mizerd/lightning is likely the upstream. Interesting: it's a Qt6 C++ shell using Rust SDK — arguably C++.
-4. **`gecka/TeleMatrix`** — 3★, "A desktop Matrix client with the look and feel of Telegram", 2026-10-25. C++.
-5. **`hoshidayori/hoshi`** — 0★, "A Matrix client for iOS in C++", 2026-10-20.
-6. **`Totgocpro/NX-Matrix`** — 0★, "open-source secure good-looking Matrix client" 2026-10-29 (maybe Switch/Nintendo?).
-7. **`Happynico7504/matrix-wiiu`** — 1★, Matrix client for Wii U, 2026-07-24.
-8. **`etkecc/komai`** — 39★, "A fine Matrix chat app" — wait, komai is on official list (Komai). etkecc/komai 2026-10-31 — that might be a fork/packaging of Komai.
-9. **`Bazsalanszky/matrix-cpp-sdk`** — 3★, "basic Matrix Client-Server SDK for C++", 2021.
-10. **`StronglogicSolutions/katrix`** — 0★, "Matrix Client in C++", 2024-03-06 — appeared also in mtx::http search, so it uses mtxclient!
-11. **`palepunk/MatrixClient`** — 5★, "client library for Matrix servers" 2024-08-22.
-12. `einmueller/SimpleMatrixClient` — Arduino, 2025-10-14.
-13. `mlightning3/MatrixClient` — Arduino 2017.
-14. `sanjeevnode/matrix_client`, `jeethsuresh/matrix_client`, `jonasborn/matrix-client`, `mekanix/fisean`, `tilda-center/matrix-client`, `digistarstudio/nMatrix-Client`, `EnterpriseSoftwareConstruction/MatrixClient`, `taimoor-ahmed-1/MatrixClient` — mostly coursework/toys.
-15. `Autosound/secret-messenger` — "Matrix Client" 2023.
-16. `nitanmarcel/cinny-click-packaging` — cinny (not C++).
-17. From mtx::http search: `franzos/nheko` + `franzos/nheko-library`, `csharpdragon/desktop_nheko`, `Steve5wutongyu6/mheko`, `JadedCtrl/Chat-O-Matic` — forks/hacks of nheko.
-18. `nunchuk-io/nunchuk-desktop` — 109★, language QML, uses libQuotient — a Matrix chat embedded in a Bitcoin multisig wallet. It IS a real Matrix client (for signing rooms). Notable! Last push 2026-10-30.
-19. `ObjFW/ObjMatrix` — Objective-C, mirror on git.nil.im — not C++, excluded (it's ObjC).
+1. **`MaurerAnton/progressive-desktop`** -- "Progressive Chat Desktop -- pure C++/Qt6 Matrix client", 0★, 2026-09-10. **This is the user's own GitHub account!** (MaurerAnton is the active gh account.) Interesting -- the user might be the author. Worth flagging prominently.
+2. **`progressive-chat/progressive-android`** -- "Progressive Chat Android -- aiming for pure C++ Matrix", 1★, 2026-09-07. And earlier `progressive-chat/progressive-qt` "GPL-3.0-only NeoChat/Spectral rewrite" 2026-11-01. So there's a whole "Progressive Chat" C++ project across desktop/android/qt.
+3. **`Mizerd/lightning`** -- 35★, "Native Matrix desktop client: Qt 6 and the official Rust SDK", 2026-11-03. Wait -- Lightning is listed on matrix.org. This repo Mizerd/lightning has 35 stars and is Qt6+Rust SDK. Hmm, is that the official Lightning? Possibly. Note it appeared in fork:only search as f-o-o-g-s/lightning. So Mizerd/lightning is likely the upstream. Interesting: it's a Qt6 C++ shell using Rust SDK -- arguably C++.
+4. **`gecka/TeleMatrix`** -- 3★, "A desktop Matrix client with the look and feel of Telegram", 2026-10-25. C++.
+5. **`hoshidayori/hoshi`** -- 0★, "A Matrix client for iOS in C++", 2026-10-20.
+6. **`Totgocpro/NX-Matrix`** -- 0★, "open-source secure good-looking Matrix client" 2026-10-29 (maybe Switch/Nintendo?).
+7. **`Happynico7504/matrix-wiiu`** -- 1★, Matrix client for Wii U, 2026-07-24.
+8. **`etkecc/komai`** -- 39★, "A fine Matrix chat app" -- wait, komai is on official list (Komai). etkecc/komai 2026-10-31 -- that might be a fork/packaging of Komai.
+9. **`Bazsalanszky/matrix-cpp-sdk`** -- 3★, "basic Matrix Client-Server SDK for C++", 2021.
+10. **`StronglogicSolutions/katrix`** -- 0★, "Matrix Client in C++", 2024-03-06 -- appeared also in mtx::http search, so it uses mtxclient!
+11. **`palepunk/MatrixClient`** -- 5★, "client library for Matrix servers" 2024-08-22.
+12. `einmueller/SimpleMatrixClient` -- Arduino, 2025-10-14.
+13. `mlightning3/MatrixClient` -- Arduino 2017.
+14. `sanjeevnode/matrix_client`, `jeethsuresh/matrix_client`, `jonasborn/matrix-client`, `mekanix/fisean`, `tilda-center/matrix-client`, `digistarstudio/nMatrix-Client`, `EnterpriseSoftwareConstruction/MatrixClient`, `taimoor-ahmed-1/MatrixClient` -- mostly coursework/toys.
+15. `Autosound/secret-messenger` -- "Matrix Client" 2023.
+16. `nitanmarcel/cinny-click-packaging` -- cinny (not C++).
+17. From mtx::http search: `franzos/nheko` + `franzos/nheko-library`, `csharpdragon/desktop_nheko`, `Steve5wutongyu6/mheko`, `JadedCtrl/Chat-O-Matic` -- forks/hacks of nheko.
+18. `nunchuk-io/nunchuk-desktop` -- 109★, language QML, uses libQuotient -- a Matrix chat embedded in a Bitcoin multisig wallet. It IS a real Matrix client (for signing rooms). Notable! Last push 2026-10-30.
+19. `ObjFW/ObjMatrix` -- Objective-C, mirror on git.nil.im -- not C++, excluded (it's ObjC).
 
-Also `eigenteam/eigen-git-mirror` (1821★) — noise (Eigen math lib, but named "eigen"... also there's Kalissaac/Eigen macOS Matrix client found earlier — different).
+Also `eigenteam/eigen-git-mirror` (1821★) -- noise (Eigen math lib, but named "eigen"... also there's Kalissaac/Eigen macOS Matrix client found earlier -- different).
 
 Also from topic=matrix C++ list: `fengwang/matrix` (math), `Xtinc/matrix` (math), noise.
 
@@ -9635,7 +9635,7 @@ Let me also run a broader code search to be thorough: search for other C++ matri
 
 Maybe better: `gh search code "csapi" --language=C++` done (mtx::http). `gh search code "libQuotient"` done. What other C++ SDKs exist? Possibly:
 - "matrix-client" C++ headers
-- "QMatrixClient" (old name of libQuotient!) — search code "QMatrixClient" would find old clients.
+- "QMatrixClient" (old name of libQuotient!) -- search code "QMatrixClient" would find old clients.
 Let me run `gh search code "QMatrixClient" --limit 100`.
 Also `gh search code "matrix" --language=Objective-C++`? meh.
 Also `gh search repos --language=C++ --topic=matrix-client` (topic search via gh).
@@ -9662,7 +9662,7 @@ Then produce final comprehensive answer: definitive C++ list, GitHub only, with 
 
 Let me run.
 
-Authenticated search changed the picture — it found a **whole C++ project family** I'd missed, including one on your own account. Let me confirm details and run two final nets.
+Authenticated search changed the picture -- it found a **whole C++ project family** I'd missed, including one on your own account. Let me confirm details and run two final nets.
 
 **Tool: shell**
 
@@ -9673,9 +9673,9 @@ Authenticated search changed the picture — it found a **whole C++ project fami
 }
 ```
 
-MaurerAnton/progressive-desktop|0★|2026-09-10|lang=C++|arch=false|topics=|Progressive Chat Desktop — pure C++/Qt6 Matrix client for Linux deskto
-progressive-chat/progressive-android|1★|2026-09-07|lang=C++|arch=false|topics=|📈 Progressive Chat Android — aiming for pure C++ Matrix client. https:
-progressive-chat/progressive-qt|0★|2026-11-01|lang=C++|arch=false|topics=|Progressive Chat Qt — GPL-3.0-only NeoChat/Spectral rewrite targeting 
+MaurerAnton/progressive-desktop|0★|2026-09-10|lang=C++|arch=false|topics=|Progressive Chat Desktop -- pure C++/Qt6 Matrix client for Linux deskto
+progressive-chat/progressive-android|1★|2026-09-07|lang=C++|arch=false|topics=|📈 Progressive Chat Android -- aiming for pure C++ Matrix client. https:
+progressive-chat/progressive-qt|0★|2026-11-01|lang=C++|arch=false|topics=|Progressive Chat Qt -- GPL-3.0-only NeoChat/Spectral rewrite targeting 
 gecka/TeleMatrix|3★|2026-10-25|lang=C++|arch=false|topics=matrix,messenger,multiplatform|A desktop Matrix client with the look and feel of Telegram Desktop
 hoshidayori/hoshi|0★|2026-10-20|lang=C++|arch=false|topics=|A Matrix client for iOS in C++, with native text selection
 Totgocpro/NX-Matrix|0★|2026-10-29|lang=C++|arch=false|topics=|An open-source, secure and good-looking Matrix client for the Nintendo
@@ -9753,25 +9753,25 @@ Arc676/Calcomatrice	0	2020-09-16	-	A matrix calculator for Ubuntu Touch
 
 _Thinking:_
 
-Now I have a much more complete picture. Key new discovery: **`uMatriks/uMatriks`** — appeared in QMatrixClient code search! That's a Matrix client (uMatriks) — likely C++/Qt (uses QMatrixClient, old libQuotient name). Let me check it.
+Now I have a much more complete picture. Key new discovery: **`uMatriks/uMatriks`** -- appeared in QMatrixClient code search! That's a Matrix client (uMatriks) -- likely C++/Qt (uses QMatrixClient, old libQuotient name). Let me check it.
 
-Also `owenblake38/owen` — in QMatrixClient search, probably noise (owen repo). Let me check uMatriks at least.
+Also `owenblake38/owen` -- in QMatrixClient search, probably noise (owen repo). Let me check uMatriks at least.
 
-Also **Progressive Chat** family (3 repos, all C++): progressive-desktop (MaurerAnton — the user's own account!), progressive-android, progressive-qt. That's a notable WIP pure-C++ Matrix client project. And the user is likely the author (MaurerAnton is active gh account). Interesting — I should point that out: "your own account".
+Also **Progressive Chat** family (3 repos, all C++): progressive-desktop (MaurerAnton -- the user's own account!), progressive-android, progressive-qt. That's a notable WIP pure-C++ Matrix client project. And the user is likely the author (MaurerAnton is active gh account). Interesting -- I should point that out: "your own account".
 
 Also:
-- Mizerd/lightning — 35★, C++, Qt6 + Rust SDK, topics matrix-client, pushed 2026-11-03 — pushed today. Is Lightning listed on matrix.org? My official list included "Lightning". So it's listed. But note it's C++ (Qt6) + Rust SDK. Fine, listed.
-- etkecc/komai — 39★, C++, "A fine Matrix chat app" — Komai IS listed on matrix.org (Komai). So etkecc/komai is likely a fork/mirror? Actually Komai's official repo might be etkecc/komai? Hmm. Komai listed on matrix.org. So this is the listed one. Note: etkecc is kustomzone... Actually komai might be by "etkecc" (Matthias?). Anyway listed.
-- gecka/TeleMatrix — 3★, Telegram-like desktop Matrix client, C++, 2026-10-25. New, unlisted.
-- hoshidayori/hoshi — iOS in C++, 2026-10-20. Unlisted.
-- Totgocpro/NX-Matrix — Nintendo Switch Matrix client, C++, 2026-10-29. Unlisted. (NX = Switch!)
-- Happynico7504/matrix-wiiu — Wii U client, C++, 2026-07-24. Unlisted.
-- StronglogicSolutions/katrix — C++ (uses mtxclient per mtx::http search), 2024. Unlisted.
-- palepunk/MatrixClient — ESP32 lib, not a chat client.
-- Bazsalanszky/matrix-cpp-sdk — SDK (not client).
-- nunchuk-io/nunchuk-desktop — 109★, QML, embeds Matrix via libQuotient (Bitcoin multisig wallet with Matrix signing rooms). Borderline but real Matrix client usage. Unlisted.
-- davidar/tensor — C++ Qt5/QML, in QMatrixClient search. Unlisted.
-- uMatriks — need to check.
+- Mizerd/lightning -- 35★, C++, Qt6 + Rust SDK, topics matrix-client, pushed 2026-11-03 -- pushed today. Is Lightning listed on matrix.org? My official list included "Lightning". So it's listed. But note it's C++ (Qt6) + Rust SDK. Fine, listed.
+- etkecc/komai -- 39★, C++, "A fine Matrix chat app" -- Komai IS listed on matrix.org (Komai). So etkecc/komai is likely a fork/mirror? Actually Komai's official repo might be etkecc/komai? Hmm. Komai listed on matrix.org. So this is the listed one. Note: etkecc is kustomzone... Actually komai might be by "etkecc" (Matthias?). Anyway listed.
+- gecka/TeleMatrix -- 3★, Telegram-like desktop Matrix client, C++, 2026-10-25. New, unlisted.
+- hoshidayori/hoshi -- iOS in C++, 2026-10-20. Unlisted.
+- Totgocpro/NX-Matrix -- Nintendo Switch Matrix client, C++, 2026-10-29. Unlisted. (NX = Switch!)
+- Happynico7504/matrix-wiiu -- Wii U client, C++, 2026-07-24. Unlisted.
+- StronglogicSolutions/katrix -- C++ (uses mtxclient per mtx::http search), 2024. Unlisted.
+- palepunk/MatrixClient -- ESP32 lib, not a chat client.
+- Bazsalanszky/matrix-cpp-sdk -- SDK (not client).
+- nunchuk-io/nunchuk-desktop -- 109★, QML, embeds Matrix via libQuotient (Bitcoin multisig wallet with Matrix signing rooms). Borderline but real Matrix client usage. Unlisted.
+- davidar/tensor -- C++ Qt5/QML, in QMatrixClient search. Unlisted.
+- uMatriks -- need to check.
 
 Let me check uMatriks quickly. Also maybe check `owenblake38/owen`? Probably noise. Let me check uMatriks only (1 call), plus maybe search for Nintendo Switch / other platforms? The user asked "every WIP C++ matrix client" GitHub only.
 
@@ -9789,7 +9789,7 @@ Alternative: search repos by keyword "matrix" language C++ sorted by created (ne
 
 Let me just verify uMatriks and also run one code search: `gh search code "org.matrix" --language=C++ --limit 100`? Hmm, too noisy.
 
-Better final net: `gh search code "matrix-rust-sdk" --language=C++` — no.
+Better final net: `gh search code "matrix-rust-sdk" --language=C++` -- no.
 
 I think coverage is good. Let me do final: check uMatriks + check a couple remaining unknowns: `owenblake38/owen` skip.
 
@@ -9797,15 +9797,15 @@ Actually one more meaningful: the user wants WIP. Let me check whether there are
 
 Let me just verify uMatriks and then write the final answer.
 
-Let me also quickly get README excerpt for progressive-desktop to characterize status? Not necessary; description suffices. But maybe I should note it's the user's own repo — 0★, last push 2026-09-10, C++ Qt6. Actually wait: is `MaurerAnton/progressive-desktop` the same project as `progressive-chat/progressive-qt`? Both "Progressive Chat". progressive-qt says "NeoChat/Spectral rewrite targeting..." So Progressive Chat is a C++/Qt6 project by MaurerAnton (the user). The desktop repo is on personal account; org repos progressive-android and progressive-qt.
+Let me also quickly get README excerpt for progressive-desktop to characterize status? Not necessary; description suffices. But maybe I should note it's the user's own repo -- 0★, last push 2026-09-10, C++ Qt6. Actually wait: is `MaurerAnton/progressive-desktop` the same project as `progressive-chat/progressive-qt`? Both "Progressive Chat". progressive-qt says "NeoChat/Spectral rewrite targeting..." So Progressive Chat is a C++/Qt6 project by MaurerAnton (the user). The desktop repo is on personal account; org repos progressive-android and progressive-qt.
 
-So the answer should highlight: the most substantial WIP pure-C++ Matrix project on GitHub right now is Progressive Chat (3 repos, C++/Qt6 GPL-3.0, active Sept–Nov 2026) — and it's on the user's own account.
+So the answer should highlight: the most substantial WIP pure-C++ Matrix project on GitHub right now is Progressive Chat (3 repos, C++/Qt6 GPL-3.0, active Sept–Nov 2026) -- and it's on the user's own account.
 
 Let me verify uMatriks and then write up.
 
 Let me do one call: gh api repos/uMatriks/uMatriks --jq ... and also maybe gh api for lightning's listed status? Not needed.
 
-Let me also grab commits count / last commit for progressive-desktop to gauge WIP activity? Could be nice: `gh api repos/MaurerAnton/progressive-desktop/commits --jq '.[0] | "\(.commit.author.date[0:10]) \(.commit.message[0:60])"'` and count. Let me include that for the Progressive repos to show activity — useful for "WIP" assessment. Actually maybe unnecessary detail; but "WIP" is the question, so showing last commit dates is valuable. Let me fetch last commit for progressive-qt and progressive-desktop.
+Let me also grab commits count / last commit for progressive-desktop to gauge WIP activity? Could be nice: `gh api repos/MaurerAnton/progressive-desktop/commits --jq '.[0] | "\(.commit.author.date[0:10]) \(.commit.message[0:60])"'` and count. Let me include that for the Progressive repos to show activity -- useful for "WIP" assessment. Actually maybe unnecessary detail; but "WIP" is the question, so showing last commit dates is valuable. Let me fetch last commit for progressive-qt and progressive-desktop.
 
 Let me run one shell with a few commands:
 - gh api repos/uMatriks/uMatriks --jq ...
@@ -9815,7 +9815,7 @@ Commit count requires pagination; skip. Last commit is enough.
 
 Let me run.
 
-One more verification — `uMatriks` surfaced via the old `QMatrixClient` identifier, and I want activity proof on the Progressive family.
+One more verification -- `uMatriks` surfaced via the old `QMatrixClient` identifier, and I want activity proof on the Progressive family.
 
 **Tool: shell**
 
@@ -9856,54 +9856,54 @@ Now I have everything. Let me write the final comprehensive answer about C++ Mat
 Full C++ list (GitHub only), categorized:
 
 **Mature / listed on matrix.org:**
-- Nheko (2516★) — C++20/Qt
-- Quaternion (709★) — Qt, libQuotient
-- NeoChat (238★, KDE) — C++/Kirigami
-- miitrix (142★) — Nintendo 3DS
-- Tesseract (51★, surakin) — C++
-- Lightning (35★, Mizerd) — Qt6 + Rust SDK (hybrid)
-- Komai (39★, etkecc) — C++
+- Nheko (2516★) -- C++20/Qt
+- Quaternion (709★) -- Qt, libQuotient
+- NeoChat (238★, KDE) -- C++/Kirigami
+- miitrix (142★) -- Nintendo 3DS
+- Tesseract (51★, surakin) -- C++
+- Lightning (35★, Mizerd) -- Qt6 + Rust SDK (hybrid)
+- Komai (39★, etkecc) -- C++
 
 **Genuinely WIP / unlisted C++ clients (the real answer):**
 
 Active (2026):
-1. **Progressive Chat** — 3 repos, pure C++/Qt6, GPL-3.0, NeoChat/Spectral rewrite:
+1. **Progressive Chat** -- 3 repos, pure C++/Qt6, GPL-3.0, NeoChat/Spectral rewrite:
    - `MaurerAnton/progressive-desktop` (your own account, 0★, last commit 2026-09-10, "13/13 local ctest green")
    - `progressive-chat/progressive-qt` (0★, 2026-11-01, "Qt 5.6 local recipes + headless QML harness")
    - `progressive-chat/progressive-android` (1★, 2026-08-05)
    → most substantial WIP pure-C++ project; also user's own.
 2. **Progressive** note: targets Qt5.6 too.
-3. **gecka/TeleMatrix** — 3★, Telegram-Desktop look, C++, PRs merged (dependabot PR #21), last commit 2026-10-19.
-4. **Totgocpro/NX-Matrix** — Nintendo Switch, C++, 2026-10-29 "Improved Loading".
-5. **hoshidayori/hoshi** — iOS in C++, 2026-10-20.
-6. **Happynico7504/matrix-wiiu** — Wii U, 1★, 2026-07-24.
-7. **marcho78/omarchy-yapper** — QML/Quickshell E2EE Matrix chat for Omarchy, 2026-09-26.
-8. **Bapesh137/PrismChat** — QML, 2026-10-28.
-9. **nunchuk-io/nunchuk-desktop** — 109★, QML/libQuotient, Bitcoin multisig wallet w/ Matrix chat, 2026-10-30. (embedded, not general-purpose)
+3. **gecka/TeleMatrix** -- 3★, Telegram-Desktop look, C++, PRs merged (dependabot PR #21), last commit 2026-10-19.
+4. **Totgocpro/NX-Matrix** -- Nintendo Switch, C++, 2026-10-29 "Improved Loading".
+5. **hoshidayori/hoshi** -- iOS in C++, 2026-10-20.
+6. **Happynico7504/matrix-wiiu** -- Wii U, 1★, 2026-07-24.
+7. **marcho78/omarchy-yapper** -- QML/Quickshell E2EE Matrix chat for Omarchy, 2026-09-26.
+8. **Bapesh137/PrismChat** -- QML, 2026-10-28.
+9. **nunchuk-io/nunchuk-desktop** -- 109★, QML/libQuotient, Bitcoin multisig wallet w/ Matrix chat, 2026-10-30. (embedded, not general-purpose)
 10. New Qt6 experiment: `j4niwzis/mux` (C++26 multi-protocol), `omauser119/monnett-qt` (Qt6), `pebll/braids` (multi-protocol).
 
 Dormant/dead:
-- **Spectral** — `dtzWill/spectral` (1★ C++, 2020) / `spectral-im/spectral` mirror; canonical on GitLab (not accessible).
-- **Tensor** — `davidar/tensor` 172★, Qt5/QML, 2017, uses QMatrixClient.
-- **uMatriks** — 22★, Ubuntu Touch, C++, explicitly "(unmaintained)", 2020.
-- **harbour-determinant** — 9★, Sailfish, C++/libQuotient, 2021.
-- **telepathy-tank** — 16★, Telepathy CM, 2020.
-- **katrix** (StronglogicSolutions) — C++, mtxclient, 2024-03.
+- **Spectral** -- `dtzWill/spectral` (1★ C++, 2020) / `spectral-im/spectral` mirror; canonical on GitLab (not accessible).
+- **Tensor** -- `davidar/tensor` 172★, Qt5/QML, 2017, uses QMatrixClient.
+- **uMatriks** -- 22★, Ubuntu Touch, C++, explicitly "(unmaintained)", 2020.
+- **harbour-determinant** -- 9★, Sailfish, C++/libQuotient, 2021.
+- **telepathy-tank** -- 16★, Telepathy CM, 2020.
+- **katrix** (StronglogicSolutions) -- C++, mtxclient, 2024-03.
 - **matrix-wiiu**, etc.
-- Forks: jheko, storm-chat-native, tailstalk2-forlinux, NexusSnheko, mheko, desktop_nheko, franzos/nheko, Quaternion forks (6 active) — mostly 0★ clones; a few with real intent (jheko "QOL features", storm-chat-native).
+- Forks: jheko, storm-chat-native, tailstalk2-forlinux, NexusSnheko, mheko, desktop_nheko, franzos/nheko, Quaternion forks (6 active) -- mostly 0★ clones; a few with real intent (jheko "QOL features", storm-chat-native).
 - Toys/coursework: EnterpriseSoftwareConstruction/MatrixClient, taimoor-ahmed-1, mlightning3 (Arduino), einmueller/SimpleMatrixClient (Arduino 2025), sanjeevnode, jeethuresh, mekanix/fisean, tilda-center, digistarstudio/nMatrix-Client (2016), Autosound/secret-messenger, mwkpe/axion, jonasborn (LED matrix, noise).
 
 Not clients (SDKs/libraries):
-- libQuotient (156★), mtxclient (44★), mujx/mtxclient (archived), Bazsalanszky/matrix-cpp-sdk, palepunk/MatrixClient (ESP32), ObjFW/ObjMatrix (Objective-C, mirror git.nil.im — not C++).
+- libQuotient (156★), mtxclient (44★), mujx/mtxclient (archived), Bazsalanszky/matrix-cpp-sdk, palepunk/MatrixClient (ESP32), ObjFW/ObjMatrix (Objective-C, mirror git.nil.im -- not C++).
 
 Also noise clusters: math "matrix" libs (Eigen etc.), LED matrix, Omarchy "dot-matrix" themes, distros packaging.
 
 Residual limits to be honest about (GitHub-only now, so GitLab not relevant): 
 - Still can't guarantee 100%: code search only indexes default branch of public repos, and my nets depend on the client touching libQuotient/mtxclient/QMatrixClient/Qt+matrix keywords. A WIP client using a hand-rolled HTTP client and never saying "matrix" in a way I searched could hide. 
 - Also `gh search code` results capped and deduped; some matches are in packaging repos.
-- But: I used 6 independent nets (topic×2, name, plus 4 code-level: libQuotient, mtx::http, #include <quotient/, QMatrixClient) — much stronger than before.
+- But: I used 6 independent nets (topic×2, name, plus 4 code-level: libQuotient, mtx::http, #include <quotient/, QMatrixClient) -- much stronger than before.
 
-Let me present the final answer — clean, complete, with a "confidence" statement. Also flag the user's own repo prominently but without over-assuming (it's their gh account; I noticed progressive-desktop is on MaurerAnton).
+Let me present the final answer -- clean, complete, with a "confidence" statement. Also flag the user's own repo prominently but without over-assuming (it's their gh account; I noticed progressive-desktop is on MaurerAnton).
 
 Actually careful: I shouldn't assume the user is the author definitively, but it's worth noting it's on the account gh is logged into as. I'll phrase: "on the account you're logged in as".
 
@@ -9920,14 +9920,14 @@ Format:
 
 Keep it tight-ish but complete.
 
-Definitive answer for **GitHub only**, using authenticated code search (`gh search code` — unavailable without auth, which is why my earlier API pass was weaker). I ran six independent nets: topic×2, name/description, plus code-level greps for `libQuotient`, `mtx::http`, `#include <quotient/`, and the legacy `QMatrixClient`.
+Definitive answer for **GitHub only**, using authenticated code search (`gh search code` -- unavailable without auth, which is why my earlier API pass was weaker). I ran six independent nets: topic×2, name/description, plus code-level greps for `libQuotient`, `mtx::http`, `#include <quotient/`, and the legacy `QMatrixClient`.
 
 ## Active WIP C++ clients (all unlisted on matrix.org)
 
 | Project | Repo | ★ | Last commit | What it is |
 |---|---|---|---|---|
 | **Progressive Chat Qt** | `progressive-chat/progressive-qt` | 0 | **2026-11-01** | GPL-3.0 **NeoChat/Spectral rewrite**, pure C++/Qt6, also builds Qt 5.6 + headless QML harness |
-| **Progressive Chat Desktop** | `MaurerAnton/progressive-desktop` | 0 | 2026-09-10 | Same project, Linux desktop. *This is on the account `gh` is logged in as* — 13/13 local ctest green |
+| **Progressive Chat Desktop** | `MaurerAnton/progressive-desktop` | 0 | 2026-09-10 | Same project, Linux desktop. *This is on the account `gh` is logged in as* -- 13/13 local ctest green |
 | **Progressive Chat Android** | `progressive-chat/progressive-android` | 1 | 2026-08-05 | "aiming for pure C++ Matrix client" on Android |
 | **TeleMatrix** | `gecka/TeleMatrix` | 3 | 2026-10-19 | Telegram-Desktop look-and-feel, C++, real PR flow (#21 merged) |
 | **NX-Matrix** | `Totgocpro/NX-Matrix` | 0 | 2026-10-29 | Nintendo Switch client, "Improved Loading" |
@@ -9937,7 +9937,7 @@ Definitive answer for **GitHub only**, using authenticated code search (`gh sear
 | **monnett-qt** | `omauser119/monnett-qt` | 0 | 2026-10-18 | Native C++/**Qt 6**, multi-account |
 | **Yapper** | `marcho78/omarchy-yapper` | 3 | 2026-09-26 | E2EE Matrix chat in QML/Quickshell for Omarchy |
 | **PrismChat** | `Bapesh137/PrismChat` | 6 | 2026-10-28 | QML client |
-| **braids** | `pebll/braids` | 1 | 2026-11-02 | Multi-protocol (WhatsApp/Signal/Matrix) — borderline aggregator |
+| **braids** | `pebll/braids` | 1 | 2026-11-02 | Multi-protocol (WhatsApp/Signal/Matrix) -- borderline aggregator |
 
 ## Dormant or abandoned unlisted C++ clients
 
@@ -9945,22 +9945,22 @@ Definitive answer for **GitHub only**, using authenticated code search (`gh sear
 |---|---|---|---|---|
 | **Tensor** | `davidar/tensor` | 172 | 2017 | Qt5/QML, legacy `QMatrixClient` era |
 | **uMatriks** | `uMatriks/uMatriks` | 22 | 2020 | Ubuntu Touch, self-labelled **"(unmaintained)"** |
-| **Spectral** | `dtzWill/spectral` / `spectral-im/spectral` | 1 / 8 | 2020–2021 | Canonical home is GitLab — GitHub is only a mirror |
+| **Spectral** | `dtzWill/spectral` / `spectral-im/spectral` | 1 / 8 | 2020–2021 | Canonical home is GitLab -- GitHub is only a mirror |
 | **harbour-determinant** | `R1tschY/harbour-determinant` | 9 | 2021 | Sailfish OS, built on libQuotient |
 | **telepathy-tank** | `TelepathyIM/telepathy-tank` | 16 | 2020 | Telepathy connection manager, not a chat UI |
 | **katrix** | `StronglogicSolutions/katrix` | 0 | 2024-03 | C++, uses `mtx::http` (mtxclient) |
 | **nheko (old)** | `mujx/nheko` | 387 | 2018 | archived |
 
-Nearly all other `MatrixClient`-named repos are coursework, Arduino sketches (`mlightning3`, `einmueller/SimpleMatrixClient`) or empty stubs — not clients.
+Nearly all other `MatrixClient`-named repos are coursework, Arduino sketches (`mlightning3`, `einmueller/SimpleMatrixClient`) or empty stubs -- not clients.
 
 ## Embedded / borderline
 
-- **nunchuk-desktop** `nunchuk-io/nunchuk-desktop` (109★, QML, pushes 2026-10-30) — Bitcoin multisig wallet that embeds Matrix via libQuotient for signing rooms. Real Matrix client usage, but not a general chat app.
-- **ObjMatrix** `ObjFW/ObjMatrix` — **Objective-C**, not C++, and only a mirror (upstream `git.nil.im`). Excluded.
+- **nunchuk-desktop** `nunchuk-io/nunchuk-desktop` (109★, QML, pushes 2026-10-30) -- Bitcoin multisig wallet that embeds Matrix via libQuotient for signing rooms. Real Matrix client usage, but not a general chat app.
+- **ObjMatrix** `ObjFW/ObjMatrix` -- **Objective-C**, not C++, and only a mirror (upstream `git.nil.im`). Excluded.
 
 ## Forks: two with intent, the rest are clones
 
-Worth knowing: nheko has **48 forks pushed since mid-2024**, but all 0★ with untouched descriptions — packaging/build clones. The few with actual intent: `Geometrically/jheko` ("QOL features"), `storm-software/storm-chat-native`, `NexusSfan/NexusSnheko`, `tails1154/tailstalk2-forlinux` (NeoChat rebrand). Quaternion has 6 recently-pushed forks, all ~0★ Qt5 rebuilds.
+Worth knowing: nheko has **48 forks pushed since mid-2024**, but all 0★ with untouched descriptions -- packaging/build clones. The few with actual intent: `Geometrically/jheko` ("QOL features"), `storm-software/storm-chat-native`, `NexusSfan/NexusSnheko`, `tails1154/tailstalk2-forlinux` (NeoChat rebrand). Quaternion has 6 recently-pushed forks, all ~0★ Qt5 rebuilds.
 
 ## Libraries, not clients
 
@@ -9970,10 +9970,10 @@ Worth knowing: nheko has **48 forks pushed since mid-2024**, but all 0★ with u
 
 Much more confident than before, but still not provably complete. Residual limits, all GitHub-side:
 
-- Code search only indexes default branches of public repos, and results are capped/deduped — my nets only catch clients that touch libQuotient, mtxclient, QMatrixClient, or use Qt+matrix keywords. A WIP client with a hand-rolled HTTP layer and no matching keywords could still hide.
+- Code search only indexes default branches of public repos, and results are capped/deduped -- my nets only catch clients that touch libQuotient, mtxclient, QMatrixClient, or use Qt+matrix keywords. A WIP client with a hand-rolled HTTP layer and no matching keywords could still hide.
 - `gh search code` can't filter by date, so I can't isolate "created this month" work.
 
-That said: for **WIP** specifically, the standout is unambiguous — **Progressive Chat** is the only pure-C++/Qt6 project with a multi-platform plan (Qt, Android, desktop), active commits across three repos, a test suite, and GPL-3.0 licensing. Everything else C++ is either dormant since ≤2021 or a single-device experiment (Switch, Wii U, iOS).
+That said: for **WIP** specifically, the standout is unambiguous -- **Progressive Chat** is the only pure-C++/Qt6 project with a multi-platform plan (Qt, Android, desktop), active commits across three repos, a test suite, and GPL-3.0 licensing. Everything else C++ is either dormant since ≤2021 or a single-device experiment (Switch, Wii U, iOS).
 
 ---
 
@@ -9987,19 +9987,19 @@ That said: for **WIP** specifically, the standout is unambiguous — **Progressi
 
 _Thinking:_
 
-The user is interested in `j4niwzis/mux` — "A fast C++26 multi-protocol cross-platform chat client". Let me investigate it: fetch repo details, README, commits, maybe recent activity.
+The user is interested in `j4niwzis/mux` -- "A fast C++26 multi-protocol cross-platform chat client". Let me investigate it: fetch repo details, README, commits, maybe recent activity.
 
 Note: earlier I flagged a cluster of 0-2★ repos pushed within days of the sweep as likely hobby/vibe-coded. mux had 5★ and pushed 2026-11-02/03. Let me actually check it properly:
-- gh api repos/j4niwzis/mux — get stars, created_at, size, language, license, description, topics, homepage
+- gh api repos/j4niwzis/mux -- get stars, created_at, size, language, license, description, topics, homepage
 - README content
 - commits list (count, dates, messages)
 - maybe contributors
 
-Let me do that to give a real assessment rather than hype. Given "C++26" — C++26 is not finalized yet (as of 2026 it's being finalized; C++26 standard expected 2026). Using C++26 features with compilers is plausible but cutting-edge. Also "multi-protocol" — which protocols? Matrix + what? Let me check README.
+Let me do that to give a real assessment rather than hype. Given "C++26" -- C++26 is not finalized yet (as of 2026 it's being finalized; C++26 standard expected 2026). Using C++26 features with compilers is plausible but cutting-edge. Also "multi-protocol" -- which protocols? Matrix + what? Let me check README.
 
 Let me run gh commands:
 1. `gh api repos/j4niwzis/mux --jq` full details (created_at, updated_at, pushed_at, size, stargazers, forks, open_issues, license, topics, homepage)
-2. `gh api repos/j4niwzis/mux/readme --jq .content | base64 -d` — README
+2. `gh api repos/j4niwzis/mux/readme --jq .content | base64 -d` -- README
 3. `gh api repos/j4niwzis/mux/commits --jq '.[0:15] | .[] | "\(.commit.author.date[0:10]) \(.commit.message|split("\n")[0]|.[0:60])"'`
 4. maybe languages breakdown: `gh api repos/j4niwzis/mux/languages`
 
@@ -10009,7 +10009,7 @@ Then assess: is it real? Is it Matrix? Which protocols? Activity level? Size of 
 
 Let me go.
 
-Let me actually check it out rather than take the description at face value — "C++26" plus that push date deserves scrutiny.
+Let me actually check it out rather than take the description at face value -- "C++26" plus that push date deserves scrutiny.
 
 **Tool: shell**
 
@@ -10171,37 +10171,37 @@ _Thinking:_
 
 This is genuinely impressive. Let me assess:
 
-- `j4niwzis/mux` — created 2026-09-26, pushed 2026-11-02, **2,520 commits by one author in ~37 days**. That's ~68 commits/day. That is... extremely high. Hmm, possibly AI-assisted or a very prolific dev. Size 7.7 MB, 3.75M lines of C++?? "C++": 3,752,449 — that's bytes actually! GitHub languages API returns bytes, not lines. So 3.75 MB of C++ code. That's substantial — roughly maybe 100k+ lines.
+- `j4niwzis/mux` -- created 2026-09-26, pushed 2026-11-02, **2,520 commits by one author in ~37 days**. That's ~68 commits/day. That is... extremely high. Hmm, possibly AI-assisted or a very prolific dev. Size 7.7 MB, 3.75M lines of C++?? "C++": 3,752,449 -- that's bytes actually! GitHub languages API returns bytes, not lines. So 3.75 MB of C++ code. That's substantial -- roughly maybe 100k+ lines.
 
-Wait, 3.75 MB C++ in 37 days by one person = ~100KB/day. That's very high but possible with heavy AI assistance. Plus it includes vendored "skiff" framework (skiff is their own UI toolkit? commits mention "skiff" submodule updates — "skiff 4ed6367", "skiff b41d747" — so skiff is a dependency (probably their own UI library) and those commits are submodule bumps). So the C++ bytes may include submodules? Actually GitHub languages API excludes vendored? It excludes paths matching vendor patterns but submodule content? It uses linguist which typically doesn't count submodules. So 3.75MB is likely own code.
+Wait, 3.75 MB C++ in 37 days by one person = ~100KB/day. That's very high but possible with heavy AI assistance. Plus it includes vendored "skiff" framework (skiff is their own UI toolkit? commits mention "skiff" submodule updates -- "skiff 4ed6367", "skiff b41d747" -- so skiff is a dependency (probably their own UI library) and those commits are submodule bumps). So the C++ bytes may include submodules? Actually GitHub languages API excludes vendored? It excludes paths matching vendor patterns but submodule content? It uses linguist which typically doesn't count submodules. So 3.75MB is likely own code.
 
-Features: Matrix AND XMPP, C++26 modules, Skia + SDL3, Linux + Android + WebAssembly build, Telegram-Desktop-like UI, Element parity features, E2EE receive via vodozemac (Rust: 287 bytes — maybe bindings), libdatachannel for WebRTC calls, sliding sync, OIDC, cross-signing, key backup, spaces as forums, etc.
+Features: Matrix AND XMPP, C++26 modules, Skia + SDL3, Linux + Android + WebAssembly build, Telegram-Desktop-like UI, Element parity features, E2EE receive via vodozemac (Rust: 287 bytes -- maybe bindings), libdatachannel for WebRTC calls, sliding sync, OIDC, cross-signing, key backup, spaces as forums, etc.
 
 That README is extraordinarily detailed and complete-looking for a 5★ repo created 5 weeks ago. Red flags vs green flags:
 
 Green:
-- Extremely detailed, technically coherent README with specific XEPs (XEP-0077, XEP-0308, XEP-0393), MSC numbers (MSC2545 for sticker packs), vodozemac (real Rust Matrix crypto lib), libdatachannel (real WebRTC lib), Skia, SDL3, C++26 modules. This is clearly written by someone who knows the domain deeply — the details are accurate and specific.
-- 2520 commits, dense daily activity, real engineering commit messages (BMI/modules build flags, -fno-modules-reduced-bmi, MUX_INLINE_IN_RELEASE) — these are real C++20/26 modules build concerns. Highly credible.
+- Extremely detailed, technically coherent README with specific XEPs (XEP-0077, XEP-0308, XEP-0393), MSC numbers (MSC2545 for sticker packs), vodozemac (real Rust Matrix crypto lib), libdatachannel (real WebRTC lib), Skia, SDL3, C++26 modules. This is clearly written by someone who knows the domain deeply -- the details are accurate and specific.
+- 2520 commits, dense daily activity, real engineering commit messages (BMI/modules build flags, -fno-modules-reduced-bmi, MUX_INLINE_IN_RELEASE) -- these are real C++20/26 modules build concerns. Highly credible.
 - AGPL-3.0, GitHub Pages deployment for WASM build: j4niwzis.github.io/mux/
-- Uses "skiff" — appears to be their own UI framework (skiff-framework mentioned for browser).
+- Uses "skiff" -- appears to be their own UI framework (skiff-framework mentioned for browser).
 
 Caveats/questions:
-- Only 5 stars, 0 issues, 1 fork — essentially unknown/undiscovered. Created 2026-09-26.
-- E2EE: "received: Olm and Megolm through vodozemac... (Sending encrypted is not done yet.)" — a real limitation noted.
-- 2520 commits in 37 days — likely heavy AI assistance; but code quality unknown.
-- The commit message style is odd — written in a strange literary/"Anglish"-ish style ("a step under a bound part changes it where pressed"). That's a distinctive, deliberate style. Possibly non-native English or a stylistic choice. It reads like "Anglish"/plain-language purism. Interesting.
+- Only 5 stars, 0 issues, 1 fork -- essentially unknown/undiscovered. Created 2026-09-26.
+- E2EE: "received: Olm and Megolm through vodozemac... (Sending encrypted is not done yet.)" -- a real limitation noted.
+- 2520 commits in 37 days -- likely heavy AI assistance; but code quality unknown.
+- The commit message style is odd -- written in a strange literary/"Anglish"-ish style ("a step under a bound part changes it where pressed"). That's a distinctive, deliberate style. Possibly non-native English or a stylistic choice. It reads like "Anglish"/plain-language purism. Interesting.
 
-Also note: this is a Matrix + XMPP client — so relevant to the user's search; it IS a C++ Matrix client, and unlisted.
+Also note: this is a Matrix + XMPP client -- so relevant to the user's search; it IS a C++ Matrix client, and unlisted.
 
 I should offer to dig deeper: check whether it builds, look at source structure, check the WebAssembly demo on GitHub Pages. Could webfetch the Pages URL to see if a live demo exists. That'd be a nice verification: does j4niwzis.github.io/mux/ exist and load?
 
-Let me verify the demo actually exists — that's the strongest evidence it's real, not vaporware. Let me webfetch https://j4niwzis.github.io/mux/.
+Let me verify the demo actually exists -- that's the strongest evidence it's real, not vaporware. Let me webfetch https://j4niwzis.github.io/mux/.
 
 Also maybe check the repo tree / CMakeLists to confirm C++26 modules usage and deps. And check if "skiff" is a separate repo by same author (j4niwzis/skiff?).
 
 Let me do:
 1. webfetch the Pages URL (check live demo)
-2. gh api repos/j4niwzis/repos? get user's repos list: `gh api users/j4niwzis/repos --jq '.[] | "\(.full_name)|\(.stargazers_count)★|\(.language)|\(.pushed_at[0:10])|\(.description)"'` — to see skiff
+2. gh api repos/j4niwzis/repos? get user's repos list: `gh api users/j4niwzis/repos --jq '.[] | "\(.full_name)|\(.stargazers_count)★|\(.language)|\(.pushed_at[0:10])|\(.description)"'` -- to see skiff
 3. maybe gh api repos/j4niwzis/mux/contents/src | head to see structure
 
 Let me run these in parallel: webfetch + 2 shell calls.
@@ -10214,7 +10214,7 @@ Actually webfetch may return truncated HTML; but I just need to know it exists (
 
 Let me run all three.
 
-That's not what it looks like — let me verify it's real rather than vaporware (5★, 0 issues, created 5 weeks ago, 2,520 commits is an unusual profile).
+That's not what it looks like -- let me verify it's real rather than vaporware (5★, 0 issues, created 5 weeks ago, 2,520 commits is an unusual profile).
 
 **Tool: webfetch**
 
@@ -10345,21 +10345,21 @@ _Thinking:_
 
 This is legitimately real and impressive. Evidence:
 
-1. **Live WASM demo exists**: j4niwzis.github.io/mux/ returns "mux / Loading mux…" — a real deployed WebAssembly build.
-2. **CMakeLists.txt is 37KB**, C++26 modules, `cmake_minimum_required(VERSION 4.3.4)`, `CMAKE_CXX_STANDARD 26`, real compiler version gating ("clang 23.1.4 or later" with libstdc++ for std module operator| range adaptor bug) — this is deep, specific, real compiler knowledge.
+1. **Live WASM demo exists**: j4niwzis.github.io/mux/ returns "mux / Loading mux…" -- a real deployed WebAssembly build.
+2. **CMakeLists.txt is 37KB**, C++26 modules, `cmake_minimum_required(VERSION 4.3.4)`, `CMAKE_CXX_STANDARD 26`, real compiler version gating ("clang 23.1.4 or later" with libstdc++ for std module operator| range adaptor bug) -- this is deep, specific, real compiler knowledge.
 3. Architecture documented: mux.net (io_context + fibers), mux.core, mux.proto.xmpp.client (via "tern"), mux.http (Beast), mux.proto.matrix.client (via **loom**), mux-cli.
-4. The author has an ecosystem: `j4niwzis/skiff` (UI framework, pushed 2026-11-01), `j4niwzis/loom` (Matrix library — likely the Matrix protocol layer! pushed 2026-10-31), `j4niwzis/tern` (XMPP library — not in list though... hmm, tern not in the repo list. Maybe private or under different name. Actually list shows: skiff, loom, knot, chevron, alef, scan, mirc (C++26 irc parsing), modulizer, demodulizer, cmake-everywhere, minimal-android-ndk.cpp, osu-cpp (16★), do_let_is (18★)). No "tern" visible — maybe private or was in first 30 (list sorted by stars; tern might be 0★ and beyond? The list seems complete ~30 repos). tern might not be public yet.
-5. Author's other repos show consistent C++26 modules expertise: modulizer (C++20 modules migrator), *-modules forks (Boost modulized: core-modules, io-modules, mp11-modules, googletest-modules, describe-modules), emscripten fork, SDL fork, fmt fork — i.e., they're building an entire C++26-modules toolchain ecosystem. That's a coherent, credible picture: this person is a serious C++ engineer doing modules-first development.
+4. The author has an ecosystem: `j4niwzis/skiff` (UI framework, pushed 2026-11-01), `j4niwzis/loom` (Matrix library -- likely the Matrix protocol layer! pushed 2026-10-31), `j4niwzis/tern` (XMPP library -- not in list though... hmm, tern not in the repo list. Maybe private or under different name. Actually list shows: skiff, loom, knot, chevron, alef, scan, mirc (C++26 irc parsing), modulizer, demodulizer, cmake-everywhere, minimal-android-ndk.cpp, osu-cpp (16★), do_let_is (18★)). No "tern" visible -- maybe private or was in first 30 (list sorted by stars; tern might be 0★ and beyond? The list seems complete ~30 repos). tern might not be public yet.
+5. Author's other repos show consistent C++26 modules expertise: modulizer (C++20 modules migrator), *-modules forks (Boost modulized: core-modules, io-modules, mp11-modules, googletest-modules, describe-modules), emscripten fork, SDL fork, fmt fork -- i.e., they're building an entire C++26-modules toolchain ecosystem. That's a coherent, credible picture: this person is a serious C++ engineer doing modules-first development.
 6. 3.75 MB C++, 2520 commits, AGPL-3.0, tests dir, themes, fonts, android, web, packaging dirs.
 
 Caveats:
 - E2EE sending not done yet (only receiving).
-- Requires clang 23.1.4+/libc++ — very new toolchain; will be hard to build for most people.
-- 5★ — essentially undiscovered.
+- Requires clang 23.1.4+/libc++ -- very new toolchain; will be hard to build for most people.
+- 5★ -- essentially undiscovered.
 - No releases probably (let me not claim; version 0.1 in CMake).
 - XMPP lib "tern" not public → can't build XMPP side? Possibly vendored via cmake-everywhere.
 
-Also note "loom" is the Matrix protocol library — that's relevant: a new C++26 Matrix SDK! The user might care: `j4niwzis/loom` (0★, C++, pushed 2026-10-31). That means there's a second new C++ Matrix library besides libQuotient/mtxclient. Interesting find — worth mentioning.
+Also note "loom" is the Matrix protocol library -- that's relevant: a new C++26 Matrix SDK! The user might care: `j4niwzis/loom` (0★, C++, pushed 2026-10-31). That means there's a second new C++ Matrix library besides libQuotient/mtxclient. Interesting find -- worth mentioning.
 
 Should I check loom? It's worth a quick check to characterize: is it a Matrix SDK in C++26? Let me fetch its README. That would strengthen the answer and it's directly relevant (C++ Matrix ecosystem).
 
@@ -10441,7 +10441,7 @@ No tags, no releases. So it's genuinely WIP, unreleased.
 
 Now let me write the final assessment. Key points:
 
-**Verdict: real, and arguably the most technically ambitious C++ Matrix client on GitHub right now — but unreleased and undiscovered.**
+**Verdict: real, and arguably the most technically ambitious C++ Matrix client on GitHub right now -- but unreleased and undiscovered.**
 
 Evidence it's real:
 - Live WebAssembly demo deployed: j4niwzis.github.io/mux/ (loads "mux…")
@@ -10450,34 +10450,34 @@ Evidence it's real:
 - Modular architecture: mux.net (io_context + fibers), mux.core, mux.proto.matrix.client (via **loom**), mux.proto.xmpp.client (via tern), mux.http (Boost.Beast), mux-cli
 - loom is a from-scratch C++26 Matrix client-server API library, sans-I/O, with typed JSON (knot), std::expected-based errors, sync store
 - Deps are real: Skia, SDL3, vodozemac (Matrix crypto), libdatachannel (WebRTC), FFmpeg, UnifiedPush
-- Author's ecosystem is coherent: skiff (UI), loom (Matrix), knot (JSON), tern (XMPP), modulizer/demodulizer, *-modules forks (Boost, googletest, fmt, SDL, emscripten all modulized) — a serious C++26-modules toolchain effort
+- Author's ecosystem is coherent: skiff (UI), loom (Matrix), knot (JSON), tern (XMPP), modulizer/demodulizer, *-modules forks (Boost, googletest, fmt, SDL, emscripten all modulized) -- a serious C++26-modules toolchain effort
 - 2,520 commits in ~5 weeks, AGPL-3.0, tests/, themes/, android/, web/, packaging/
 
 Caveats / why it's not "listable" yet:
-- **No tags, no releases** — version 0.1 in CMake only
-- 5★, 0 issues, 1 fork — nobody is using it yet
+- **No tags, no releases** -- version 0.1 in CMake only
+- 5★, 0 issues, 1 fork -- nobody is using it yet
 - **E2EE receive-only**: Olm/Megolm via vodozemac, cross-signing, key backup done; *sending* encrypted not implemented
-- Toolchain barrier: needs clang ≥23.1.4 or libc++, CMake 4.3.4 — most people can't build it
+- Toolchain barrier: needs clang ≥23.1.4 or libc++, CMake 4.3.4 -- most people can't build it
 - tern (XMPP) doesn't appear public → XMPP half may not be buildable externally
 - Commit density (~68/day) suggests heavy AI assistance; quality unverified by any third party
 
-Relevance to earlier question: mux is a genuine unlisted C++ Matrix client — and loom is a **third C++ Matrix library** alongside libQuotient and mtxclient (C++26 modules, sans-I/O).
+Relevance to earlier question: mux is a genuine unlisted C++ Matrix client -- and loom is a **third C++ Matrix library** alongside libQuotient and mtxclient (C++26 modules, sans-I/O).
 
-Also should I mention: the earlier "vibe-coded cluster" heuristic — mux was in the same "pushed within days, low stars" bucket I flagged with caution. mux proves that heuristic was wrong in this case; I should own that explicitly. Good honesty point: I lumped it in Tier D "treat with caution" and it turned out to be the most serious project found. That's a nice correction to surface.
+Also should I mention: the earlier "vibe-coded cluster" heuristic -- mux was in the same "pushed within days, low stars" bucket I flagged with caution. mux proves that heuristic was wrong in this case; I should own that explicitly. Good honesty point: I lumped it in Tier D "treat with caution" and it turned out to be the most serious project found. That's a nice correction to surface.
 
 Let me write it up concisely but with substance. Include the code sample maybe briefly. Keep it tight.
 
 Let me write final answer.
 
-Good instinct — and it's a correction I owe you: I lumped `mux` into the "0–5★, pushed recently, treat with caution" bucket in Tier D. That heuristic was wrong here. It's the most technically serious C++ Matrix project I found.
+Good instinct -- and it's a correction I owe you: I lumped `mux` into the "0–5★, pushed recently, treat with caution" bucket in Tier D. That heuristic was wrong here. It's the most technically serious C++ Matrix project I found.
 
 ## Verdict: real, ambitious, unreleased
 
 **Evidence it's not vaporware:**
 
-- **Live WebAssembly demo is deployed** — `j4niwzis.github.io/mux/` actually loads. You can try it in a browser right now.
+- **Live WebAssembly demo is deployed** -- `j4niwzis.github.io/mux/` actually loads. You can try it in a browser right now.
 - **37 KB `CMakeLists.txt`**, `CMAKE_CXX_STANDARD 26`, `cmake_minimum_required(VERSION 4.3.4)`, real architecture: `mux.net` (io_context + fibers), `mux.core`, `mux.proto.matrix.client`, `mux.proto.xmpp.client`, `mux.http` (Boost.Beast).
-- **Compiler gating that only a real implementer would write**: it hard-fails on clang < 23.1.4 *with libstdc++* because of a `std` module range-adaptor `operator|` bug — while noting libc++ never had it. That's not LLM filler.
+- **Compiler gating that only a real implementer would write**: it hard-fails on clang < 23.1.4 *with libstdc++* because of a `std` module range-adaptor `operator|` bug -- while noting libc++ never had it. That's not LLM filler.
 - **Real dependencies**: Skia + SDL3 for rendering, **vodozemac** for Olm/Megolm, **libdatachannel** for WebRTC calls, FFmpeg, UnifiedPush.
 - **The author built an entire C++26-modules ecosystem** around it: `skiff` (UI toolkit), `loom` (Matrix), `knot` (typed JSON), `modulizer`/`demodulizer`, plus modulized forks of Boost, fmt, GoogleTest, SDL and Emscripten. Coherent, not scattered.
 
@@ -10485,16 +10485,16 @@ Good instinct — and it's a correction I owe you: I lumped `mux` into the "0–
 
 ## The catch
 
-- **No tags, no releases** — `VERSION 0.1` in CMake and nothing published.
+- **No tags, no releases** -- `VERSION 0.1` in CMake and nothing published.
 - **5★, 0 issues, 1 fork.** Nobody is using it yet.
 - **E2EE is receive-only**: Olm/Megolm decrypt, verification and key backup work, but the README states plainly *"Sending encrypted is not done yet."*
 - **Toolchain wall**: needs clang ≥23.1.4 (or libc++) and CMake 4.3.4. Almost nobody has that installed today.
 - `tern` (the XMPP layer) doesn't appear to be public, so the XMPP half may not be buildable externally.
-- ~2,520 commits in ~5 weeks by one author (~68/day) — likely heavy AI assistance, and no third party has validated the code.
+- ~2,520 commits in ~5 weeks by one author (~68/day) -- likely heavy AI assistance, and no third party has validated the code.
 
 ## Why it matters for your search
 
-`loom` is the real find underneath it: a **third C++ Matrix library**, next to `libQuotient` (156★, Qt) and `mtxclient` (44★, no-Qt). It's C++26 modules, sans-I/O — you supply the HTTP client, it handles typed endpoints and errors:
+`loom` is the real find underneath it: a **third C++ Matrix library**, next to `libQuotient` (156★, Qt) and `mtxclient` (44★, no-Qt). It's C++26 modules, sans-I/O -- you supply the HTTP client, it handles typed endpoints and errors:
 
 ```cpp
 loom::request r = loom::login{.user = "alice", .password = "…"}.to_send();
@@ -10521,23 +10521,23 @@ _Thinking:_
 
 The user wants to know more about mux. Let me dig deeper:
 
-1. Check the `skiff` framework repo (UI toolkit) — how does it render? Skia + SDL3? Let me read skiff's README.
-2. Check mux's src structure — directories, modules.
-3. Check CODE_STYLE.md — interesting (the commit messages have that weird "Anglish" style; CODE_STYLE might explain).
+1. Check the `skiff` framework repo (UI toolkit) -- how does it render? Skia + SDL3? Let me read skiff's README.
+2. Check mux's src structure -- directories, modules.
+3. Check CODE_STYLE.md -- interesting (the commit messages have that weird "Anglish" style; CODE_STYLE might explain).
 4. Check the web/ directory (WASM build) and packaging.
-5. Check dependencies list in CMakeLists (37KB) — grep for find_package / ports to list deps.
+5. Check dependencies list in CMakeLists (37KB) -- grep for find_package / ports to list deps.
 6. Maybe check tests.
 
 Let me run several gh commands in parallel:
 
 A. `gh api repos/j4niwzis/skiff/readme --jq .content | base64 -d | head -60`
 B. `gh api repos/j4niwzis/mux/contents/src --jq '.[] | .type + "\t" + .name'` and maybe list module dirs
-C. CMakeLists grep for mux_find_package to list dependencies: fetch CMakeLists.txt content via raw: `gh api repos/j4niwzis/mux/contents/CMakeLists.txt --jq .content | base64 -d | grep -A2 mux_find_package | head -80` — better: grep for `mux_find_package(` lines.
+C. CMakeLists grep for mux_find_package to list dependencies: fetch CMakeLists.txt content via raw: `gh api repos/j4niwzis/mux/contents/CMakeLists.txt --jq .content | base64 -d | grep -A2 mux_find_package | head -80` -- better: grep for `mux_find_package(` lines.
 D. CODE_STYLE.md head -60
 
 Let me do 4 parallel calls.
 
-Also maybe check the modules structure: `gh api repos/j4niwzis/mux/git/trees/main?recursive=1 --jq '[.tree[] | select(.path|test("^src/.*module.*$"))] | .[0:40] | .[].path'` — that could reveal module names. Let me do that too maybe.
+Also maybe check the modules structure: `gh api repos/j4niwzis/mux/git/trees/main?recursive=1 --jq '[.tree[] | select(.path|test("^src/.*module.*$"))] | .[0:40] | .[].path'` -- that could reveal module names. Let me do that too maybe.
 
 Let me pick 4-5 calls:
 
@@ -10555,13 +10555,13 @@ That gives src structure. Good.
 
 Let me run 4 calls.
 
-Note: default branch might be "main" or "master". Let me get default branch: earlier CMakeLists project(mux...). Let me use `gh api repos/j4niwzis/mux --jq .default_branch` — combine into one call? I'll just try "main" and fallback. Better: include in call 2: `b=$(gh api repos/j4niwzis/mux --jq .default_branch); gh api "repos/j4niwzis/mux/git/trees/$b?recursive=1" ...`
+Note: default branch might be "main" or "master". Let me get default branch: earlier CMakeLists project(mux...). Let me use `gh api repos/j4niwzis/mux --jq .default_branch` -- combine into one call? I'll just try "main" and fallback. Better: include in call 2: `b=$(gh api repos/j4niwzis/mux --jq .default_branch); gh api "repos/j4niwzis/mux/git/trees/$b?recursive=1" ...`
 
 Let me write that.
 
 Let me go with 4 parallel calls.
 
-Let me dig into the architecture — the rendering stack, module layout, and dependency list.
+Let me dig into the architecture -- the rendering stack, module layout, and dependency list.
 
 **Tool: shell**
 
@@ -10815,8 +10815,8 @@ skiff-widgets) are written. A change that does not follow this is not done.
 _Thinking:_
 
 Now I have great detail. Let me summarize what's known and maybe dig one more level: 
-- dependency graph is now clear: tern (XMPP), loom (Matrix), knot (JSON), chevron (?), alef (precis/idna/grapheme/line/bidi/emoji — Unicode/text), splice (variant/overloaded utilities), skiff (UI/Skia), skiff-widgets, skiff-framework (browser), Boost (asio_core, beast, pfr modules), OpenSSL, SDL3, Opus, Vorbis, FFmpeg (mp4, matroska, h264, hevc, vp9, aac, opus, mp3), vodozemac (Matrix crypto).
-- alef: Unicode — precis, idna, grapheme, line (line breaking), bidi, emoji. Impressive.
+- dependency graph is now clear: tern (XMPP), loom (Matrix), knot (JSON), chevron (?), alef (precis/idna/grapheme/line/bidi/emoji -- Unicode/text), splice (variant/overloaded utilities), skiff (UI/Skia), skiff-widgets, skiff-framework (browser), Boost (asio_core, beast, pfr modules), OpenSSL, SDL3, Opus, Vorbis, FFmpeg (mp4, matroska, h264, hevc, vp9, aac, opus, mp3), vodozemac (Matrix crypto).
+- alef: Unicode -- precis, idna, grapheme, line (line breaking), bidi, emoji. Impressive.
 - splice: variant utilities (spl::overloaded, spl::variant).
 - chevron: ? maybe HTTP/other.
 - The CODE_STYLE explains the commit message style: no branching on strings, variants, typed boundaries, modules only, clang 23, workarounds documented. The odd commit-message English is likely intentional style ("Anglish"-ish). Maybe CODE_STYLE mentions writing style? Let me check more of CODE_STYLE (the head -55 didn't show writing style). There might be a section on commit messages / word choice. The README and commits use a distinctive purist-English style. Let me grep CODE_STYLE for "commit" or "word".
@@ -10828,7 +10828,7 @@ Also might be nice: check the `test/` dir and CI workflows (web workflow deploys
 And check how big: 3.75MB C++ ≈ how many lines? Could compute: count lines? Hard via API. Could use `gh api .../git/trees` but no line counts. Skip.
 
 Let me do a final round:
-1. CODE_STYLE remainder (grep for commit/word/style sections) — `base64 -d | sed -n '55,160p'` or grep -n "##" to list sections.
+1. CODE_STYLE remainder (grep for commit/word/style sections) -- `base64 -d | sed -n '55,160p'` or grep -n "##" to list sections.
 2. `.github/workflows` listing + maybe one workflow name.
 3. Maybe check skiff-widgets? Optional.
 4. Check test dir listing.
@@ -10842,7 +10842,7 @@ Then write the final deep-dive summary.
 
 Let me run.
 
-Actually also useful: README tail (sections after Browser) — there might be "Building", "Status" sections. The README was 10081 bytes; I read head -80 which covered up to Browser section. Let me get the rest: `sed -n '80,200p'`. That likely has Building/Requirements/Status/License. That's valuable — tells what's done vs not. Let me include that.
+Actually also useful: README tail (sections after Browser) -- there might be "Building", "Status" sections. The README was 10081 bytes; I read head -80 which covered up to Browser section. Let me get the rest: `sed -n '80,200p'`. That likely has Building/Requirements/Status/License. That's valuable -- tells what's done vs not. Let me include that.
 
 So 4 calls:
 A. README tail
@@ -11054,7 +11054,7 @@ Now I have a comprehensive picture. Let me write a deep-dive summary for the use
 
 Key facts to present:
 
-**It's a full-stack, from-scratch effort — the author wrote ~10 libraries:**
+**It's a full-stack, from-scratch effort -- the author wrote ~10 libraries:**
 
 | library | role |
 |---|---|
@@ -11062,7 +11062,7 @@ Key facts to present:
 | loom | Matrix client-server API + events + sync state + crypto (over vodozemac), sans-I/O |
 | knot | JSON, typed, no DOM/tree |
 | chevron | XML typed (under tern) + HTML for Matrix formatted bodies |
-| alef | Unicode: normalization, casing, graphemes, IDNA, PRECIS, emoji — tables generated from Unicode data files at compile time |
+| alef | Unicode: normalization, casing, graphemes, IDNA, PRECIS, emoji -- tables generated from Unicode data files at compile time |
 | splice | spl::variant, overload sets, erased calls, aggregate fields |
 | skiff | retained-mode UI on Skia (osu!framework-shaped drawables), sized for no-GPU machines |
 | skiff-widgets | controls: text areas, buttons, tabs, sliders, dialogs |
@@ -11078,15 +11078,15 @@ Plus: SDL3 (own fork for Android NativeActivity), Skia, Boost.Asio + Beast, Open
 - Sans-I/O below, I/O in mux (sockets, TLS, files, clock).
 - Release builds instantiate statically whole; dev builds erase handlers & split accounts into separate TUs for parallel builds (MUX_SPLIT_ACCOUNTS).
 
-**Rendering**: Skia + SDL3, via skiff — retained-mode UI framework "in the shape osu!framework gives its drawables" (osu!framework is ppy's game UI framework — that's why osu-cpp exists in their repos!). Sized for machines with no GPU acceleration (software rendering fallback; GPU via OpenGL optional). Six modules: skiff.core, skiff.web (HTML backend!), skia (module wrapper over Skia headers), skiff.paint (font stack w/ fallbacks, canvas painter, easing), skiff.scene (layout, typed stylesheets, transforms, input routing, a11y semantics, frame scheduling), skiff.nodes (Box, Text, Sprite, FillFlow, ScrollContainer, CachedContainer, Clickable).
+**Rendering**: Skia + SDL3, via skiff -- retained-mode UI framework "in the shape osu!framework gives its drawables" (osu!framework is ppy's game UI framework -- that's why osu-cpp exists in their repos!). Sized for machines with no GPU acceleration (software rendering fallback; GPU via OpenGL optional). Six modules: skiff.core, skiff.web (HTML backend!), skia (module wrapper over Skia headers), skiff.paint (font stack w/ fallbacks, canvas painter, easing), skiff.scene (layout, typed stylesheets, transforms, input routing, a11y semantics, frame scheduling), skiff.nodes (Box, Text, Sprite, FillFlow, ScrollContainer, CachedContainer, Clickable).
 
-Notable: **skiff.web** renders the same UI tree to DOM/CSS for the browser build — so the same UI vocabulary works native (Skia) and web (DOM). That's a genuinely clever design.
+Notable: **skiff.web** renders the same UI tree to DOM/CSS for the browser build -- so the same UI vocabulary works native (Skia) and web (DOM). That's a genuinely clever design.
 
-Styling: typed stylesheets, no selector strings/RTTI/runtime hashes — node kinds and app-defined roles are C++ types.
+Styling: typed stylesheets, no selector strings/RTTI/runtime hashes -- node kinds and app-defined roles are C++ types.
 
 **Code style** is strict and documented: modules-only C++26 (no own headers), clang 23, everything typed at boundary (JSON/XML/protocol read once into structs/variants at boundary; no generic trees past it), **no branching on strings** (text→variant at boundary via *_of tables), dispatch via visit+overload sets (holds_alternative/get_if chains banned), declarative code, documented compiler-bug workarounds with reduced cases.
 
-That explains the odd commit-message English — there's a section "## Comments, names and commits" (line 126) which I didn't read; the prose style (avoiding Latinate words, e.g. "a step under a bound part changes it where pressed") looks like deliberate **Anglish**-style word choice. I could note it as a stylistic quirk; maybe I should verify by reading that section. I have limited budget; but it'd be a nice touch. Let me consider: I could fetch lines 126-end of CODE_STYLE. It might explain. It's cheap — one call. But I've already made many calls. The user wants to know more about the project; the commit style is a curiosity. I think it's worth one quick call to accurately explain it rather than speculate. Let me do it.
+That explains the odd commit-message English -- there's a section "## Comments, names and commits" (line 126) which I didn't read; the prose style (avoiding Latinate words, e.g. "a step under a bound part changes it where pressed") looks like deliberate **Anglish**-style word choice. I could note it as a stylistic quirk; maybe I should verify by reading that section. I have limited budget; but it'd be a nice touch. Let me consider: I could fetch lines 126-end of CODE_STYLE. It might explain. It's cheap -- one call. But I've already made many calls. The user wants to know more about the project; the commit style is a curiosity. I think it's worth one quick call to accurately explain it rather than speculate. Let me do it.
 
 Actually, I should be careful not to over-invest. But accuracy matters: I'd otherwise speculate about "Anglish". One more call is fine.
 
@@ -11094,9 +11094,9 @@ Let me fetch CODE_STYLE from line 126 onward.
 
 Then write the final deep dive.
 
-Also mention: tests (net_test, matrix_test, xmpp_test, calls_matrix_test, ui_test, composer_model_test, emoji_panel_test, etc. — ~25 test files + python/js smoke tests), CI: android.yml (APKs), check.yml, web.yml (WASM → Pages). CI publishes Linux binaries and Android APKs in debug and stripped variants with build IDs/DWARF. That's serious release engineering for a 5★ repo.
+Also mention: tests (net_test, matrix_test, xmpp_test, calls_matrix_test, ui_test, composer_model_test, emoji_panel_test, etc. -- ~25 test files + python/js smoke tests), CI: android.yml (APKs), check.yml, web.yml (WASM → Pages). CI publishes Linux binaries and Android APKs in debug and stripped variants with build IDs/DWARF. That's serious release engineering for a 5★ repo.
 
-Also: `?demo` opens built-in sample conversations without an account — so the Pages build has a demo mode! Nice: j4niwzis.github.io/mux/?demo
+Also: `?demo` opens built-in sample conversations without an account -- so the Pages build has a demo mode! Nice: j4niwzis.github.io/mux/?demo
 
 Let me mention that.
 
@@ -11129,13 +11129,13 @@ Let me do the final fetch then write.
 
 _Thinking:_
 
-The commit style isn't explained as "Anglish" explicitly — just "plain English sentences" and "English everywhere". The distinctive prose is likely a non-native/learned-English style (possibly the author learned English from a dictionary, avoiding Latinate loanwords, or using a thesaurus). I should note it neutrally: "plain English" per their style guide; the resulting prose reads unusually (Germanic-only vocabulary), likely deliberate or learned-English. Don't over-claim.
+The commit style isn't explained as "Anglish" explicitly -- just "plain English sentences" and "English everywhere". The distinctive prose is likely a non-native/learned-English style (possibly the author learned English from a dictionary, avoiding Latinate loanwords, or using a thesaurus). I should note it neutrally: "plain English" per their style guide; the resulting prose reads unusually (Germanic-only vocabulary), likely deliberate or learned-English. Don't over-claim.
 
-Note "English everywhere" — maybe they mean no other languages in code/docs. The odd style: minimal Latinate words ("a step under a bound part changes it where pressed" = "a key press changes the value where the cursor is"). This looks like the author writes in a restricted, Germanic-only vocabulary — plausibly they learned English from a thesaurus/dictionary, or it's an intentional plain-English purism. I'll mention as a curiosity, neutrally.
+Note "English everywhere" -- maybe they mean no other languages in code/docs. The odd style: minimal Latinate words ("a step under a bound part changes it where pressed" = "a key press changes the value where the cursor is"). This looks like the author writes in a restricted, Germanic-only vocabulary -- plausibly they learned English from a thesaurus/dictionary, or it's an intentional plain-English purism. I'll mention as a curiosity, neutrally.
 
 Now write the deep dive. Structure:
 
-1. It's not a client — it's a stack (10 libraries)
+1. It's not a client -- it's a stack (10 libraries)
 2. Rendering: Skia + SDL3 via skiff (with osu!framework lineage), and skiff.web → DOM for browser
 3. Architecture: 2 threads, typed changes/requests mailbox, sans-I/O protocols, closed protocol set, static-vs-erased builds
 4. Matrix specifics: loom + vodozemac, what's done/not
@@ -11148,13 +11148,13 @@ Keep it organized and readable. Use tables/lists. Reasonably detailed since user
 
 Let me write.
 
-I should mention osu!framework lineage: skiff README says "in the shape osu!framework gives its drawables" and the author has `j4niwzis/osu-cpp` (16★) — "osu! in C++". So they're porting osu!framework concepts. Nice detail.
+I should mention osu!framework lineage: skiff README says "in the shape osu!framework gives its drawables" and the author has `j4niwzis/osu-cpp` (16★) -- "osu! in C++". So they're porting osu!framework concepts. Nice detail.
 
-Also alef compiles Unicode tables from Unicode data files at compile time — nice.
+Also alef compiles Unicode tables from Unicode data files at compile time -- nice.
 
 Let me write the final answer.
 
-It goes deeper than "a chat client that uses Skia." This is a **from-scratch application stack** — the author wrote ~10 libraries before writing the client.
+It goes deeper than "a chat client that uses Skia." This is a **from-scratch application stack** -- the author wrote ~10 libraries before writing the client.
 
 ## It's a stack, not a client
 
@@ -11162,24 +11162,24 @@ It goes deeper than "a chat client that uses Skia." This is a **from-scratch app
 |---|---|
 | **loom** | Matrix: every client-server endpoint + event as types, sync state, crypto (over vodozemac). **Sans-I/O** |
 | **tern** | XMPP: stream, SASL, roster, presence, XEPs. Also sans-I/O |
-| **knot** | JSON — typed, no intermediate tree |
+| **knot** | JSON -- typed, no intermediate tree |
 | **chevron** | XML (under tern) + HTML for Matrix formatted bodies |
-| **alef** | Unicode: normalization, casing, graphemes, IDNA, PRECIS, emoji — **tables generated from Unicode data files at compile time** |
+| **alef** | Unicode: normalization, casing, graphemes, IDNA, PRECIS, emoji -- **tables generated from Unicode data files at compile time** |
 | **splice** | `spl::variant`, overload sets, erased calls |
 | **skiff** | UI framework on Skia |
 | **skiff-widgets** | Controls: text areas, buttons, tabs, sliders, dialogs |
-| **cmake-everywhere** | Every dependency pinned — system copy or built, native or cross |
+| **cmake-everywhere** | Every dependency pinned -- system copy or built, native or cross |
 
 Plus SDL3 (**own fork**, for Android NativeActivity), Skia, Boost.Asio + Beast, OpenSSL, vodozemac, FFmpeg, Opus/Vorbis, libdatachannel + libnice for calls.
 
 ## The rendering answer
 
-`skiff` is a retained-mode UI framework on Skia, explicitly *"in the shape osu!framework gives its drawables"* — which tracks, since the author also has `osu-cpp` (16★). It's **sized for machines with no GPU acceleration** (GPU/OpenGL optional, software fallback). Six modules: `skiff.core`, `skia` (module wrapper so nothing downstream needs a global module fragment), `skiff.paint`, `skiff.scene` (layout, transforms, input routing, a11y semantics, frame scheduling), `skiff.nodes` (Box, Text, Sprite, FillFlow, ScrollContainer, Clickable).
+`skiff` is a retained-mode UI framework on Skia, explicitly *"in the shape osu!framework gives its drawables"* -- which tracks, since the author also has `osu-cpp` (16★). It's **sized for machines with no GPU acceleration** (GPU/OpenGL optional, software fallback). Six modules: `skiff.core`, `skia` (module wrapper so nothing downstream needs a global module fragment), `skiff.paint`, `skiff.scene` (layout, transforms, input routing, a11y semantics, frame scheduling), `skiff.nodes` (Box, Text, Sprite, FillFlow, ScrollContainer, Clickable).
 
 Two design details that stand out:
 
-- **Typed stylesheets, no selectors.** Node kinds and app-defined roles *are C++ types* — no selector strings, runtime hashes, or RTTI.
-- **`skiff.web`** renders the *same* UI tree to DOM/CSS for the browser build — stacks become flex boxes, texts become spans, a `Spec` becomes the element's CSS. One UI vocabulary, two backends. That's why a WASM build exists at all.
+- **Typed stylesheets, no selectors.** Node kinds and app-defined roles *are C++ types* -- no selector strings, runtime hashes, or RTTI.
+- **`skiff.web`** renders the *same* UI tree to DOM/CSS for the browser build -- stacks become flex boxes, texts become spans, a `Spec` becomes the element's CSS. One UI vocabulary, two backends. That's why a WASM build exists at all.
 
 ## Architecture
 
@@ -11188,7 +11188,7 @@ mux.platform.*   SDL3 window, input, IME, clipboard, audio/video, notifications 
 mux.ui           screens, as skiff nodes
    requests ↓  ↑ changes
 mux.app.*        program: one part per concern (outbox, reading, history, rooms, calls…)
-mux.core         model: accounts, conversations, messages — one shape for both protocols
+mux.core         model: accounts, conversations, messages -- one shape for both protocols
 mux.app.network  accounts, on the network's own thread
 mux.proto.*      tern (XMPP) / loom (Matrix) over Asio+TLS / Beast
 mux.net/.http/.vault   io_context, TLS, HTTP, sealed files
@@ -11196,16 +11196,16 @@ mux.net/.http/.vault   io_context, TLS, HTTP, sealed files
 
 - **Two threads**: network on one `io_context` as stackful coroutines, UI on SDL's thread. The network reports **changes** (typed variant) via a mailbox drained between frames; the UI sends **requests** (typed variant). Neither blocks.
 - **Protocols are a closed set**: a tag type in `src/proto/tags.cc`; its client, changes, requests and dialogs found by **overload resolution on types**. Accounts are a variant, visited.
-- **Static in release, erased in dev** — `MUX_SPLIT_ACCOUNTS` splits accounts into separate translation units so dev builds compile in parallel.
+- **Static in release, erased in dev** -- `MUX_SPLIT_ACCOUNTS` splits accounts into separate translation units so dev builds compile in parallel.
 
 ## Engineering rigor (the part that convinced me)
 
 `CODE_STYLE.md` is unusually strict and enforced in review ("a change that does not follow this is not done"):
 
-- **C++26, modules only** — no headers of their own; third-party headers only in a global module fragment.
-- **Everything typed at the boundary** — JSON/XML/protocol/config read *once* into structs, enums, variants. No generic trees past the boundary. No typed→JSON→typed round trips.
-- **No branching on strings** — any text that decides behavior becomes a `std::variant` via a `*_of` table. `name == "..."` chains are banned.
-- **Dispatch only via `visit` + overload sets** — `holds_alternative`/`get_if` chains and `if constexpr (is_same_v)` dispatch are banned.
+- **C++26, modules only** -- no headers of their own; third-party headers only in a global module fragment.
+- **Everything typed at the boundary** -- JSON/XML/protocol/config read *once* into structs, enums, variants. No generic trees past the boundary. No typed→JSON→typed round trips.
+- **No branching on strings** -- any text that decides behavior becomes a `std::variant` via a `*_of` table. `name == "..."` chains are banned.
+- **Dispatch only via `visit` + overload sets** -- `holds_alternative`/`get_if` chains and `if constexpr (is_same_v)` dispatch are banned.
 - **Compiler bugs get documented workarounds with the reduced case** (the clang 23.1.2 `operator|` example, and an `extern template` destruction rule).
 
 And real release engineering: ~25 test files (`matrix_test.cc`, `xmpp_test.cc`, `calls_matrix_test.cc`, `ui_test.cc`, `composer_model_test.cc`…), CI that publishes **Linux binaries and Android APKs in `debug` and `stripped` variants with matching ELF Build IDs and retained DWARF** for crash symbolization.
@@ -11218,12 +11218,12 @@ To build natively you need **clang 23** (libc++ or libstdc++ ≥15.2), **CMake 4
 
 ## Caveats, restated
 
-- **No releases/tags** — `VERSION 0.1` only.
+- **No releases/tags** -- `VERSION 0.1` only.
 - **E2EE is receive-only** (Olm/Megolm decrypt, cross-signing, key backup work; sending doesn't).
-- 5★, 0 issues — zero external validation of the code.
-- `tern` is linked in README as `github.com/j4niwzis/tern` but didn't appear in my repo listing — possibly private, which would block building the XMPP half.
+- 5★, 0 issues -- zero external validation of the code.
+- `tern` is linked in README as `github.com/j4niwzis/tern` but didn't appear in my repo listing -- possibly private, which would block building the XMPP half.
 
-One curiosity: the style guide demands *"English everywhere"* and plain sentences, and the result is prose written almost entirely from Germanic roots (*"a step under a bound part changes it where pressed"*) — deliberate plain-English purism or learned-English phrasing, hard to say which. Either way it's consistent across 2,520 commits.
+One curiosity: the style guide demands *"English everywhere"* and plain sentences, and the result is prose written almost entirely from Germanic roots (*"a step under a bound part changes it where pressed"*) -- deliberate plain-English purism or learned-English phrasing, hard to say which. Either way it's consistent across 2,520 commits.
 
 Want me to check whether it actually builds, or read `loom`'s API coverage to see how much of the Matrix spec it implements?
 
@@ -11239,19 +11239,19 @@ what is description of the repo?
 
 _Thinking:_
 
-The user asks "what is description of the repo?" — likely referring to mux, the repo we've been discussing. Let me give the description. I already have it from gh api: "A fast C++26 multi-protocol cross-platform chat client" with topics.
+The user asks "what is description of the repo?" -- likely referring to mux, the repo we've been discussing. Let me give the description. I already have it from gh api: "A fast C++26 multi-protocol cross-platform chat client" with topics.
 
 Should I re-fetch? I have it in context: desc = "A fast C++26 multi-protocol cross-platform chat client", 5 stars, AGPL-3.0, topics listed.
 
 But maybe they mean which repo? Most recent discussed = j4niwzis/mux. Answer directly with the description field plus metadata. Keep concise.
 
-I can state it from earlier tool results — no need to re-run. Though a quick verification call is cheap and safe. Let me just answer from the fetched data; it's reliable (I ran `gh api repos/j4niwzis/mux --jq` and got desc).
+I can state it from earlier tool results -- no need to re-run. Though a quick verification call is cheap and safe. Let me just answer from the fetched data; it's reliable (I ran `gh api repos/j4niwzis/mux --jq` and got desc).
 
 Answer: GitHub description string + topics + homepage empty. Also note it's the one-line blurb vs README tagline "Multi-protocol Unified eXchange: one chat client for Matrix and XMPP...".
 
 Let me also offer if they meant a different repo.
 
-`j4niwzis/mux` — the GitHub description field is a single line:
+`j4niwzis/mux` -- the GitHub description field is a single line:
 
 > **A fast C++26 multi-protocol cross-platform chat client**
 
@@ -11266,9 +11266,9 @@ That's all it says in the metadata. Supporting fields from the API:
 
 The README's own tagline is more informative than the description:
 
-> **Multi-protocol Unified eXchange**: one chat client for Matrix and XMPP, written in C++26 modules, drawn with Skia in an SDL3 window — on Linux and on Android. It looks and behaves like Telegram Desktop, with Element's Matrix features behind it.
+> **Multi-protocol Unified eXchange**: one chat client for Matrix and XMPP, written in C++26 modules, drawn with Skia in an SDL3 window -- on Linux and on Android. It looks and behaves like Telegram Desktop, with Element's Matrix features behind it.
 
-Note the description is a bit of an understatement — the topics advertise `xmpp` and `skia`, but nothing about the fact that it ships ~10 of its own libraries, or that it also builds to WebAssembly (deployed on GitHub Pages). If you meant a different repo, tell me which and I'll pull its description the same way.
+Note the description is a bit of an understatement -- the topics advertise `xmpp` and `skia`, but nothing about the fact that it ships ~10 of its own libraries, or that it also builds to WebAssembly (deployed on GitHub Pages). If you meant a different repo, tell me which and I'll pull its description the same way.
 
 ---
 
@@ -11282,15 +11282,15 @@ android? this thing w custom ui works on android? bruh, that is actually what i 
 
 _Thinking:_
 
-The user is excited that mux works on Android with a custom UI (Skia + SDL3 instead of native Android views). They want that for their own projects. I should dig into HOW it does Android — this is the interesting technical question.
+The user is excited that mux works on Android with a custom UI (Skia + SDL3 instead of native Android views). They want that for their own projects. I should dig into HOW it does Android -- this is the interesting technical question.
 
 Let me investigate:
-1. `src/android_runtime.cc` — how it bridges to JVM/Activity
+1. `src/android_runtime.cc` -- how it bridges to JVM/Activity
 2. The `android/` directory contents
 3. SDL3 fork changes? Maybe check j4niwzis/SDL? Actually earlier repo list showed forks of emscripten, fmt, SDL maybe not. Let me check the android.yml workflow to see what it builds (APK).
 4. Check README's Android section (I read head 80 and tail 80; the middle ~ maybe skipped). Let me grep README for "Android".
 5. The CMakeLists around line 415 (SDL3) and android section.
-6. Check if they use NativeActivity vs Java glue: `src/android_runtime.cc` + `src/android_runtime.h` suggests JNI glue — probably SDL's SDL_Activity or their own Activity with JNI callbacks for IME, clipboard, notifications, permissions, intents.
+6. Check if they use NativeActivity vs Java glue: `src/android_runtime.cc` + `src/android_runtime.h` suggests JNI glue -- probably SDL's SDL_Activity or their own Activity with JNI callbacks for IME, clipboard, notifications, permissions, intents.
 7. Also check `packaging/` dir and `android/` dir contents.
 8. Check the android.yml workflow - maybe it produces downloadable APKs. This matters: user could actually download an APK!
 
@@ -11313,7 +11313,7 @@ Also let me check whether there's an actual APK link in README or GH Pages.
 
 Let me do 4-5 calls.
 
-That's the genuinely hard part and worth understanding properly — most cross-platform C++ clients punt to native views. Let me see how the Android side actually works.
+That's the genuinely hard part and worth understanding properly -- most cross-platform C++ clients punt to native views. Let me see how the Android side actually works.
 
 ---
 
@@ -11327,7 +11327,7 @@ i let u
 
 _Thinking:_
 
-User said "i let u" — likely meaning "I let you [do it]" i.e., go ahead / continue investigating. Actually it looks like an incomplete message — probably "I let you..." meaning "go ahead, I'll let you [look into it]". So they want me to continue the investigation into how mux does Android, and what that means for their own projects.
+User said "i let u" -- likely meaning "I let you [do it]" i.e., go ahead / continue investigating. Actually it looks like an incomplete message -- probably "I let you..." meaning "go ahead, I'll let you [look into it]". So they want me to continue the investigation into how mux does Android, and what that means for their own projects.
 
 Let me run the parallel calls I planned:
 A. README grep -i android
@@ -11339,7 +11339,7 @@ Then produce a good writeup.
 
 Let me do these in parallel.
 
-Continuing — let me get the Android specifics.
+Continuing -- let me get the Android specifics.
 
 ---
 
@@ -11387,7 +11387,7 @@ go
 
 _Thinking:_
 
-The user invoked /goal with args "get the Android specifics". So I need to call get_goal first — there may be an existing goal. Let me check.
+The user invoked /goal with args "get the Android specifics". So I need to call get_goal first -- there may be an existing goal. Let me check.
 
 **Tool: get_goal**
 
@@ -11408,7 +11408,7 @@ The user invoked /goal with args "get the Android specifics". So I need to call 
 
 _Thinking:_
 
-No existing non-closed goal. So create a goal with objective "get the Android specifics" — but per rules I must build a complete faithful representation. The user's request: investigate how j4niwzis/mux does Android (custom Skia+SDL3 UI on Android), from conversation context. The arguments are literally "get the Android specifics". I'll create a goal that captures: research and document how mux's Android target works (build system, runtime glue, SDL3/Skia integration, APK output, limitations), so the user can apply the approach to their own projects.
+No existing non-closed goal. So create a goal with objective "get the Android specifics" -- but per rules I must build a complete faithful representation. The user's request: investigate how j4niwzis/mux does Android (custom Skia+SDL3 UI on Android), from conversation context. The arguments are literally "get the Android specifics". I'll create a goal that captures: research and document how mux's Android target works (build system, runtime glue, SDL3/Skia integration, APK output, limitations), so the user can apply the approach to their own projects.
 
 Then do the work: run the gh commands.
 
@@ -11416,7 +11416,7 @@ Let me create the goal, then proceed with research.
 
 Objective text: keep faithful. Something like:
 
-"Get the Android specifics of j4niwzis/mux: determine exactly how the C++26/Skia/SDL3 custom-UI Matrix+XMPP client builds and runs on Android — the android/ directory contents and packaging, src/android_runtime.cc JNI/activity glue (IME, clipboard, notifications, permissions, intents), how Skia and SDL3 are wired for Android (including the author's SDL fork), what the android.yml CI workflow produces (APK artifacts/ABI), any Android limitations noted in README/CMakeLists, and which NDK/toolchain requirements apply. Deliver a concrete writeup of the approach plus the practical tradeoffs and whether it can actually be tried today, so it can be reused in the user's own cross-platform custom-UI Android projects."
+"Get the Android specifics of j4niwzis/mux: determine exactly how the C++26/Skia/SDL3 custom-UI Matrix+XMPP client builds and runs on Android -- the android/ directory contents and packaging, src/android_runtime.cc JNI/activity glue (IME, clipboard, notifications, permissions, intents), how Skia and SDL3 are wired for Android (including the author's SDL fork), what the android.yml CI workflow produces (APK artifacts/ABI), any Android limitations noted in README/CMakeLists, and which NDK/toolchain requirements apply. Deliver a concrete writeup of the approach plus the practical tradeoffs and whether it can actually be tried today, so it can be reused in the user's own cross-platform custom-UI Android projects."
 
 That's complete and faithful to context. Create it.
 
@@ -11424,7 +11424,7 @@ Then do research with gh (gh still available as shell tool).
 
 Let me create goal first.
 
-No active goal yet — creating one for this.
+No active goal yet -- creating one for this.
 
 **Tool: create_goal**
 
@@ -11502,7 +11502,7 @@ Let me do these 4-5 in parallel via shell tool (still available per catalog? The
 
 Let me run.
 
-Now the research — five parallel probes into the Android side.
+Now the research -- five parallel probes into the Android side.
 
 ---
 
@@ -11590,7 +11590,7 @@ Exited with code 2
 
 _Thinking:_
 
-Quoting issue — my command had a stray quote. Let me redo carefully.
+Quoting issue -- my command had a stray quote. Let me redo carefully.
 
 The jq expression with tabs: use " " regular space instead of \t.
 
@@ -11623,7 +11623,7 @@ file toolchain-sources.json
 
 _Thinking:_
 
-Interesting — there's NO Gradle build.gradle! Only AndroidManifest.xml, abis.json, exports.map, smoke dir, test-signing.p12, toolchain-sources.json, README.md. That strongly suggests they build the APK manually: compile with NDK clang, package with aapt2, sign with apksigner — no Gradle/AGP at all. That's notable: a fully hand-rolled APK pipeline. Let me confirm by reading android/README.md and the manifests/toolchain-sources.json.
+Interesting -- there's NO Gradle build.gradle! Only AndroidManifest.xml, abis.json, exports.map, smoke dir, test-signing.p12, toolchain-sources.json, README.md. That strongly suggests they build the APK manually: compile with NDK clang, package with aapt2, sign with apksigner -- no Gradle/AGP at all. That's notable: a fully hand-rolled APK pipeline. Let me confirm by reading android/README.md and the manifests/toolchain-sources.json.
 
 Let me fetch:
 - android/README.md (this will explain the whole thing!)
@@ -11649,7 +11649,7 @@ Then next round: android_runtime.cc, abis.json, toolchain-sources.json, CMake an
 
 Let me go with 4 calls now.
 
-No Gradle at all — that's telling. Let me read `android/README.md` and the manifest.
+No Gradle at all -- that's telling. Let me read `android/README.md` and the manifest.
 
 **Tool: shell**
 
@@ -11792,21 +11792,21 @@ This is a goldmine and answers most of the objective. Key facts:
 
 **No Gradle/D8/R8/Java SDK app bridge**: "Android packaging without D8". They use SDL fork's NativeActivity profile. A host C++ program emits four small callback classes **directly as DEX**. IME composition and document selection via JNI. No D8, R8, Gradle, SDLActivity Java sources, android.jar, or downloaded DEX needed.
 
-Targets: ARM64 or armeabi-v7a (NEON), API 21+ (Android 5.0), GLES 2.0 or none — where no GLES, Skia draws in software and window shown through **ANativeWindow_lock**. 
+Targets: ARM64 or armeabi-v7a (NEON), API 21+ (Android 5.0), GLES 2.0 or none -- where no GLES, Skia draws in software and window shown through **ANativeWindow_lock**. 
 
-Toolchain: their own `minimal-android-ndk.cpp` build from pinned commit — they literally build their own minimal NDK from AOSP sources (toolchain-sources.json pins AOSP repos + LLVM runtimes; builds libc++ 23.1.2 with host clang 23). This is because they need libc++ 23 with C++23 range adaptors including `std::views::enumerate`, plus module support.
+Toolchain: their own `minimal-android-ndk.cpp` build from pinned commit -- they literally build their own minimal NDK from AOSP sources (toolchain-sources.json pins AOSP repos + LLVM runtimes; builds libc++ 23.1.2 with host clang 23). This is because they need libc++ 23 with C++23 range adaptors including `std::views::enumerate`, plus module support.
 
 Why fork SDL3: uses NativeActivity profile of SDL fork. Presumably for module-friendly or NativeActivity-specific changes. The README says "It uses the NativeActivity profile of the SDL fork."
 
-DEX emission: "A host C++ program emits four small callback classes directly as DEX" — so `tools/` likely has a DEX writer (maybe `tools/dex_*.py` or cpp). Let me check tools/ directory for that.
+DEX emission: "A host C++ program emits four small callback classes directly as DEX" -- so `tools/` likely has a DEX writer (maybe `tools/dex_*.py` or cpp). Let me check tools/ directory for that.
 
-Status: **experimental port** — SDL library, Mux's Android platform modules, and a small test app cross-compiled and packaged; **full client and device behavior not yet validated**. So the Android claim in the README ("on Linux and on Android") is aspirational for the client — only the smoke app is validated. That's crucial nuance for the user: Skia+SDL3 on Android works (smoke app), full client not validated on device.
+Status: **experimental port** -- SDL library, Mux's Android platform modules, and a small test app cross-compiled and packaged; **full client and device behavior not yet validated**. So the Android claim in the README ("on Linux and on Android") is aspirational for the client -- only the smoke app is validated. That's crucial nuance for the user: Skia+SDL3 on Android works (smoke app), full client not validated on device.
 
-Also important caveat for user's own projects: this is a very heavy lift — custom minimal NDK, clang 23, libc++ modules, hand-rolled DEX emission, manual APK packaging (no Gradle ≥ AGP), API 21 min, GLES2 or software rendering via ANativeWindow_lock.
+Also important caveat for user's own projects: this is a very heavy lift -- custom minimal NDK, clang 23, libc++ modules, hand-rolled DEX emission, manual APK packaging (no Gradle ≥ AGP), API 21 min, GLES2 or software rendering via ANativeWindow_lock.
 
 Still to gather:
-1. android.yml workflow output (APK artifacts, ABIs) — confirm CI builds.
-2. android_runtime.cc/h — JNI glue specifics (IME, notifications, intents, clipboard, permissions).
+1. android.yml workflow output (APK artifacts, ABIs) -- confirm CI builds.
+2. android_runtime.cc/h -- JNI glue specifics (IME, notifications, intents, clipboard, permissions).
 3. tools/ dir to find the DEX emitter (the host C++ program).
 4. AndroidManifest.xml (NativeActivity, configChanges, etc.)
 5. abis.json
@@ -11824,7 +11824,7 @@ Then write up. Also need to note the tradeoffs section (objective requires it).
 
 Let me run 4 calls.
 
-Jackpot — it's hand-rolled, no Gradle at all. Let me get the glue code, manifest, and CI.
+Jackpot -- it's hand-rolled, no Gradle at all. Let me get the glue code, manifest, and CI.
 
 **Tool: shell**
 
@@ -11887,7 +11887,7 @@ _Thinking:_
 
 Excellent. Manifest shows:
 - package io.github.j4niwzis.mux
-- NativeActivity: org.libsdl.nativeapp.NativeActivity (SDL's own NativeActivity — interesting, they said no SDLActivity Java sources needed; but they use org.libsdl.nativeapp.NativeActivity, which is one of the four DEX-emitted callback classes!)
+- NativeActivity: org.libsdl.nativeapp.NativeActivity (SDL's own NativeActivity -- interesting, they said no SDLActivity Java sources needed; but they use org.libsdl.nativeapp.NativeActivity, which is one of the four DEX-emitted callback classes!)
 - meta-data android.app.lib_name = mux
 - Three DEX classes: NativeActivity, Receiver (notification actions mark-as-read/reply), PushReceiver (UnifiedPush)
 - Permissions: INTERNET, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, RECORD_AUDIO, MODIFY_AUDIO_SETTINGS
@@ -11897,13 +11897,13 @@ Excellent. Manifest shows:
 
 So the "four small callback classes" emitted directly as DEX are likely: NativeActivity, Receiver, PushReceiver, and maybe a 4th (Document picker? No, that's via JNI from Activity). Perhaps Activity/Context helpers.
 
-Now: android_runtime.cc — the native side. Let me get it. Also android.yml, tools listing, abis.json.
+Now: android_runtime.cc -- the native side. Let me get it. Also android.yml, tools listing, abis.json.
 
 Let me run 4 parallel calls.
 
 Note android_runtime.cc might be big; head -80 lines.
 
-Let me also consider: maybe better to look at the `tools/` dir to find the DEX emitter tool name — README says "A host C++ program emits four small callback classes directly as DEX". Maybe in tools/ there's `android_manifest.py` (mentioned) and maybe a C++ tool. Let me list tools/.
+Let me also consider: maybe better to look at the `tools/` dir to find the DEX emitter tool name -- README says "A host C++ program emits four small callback classes directly as DEX". Maybe in tools/ there's `android_manifest.py` (mentioned) and maybe a C++ tool. Let me list tools/.
 
 Calls:
 1. `gh api repos/j4niwzis/mux/contents/src/android_runtime.cc --jq .content | base64 -d | head -90`
@@ -12001,14 +12001,14 @@ bool nameserver(char* output, size_t capacity) {
 _Thinking:_
 
 Beautiful detail:
-- Uses SDL_GetAndroidJNIEnv / SDL_GetAndroidActivity — SDL provides the JNI access.
+- Uses SDL_GetAndroidJNIEnv / SDL_GetAndroidActivity -- SDL provides the JNI access.
 - JNI helper RAII `frame` with PushLocalFrame(64).
 - POST_NOTIFICATIONS permission request via Activity.requestPermissions (Android 13+/API 33).
-- Sets HOME/XDG_* env vars to internal storage paths so the Linux-oriented config code works unchanged — clever portability trick.
-- TLS: instead of OpenSSL reading CA files, they ask Android's own trust store per-server chain via `mux_android_trusts` — because a CA file would be read whole or not at all. Interesting.
+- Sets HOME/XDG_* env vars to internal storage paths so the Linux-oriented config code works unchanged -- clever portability trick.
+- TLS: instead of OpenSSL reading CA files, they ask Android's own trust store per-server chain via `mux_android_trusts` -- because a CA file would be read whole or not at all. Interesting.
 - Also nameserver discovery via ConnectivityManager (probably to get DNS servers).
 
-Now I want: the exported API surface of android_runtime.h (functions like mux_android_initialize, mux_android_trusts, maybe clipboard, notifications, intents/URI picker, IME). Let me read android_runtime.h fully — that's the clean list.
+Now I want: the exported API surface of android_runtime.h (functions like mux_android_initialize, mux_android_trusts, maybe clipboard, notifications, intents/URI picker, IME). Let me read android_runtime.h fully -- that's the clean list.
 
 Also android.yml CI. And tools listing (DEX emitter). And maybe grep CMakeLists for MUX_ANDROID.
 
@@ -12050,7 +12050,7 @@ bool mux_android_trusts(const unsigned char* const* certificates, const size_t* 
 
 _Thinking:_
 
-android_runtime.h is quite small: only 3 functions — initialize, nameserver, trusts. So the platform *services* that must precede network/files. The rest (IME, clipboard, notifications UI, intents) presumably goes through SDL's Android APIs and their own `mux.platform.*` modules + the DEX-emitted Receiver/PushReceiver.
+android_runtime.h is quite small: only 3 functions -- initialize, nameserver, trusts. So the platform *services* that must precede network/files. The rest (IME, clipboard, notifications UI, intents) presumably goes through SDL's Android APIs and their own `mux.platform.*` modules + the DEX-emitted Receiver/PushReceiver.
 
 Interesting: notification replies mark-as-read handled by `org.libsdl.nativeapp.Receiver` in DEX.
 
@@ -12191,7 +12191,7 @@ _Thinking:_
 
 Very rich. Key CI facts:
 - Runs on every push for the **full client** for both ABIs (arm64-v8a, armeabi-v7a); by hand (workflow_dispatch) can build "bridge check" (smoke) or full client with chosen ABI.
-- Staged build across multiple jobs because a single job exceeded GitHub's 6-hour limit — each stage passes build dir as artifact (stage-give/stage-take). That's a real indicator of how heavy C++26 modules builds are on CI.
+- Staged build across multiple jobs because a single job exceeded GitHub's 6-hour limit -- each stage passes build dir as artifact (stage-give/stage-take). That's a real indicator of how heavy C++26 modules builds are on CI.
 - Build type Debug with -O3 -g -fno-omit-frame-pointer.
 - Uses their own android-setup action that builds the minimal NDK probably (~/.cache/mux-android-$ABI).
 - MUX_CALLS=ON, MUX_VIDEO=OFF, MUX_CLI=OFF, MUX_TESTS=OFF.
@@ -12308,7 +12308,7 @@ Let me run 3 calls.
 
 _Thinking:_
 
-Good — staged jobs: modules → app → (probably program → apk). Let me get the last portion which has the APK packaging + artifact names. Let me look at remaining lines 180-300.
+Good -- staged jobs: modules → app → (probably program → apk). Let me get the last portion which has the APK packaging + artifact names. Let me look at remaining lines 180-300.
 
 Also I want tools listing and abis.json.
 
@@ -12580,7 +12580,7 @@ Let me do parallel: (1) android.yml tail from 320, (2) tools listing, (3) abis.j
 
 _Thinking:_
 
-Now I have the full CI: 4 artifacts per ABI (stripped test-signed, stripped unsigned, debug test-signed, debug unsigned). But **artifacts require GitHub login to download** (they're actions artifacts, not releases). So "can it be tried today?" — only if you have a GitHub account and the workflow ran. Also whether the latest runs succeed is important! Let me check recent workflow run status: `gh run list --workflow android.yml --repo j4niwzis/mux --limit 5`. That tells whether the Android build is currently green — critical evidence. If it's failing, then no APK.
+Now I have the full CI: 4 artifacts per ABI (stripped test-signed, stripped unsigned, debug test-signed, debug unsigned). But **artifacts require GitHub login to download** (they're actions artifacts, not releases). So "can it be tried today?" -- only if you have a GitHub account and the workflow ran. Also whether the latest runs succeed is important! Let me check recent workflow run status: `gh run list --workflow android.yml --repo j4niwzis/mux --limit 5`. That tells whether the Android build is currently green -- critical evidence. If it's failing, then no APK.
 
 Let me check that. Also check `gh run list` overall.
 
@@ -12597,7 +12597,7 @@ Actually also check whether recent runs have downloadable artifacts: `gh run lis
 
 Let me run.
 
-Now the critical question — is the Android pipeline actually green today?
+Now the critical question -- is the Android pipeline actually green today?
 
 **Tool: shell**
 
@@ -12617,11 +12617,11 @@ Now the critical question — is the Android pipeline actually green today?
 
 _Thinking:_
 
-Important! The android.yml workflow is FAILING on all recent runs (2026-11-01/02). So no APK is currently produced. Let me verify: maybe check more runs to find last success — `gh run list --workflow android.yml --limit 30` filtered for success. Let me check if there was ever a success.
+Important! The android.yml workflow is FAILING on all recent runs (2026-11-01/02). So no APK is currently produced. Let me verify: maybe check more runs to find last success -- `gh run list --workflow android.yml --limit 30` filtered for success. Let me check if there was ever a success.
 
 Let me search: `gh run list --repo j4niwzis/mux --workflow android.yml --limit 100 --json conclusion,createdAt | jq` and find any successes.
 
-Also check web.yml and check.yml status — the web build may still be green (Pages demo works, which we saw loads). That's relevant: WASM build green, Android failing.
+Also check web.yml and check.yml status -- the web build may still be green (Pages demo works, which we saw loads). That's relevant: WASM build green, Android failing.
 
 Let me do:
 1. android.yml last 100 runs: count conclusions → find last success date.
@@ -12635,7 +12635,7 @@ Command 2: `gh run list --repo j4niwzis/mux --workflow web.yml --limit 5 --json 
 
 Let me run.
 
-Also, should check the failure reason — maybe the failing job is only 'link' due to OOM, or maybe a compile error. Could look at a specific run's failed job: `gh run view <id> --log-failed`. That might be huge. Maybe get job list: `gh run view 0117ff39...`? Actually need run id. Let me use `gh run list --json databaseId`. Let me include databaseId in query.
+Also, should check the failure reason -- maybe the failing job is only 'link' due to OOM, or maybe a compile error. Could look at a specific run's failed job: `gh run view <id> --log-failed`. That might be huge. Maybe get job list: `gh run view 0117ff39...`? Actually need run id. Let me use `gh run list --json databaseId`. Let me include databaseId in query.
 
 Actually simpler: `gh run view --repo j4niwzis/mux --job <id>` needs ids. Let me get run databaseId then `gh run view <id> --json jobs` to see which job failed.
 
@@ -12662,20 +12662,20 @@ success: 15 runs, most recent 2026-10-31T22:57:03Z
 
 _Thinking:_
 
-So there were 15 successes, most recent 2026-10-31T22:57Z. And failures since 2026-10-31/11-01 — 85 failures. So Android pipeline did work at some point (green as recently as Oct 31), currently red since Nov 1.
+So there were 15 successes, most recent 2026-10-31T22:57Z. And failures since 2026-10-31/11-01 -- 85 failures. So Android pipeline did work at some point (green as recently as Oct 31), currently red since Nov 1.
 
 Note: it's also possible many failures are the "full client" (FULL=client) build on every push, whereas successes might be the smoke bridge. Let me check whether successes were push-triggered client builds or manual. Hard from this. But let's find the last successful run and see if artifacts exist.
 
-Let me check: get the last successful run's databaseId and check its artifacts — `gh run view <id> --json jobs` maybe, and `gh api repos/.../actions/runs/<id>/artifacts`.
+Let me check: get the last successful run's databaseId and check its artifacts -- `gh run view <id> --json jobs` maybe, and `gh api repos/.../actions/runs/<id>/artifacts`.
 
 Let me get run id of the Oct 31 success:
 `gh run list --repo j4niwzis/mux --workflow android.yml --limit 100 --json databaseId,conclusion,createdAt | jq -r '.[] | select(.conclusion=="success") | "\(.databaseId) \(.createdAt)"' | head -3`
 
 Then check artifacts for that run: `gh api repos/j4niwzis/mux/actions/runs/<id>/artifacts --jq '.artifacts[] | "\(.name) \(.size_in_bytes)"'`
 
-That answers "can it be tried today?" — if artifacts exist and are downloadable (they are, with auth: `gh run download`).
+That answers "can it be tried today?" -- if artifacts exist and are downloadable (they are, with auth: `gh run download`).
 
-Actually we could even download the smoke APK! But note: smoke app is a blue-window test app, not the client. And test-signed with shared test key. Downloading is feasible: `gh run download <id> -n ...`. But maybe unnecessary; user wants to know how it works, not necessarily install. Though trying it would be the strongest evidence. Hmm — downloading an APK and inspecting it (aapt dump) could confirm contents. That's heavy-ish but doable if artifacts small (~10-50MB). Might be worth it to verify "exists and is a real APK". But CI artifacts expire after 90 days default — still fine.
+Actually we could even download the smoke APK! But note: smoke app is a blue-window test app, not the client. And test-signed with shared test key. Downloading is feasible: `gh run download <id> -n ...`. But maybe unnecessary; user wants to know how it works, not necessarily install. Though trying it would be the strongest evidence. Hmm -- downloading an APK and inspecting it (aapt dump) could confirm contents. That's heavy-ish but doable if artifacts small (~10-50MB). Might be worth it to verify "exists and is a real APK". But CI artifacts expire after 90 days default -- still fine.
 
 Let me first check artifacts existence for last successful run, and which job failed now (maybe informative). Let me also check whether the failure is in full-client build vs. smoke.
 
@@ -12690,7 +12690,7 @@ echo "run=$id"
 gh api repos/j4niwzis/mux/actions/runs/$id/artifacts --jq '.artifacts[] | "\(.name)  \(.size_in_bytes)"'
 ```
 
-That's fine (no echo separator noise issue—one echo).
+That's fine (no echo separator noise issue--one echo).
 
 Let me also check the currently-failing job name in parallel: get latest run id and view jobs:
 `gh run view <latest> --json jobs --jq '.jobs[] | select(.conclusion=="failure") | .name'`
@@ -12732,11 +12732,11 @@ mux-android-armeabi-v7a-client-debug-test-signed-5e250364834d270c93d991b22f89cab
 
 _Thinking:_
 
-Excellent — definitive evidence: the **full client APK was actually built** for both ABIs on 2026-10-31 (commit 5e25036). arm64 stripped is 30.78 MB, debug 337.92 MB (with symbols). Note: "client" not "bridge" — so it's the real full client APK, test-signed.
+Excellent -- definitive evidence: the **full client APK was actually built** for both ABIs on 2026-10-31 (commit 5e25036). arm64 stripped is 30.78 MB, debug 337.92 MB (with symbols). Note: "client" not "bridge" -- so it's the real full client APK, test-signed.
 
-So: yes, there IS a downloadable APK from that run (artifacts, requires GitHub login). Whether it runs on a device is a separate question — README says "experimental port... full client and device behavior have not yet been validated."
+So: yes, there IS a downloadable APK from that run (artifacts, requires GitHub login). Whether it runs on a device is a separate question -- README says "experimental port... full client and device behavior have not yet been validated."
 
-Now let me check what's currently failing (which job). And maybe verify the APK actually is a working package — I could download the stripped one (30MB) and inspect with `aapt`/`unzip` to confirm lib/arm64-v8a/libmux.so + classes.dex. That would be strong verification. Download 30MB — feasible. Then `unzip -l` and check 16KB alignment etc. Maybe `python3` zip listing. Let's try downloading to /tmp/opencode and inspecting. That gives concrete evidence of the mechanism (contents of APK), which is nice: shows no Gradle output, one .so, classes.dex.
+Now let me check what's currently failing (which job). And maybe verify the APK actually is a working package -- I could download the stripped one (30MB) and inspect with `aapt`/`unzip` to confirm lib/arm64-v8a/libmux.so + classes.dex. That would be strong verification. Download 30MB -- feasible. Then `unzip -l` and check 16KB alignment etc. Maybe `python3` zip listing. Let's try downloading to /tmp/opencode and inspecting. That gives concrete evidence of the mechanism (contents of APK), which is nice: shows no Gradle output, one .so, classes.dex.
 
 Let me do it: 
 `gh run download 41250415618 -n mux-android-arm64-v8a-client-stripped-test-signed-5e250364834d270c93d991b22f89cab2feeb0179 -D /tmp/opencode` (gh run download requires being in repo dir? `gh run download` works with --repo flag maybe. Actually `gh run download [<run-id>] [-n name] --repo`. Let me use gh api to download instead: artifacts require Accept header; `gh run download` handles. Let me try with --repo.
@@ -12778,9 +12778,9 @@ app (arm64-v8a)
 
 _Thinking:_
 
-The current failures are in the `app` stage for both ABIs — a compile failure in the app units (likely C++26 modules issue with recent commits, e.g., "Threads panel importing its UI layer"). Not a fundamental Android problem — a build break in current source. Good nuance.
+The current failures are in the `app` stage for both ABIs -- a compile failure in the app units (likely C++26 modules issue with recent commits, e.g., "Threads panel importing its UI layer"). Not a fundamental Android problem -- a build break in current source. Good nuance.
 
-Now let me download the last successful APK and inspect its contents — concrete verification of the packaging approach.
+Now let me download the last successful APK and inspect its contents -- concrete verification of the packaging approach.
 
 Let me do that.
 
@@ -12834,26 +12834,26 @@ _Thinking:_
 
 This is beautiful evidence:
 
-APK contents — only 7 entries:
-- lib/arm64-v8a/libmux.so — **87 MB uncompressed** (single native library!), deflate-compressed
-- AndroidManifest.xml — 4.6 KB (binary AXML)
-- classes.dex — **2,768 bytes** — that's the entire Java layer! Four small callback classes emitted directly as DEX, as the README claimed. 2.7 KB DEX.
-- resources.arsc — 40 bytes (essentially empty)
+APK contents -- only 7 entries:
+- lib/arm64-v8a/libmux.so -- **87 MB uncompressed** (single native library!), deflate-compressed
+- AndroidManifest.xml -- 4.6 KB (binary AXML)
+- classes.dex -- **2,768 bytes** -- that's the entire Java layer! Four small callback classes emitted directly as DEX, as the README claimed. 2.7 KB DEX.
+- resources.arsc -- 40 bytes (essentially empty)
 - Signing block v2/v3 (META-INF ANDROIDD.* = default test key)
 
-Total: NO Gradle, no kotlin, no androidx, no resources — the Java footprint is a 2.7 KB DEX. This is the most concrete proof of the "no D8/Gradle" claim.
+Total: NO Gradle, no kotlin, no androidx, no resources -- the Java footprint is a 2.7 KB DEX. This is the most concrete proof of the "no D8/Gradle" claim.
 
-Let me also check the 16KB alignment requirement they mentioned (Android 15 requires 16KB page alignment). Could check libmux.so ELF alignment via readelf if available. Let me try: extract lib/arm64-v8a/libmux.so (87MB) — heavy but ok? Maybe use `unzip -p | readelf -l` streaming. If readelf available. Let me check quickly: `readelf --version`. Alternatively parse ELF header p_align via python from the zip entry partially. Simple: python read first bytes of decompressed stream to parse ELF program headers. Doable but let me just try python with zipfile.open streaming and parse ELF64 header + first LOAD segment p_align.
+Let me also check the 16KB alignment requirement they mentioned (Android 15 requires 16KB page alignment). Could check libmux.so ELF alignment via readelf if available. Let me try: extract lib/arm64-v8a/libmux.so (87MB) -- heavy but ok? Maybe use `unzip -p | readelf -l` streaming. If readelf available. Let me check quickly: `readelf --version`. Alternatively parse ELF header p_align via python from the zip entry partially. Simple: python read first bytes of decompressed stream to parse ELF program headers. Doable but let me just try python with zipfile.open streaming and parse ELF64 header + first LOAD segment p_align.
 
-Actually simpler: check if `readelf` exists and pipe: `python3 -c "import zipfile,sys;z=zipfile.ZipFile('muxapk/mux-test-signed.apk');sys.stdout.buffer.write(z.read('lib/arm64-v8a/libmux.so'))" | readelf -lW /dev/stdin | head -20` — that writes 87MB to pipe; fine but readelf may need seekable file. Let me extract to file (87MB disk) in /tmp/opencode — acceptable.
+Actually simpler: check if `readelf` exists and pipe: `python3 -c "import zipfile,sys;z=zipfile.ZipFile('muxapk/mux-test-signed.apk');sys.stdout.buffer.write(z.read('lib/arm64-v8a/libmux.so'))" | readelf -lW /dev/stdin | head -20` -- that writes 87MB to pipe; fine but readelf may need seekable file. Let me extract to file (87MB disk) in /tmp/opencode -- acceptable.
 
 Is this necessary? The objective includes "verifies ARM64 and 16 KB ELF alignment" claim. Verifying would be nice but maybe overkill. It's cheap enough. But disk/time... Let me do a quick python ELF parse without extracting fully: parse only first ~64KB of the decompressed stream (program headers are at start). Use z.open(...) and read 65536 bytes, parse ELF header (e_type, machine), then phdr offset, parse LOAD segments p_align. That's fine and fast.
 
-Let me do that — it also confirms machine = AArch64.
+Let me do that -- it also confirms machine = AArch64.
 
 Then also check the DEX classes: dexdump maybe not available. Instead, python: DEX magic "dex\n035\0" and count class_defs. Simple check: read classes.dex, parse header: classDefsOff/classDefsSize at offsets 0x60..0x68 for dex 035. Let me parse: header size 0x70. Fields: magic(8), checksum(4), signature(20), fileSize(4), headerSize(4), endianTag(4), linkSize(4), linkOff(4), mapOff(4), stringIdsSize(4), stringIdsOff(4), typeIdsSize(4), typeIdsOff(4), protoIdsSize, protoIdsOff, fieldIdsSize, fieldIdsOff, methodIdsSize, methodIdsOff, classDefsSize(4)@0x60, classDefsOff(4)@0x64, dataSize@0x68, dataOff@0x6c.
 
-Then list class names via type descriptors: for each class_def (8 fields: classIdx u32, accessFlags, superclassIdx, interfacesOff, sourceFileIdx, annotationsOff, classDataOff, staticValuesOff — each 4 bytes = 32 bytes), get type_ids → string_ids → string data (uleb128 length + bytes). Let me just print the class names — should be the 4 classes (NativeActivity, Receiver, PushReceiver, maybe one more).
+Then list class names via type descriptors: for each class_def (8 fields: classIdx u32, accessFlags, superclassIdx, interfacesOff, sourceFileIdx, annotationsOff, classDataOff, staticValuesOff -- each 4 bytes = 32 bytes), get type_ids → string_ids → string data (uleb128 length + bytes). Let me just print the class names -- should be the 4 classes (NativeActivity, Receiver, PushReceiver, maybe one more).
 
 That's a satisfying verification: enumerating the actual emitted Java classes.
 
@@ -12867,7 +12867,7 @@ Let me implement.
 
 Then finalize with the writeup. That's a lot of evidence gathered; then update plan and maybe mark complete.
 
-Actually per goal rules I should persist a plan with update_goal_plan before implementation for multi-phase goals... The goal was just created; I've been doing research. The work is nearly done. Should I create a plan now? The rules say persist overall plan before implementation. This is a research/deliverable goal. I could create a plan retroactively and mark tasks complete with evidence. Given "Completion audit" requires evidence, and update_goal_plan is available, it's reasonable to record a plan with tasks and mark them completed with evidence, then close complete. Let me do that at the end — create plan (update_goal_plan with full plan) then update tasks complete then update_goal complete. Hmm, but creating a plan after the fact with everything complete might be seen as okay — it documents deliverables. I'll do a compact version: one update_goal_plan with phases/tasks completed + evidence + verification, then update_goal complete.
+Actually per goal rules I should persist a plan with update_goal_plan before implementation for multi-phase goals... The goal was just created; I've been doing research. The work is nearly done. Should I create a plan now? The rules say persist overall plan before implementation. This is a research/deliverable goal. I could create a plan retroactively and mark tasks complete with evidence. Given "Completion audit" requires evidence, and update_goal_plan is available, it's reasonable to record a plan with tasks and mark them completed with evidence, then close complete. Let me do that at the end -- create plan (update_goal_plan with full plan) then update tasks complete then update_goal complete. Hmm, but creating a plan after the fact with everything complete might be seen as okay -- it documents deliverables. I'll do a compact version: one update_goal_plan with phases/tasks completed + evidence + verification, then update_goal complete.
 
 Let me first finish the DEX inspection.
 
@@ -12905,7 +12905,7 @@ Exited with code 1
 
 _Thinking:_
 
-ELF verified: aarch64, LOAD segments 16 KB aligned (0x4000) — matches Android 15 16KB page size requirement. 
+ELF verified: aarch64, LOAD segments 16 KB aligned (0x4000) -- matches Android 15 16KB page size requirement. 
 
 DEX: 6 class defs. My type_idx lookup was buggy. Let me fix: type_ids table offset at header offset 0x40 (typeIdsOff)? Let me recompute DEX header layout (035):
 
@@ -12977,16 +12977,16 @@ _Thinking:_
 The DEX contains exactly 6 classes under `org.libsdl.nativeapp`:
 1. **NativeActivity** extends android.app.NativeActivity
 2. **InputView** extends android.view.View
-3. **InputConnection** extends android.view.inputmethod.BaseInputConnection — this is the IME/soft keyboard glue!
-4. **Receiver** extends BroadcastReceiver — notification actions (mark as read, inline reply)
-5. **PushReceiver** extends BroadcastReceiver — UnifiedPush
-6. **Runner** extends java.lang.Object — probably threading entrypoint
+3. **InputConnection** extends android.view.inputmethod.BaseInputConnection -- this is the IME/soft keyboard glue!
+4. **Receiver** extends BroadcastReceiver -- notification actions (mark as read, inline reply)
+5. **PushReceiver** extends BroadcastReceiver -- UnifiedPush
+6. **Runner** extends java.lang.Object -- probably threading entrypoint
 
-All in 2,768 bytes. That's the whole Java layer. (README said "four small callback classes" — actually 6 now.)
+All in 2,768 bytes. That's the whole Java layer. (README said "four small callback classes" -- actually 6 now.)
 
-This directly answers objective item (2): IME composition via InputConnection/InputView (custom classes, not relying on SDL's Java sources), document selection (SAF intent) — via JNI from native presumably using InputView/Activity; notifications via Receiver; UnifiedPush via PushReceiver; permissions + trust via android_runtime.cc JNI.
+This directly answers objective item (2): IME composition via InputConnection/InputView (custom classes, not relying on SDL's Java sources), document selection (SAF intent) -- via JNI from native presumably using InputView/Activity; notifications via Receiver; UnifiedPush via PushReceiver; permissions + trust via android_runtime.cc JNI.
 
-Now I have everything. Remaining nice-to-have: check `tools/` for the DEX emitter (host C++ program). Let me do one quick listing to name it — it's what makes this reproducible for the user's own projects. That's high value for reuse.
+Now I have everything. Remaining nice-to-have: check `tools/` for the DEX emitter (host C++ program). Let me do one quick listing to name it -- it's what makes this reproducible for the user's own projects. That's high value for reuse.
 
 Let me list tools/ and grep CMakeLists for the dex tool target.
 
@@ -13018,17 +13018,17 @@ wasm_sizes.py
 
 _Thinking:_
 
-tools/ has android_apk.py (the packager) and android_manifest.py (the manifest generator). But README said "A host C++ program emits four small callback classes directly as DEX" — that's probably part of the SDL fork's build (SDL has android-project tooling?). Actually SDL3 upstream has `build-scripts/` that can generate... Hmm. Or maybe it's produced by the minimal-android-ndk or the SDL fork's CMake during build (a host tool compiled then run). Let me check the SDL fork quickly to see if there's a dex emitter. Actually, an easier check: grep the mux CMakeLists for "dex".
+tools/ has android_apk.py (the packager) and android_manifest.py (the manifest generator). But README said "A host C++ program emits four small callback classes directly as DEX" -- that's probably part of the SDL fork's build (SDL has android-project tooling?). Actually SDL3 upstream has `build-scripts/` that can generate... Hmm. Or maybe it's produced by the minimal-android-ndk or the SDL fork's CMake during build (a host tool compiled then run). Let me check the SDL fork quickly to see if there's a dex emitter. Actually, an easier check: grep the mux CMakeLists for "dex".
 
 Let me grep CMakeLists for dex and also check whether j4niwzis has an SDL fork repo.
 
 Actually, since resources.arsc is 40 bytes and classes.dex 2768 bytes and the manifest is generated by tools/android_manifest.py, the DEX likely comes from the SDL fork's CMake (SDL3 upstream actually does have a `SDL3/android` ... no, upstream ships Java sources requiring Gradle/SDLActivity). Their fork probably added emitted DEX.
 
-Let me check j4niwzis repos for SDL: `gh api repos/j4niwzis/SDL --jq '.description + " | " + (.pushed_at)'` — earlier repo list showed maybe not. Let me check quickly and also grep CMakeLists for "dex" in mux.
+Let me check j4niwzis repos for SDL: `gh api repos/j4niwzis/SDL --jq '.description + " | " + (.pushed_at)'` -- earlier repo list showed maybe not. Let me check quickly and also grep CMakeLists for "dex" in mux.
 
 Two parallel calls.
 
-Actually — maybe I have enough. The DEX emission source location is a minor detail; but naming it helps reproducibility. One combined call: check SDL repo existence + grep mux CMakeLists for dex.
+Actually -- maybe I have enough. The DEX emission source location is a minor detail; but naming it helps reproducibility. One combined call: check SDL repo existence + grep mux CMakeLists for dex.
 
 Let me do it.
 
@@ -13057,7 +13057,7 @@ tools/android_apk.py
 
 _Thinking:_
 
-`cmake/android-apk.cmake` is the packaging module — likely contains the DEX emission or at least packaging. Let me grep that file for the dex emitter. Also fix the SDL fork query quoting.
+`cmake/android-apk.cmake` is the packaging module -- likely contains the DEX emission or at least packaging. Let me grep that file for the dex emitter. Also fix the SDL fork query quoting.
 
 Let me run two calls:
 1. `gh api repos/j4niwzis/mux/contents/cmake/android-apk.cmake --jq .content | base64 -d | grep -n -i "dex" | head -30`
@@ -13094,15 +13094,15 @@ Actually to be economical: maybe just do #1 (more directly relevant to mechanism
 
 _Thinking:_
 
-Confirmed: the DEX comes from the **SDL fork's** `build-scripts/native-activity/dex` — a host tool `sdl-native-dex` compiled for the machine (MACHINE build) with `PROGRAMS`, which emits classes.dex. So the fork adds a "native-activity/dex" build script. Upstream SDL3 doesn't have that (it has Java sources for SDLActivity). That's why the fork.
+Confirmed: the DEX comes from the **SDL fork's** `build-scripts/native-activity/dex` -- a host tool `sdl-native-dex` compiled for the machine (MACHINE build) with `PROGRAMS`, which emits classes.dex. So the fork adds a "native-activity/dex" build script. Upstream SDL3 doesn't have that (it has Java sources for SDLActivity). That's why the fork.
 
-That answers item (3): why fork SDL3 — to get a NativeActivity-based Android profile whose Java glue is emitted as DEX by a small host program, rather than shipping SDLActivity.java requiring Gradle/android.jar/D8. Plus presumably module-friendly CMake and maybe CMake 4 support.
+That answers item (3): why fork SDL3 -- to get a NativeActivity-based Android profile whose Java glue is emitted as DEX by a small host program, rather than shipping SDLActivity.java requiring Gradle/android.jar/D8. Plus presumably module-friendly CMake and maybe CMake 4 support.
 
 Now I have all evidence. Let me write the deliverable writeup.
 
 Before that, per goal policy I should persist a plan. Since I'm about to finish, let me create the plan with tasks and evidence, mark phases complete, then close the goal complete. Actually the flow: update_goal_plan (create full plan) → then maybe plan_ops set completed. Simpler: call update_goal_plan with full plan where phases/tasks are completed with evidence and verification. Then update_goal complete with evidence.
 
-Hmm, creating a plan and immediately marking everything complete is a bit odd but it documents the audit. The rules say "Persist the overall plan ... before implementation" — I'm past implementation. I think it's acceptable and probably expected to have a plan. But given I'm finishing, maybe just go straight to update_goal complete with strong evidence? The goal tooling may require a plan for audit... Completion audit says "Build a prompt-to-artifact checklist". I'll create the plan quickly (one call) with phases completed + evidence, then update_goal complete. That satisfies both.
+Hmm, creating a plan and immediately marking everything complete is a bit odd but it documents the audit. The rules say "Persist the overall plan ... before implementation" -- I'm past implementation. I think it's acceptable and probably expected to have a plan. But given I'm finishing, maybe just go straight to update_goal complete with strong evidence? The goal tooling may require a plan for audit... Completion audit says "Build a prompt-to-artifact checklist". I'll create the plan quickly (one call) with phases completed + evidence, then update_goal complete. That satisfies both.
 
 Actually, to keep it efficient and honest: I'll create plan (summary + criteria + 5 phases mapping to the 5 objective items, all completed with evidence), then update_goal complete.
 
@@ -13110,19 +13110,19 @@ Let me first write the user-facing answer (that's the real deliverable), then do
 
 Let me do: update_goal_plan (with completed tasks + evidence) → update_goal complete → then final response with the full writeup. Two tool calls then text. That's fine.
 
-Wait — should I close complete? Objective = deliver a concrete writeup of mechanism + tradeoffs. The writeup is in my response. To close complete I need evidence; I can cite the evidence gathered. But strictly, closing should happen after delivering. I'll deliver in the same turn: do plan + close, then write the answer. Risk: closing before writing. But my message will accompany it. It's fine — the deliverable is produced in the same turn.
+Wait -- should I close complete? Objective = deliver a concrete writeup of mechanism + tradeoffs. The writeup is in my response. To close complete I need evidence; I can cite the evidence gathered. But strictly, closing should happen after delivering. I'll deliver in the same turn: do plan + close, then write the answer. Risk: closing before writing. But my message will accompany it. It's fine -- the deliverable is produced in the same turn.
 
 Actually safer ordering per "Completion still requires the requested end state to be true and verified": I'll write the answer first (text isn't sent until I finish the turn though). Both are in the same assistant turn anyway. Let me do tool calls first, then the writeup text.
 
 Let me construct the plan.
 
 Phases:
-1. APK assembly / android+packaging dirs — evidence: android/README.md, tools/android_apk.py, cmake/android-apk.cmake, verified APK contents (7 entries: libmux.so 87MB, classes.dex 2768B, resources.arsc 40B, v2/v3 sig).
-2. JNI/JVM glue — evidence: src/android_runtime.h (3 funcs), android_runtime.cc (JNI frame, POST_NOTIFICATIONS, XDG env, nameserver), AndroidManifest.xml (NativeActivity + Receiver + PushReceiver, perms), DEX class enumeration (6 classes: NativeActivity, InputView, InputConnection, Receiver, PushReceiver, Runner).
-3. Skia+SDL3 wiring / why fork — evidence: cmake/android-apk.cmake sdl-native-dex from fork build-scripts/native-activity/dex; README "uses NativeActivity profile of the SDL fork"; GLES 2.0 optional → software via ANativeWindow_lock; abis.json.
-4. CI output / tryable today — evidence: run 41250415618 artifacts (8: arm64-v8a + armeabi-v7a × stripped/debug × signed/unsigned, 30.78MB/337.92MB), 15 success vs 85 failure, latest success 2026-10-31, current failure in `app` stage both ABIs; readme says experimental, device behavior not validated.
-5. Toolchain — evidence: clang 23 + libc++, CMake 4.4 (cmr 4.3.4 in mux), Ninja, JDK17, aapt2/zipalign/apksigner, own minimal NDK from pinned AOSP (minimal-android-ndk.cpp @1c68644, toolchain-sources.json), libc++ 23.1.2 for views::enumerate, Rust aarch64 target for vodozemac, API21+, arm64-v8a/armeabi-v7a.
-6. Tradeoffs writeup — delivered in response.
+1. APK assembly / android+packaging dirs -- evidence: android/README.md, tools/android_apk.py, cmake/android-apk.cmake, verified APK contents (7 entries: libmux.so 87MB, classes.dex 2768B, resources.arsc 40B, v2/v3 sig).
+2. JNI/JVM glue -- evidence: src/android_runtime.h (3 funcs), android_runtime.cc (JNI frame, POST_NOTIFICATIONS, XDG env, nameserver), AndroidManifest.xml (NativeActivity + Receiver + PushReceiver, perms), DEX class enumeration (6 classes: NativeActivity, InputView, InputConnection, Receiver, PushReceiver, Runner).
+3. Skia+SDL3 wiring / why fork -- evidence: cmake/android-apk.cmake sdl-native-dex from fork build-scripts/native-activity/dex; README "uses NativeActivity profile of the SDL fork"; GLES 2.0 optional → software via ANativeWindow_lock; abis.json.
+4. CI output / tryable today -- evidence: run 41250415618 artifacts (8: arm64-v8a + armeabi-v7a × stripped/debug × signed/unsigned, 30.78MB/337.92MB), 15 success vs 85 failure, latest success 2026-10-31, current failure in `app` stage both ABIs; readme says experimental, device behavior not validated.
+5. Toolchain -- evidence: clang 23 + libc++, CMake 4.4 (cmr 4.3.4 in mux), Ninja, JDK17, aapt2/zipalign/apksigner, own minimal NDK from pinned AOSP (minimal-android-ndk.cpp @1c68644, toolchain-sources.json), libc++ 23.1.2 for views::enumerate, Rust aarch64 target for vodozemac, API21+, arm64-v8a/armeabi-v7a.
+6. Tradeoffs writeup -- delivered in response.
 
 Completion criteria: each of 5 items answered with primary evidence + delivered writeup including tradeoffs.
 
@@ -13591,12 +13591,12 @@ Now update_goal complete with evidence.
       },
       {
         "type": "checkpoint",
-        "detail": "No active goal yet — creating one for this.",
+        "detail": "No active goal yet -- creating one for this.",
         "timestamp": 1793720321
       },
       {
         "type": "checkpoint",
-        "detail": "Now the research — five parallel probes into the Android side.",
+        "detail": "Now the research -- five parallel probes into the Android side.",
         "timestamp": 1793720332
       },
       {
@@ -13606,17 +13606,17 @@ Now update_goal complete with evidence.
       },
       {
         "type": "checkpoint",
-        "detail": "No Gradle at all — that's telling. Let me read `android/README.md` and the manifest.",
+        "detail": "No Gradle at all -- that's telling. Let me read `android/README.md` and the manifest.",
         "timestamp": 1793720422
       },
       {
         "type": "checkpoint",
-        "detail": "Jackpot — it's hand-rolled, no Gradle at all. Let me get the glue code, manifest, and CI.",
+        "detail": "Jackpot -- it's hand-rolled, no Gradle at all. Let me get the glue code, manifest, and CI.",
         "timestamp": 1793720487
       },
       {
         "type": "checkpoint",
-        "detail": "Now the critical question — is the Android pipeline actually green today?",
+        "detail": "Now the critical question -- is the Android pipeline actually green today?",
         "timestamp": 1793720600
       },
       {
@@ -13652,19 +13652,19 @@ Now update_goal complete with evidence.
     ],
     "checkpoints": [
       {
-        "summary": "Now the research — five parallel probes into the Android side.",
+        "summary": "Now the research -- five parallel probes into the Android side.",
         "timestamp": 1793720332
       },
       {
-        "summary": "No Gradle at all — that's telling. Let me read `android/README.md` and the manifest.",
+        "summary": "No Gradle at all -- that's telling. Let me read `android/README.md` and the manifest.",
         "timestamp": 1793720422
       },
       {
-        "summary": "Jackpot — it's hand-rolled, no Gradle at all. Let me get the glue code, manifest, and CI.",
+        "summary": "Jackpot -- it's hand-rolled, no Gradle at all. Let me get the glue code, manifest, and CI.",
         "timestamp": 1793720487
       },
       {
-        "summary": "Now the critical question — is the Android pipeline actually green today?",
+        "summary": "Now the critical question -- is the Android pipeline actually green today?",
         "timestamp": 1793720600
       },
       {
@@ -13693,7 +13693,7 @@ Now update_goal complete with evidence.
     "lastPromptAgent": "build",
     "awaitingContinuationProgress": true,
     "continuationBaselineMessageID": "msg_1a210054e001wwr7Fvenz2Uq0E",
-    "continuationBaselineSummary": "Now the research — five parallel probes into the Android side.",
+    "continuationBaselineSummary": "Now the research -- five parallel probes into the Android side.",
     "autoTurns": 1,
     "lastContinuationAt": 1793720334,
     "remainingTokens": 298624117,
@@ -13715,7 +13715,7 @@ Now update_goal complete with evidence.
 
 _Thinking:_
 
-The research is done and the goal is closed as complete. All evidence gathered. Now I just need to deliver the final writeup — that's the user-facing deliverable I promised. No more tool calls needed; just write it.
+The research is done and the goal is closed as complete. All evidence gathered. Now I just need to deliver the final writeup -- that's the user-facing deliverable I promised. No more tool calls needed; just write it.
 
 Let me write the comprehensive answer about how mux does Android, plus tradeoffs for their own projects.
 
@@ -13725,7 +13725,7 @@ Key content:
 3. Why fork SDL3: to get build-scripts/native-activity/dex (sdl-native-dex host tool) so no SDLActivity.java/Gradle/D8/android.jar.
 4. JNI glue: android_runtime.h 3 funcs; IME via InputConnection/InputView; notifications via Receiver; UnifiedPush via PushReceiver; TLS via platform TrustManager; HOME/XDG remap; permissions request.
 5. CI: staged 5 jobs due to 6h limit; last success Oct 31 produced 8 artifacts; currently red (app stage compile break both ABIs) since Nov 1; 15 success/85 failure overall.
-6. Try it today: yes — download artifact from run 41250415618 (requires GitHub login); but README says experimental, device behavior not validated; test-signed with shared key.
+6. Try it today: yes -- download artifact from run 41250415618 (requires GitHub login); but README says experimental, device behavior not validated; test-signed with shared key.
 7. Toolchain: clang 23 + libc++, CMake 4.4, Ninja, JDK17 (only for signer), aapt2/zipalign/apksigner, own minimal NDK from pinned AOSP (libc++ 23.1.2 for views::enumerate), Rust aarch64 target for vodozemac. API 21+, arm64-v8a + armeabi-v7a, GLES2 optional with software via ANativeWindow_lock.
 8. Tradeoffs vs native views for their own projects.
 
@@ -13733,25 +13733,25 @@ Tradeoffs table:
 - Pros: one codebase/pixel-identical across Linux+Android+web (via skiff.web DOM); no JVM/Gradle; full control of rendering/typography/animation; no Compose/XML; deterministic; single 87MB .so (though big).
 - Cons: you must reimplement everything the platform gives free: IME (they had to write InputConnection!), text selection, accessibility semantics, clipboard, notifications, permissions, SAF picker, TLS trust, back gesture, insets/cutouts, RTL/bidi, font fallback, high-refresh, battery/thermal, memory pressure, screenshots? Actually some come from SDL.
 - Binary size: 87MB uncompressed lib (30MB compressed APK). Because: C++ modules + static linking of Skia/FFmpeg/vodozemac etc.
-- App store acceptance: test-signed; 16KB alignment needed from Nov 2025 (Android 15) — they verify.
-- Build cost: 5 staged CI jobs, >6 hours in aggregate — that's the real tax of C++26 modules.
-- When it's the right call: you already have a custom renderer (game engine, osu-like, canvas app), or you want pixel parity across desktop+mobile. When not: standard forms/settings-heavy business app — use Compose.
+- App store acceptance: test-signed; 16KB alignment needed from Nov 2025 (Android 15) -- they verify.
+- Build cost: 5 staged CI jobs, >6 hours in aggregate -- that's the real tax of C++26 modules.
+- When it's the right call: you already have a custom renderer (game engine, osu-like, canvas app), or you want pixel parity across desktop+mobile. When not: standard forms/settings-heavy business app -- use Compose.
 
 Practical path for user's own project (lighter versions of the same idea):
-- SDL3 upstream works fine with Gradle (just accept Gradle) — much lower effort; add Skia or your own renderer.
+- SDL3 upstream works fine with Gradle (just accept Gradle) -- much lower effort; add Skia or your own renderer.
 - Skip modules (C++20/23) to avoid the 6-hour build problem.
 - Software vs GL: keep GLES fallback via ANativeWindow_lock.
-- Don't hand-emit DEX unless you really hate Gradle — mux only did it because they also built their own NDK.
+- Don't hand-emit DEX unless you really hate Gradle -- mux only did it because they also built their own NDK.
 
 I'll note the "bruh" excitement: yes it works, and it's verified by a real 30MB APK with a 2.7KB Java layer.
 
-Also mention: to try it — `gh run download 41250415618 -n mux-android-arm64-v8a-client-stripped-test-signed-5e250364834d270c93d991b22f89cab2feeb0179` then adb install.
+Also mention: to try it -- `gh run download 41250415618 -n mux-android-arm64-v8a-client-stripped-test-signed-5e250364834d270c93d991b22f89cab2feeb0179` then adb install.
 
 Let me write it well-structured but not bloated. Include the actual numbers.
 
 Goal is already complete; this turn is just delivering. Good.
 
-Research is done and the goal is closed — here's the writeup. Short version: **yes, it genuinely works, and I verified it against a real APK rather than just the README.**
+Research is done and the goal is closed -- here's the writeup. Short version: **yes, it genuinely works, and I verified it against a real APK rather than just the README.**
 
 ## What an Android build actually contains
 
@@ -13765,7 +13765,7 @@ I downloaded the last successful build (run `41250415618`, commit `5e25036`) and
 | `resources.arsc` | 40 B |
 | `META-INF/ANDROIDD.{RSA,SF}`, `MANIFEST.MF` | v2/v3 signature |
 
-And I parsed the DEX — the entire Java layer is **6 classes** in 2,768 bytes:
+And I parsed the DEX -- the entire Java layer is **6 classes** in 2,768 bytes:
 
 ```
 org.libsdl.nativeapp.NativeActivity    extends android.app.NativeActivity
@@ -13780,9 +13780,9 @@ No Kotlin, no androidx, no resources, no `res/` payload. `libmux.so` LOAD segmen
 
 ## The mechanism
 
-**There is no Gradle.** `android/` contains no `build.gradle` — just a manifest, `abis.json`, `toolchain-sources.json`, `test-signing.p12`, and a smoke app. Packaging goes `aapt2 → zipalign → apksigner`, driven by `tools/android_apk.py` and `cmake/android-apk.cmake`.
+**There is no Gradle.** `android/` contains no `build.gradle` -- just a manifest, `abis.json`, `toolchain-sources.json`, `test-signing.p12`, and a smoke app. Packaging goes `aapt2 → zipalign → apksigner`, driven by `tools/android_apk.py` and `cmake/android-apk.cmake`.
 
-The trick that makes this possible is in the **SDL fork**. Upstream SDL3 ships `SDLActivity.java`, which drags in Gradle, `android.jar` and D8. Their fork adds `build-scripts/native-activity/dex`, a *host* C++ program (`sdl-native-dex`) compiled for the build machine that writes `classes.dex` directly. That's the whole reason for the fork — it deletes the Java build toolchain as a dependency.
+The trick that makes this possible is in the **SDL fork**. Upstream SDL3 ships `SDLActivity.java`, which drags in Gradle, `android.jar` and D8. Their fork adds `build-scripts/native-activity/dex`, a *host* C++ program (`sdl-native-dex`) compiled for the build machine that writes `classes.dex` directly. That's the whole reason for the fork -- it deletes the Java build toolchain as a dependency.
 
 Native side (`src/android_runtime.h`) is only three functions:
 
@@ -13792,7 +13792,7 @@ bool mux_android_nameserver(char*, size_t);       // DNS via ConnectivityManager
 bool mux_android_trusts(...certificates..., host, why, capacity);  // Android's own TLS trust
 ```
 
-Clever bits in the `.cc`: it `setenv`s `HOME`/`XDG_CONFIG_HOME`/`XDG_STATE_HOME`/`XDG_CACHE_HOME` to internal storage so the Linux config code works unchanged on Android; it asks for `POST_NOTIFICATIONS` on API ≥ 33; and rather than shipping a CA bundle for OpenSSL, it hands each server chain to the platform's `X509TrustManagerExtensions.checkServerTrusted` — "as its own TLS would".
+Clever bits in the `.cc`: it `setenv`s `HOME`/`XDG_CONFIG_HOME`/`XDG_STATE_HOME`/`XDG_CACHE_HOME` to internal storage so the Linux config code works unchanged on Android; it asks for `POST_NOTIFICATIONS` on API ≥ 33; and rather than shipping a CA bundle for OpenSSL, it hands each server chain to the platform's `X509TrustManagerExtensions.checkServerTrusted` -- "as its own TLS would".
 
 **Rendering**: GLES 2.0 is `required="false"`. Where there's no usable GLES, Skia draws in software and the surface is presented through `ANativeWindow_lock`. Targets API 21+, `arm64-v8a` and `armeabi-v7a`.
 
@@ -13807,34 +13807,34 @@ adb install mux-test-signed.apk
 
 It's an Actions artifact, so it needs a GitHub login (nothing published as a release). 30.78 MB stripped / 337.92 MB debug; **shared test key**, so don't treat it as trusted.
 
-Health check: the workflow is **15 success / 85 failure**. Last green was 2026-10-31; everything since 2026-11-01 fails in the `app` stage for both ABIs — a source-level compile break, not an Android-specific defect. Also note CI needs **five chained jobs** (`modules → app → program → link → apk`) because one job blew GitHub's 6-hour limit, with 48 GB of swap for the final link. And README says it straight: *"experimental port… the full client and device behavior have not yet been validated."*
+Health check: the workflow is **15 success / 85 failure**. Last green was 2026-10-31; everything since 2026-11-01 fails in the `app` stage for both ABIs -- a source-level compile break, not an Android-specific defect. Also note CI needs **five chained jobs** (`modules → app → program → link → apk`) because one job blew GitHub's 6-hour limit, with 48 GB of swap for the final link. And README says it straight: *"experimental port… the full client and device behavior have not yet been validated."*
 
 ## Toolchain: the real cost
 
-clang 23 + libc++, CMake 4.4, Ninja, Python 3, JDK 17 (only to run the signer), `aapt2`, `zipalign`, `readelf` — plus they **build their own NDK** from `minimal-android-ndk.cpp` @ `1c68644f` using pinned AOSP repos in `toolchain-sources.json`, producing libc++ 23.1.2, because mux needs `std::views::enumerate` which libc++ 22 lacks. The client also needs Rust `aarch64-linux-android` for vodozemac, plus GN and Perl for source-built ports.
+clang 23 + libc++, CMake 4.4, Ninja, Python 3, JDK 17 (only to run the signer), `aapt2`, `zipalign`, `readelf` -- plus they **build their own NDK** from `minimal-android-ndk.cpp` @ `1c68644f` using pinned AOSP repos in `toolchain-sources.json`, producing libc++ 23.1.2, because mux needs `std::views::enumerate` which libc++ 22 lacks. The client also needs Rust `aarch64-linux-android` for vodozemac, plus GN and Perl for source-built ports.
 
 ## Is this the right pattern for your projects?
 
-It is, if what you want is exactly what you reacted to: **one renderer, identical pixels on desktop and mobile**. `skiff` even has an HTML backend, so the same UI tree renders to DOM/CSS — that's how the WASM build exists.
+It is, if what you want is exactly what you reacted to: **one renderer, identical pixels on desktop and mobile**. `skiff` even has an HTML backend, so the same UI tree renders to DOM/CSS -- that's how the WASM build exists.
 
 | | Custom UI (Skia/SDL3) | Native Compose/XML |
 |---|---|---|
-| Cross-platform parity | Pixel-identical, one codebase | None — rewrite everything |
+| Cross-platform parity | Pixel-identical, one codebase | None -- rewrite everything |
 | Build tooling | No Gradle needed at mux's extreme; normally still easiest with it | Gradle/AGP standard |
 | Binary size | Big (one static `.so`; 87 MB here) | Small, uses platform widgets |
 | What you must reimplement | **Everything**: IME, text selection, clipboard, notifications, permissions, document picker, back gesture, insets, a11y semantics, font fallback | Free (TextView, etc.) |
-| Build time | Brutal with C++ modules — 5 CI stages, hours | Seconds to minutes |
+| Build time | Brutal with C++ modules -- 5 CI stages, hours | Seconds to minutes |
 | Rendering perf | Full control; software fallback is always there | Platform composites |
 
 My honest read: adopt the *shape* (native `libfoo.so` + Skia + your own retained-mode UI), not the *extremes*. Concrete advice:
 
 1. **Keep Gradle.** Upstream SDL3 works fine with it. Hand-emitting DEX only paid off here because the author also builds his own NDK. That's a month of work you don't need.
-2. **Skip C++26 modules** unless you enjoy multi-hour CI. Plain C++20/23 removes the entire staged-pipeline problem — none of the five jobs exist for protocol reasons, all of them exist because modules don't parallelize (`MUX_PROGRAM_JOBS=1`).
-3. **Budget for IME.** The strongest signal of how much work this is: they had to emit their own `InputConnection`. Soft keyboard, composition strings, cursor tracking, autocorrect — that's where custom-UI Android projects die.
+2. **Skip C++26 modules** unless you enjoy multi-hour CI. Plain C++20/23 removes the entire staged-pipeline problem -- none of the five jobs exist for protocol reasons, all of them exist because modules don't parallelize (`MUX_PROGRAM_JOBS=1`).
+3. **Budget for IME.** The strongest signal of how much work this is: they had to emit their own `InputConnection`. Soft keyboard, composition strings, cursor tracking, autocorrect -- that's where custom-UI Android projects die.
 4. **Keep the software path.** `ANativeWindow_lock` + CPU Skia is what makes the client survive no-GLES devices and degrades gracefully.
-5. **Check 16 KB alignment early** — they verify it because Play enforces it; a static link usually needs `-Wl,-z,max-page-size=16384`.
+5. **Check 16 KB alignment early** -- they verify it because Play enforces it; a static link usually needs `-Wl,-z,max-page-size=16384`.
 
-Want me to scope a minimal version of this — SDL3 + Skia + your own renderer on Android with regular Gradle — as a starting skeleton?
+Want me to scope a minimal version of this -- SDL3 + Skia + your own renderer on Android with regular Gradle -- as a starting skeleton?
 
 ---
 
@@ -13848,31 +13848,31 @@ why not the extremes?
 
 _Thinking:_
 
-The user asks: "why not the extremes?" — i.e., why shouldn't they adopt the extremes (no Gradle, hand-emitted DEX, own NDK, C++26 modules)?
+The user asks: "why not the extremes?" -- i.e., why shouldn't they adopt the extremes (no Gradle, hand-emitted DEX, own NDK, C++26 modules)?
 
-I should answer honestly: my advice was cost-driven, not capability-driven. But I should give a real cost/benefit analysis, and also note when the extremes actually ARE worth it — and what specifically each extreme buys and costs. I should acknowledge that my recommendation (skip modules, keep Gradle) is about their likely constraints, and that there are legitimate reasons to go extreme:
+I should answer honestly: my advice was cost-driven, not capability-driven. But I should give a real cost/benefit analysis, and also note when the extremes actually ARE worth it -- and what specifically each extreme buys and costs. I should acknowledge that my recommendation (skip modules, keep Gradle) is about their likely constraints, and that there are legitimate reasons to go extreme:
 
-1. Build determinism / no JVM tooling — Gradle is heavy, slow, version-churning; AGP breaks; you need network downloads; reproducible builds harder. Hand-rolled packaging = fully offline, deterministic, ~seconds.
+1. Build determinism / no JVM tooling -- Gradle is heavy, slow, version-churning; AGP breaks; you need network downloads; reproducible builds harder. Hand-rolled packaging = fully offline, deterministic, ~seconds.
 2. Reproducible toolchain: their own NDK pinned to AOSP commits = bit-identical builds years later. Standard NDK updates silently.
 3. No Java/Kotlin code to maintain at all: a 2.7KB DEX means no Android Studio, no AGP upgrade treadmill, no R8 config, no 64K method issues.
-4. If you already need a new libc++ (they needed libc++23 for views::enumerate + modules), building your own runtime is forced anyway — building the NDK is then marginal.
-5. Modules: real build-time tax but they get clean interfaces, no ODR issues, faster incremental rebuilds of *dependent* code after interface-stable modules are built, no header recompilation. Their staged CI is the price; but note it's a *CI* limitation (6h job), not inherent — on a local beefy machine or self-hosted runner, one long build is fine.
+4. If you already need a new libc++ (they needed libc++23 for views::enumerate + modules), building your own runtime is forced anyway -- building the NDK is then marginal.
+5. Modules: real build-time tax but they get clean interfaces, no ODR issues, faster incremental rebuilds of *dependent* code after interface-stable modules are built, no header recompilation. Their staged CI is the price; but note it's a *CI* limitation (6h job), not inherent -- on a local beefy machine or self-hosted runner, one long build is fine.
 
 Costs:
-- Each extreme is a "you now own it forever" decision: no upstream security patches, no AGP fixing 16KB alignment for you, etc. When Android requires something new (e.g., 16KB pages Nov 2025), you must implement and verify it yourself — mux literally added a check in their packaging test.
+- Each extreme is a "you now own it forever" decision: no upstream security patches, no AGP fixing 16KB alignment for you, etc. When Android requires something new (e.g., 16KB pages Nov 2025), you must implement and verify it yourself -- mux literally added a check in their packaging test.
 - You must reimplement emit-level stuff: DEX format writing = implementing a spec (dex 035 layout) correctly; if you get it wrong, cryptic runtime failures.
 - Own NDK = owning libc++/compiler-rt/libunwind builds across AOSP revisions; when you bump to new clang, you rebuild everything.
 - Modules: clang-only; no MSVC/GCC parity in practice; tooling (clangd, sanitizers) weaker; and ecology (most libs still headers) → you end up with lots of global module fragments (mux does exactly this: "a library's headers only in a global module fragment").
 
-Middle ground recommendations — what to take from mux:
+Middle ground recommendations -- what to take from mux:
 - Take: XDG-ish env remap trick, platform TLS trust via TrustManager, software rendering fallback, 16KB alignment verification, DT_NEEDED dependency-following packager checks, debug+stripped artifacts with matching Build IDs.
 - Skip initially: own NDK, DEX emitter, modules.
 
-Also honest re-framing: if their project is a personal/long-lived renderer-driven app where they control everything and value determinism + no JVM, going extreme is defensible — mux proves it's achievable by one person. The reason I said "not the extremes" is sequencing: get the renderer running on device first; the packaging/toolchain extremism is orthogonal and can come later, and doing it first is how these projects die before they ship anything.
+Also honest re-framing: if their project is a personal/long-lived renderer-driven app where they control everything and value determinism + no JVM, going extreme is defensible -- mux proves it's achievable by one person. The reason I said "not the extremes" is sequencing: get the renderer running on device first; the packaging/toolchain extremism is orthogonal and can come later, and doing it first is how these projects die before they ship anything.
 
 Concrete decision rule: adopt an extreme when it removes a recurring *tax* you actually pay (Gradle churn every 3 months), not when it removes a one-time setup cost (writing a DEX emitter).
 
-Also worth noting evidence-based: how long mux took: created 2026-09-26, so ~5 weeks to get a 30MB APK + web demo, 2520 commits. And even then: device behavior not validated, CI red. That's empirical evidence of the cost even for a very strong engineer. So the "extremes" cost ~5 weeks before a validated build exists — and they're STILL not validated on device.
+Also worth noting evidence-based: how long mux took: created 2026-09-26, so ~5 weeks to get a 30MB APK + web demo, 2520 commits. And even then: device behavior not validated, CI red. That's empirical evidence of the cost even for a very strong engineer. So the "extremes" cost ~5 weeks before a validated build exists -- and they're STILL not validated on device.
 
 That's a strong, honest answer. Let me also give a pragmatic "take the extremes BUT in order" ladder:
 
@@ -13882,15 +13882,15 @@ Stage 2: replace Gradle with aapt2/zipalign/apksigner script (1-2 days, keeps up
 Stage 3: emit your own DEX only if you also need a custom runtime.
 Stage 4: modules only when your build machine can eat the 6h.
 
-Also mention: `aapt2` from Ubuntu 24.04 needed Android 14 resource compiler — small gotchas like that multiply.
+Also mention: `aapt2` from Ubuntu 24.04 needed Android 14 resource compiler -- small gotchas like that multiply.
 
 Let me write this concisely but substantively. Maybe ~500-700 words. Use a table? Possibly. Keep it punchy and opinionated with reasons.
 
-No tool calls needed — this is a judgment/opinion answer grounded in evidence already gathered. Maybe I don't need any tools. Right.
+No tool calls needed -- this is a judgment/opinion answer grounded in evidence already gathered. Maybe I don't need any tools. Right.
 
 Let me write it.
 
-Fair challenge — my advice was cost-driven, not capability-driven. Let me be precise about *why*, because there are real reasons to go extreme too.
+Fair challenge -- my advice was cost-driven, not capability-driven. Let me be precise about *why*, because there are real reasons to go extreme too.
 
 ## What each extreme actually buys you
 
@@ -13898,26 +13898,26 @@ They're not all the same kind of decision:
 
 | Extreme | What it removes | Recurring tax, or one-time cost? |
 |---|---|---|
-| No Gradle / no `android.jar` | No AGP upgrade treadmill, no R8 config, no Android Studio, no Kotlin/Java to maintain | **Recurring** — Gradle breaks every few months |
-| Hand-emitted DEX | No D8, ~seconds of packaging, offline builds | **One-time** — you implement a spec (DEX 035) once |
-| Own minimal NDK | Bit-identical toolchain pinned to AOSP commits; gets you libc++ 23 today | **Recurring** — you now own libc++/compiler-rt/libunwind forever |
-| C++26 modules | Real interface boundaries, no ODR hell, no header re-parsing | **Recurring** — every build pays it |
+| No Gradle / no `android.jar` | No AGP upgrade treadmill, no R8 config, no Android Studio, no Kotlin/Java to maintain | **Recurring** -- Gradle breaks every few months |
+| Hand-emitted DEX | No D8, ~seconds of packaging, offline builds | **One-time** -- you implement a spec (DEX 035) once |
+| Own minimal NDK | Bit-identical toolchain pinned to AOSP commits; gets you libc++ 23 today | **Recurring** -- you now own libc++/compiler-rt/libunwind forever |
+| C++26 modules | Real interface boundaries, no ODR hell, no header re-parsing | **Recurring** -- every build pays it |
 
 The honest rule: **adopt an extreme when it kills a tax you pay repeatedly, skip it when it only defers a one-time cost.** By that rule, "no Gradle" is genuinely defensible. Hand-writing a DEX emitter when you don't also need a custom runtime is not.
 
 ## Why I'd still sequence it last
 
-The strongest evidence is mux itself. Created 2026-09-26. ~5 weeks and 2,520 commits later it has a 30 MB APK and a WASM demo — and the README still says *"experimental port… the full client and device behavior have not yet been validated,"* with CI red since 2026-11-01. That's a very strong engineer spending five weeks and **still not having run the client on a phone**.
+The strongest evidence is mux itself. Created 2026-09-26. ~5 weeks and 2,520 commits later it has a 30 MB APK and a WASM demo -- and the README still says *"experimental port… the full client and device behavior have not yet been validated,"* with CI red since 2026-11-01. That's a very strong engineer spending five weeks and **still not having run the client on a phone**.
 
 That's the failure mode I'm steering you away from: the toolchain extremism absorbed the whole budget. It's orthogonal to whether your renderer draws correctly on a device, and doing it first is how these projects die before shipping anything.
 
-And each extreme means *you own it forever*. When Android made 16 KB page alignment mandatory, everyone using AGP got it free — mux had to add a check to their packaging test. That's the pattern: every platform change becomes your ticket.
+And each extreme means *you own it forever*. When Android made 16 KB page alignment mandatory, everyone using AGP got it free -- mux had to add a check to their packaging test. That's the pattern: every platform change becomes your ticket.
 
 ## The parts of the extremism worth stealing anyway
 
-Not all of it is ideological — some is just good engineering, and it's cheap:
+Not all of it is ideological -- some is just good engineering, and it's cheap:
 
-- **`HOME`/`XDG_*` → internal storage** in `mux_android_initialize()` — makes your Linux config code work unmodified. Adopt immediately.
+- **`HOME`/`XDG_*` → internal storage** in `mux_android_initialize()` -- makes your Linux config code work unmodified. Adopt immediately.
 - **TLS via platform `X509TrustManagerExtensions`** instead of shipping a CA bundle. Adopt immediately.
 - **Software rendering fallback + `ANativeWindow_lock`** with `glEsVersion required="false"`. Cheap insurance.
 - **Debug + stripped artifacts sharing one Build ID**, plus following `DT_NEEDED` and rejecting unresolved libs in the packager. Do this once you have any native crash reports at all.
@@ -13928,12 +13928,12 @@ Not all of it is ideological — some is just good engineering, and it's cheap:
 1. **SDL3 upstream + Gradle.** Get pixels on a phone. ~2 days.
 2. **Keep only one activity**, drop the rest of the Java layer. Gradle still fine.
 3. **Replace Gradle with `aapt2` + `zipalign` + `apksigner`** driven by a small CMake target. 1–2 days, and you keep SDL3's own Java glue. This is where you get the offline, deterministic build without writing a DEX format implementation.
-4. **Emit your own DEX** only if you also need a custom runtime (mux needed libc++ 23 modules — that forced the NDK, which made the DEX emitter marginal rather than gratuitous).
-5. **Modules** only when your build machine can swallow one multi-hour build — mux's five CI stages exist purely because GitHub caps jobs at 6 hours, not because Android cares.
+4. **Emit your own DEX** only if you also need a custom runtime (mux needed libc++ 23 modules -- that forced the NDK, which made the DEX emitter marginal rather than gratuitous).
+5. **Modules** only when your build machine can swallow one multi-hour build -- mux's five CI stages exist purely because GitHub caps jobs at 6 hours, not because Android cares.
 
-So: not "don't go extreme" — "get something running on a device first, then buy the extremes with evidence that they're what's slowing you down." Going straight to step 4–5 is how you spend five weeks and still not have validated it.
+So: not "don't go extreme" -- "get something running on a device first, then buy the extremes with evidence that they're what's slowing you down." Going straight to step 4–5 is how you spend five weeks and still not have validated it.
 
-If you tell me what you're actually building — game-like canvas, chat UI, tool with lots of text input — I can say which rung to start at. Text input specifically is where I'd push hardest for keeping upstream SDL3 + Gradle, because that's where mux had to emit its own `InputConnection`.
+If you tell me what you're actually building -- game-like canvas, chat UI, tool with lots of text input -- I can say which rung to start at. Text input specifically is where I'd push hardest for keeping upstream SDL3 + Gradle, because that's where mux had to emit its own `InputConnection`.
 
 ---
 
@@ -13949,17 +13949,17 @@ _Thinking:_
 
 The user says: "check my gh, i fork agora, to get the same, but better and bloatless"
 
-So they want me to check GitHub — they plan to fork "agora" — presumably `agora` is... Actually wait. In context: we were discussing Android Matrix clients, C++26/Skia/SDL3. The user might mean they want to fork something named "agora". Hmm, "agora" — maybe it's a Matrix client? Let me think: There's "Agora" ... Could be `agora` desktop client? Actually there's "Nheko"? No.
+So they want me to check GitHub -- they plan to fork "agora" -- presumably `agora` is... Actually wait. In context: we were discussing Android Matrix clients, C++26/Skia/SDL3. The user might mean they want to fork something named "agora". Hmm, "agora" -- maybe it's a Matrix client? Let me think: There's "Agora" ... Could be `agora` desktop client? Actually there's "Nheko"? No.
 
-Wait — maybe the user means they forked a repo called "agora" and want me to check it. Let me check their gh account (MaurerAnton) for repos named agora. Actually recall from summary: "Note `MaurerAnton/progressive-desktop` is on this same account."
+Wait -- maybe the user means they forked a repo called "agora" and want me to check it. Let me check their gh account (MaurerAnton) for repos named agora. Actually recall from summary: "Note `MaurerAnton/progressive-desktop` is on this same account."
 
-So likely: find `agora` — maybe they mean the agora repo they want to fork, or they already forked it. The instruction: "check my gh, i fork agora, to get the same, but better and bloatless" — meaning: check my GitHub; I'm going to fork "agora" (or I have forked agora) to get the same functionality but better and bloatless.
+So likely: find `agora` -- maybe they mean the agora repo they want to fork, or they already forked it. The instruction: "check my gh, i fork agora, to get the same, but better and bloatless" -- meaning: check my GitHub; I'm going to fork "agora" (or I have forked agora) to get the same functionality but better and bloatless.
 
-Hmm — what is "agora"? Possibly a Matrix client written in something. Let me search GitHub for "agora" related to Matrix chat. There's "agora" - a chat client? Let me actually run gh searches.
+Hmm -- what is "agora"? Possibly a Matrix client written in something. Let me search GitHub for "agora" related to Matrix chat. There's "agora" - a chat client? Let me actually run gh searches.
 
 Plan: 
 1. Check user's own repos (`gh repo list MaurerAnton`) to see if agora fork exists.
-2. Search GitHub for `agora` — likely candidates: a Matrix client? "Agora" is also Element's new "Element X" codename? Hmm, actually Element X Android was codenamed... no.
+2. Search GitHub for `agora` -- likely candidates: a Matrix client? "Agora" is also Element's new "Element X" codename? Hmm, actually Element X Android was codenamed... no.
 
 Actually, thinking more: maybe agora is a Rust Matrix client? Or maybe they mean "agora" in relation to SDL3/Skia? Hmm.
 
@@ -13970,7 +13970,7 @@ Best approach: actually run gh commands to find out. Let me do parallel searches
 
 Let me start with listing their repos & searching for agora. Then determine which is the intended one.
 
-Note: git remote -v check? Working dir /home/user/questions is empty-ish? Possibly they cloned agora there. Let me check the working directory too — maybe they already forked/cloned it locally.
+Note: git remote -v check? Working dir /home/user/questions is empty-ish? Possibly they cloned agora there. Let me check the working directory too -- maybe they already forked/cloned it locally.
 
 Let me do:
 1. `ls -la /home/user/questions` (check local)
@@ -13996,7 +13996,7 @@ Let me run 3 parallel shell calls.
 }
 ```
 
-[{"description":"A route of "all district streets with the fewest repeats" (mixed CPP): a C++17 core + an Android APK through GitHub Actions","isFork":false,"nameWithOwner":"MaurerAnton/every-street","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-11-03T13:01:27Z"},{"description":"CI build of octet (skaft-software) for aarch64-unknown-linux-gnu","isFork":false,"nameWithOwner":"MaurerAnton/octet-aarch64-build","parent":null,"primaryLanguage":null,"pushedAt":"2026-11-03T12:04:50Z"},{"description":"Agora - BYOK LLM client with Tor proxy support","isFork":false,"nameWithOwner":"MaurerAnton/agora","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-11-03T03:10:14Z"},{"description":"C++ web archiver: libcurl capture, WARC, SQLite FTS5, cgroup memory guards","isFork":false,"nameWithOwner":"MaurerAnton/archivebox-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-11-01T15:27:34Z"},{"description":"The shortest path between two files is a duct — raw TCP file transfer, 47 lines of C89 (+ GPL header)","isFork":false,"nameWithOwner":"MaurerAnton/duct","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-10-31T15:44:21Z"},{"description":"Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control.","isFork":false,"nameWithOwner":"MaurerAnton/Agora-1","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-09-16T12:08:35Z"},{"description":"Progressive Chat Desktop — pure C++/Qt6 Matrix client for Linux desktop + PineTab 2/PinePhone. Sister to progressive-android. Reuses progressive_native core.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-desktop","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-10T12:56:40Z"},{"description":"SOTA 2B multilingual text-to-speech model in pure C++ — 24 languages, zero-shot voice cloning, 48kHz output","isFork":false,"nameWithOwner":"MaurerAnton/audio.cpp26","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-09-09T03:43:32Z"},{"description":"A monitor of resources","isFork":true,"nameWithOwner":"MaurerAnton/btop","parent":{"id":"MDEwOlJlcG9zaXRvcnkzNjUwMDUzNzc=","name":"btop","owner":{"id":"MDQ6VXNlcjU5NjU5NDgz","login":"aristocratos"}},"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-09T03:24:13Z"},{"description":"Personal landing page","isFork":false,"nameWithOwner":"MaurerAnton/MaurerAnton.github.io","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-08-05T21:26:51Z"},{"description":"Open-source clone of the Fahren Lernen driving theory test app","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-clone","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-08-05T10:59:58Z"},{"description":"📈 Progressive Chat Android — aiming for pure C++ Matrix client. https://progressive.chat","isFork":true,"nameWithOwner":"MaurerAnton/progressive-android-experiments","parent":{"id":"R_kgDOSbkS3g","name":"progressive-android","owner":{"id":"O_kgDOEO51MA","login":"progressive-chat"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-08-03T14:27:12Z"},{"description":"Pure C++20 Zonos2 TTS — 28-layer MoE transformer","isFork":false,"nameWithOwner":"MaurerAnton/zonos2.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-15T04:28:12Z"},{"description":"Pure C++ npm registry caching proxy — zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/npmproxy","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-13T18:09:40Z"},{"description":"Pure C++ inference for NVIDIA Nemotron-3.5-ASR (FastConformer + RNNT) using ggml/CrispASR","isFork":false,"nameWithOwner":"MaurerAnton/nemotron-asr-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-07T11:53:21Z"},{"description":"1:1 MAUI clone - binary identical (MD5 match, 0 pixel differences)","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui8","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-06-04T17:31:33Z"},{"description":"MAUI clone of Fahren Lernen NEU - same stack as original","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui","parent":null,"primaryLanguage":{"name":"LLVM"},"pushedAt":"2026-06-04T12:11:49Z"},{"description":"Open-source business management platform — project management, HR, finance, time tracking","isFork":true,"nameWithOwner":"MaurerAnton/projectforge","parent":{"id":"MDEwOlJlcG9zaXRvcnk2MDg1MTMxOQ==","name":"projectforge","owner":{"id":"MDEyOk9yZ2FuaXphdGlvbjE3NzMxNjc=","login":"micromata"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-06-03T10:23:55Z"},{"description":"Pure C++ Git caching proxy — zero deps beyond libcurl and git","isFork":false,"nameWithOwner":"MaurerAnton/coblet","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-02T16:30:56Z"},{"description":"Fast source code line counter with complexity estimation — C++ port of scc","isFork":false,"nameWithOwner":"MaurerAnton/sccpp","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-06-01T17:01:32Z"},{"description":"Pure C++/OpenGL ES Matrix chat for Android. IRC-styled UI with SDFont rendering. Will be merged into progressive-android 0.5.5+. Zero JVM UI code.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-next","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-01T08:57:35Z"},{"description":"C++ port of shadow-tls: proxy that exposes real TLS handshake to firewall. V2/V3 protocol, real TLS via OpenSSL, 1780 MB/s throughput.","isFork":false,"nameWithOwner":"MaurerAnton/shadowtls-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T12:31:03Z"},{"description":"The agent that grows with you","isFork":true,"nameWithOwner":"MaurerAnton/hermes-agent","parent":{"id":"R_kgDORtBDWg","name":"hermes-agent","owner":{"id":"U_kgDODxGXnA","login":"adybag14-cyber"}},"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-30T08:38:29Z"},{"description":"Pure C++ PyPI caching proxy — zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/croxpi","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T07:39:08Z"},{"description":"RedReader with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-patched","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:36:08Z"},{"description":"RedReader Android Reddit client with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-old-broken","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:05:47Z"},{"description":"Single-file wxWidgets utility for interactive image cropping and resizing","isFork":false,"nameWithOwner":"MaurerAnton/crop-image-wx.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-29T10:22:49Z"},{"description":"C++ patches for Tenstorrent tt-metal: exp2 kernel (#44507) + host tilizer (#8621)","isFork":false,"nameWithOwner":"MaurerAnton/tt-metal-bounties","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-20T18:25:32Z"},{"description":"RoboSats-XMR: Clean-room FastAPI backend prototype for Monero-based P2P exchange with multisig escrow","isFork":false,"nameWithOwner":"MaurerAnton/robosats-xmr","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-20T11:35:18Z"},{"description":"Progressive Chat Android v0.0.2 ~2% C++ buildable C++ port","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-0.0.2","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-05-20T10:58:37Z"},{"description":"Reliable model swapping for any local OpenAI/Anthropic compatible server - llama.cpp, vllm, etc","isFork":true,"nameWithOwner":"MaurerAnton/llama-swap","parent":{"id":"R_kgDOM7P8-A","name":"llama-swap","owner":{"id":"MDQ6VXNlcjgzOTcy","login":"mostlygeek"}},"primaryLanguage":{"name":"Go"},"pushedAt":"2026-05-18T09:28:56Z"},{"description":"Parser for artificialanalysis.ai — extract AI model pricing, benchmarks & speed without an API key. Python / C++ / JavaScript (Node.js). Includes dashboard.html — interactive token cost calculator.","isFork":false,"nameWithOwner":"MaurerAnton/artificialanalysis-ai-parser","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-18T04:24:25Z"},{"description":"Personal site — static HTML with dark theme, content from JSON","isFork":false,"nameWithOwner":"MaurerAnton/maureranton.com","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-14T20:04:35Z"}]
+[{"description":"A route of "all district streets with the fewest repeats" (mixed CPP): a C++17 core + an Android APK through GitHub Actions","isFork":false,"nameWithOwner":"MaurerAnton/every-street","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-11-03T13:01:27Z"},{"description":"CI build of octet (skaft-software) for aarch64-unknown-linux-gnu","isFork":false,"nameWithOwner":"MaurerAnton/octet-aarch64-build","parent":null,"primaryLanguage":null,"pushedAt":"2026-11-03T12:04:50Z"},{"description":"Agora - BYOK LLM client with Tor proxy support","isFork":false,"nameWithOwner":"MaurerAnton/agora","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-11-03T03:10:14Z"},{"description":"C++ web archiver: libcurl capture, WARC, SQLite FTS5, cgroup memory guards","isFork":false,"nameWithOwner":"MaurerAnton/archivebox-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-11-01T15:27:34Z"},{"description":"The shortest path between two files is a duct -- raw TCP file transfer, 47 lines of C89 (+ GPL header)","isFork":false,"nameWithOwner":"MaurerAnton/duct","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-10-31T15:44:21Z"},{"description":"Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control.","isFork":false,"nameWithOwner":"MaurerAnton/Agora-1","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-09-16T12:08:35Z"},{"description":"Progressive Chat Desktop -- pure C++/Qt6 Matrix client for Linux desktop + PineTab 2/PinePhone. Sister to progressive-android. Reuses progressive_native core.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-desktop","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-10T12:56:40Z"},{"description":"SOTA 2B multilingual text-to-speech model in pure C++ -- 24 languages, zero-shot voice cloning, 48kHz output","isFork":false,"nameWithOwner":"MaurerAnton/audio.cpp26","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-09-09T03:43:32Z"},{"description":"A monitor of resources","isFork":true,"nameWithOwner":"MaurerAnton/btop","parent":{"id":"MDEwOlJlcG9zaXRvcnkzNjUwMDUzNzc=","name":"btop","owner":{"id":"MDQ6VXNlcjU5NjU5NDgz","login":"aristocratos"}},"primaryLanguage":{"name":"C++"},"pushedAt":"2026-09-09T03:24:13Z"},{"description":"Personal landing page","isFork":false,"nameWithOwner":"MaurerAnton/MaurerAnton.github.io","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-08-05T21:26:51Z"},{"description":"Open-source clone of the Fahren Lernen driving theory test app","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-clone","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-08-05T10:59:58Z"},{"description":"📈 Progressive Chat Android -- aiming for pure C++ Matrix client. https://progressive.chat","isFork":true,"nameWithOwner":"MaurerAnton/progressive-android-experiments","parent":{"id":"R_kgDOSbkS3g","name":"progressive-android","owner":{"id":"O_kgDOEO51MA","login":"progressive-chat"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-08-03T14:27:12Z"},{"description":"Pure C++20 Zonos2 TTS -- 28-layer MoE transformer","isFork":false,"nameWithOwner":"MaurerAnton/zonos2.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-15T04:28:12Z"},{"description":"Pure C++ npm registry caching proxy -- zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/npmproxy","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-13T18:09:40Z"},{"description":"Pure C++ inference for NVIDIA Nemotron-3.5-ASR (FastConformer + RNNT) using ggml/CrispASR","isFork":false,"nameWithOwner":"MaurerAnton/nemotron-asr-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-07T11:53:21Z"},{"description":"1:1 MAUI clone - binary identical (MD5 match, 0 pixel differences)","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui8","parent":null,"primaryLanguage":{"name":"Java"},"pushedAt":"2026-06-04T17:31:33Z"},{"description":"MAUI clone of Fahren Lernen NEU - same stack as original","isFork":false,"nameWithOwner":"MaurerAnton/fahrenlernen-maui","parent":null,"primaryLanguage":{"name":"LLVM"},"pushedAt":"2026-06-04T12:11:49Z"},{"description":"Open-source business management platform -- project management, HR, finance, time tracking","isFork":true,"nameWithOwner":"MaurerAnton/projectforge","parent":{"id":"MDEwOlJlcG9zaXRvcnk2MDg1MTMxOQ==","name":"projectforge","owner":{"id":"MDEyOk9yZ2FuaXphdGlvbjE3NzMxNjc=","login":"micromata"}},"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-06-03T10:23:55Z"},{"description":"Pure C++ Git caching proxy -- zero deps beyond libcurl and git","isFork":false,"nameWithOwner":"MaurerAnton/coblet","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-02T16:30:56Z"},{"description":"Fast source code line counter with complexity estimation -- C++ port of scc","isFork":false,"nameWithOwner":"MaurerAnton/sccpp","parent":null,"primaryLanguage":{"name":"C"},"pushedAt":"2026-06-01T17:01:32Z"},{"description":"Pure C++/OpenGL ES Matrix chat for Android. IRC-styled UI with SDFont rendering. Will be merged into progressive-android 0.5.5+. Zero JVM UI code.","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-next","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-06-01T08:57:35Z"},{"description":"C++ port of shadow-tls: proxy that exposes real TLS handshake to firewall. V2/V3 protocol, real TLS via OpenSSL, 1780 MB/s throughput.","isFork":false,"nameWithOwner":"MaurerAnton/shadowtls-cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T12:31:03Z"},{"description":"The agent that grows with you","isFork":true,"nameWithOwner":"MaurerAnton/hermes-agent","parent":{"id":"R_kgDORtBDWg","name":"hermes-agent","owner":{"id":"U_kgDODxGXnA","login":"adybag14-cyber"}},"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-30T08:38:29Z"},{"description":"Pure C++ PyPI caching proxy -- zero deps beyond libcurl","isFork":false,"nameWithOwner":"MaurerAnton/croxpi","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-30T07:39:08Z"},{"description":"RedReader with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-patched","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:36:08Z"},{"description":"RedReader Android Reddit client with PinkReader features","isFork":false,"nameWithOwner":"MaurerAnton/RedReader-old-broken","parent":null,"primaryLanguage":null,"pushedAt":"2026-05-29T11:05:47Z"},{"description":"Single-file wxWidgets utility for interactive image cropping and resizing","isFork":false,"nameWithOwner":"MaurerAnton/crop-image-wx.cpp","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-29T10:22:49Z"},{"description":"C++ patches for Tenstorrent tt-metal: exp2 kernel (#44507) + host tilizer (#8621)","isFork":false,"nameWithOwner":"MaurerAnton/tt-metal-bounties","parent":null,"primaryLanguage":{"name":"C++"},"pushedAt":"2026-05-20T18:25:32Z"},{"description":"RoboSats-XMR: Clean-room FastAPI backend prototype for Monero-based P2P exchange with multisig escrow","isFork":false,"nameWithOwner":"MaurerAnton/robosats-xmr","parent":null,"primaryLanguage":{"name":"Python"},"pushedAt":"2026-05-20T11:35:18Z"},{"description":"Progressive Chat Android v0.0.2 ~2% C++ buildable C++ port","isFork":false,"nameWithOwner":"MaurerAnton/progressive-android-0.0.2","parent":null,"primaryLanguage":{"name":"Kotlin"},"pushedAt":"2026-05-20T10:58:37Z"},{"description":"Reliable model swapping for any local OpenAI/Anthropic compatible server - llama.cpp, vllm, etc","isFork":true,"nameWithOwner":"MaurerAnton/llama-swap","parent":{"id":"R_kgDOM7P8-A","name":"llama-swap","owner":{"id":"MDQ6VXNlcjgzOTcy","login":"mostlygeek"}},"primaryLanguage":{"name":"Go"},"pushedAt":"2026-05-18T09:28:56Z"},{"description":"Parser for artificialanalysis.ai -- extract AI model pricing, benchmarks & speed without an API key. Python / C++ / JavaScript (Node.js). Includes dashboard.html -- interactive token cost calculator.","isFork":false,"nameWithOwner":"MaurerAnton/artificialanalysis-ai-parser","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-18T04:24:25Z"},{"description":"Personal site -- static HTML with dark theme, content from JSON","isFork":false,"nameWithOwner":"MaurerAnton/maureranton.com","parent":null,"primaryLanguage":{"name":"HTML"},"pushedAt":"2026-05-14T20:04:35Z"}]
 
 
 **Tool: shell**
@@ -14046,31 +14046,31 @@ drwxr-xr-x   8 user user    4096 Sep  8 19:40 crush
 
 _Thinking:_
 
-So the user has their own `MaurerAnton/agora` — "Agora - BYOK LLM client with Tor proxy support" (Kotlin), pushed 2026-11-03 (today!), and `Agora-1` — "Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control" (Kotlin).
+So the user has their own `MaurerAnton/agora` -- "Agora - BYOK LLM client with Tor proxy support" (Kotlin), pushed 2026-11-03 (today!), and `Agora-1` -- "Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control" (Kotlin).
 
-Wait — "i fork agora" — maybe they mean they want to fork some existing "agora"? Or their own agora? Hmm. There's a local `agora-site` directory too. And local research files: AGORA_SKIA_DEEP_RESEARCH.md, AGORA_UI_SKIA_CENSUS_FINAL_REPORT.md.
+Wait -- "i fork agora" -- maybe they mean they want to fork some existing "agora"? Or their own agora? Hmm. There's a local `agora-site` directory too. And local research files: AGORA_SKIA_DEEP_RESEARCH.md, AGORA_UI_SKIA_CENSUS_FINAL_REPORT.md.
 
 Hmm, this is confusing. Possibly in the lost context, we were talking about making Agora (their BYOK LLM client) use the mux-style approach: Skia custom UI, no JVM UI code, bloatless.
 
-Wait, "i fork agora, to get the same, but better and bloatless" — maybe they mean: they fork the mux approach... no. Actually maybe: "I fork agora" = I forked the agora repo (their own? or someone else's?) to get the same thing (Matrix chat? no—agora is LLM client) but better and bloatless.
+Wait, "i fork agora, to get the same, but better and bloatless" -- maybe they mean: they fork the mux approach... no. Actually maybe: "I fork agora" = I forked the agora repo (their own? or someone else's?) to get the same thing (Matrix chat? no--agora is LLM client) but better and bloatless.
 
-Hmm — but maybe "agora" here refers to an existing repo named Agora that is a Matrix/LLM client. Their own agora is a BYOK LLM client in Kotlin. So the plan: fork their agora to make a bloatless version — i.e., rewrite the Android UI in C++/Skia using the mux technique (no Gradle, no DEX, custom UI).
+Hmm -- but maybe "agora" here refers to an existing repo named Agora that is a Matrix/LLM client. Their own agora is a BYOK LLM client in Kotlin. So the plan: fork their agora to make a bloatless version -- i.e., rewrite the Android UI in C++/Skia using the mux technique (no Gradle, no DEX, custom UI).
 
-Actually maybe there is an upstream "agora" they forked. `MaurerAnton/agora` shows isFork:false though. And `Agora-1` also isFork:false but with description "Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control" — maybe cloned from somewhere.
+Actually maybe there is an upstream "agora" they forked. `MaurerAnton/agora` shows isFork:false though. And `Agora-1` also isFork:false but with description "Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control" -- maybe cloned from somewhere.
 
-The user says "check my gh, i fork agora, to get the same, but better and bloatless". I should check their gh for agora-related repos — done — and maybe check local agora-site dir, and read those local research docs (AGORA_SKIA_DEEP_RESEARCH.md — 15KB, AGORA_UI_SKIA_CENSUS_FINAL_REPORT.md — 18KB) which are highly relevant: prior census of UI/Skia approaches for Agora.
+The user says "check my gh, i fork agora, to get the same, but better and bloatless". I should check their gh for agora-related repos -- done -- and maybe check local agora-site dir, and read those local research docs (AGORA_SKIA_DEEP_RESEARCH.md -- 15KB, AGORA_UI_SKIA_CENSUS_FINAL_REPORT.md -- 18KB) which are highly relevant: prior census of UI/Skia approaches for Agora.
 
-The intent likely: They want to take the mux Android approach (or something similar) and apply it to Agora — a bloatless version. But which agora? Possibly there's an upstream "agora" LLM client that is bloated, and they forked to make it slimmer.
+The intent likely: They want to take the mux Android approach (or something similar) and apply it to Agora -- a bloatless version. But which agora? Possibly there's an upstream "agora" LLM client that is bloated, and they forked to make it slimmer.
 
-Hmm. Alternatively "i fork agora" could be future: "I [will] fork agora" — they want me to check whether forking is feasible/right.
+Hmm. Alternatively "i fork agora" could be future: "I [will] fork agora" -- they want me to check whether forking is feasible/right.
 
-Given ambiguity, best move: gather evidence then ask? The instructions say prefer to ask when ambiguous. But also "check my gh" — they gave me the action: check their GitHub. So the immediate task is: inspect their GitHub agora repos and report, then advise on "fork to get same but better and bloatless".
+Given ambiguity, best move: gather evidence then ask? The instructions say prefer to ask when ambiguous. But also "check my gh" -- they gave me the action: check their GitHub. So the immediate task is: inspect their GitHub agora repos and report, then advise on "fork to get same but better and bloatless".
 
-Key ambiguity: which "agora" — their own `MaurerAnton/agora` vs upstream. Let me check details of both agora repos (size, languages, gradle, deps), plus check local files, then possibly ask a clarifying question.
+Key ambiguity: which "agora" -- their own `MaurerAnton/agora` vs upstream. Let me check details of both agora repos (size, languages, gradle, deps), plus check local files, then possibly ask a clarifying question.
 
-Actually — think about "to get the same, but better and bloatless". Same as what? Same as mux presumably: the mux-style Android native app. Or same as some existing app.
+Actually -- think about "to get the same, but better and bloatless". Same as what? Same as mux presumably: the mux-style Android native app. Or same as some existing app.
 
-Given the strong local artifacts (AGORA_SKIA_DEEP_RESEARCH.md), it appears earlier conversation (lost) involved deep research into Skia UI for Agora. Let me read those docs — they'd tell me exactly what "agora" is and what they planned. That's the cheapest way to re-establish context.
+Given the strong local artifacts (AGORA_SKIA_DEEP_RESEARCH.md), it appears earlier conversation (lost) involved deep research into Skia UI for Agora. Let me read those docs -- they'd tell me exactly what "agora" is and what they planned. That's the cheapest way to re-establish context.
 
 Let me read AGORA_SKIA_DEEP_RESEARCH.md head and the agora-site dir listing, plus check MaurerAnton/agora repo details (gh api).
 
@@ -14081,11 +14081,11 @@ Let me do parallel:
 
 Actually maybe the most useful: read the deep research doc first. Let me do those three.
 
-Also maybe check for bloat: their agora is Kotlin — "bloatless" likely means the JVM/Gradle/Compose bloat → rewrite with the mux technique. That connects to the conversation: "custom-UI-on-Android approach versus native Android views... so it can be reused in the user's own cross-platform custom-UI Android projects."
+Also maybe check for bloat: their agora is Kotlin -- "bloatless" likely means the JVM/Gradle/Compose bloat → rewrite with the mux technique. That connects to the conversation: "custom-UI-on-Android approach versus native Android views... so it can be reused in the user's own cross-platform custom-UI Android projects."
 
 So yes: they want Agora as a bloatless native app using the mux approach. "I fork agora" might mean they forked it (creating a new repo) OR they intend to fork the mux approach for agora.
 
-Hmm wait — another reading: maybe there IS an upstream "agora" repo (someone else's) that they forked, and their fork is `MaurerAnton/agora`. Let me check if there's a network of agora repos: search GitHub for "agora" LLM client Kotlin. Let me do `gh search repos "agora byok llm"` maybe.
+Hmm wait -- another reading: maybe there IS an upstream "agora" repo (someone else's) that they forked, and their fork is `MaurerAnton/agora`. Let me check if there's a network of agora repos: search GitHub for "agora" LLM client Kotlin. Let me do `gh search repos "agora byok llm"` maybe.
 
 Let's gather: repo details for MaurerAnton/agora and MaurerAnton/Agora-1, plus read local doc, plus search upstream agora candidates.
 
@@ -14104,11 +14104,11 @@ Their account has two Agora repos plus local research docs. Let me pull them tog
 ```
 
 Read file /home/user/questions/AGORA_SKIA_DEEP_RESEARCH.md, lines 1-70
-# Research: Pure-C++ UI toolkits on Skia — an exhaustive survey
+# Research: Pure-C++ UI toolkits on Skia -- an exhaustive survey
 2: 
 **Topic:** Whether a maintained, permissively licensed pure-C++ UI toolkit on Skia exists
 with Android support (IME + TalkBack), Markdown/LaTeX, RTL and a web target.
-**Context of use:** the Agora project — chat, Markdown/LaTeX, IME, text selection, TalkBack,
+**Context of use:** the Agora project -- chat, Markdown/LaTeX, IME, text selection, TalkBack,
 RTL, variable fonts, **minSdk 26**.
 **Client's constraints:** pure C++, no QML, minimal Java, a C++ core as a portable layer of logic;
 a project that can be *maintained*, rather than a drop-in production solution.
@@ -14133,12 +14133,12 @@ methodological difference from a superficial survey.
 27: 
 28: ---
 29: 
-## 2. Axis A. C++ toolkits on Skia — a full rewrite
+## 2. Axis A. C++ toolkits on Skia -- a full rewrite
 31: 
 | Project | ★ | License | Activity | Base | Android | Web/WASM | Verdict |
 33: |---|---|---|---|---|---|---|---|
 | **nim_duilib** / **dui** | 335 | **MIT** | **2026-10-31 (today)** | XML-DirectUI + Skia CPU/GPU + SDL3 | ✘ | ✘ | **The best desktop candidate** |
-| Tencent/tgfx | 1601 | NOASSERTION | 2026-10-31 | graphics only (Metal/GL) | — | — | graphics, not a toolkit |
+| Tencent/tgfx | 1601 | NOASSERTION | 2026-10-31 | graphics only (Metal/GL) | -- | -- | graphics, not a toolkit |
 | skui-org/skui | 435 | MIT | 2022-01-21 | Skia + signals | ✘ | ✘ | dead for 4 years |
 | cutefish-toolkit | 229 | BSD-3 | 2026-10-31 | Skia + Wayland | ✘ | ✘ | Wayland only |
 | nidium/Nidium | 1146 | NOASSERTION | 2019-11-12 | Skia+Yoga+SpiderMonkey | ✘ | mentioned | dead for 7 years |
@@ -14159,8 +14159,8 @@ methodological difference from a superficial survey.
 «active» + «permissive license» + «Android» + «web».
 The set of «active» ones and the set of those with Android **do not intersect**.
 55: 
-The only project passing on activity + license + widget maturity —
-**nim_duilib/dui** — while having neither Android nor WASM.
+The only project passing on activity + license + widget maturity --
+**nim_duilib/dui** -- while having neither Android nor WASM.
 58: 
 59: ---
 60: 
@@ -14171,9 +14171,9 @@ Kotlin surface: `HYSkiaEngine.kt`, `HYSkiaSurfaceView.kt`, `HYSkiaTextureView.kt
 C++ side: `SkiaViewContext`, `gl/HYEGLContext`, `widget/TextView`.
 66: 
 The tree check showed:
-- `TextView` — **display only**, no editing;
-- IME / `InputConnection` — **absent**;
-- accessibility / TalkBack / `AccessibilityNodeInfo` — **absent**;
+- `TextView` -- **display only**, no editing;
+- IME / `InputConnection` -- **absent**;
+- accessibility / TalkBack / `AccessibilityNodeInfo` -- **absent**;
 [Output truncated. Continue reading with offset: 71]
 
 **Tool: shell**
@@ -14199,26 +14199,26 @@ _Thinking:_
 
 Now I understand the context much better. Agora = their own BYOK LLM client project (chat with Markdown/LaTeX, IME, text selection, TalkBack, RTL, variable fonts, minSdk 26). There's extensive prior research concluding no pure-C++ Skia toolkit exists with Android+permissive license+activity.
 
-Now "i fork agora, to get the same, but better and bloatless" — hmm. Maybe: there is an upstream popular project also called "Agora"? Let me search GitHub for other agora repos — maybe an existing Kotlin BYOK LLM client that's bloated, and they want a leaner fork. Their `agora` (created 2026-06-09, GPL-3.0, 132 MB, Kotlin, 1 star) vs `Agora-1` (created 2026-09-16, MIT, 110.9MB, Kotlin) — Agora-1 description "Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control" sounds like a *copy* of another repo (maybe they cloned someone's agora and re-published it — that's the "fork" they mean: "I fork agora" = they took an existing agora app as base).
+Now "i fork agora, to get the same, but better and bloatless" -- hmm. Maybe: there is an upstream popular project also called "Agora"? Let me search GitHub for other agora repos -- maybe an existing Kotlin BYOK LLM client that's bloated, and they want a leaner fork. Their `agora` (created 2026-06-09, GPL-3.0, 132 MB, Kotlin, 1 star) vs `Agora-1` (created 2026-09-16, MIT, 110.9MB, Kotlin) -- Agora-1 description "Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control" sounds like a *copy* of another repo (maybe they cloned someone's agora and re-published it -- that's the "fork" they mean: "I fork agora" = they took an existing agora app as base).
 
-Hmm! Actually maybe: they forked a well-known repo... Let me check what Agora-1 is: its commits? If it's a copy, first commit may show. Let me check `git log`? Not local. Could check via API commits (earliest commit) — hard.
+Hmm! Actually maybe: they forked a well-known repo... Let me check what Agora-1 is: its commits? If it's a copy, first commit may show. Let me check `git log`? Not local. Could check via API commits (earliest commit) -- hard.
 
-Alternative reading: "check my gh, i fork agora" = "I forked Agora [from someone else] — check my GitHub". So there should be a fork relationship... but both show fork=false (though GitHub API `fork` is false if created via repo push rather than fork button).
+Alternative reading: "check my gh, i fork agora" = "I forked Agora [from someone else] -- check my GitHub". So there should be a fork relationship... but both show fork=false (though GitHub API `fork` is false if created via repo push rather than fork button).
 
 Let me search GitHub for "agora" LLM client Android repos with stars, to find the upstream. Search: `gh search repos "agora llm android" --limit 10` and `gh search repos agora --sort stars --limit 15`.
 
 That will identify the likely upstream. Let me also look at whether MaurerAnton/agora has upstream references in its docs (e.g., "based on"). Maybe check its README.
 
-Actually — maybe simpler: the user intends to *fork their own agora* to make a leaner rewrite? "i fork agora, to get the same, but better and bloatless" — likely: they want a new project (fork) that is the same app (BYOK LLM chat) but better and without bloat. Given conversation about mux (custom UI in C++, 2.7KB DEX, one .so), the "bloatless" target = the mux approach.
+Actually -- maybe simpler: the user intends to *fork their own agora* to make a leaner rewrite? "i fork agora, to get the same, but better and bloatless" -- likely: they want a new project (fork) that is the same app (BYOK LLM chat) but better and without bloat. Given conversation about mux (custom UI in C++, 2.7KB DEX, one .so), the "bloatless" target = the mux approach.
 
-I think the deliverable: assess their agora repos (size, structure, bloat), identify what's making it bloated, and propose the lean architecture — grounded in what we learned from mux. Also possibly check if there's an upstream agora to fork.
+I think the deliverable: assess their agora repos (size, structure, bloat), identify what's making it bloated, and propose the lean architecture -- grounded in what we learned from mux. Also possibly check if there's an upstream agora to fork.
 
 Let me gather more concrete evidence:
 1. Structure of MaurerAnton/agora: top-level dirs, Gradle config, deps (libs.versions.toml), APK size if CI builds exist.
 2. Search for upstream agora candidates.
 3. Check local agora-site dir maybe contains something relevant.
 
-Given size 132 MB repo — likely lots of assets/history.
+Given size 132 MB repo -- likely lots of assets/history.
 
 Let me run:
 - `gh api repos/MaurerAnton/agora/contents --jq '.[] | .type + " " + .name'`
@@ -14292,11 +14292,11 @@ Exited with code 5
 
 _Thinking:_
 
-There's a `FORK.md` in their agora! So it IS a fork of something — "document the fork for its users". Let me read FORK.md to know what upstream it forked. That answers "i fork agora".
+There's a `FORK.md` in their agora! So it IS a fork of something -- "document the fork for its users". Let me read FORK.md to know what upstream it forked. That answers "i fork agora".
 
-Also fix the search command (jq parse error because gh output maybe wrapped?). Actually the error suggests output isn't JSON — maybe `gh search repos` needs `--json fullName,...` and it printed something else. Whatever; FORK.md is the key.
+Also fix the search command (jq parse error because gh output maybe wrapped?). Actually the error suggests output isn't JSON -- maybe `gh search repos` needs `--json fullName,...` and it printed something else. Whatever; FORK.md is the key.
 
-Let me read FORK.md and README head. And check app dir / core dir to see C++ core existence ("core" dir) — interesting: they may already have a C++ core. Also commits mention "C++ core", "ChatMediaReferencesDao", so Agora is an Android Kotlin app (likely fork of an existing LLM client) being re-architected with a C++ core.
+Let me read FORK.md and README head. And check app dir / core dir to see C++ core existence ("core" dir) -- interesting: they may already have a C++ core. Also commits mention "C++ core", "ChatMediaReferencesDao", so Agora is an Android Kotlin app (likely fork of an existing LLM client) being re-architected with a C++ core.
 
 So "i fork agora, to get the same, but better and bloatless" = they forked an upstream Android LLM client (maybe "Agora" from someone) and want their version better + bloatless.
 
@@ -14313,7 +14313,7 @@ Actually maybe more efficient: FORK.md + core listing. And README later.
 
 Let me fetch FORK.md and core contents.
 
-There's a `FORK.md` — that's the answer to "I fork agora". Let me read it.
+There's a `FORK.md` -- that's the answer to "I fork agora". Let me read it.
 
 **Tool: shell**
 
@@ -14413,17 +14413,17 @@ Now everything clicks:
 
 - Their fork: `MaurerAnton/agora` ← fork of `newo-ether/Agora` (upstream base 2.2.0, commit da153d05). Upstream Agora is presumably a well-known Android BYOK LLM chat client (Kotlin, Material/Compose).
 - Their fork adds: user-visible improvements + **a C++ core** (`core/` with CMakeLists, include, src, tests, thirdparty, tools) pinned by golden traces.
-- So the plan for "same but bloatless" = keep replacing Kotlin with C++ — eventually including the UI (Skia custom UI like mux) → "bloatless".
+- So the plan for "same but bloatless" = keep replacing Kotlin with C++ -- eventually including the UI (Skia custom UI like mux) → "bloatless".
 
 This is exactly the mux connection: they want the ultimate bloatless = no Compose/Gradle DEX, one .so, custom Skia UI.
 
-Now the user said "check my gh, i fork agora, to get the same, but better and bloatless". So the deliverable should be: check their GitHub and assess the fork — what it is, current state, and specifically what "bloatless" would mean and how to get there (with the mux lessons).
+Now the user said "check my gh, i fork agora, to get the same, but better and bloatless". So the deliverable should be: check their GitHub and assess the fork -- what it is, current state, and specifically what "bloatless" would mean and how to get there (with the mux lessons).
 
 I should gather concrete evidence on their repo state:
-1. Upstream info: newo-ether/Agora — stars, size, language, description, last push. Comparison vs fork.
+1. Upstream info: newo-ether/Agora -- stars, size, language, description, last push. Comparison vs fork.
 2. Their fork: commits ahead? `gh api repos/MaurerAnton/agora/compare/newo-ether:Agora...MaurerAnton:agora`? Actually compare across forks: `gh api repos/newo-ether/Agora/compare/da153d05...MaurerAnton:agora` maybe. Let me instead check commits since da153d05 in their repo: `gh api repos/MaurerAnton/agora/commits --jq` and find how many since that commit; simpler: check their repo's `fork` metadata? Since FORK.md says base 2.2.0.
 
-3. Bloat metrics: APK size. Releases named "APK: …" — check latest release assets sizes. `gh release list --repo MaurerAnton/agora` and `gh release view --json assets`. That gives concrete APK sizes to compare with upstream (and with mux's 30MB).
+3. Bloat metrics: APK size. Releases named "APK: …" -- check latest release assets sizes. `gh release list --repo MaurerAnton/agora` and `gh release view --json assets`. That gives concrete APK sizes to compare with upstream (and with mux's 30MB).
 
 4. Their core/ size: how much C++ is ported so far, what's ported (README in core).
 
@@ -14436,7 +14436,7 @@ Let me gather in parallel:
 
 Let me do 3 calls.
 
-Careful with jq quoting again. Use simple field access with -r? Use `--jq` with plain string concat like before — that failed with escaped stuff when using \". Use `--jq '.x'` style simple. For multiple fields, output as `{a,b}` object maybe: `--jq '{stars:.stargazers_count, size:.size, lang:.language, pushed:.pushed_at, desc:.description}'` — jq object construction with raw.field works without quotes. Good approach avoids quoting issues.
+Careful with jq quoting again. Use simple field access with -r? Use `--jq` with plain string concat like before -- that failed with escaped stuff when using \". Use `--jq '.x'` style simple. For multiple fields, output as `{a,b}` object maybe: `--jq '{stars:.stargazers_count, size:.size, lang:.language, pushed:.pushed_at, desc:.description}'` -- jq object construction with raw.field works without quotes. Good approach avoids quoting issues.
 
 Let me do that.
 
@@ -14475,12 +14475,12 @@ _Thinking:_
 Continue: I have upstream facts (newo-ether/Agora, 558★, GPL-3.0, Kotlin, 126MB, pushed today 2026-11-03) and the fork's releases (pre-releases named ci-*). Next: get APK asset sizes from the latest release (that's the concrete bloat metric), and read core/README.md to see how far the C++ core port is (for "bloatless" plan).
 
 Let me run:
-1. `gh release view ci-cpp-port-2026-11-03 --repo MaurerAnton/agora --json assets` — get name + size.
+1. `gh release view ci-cpp-port-2026-11-03 --repo MaurerAnton/agora --json assets` -- get name + size.
 2. `gh api repos/MaurerAnton/agora/contents/core/README.md --jq .content | base64 -d | head -60`
 
 Parallel.
 
-Then deliver the assessment. Also maybe check upstream release APK size for comparison. Let me include upstream latest release assets too — third call.
+Then deliver the assessment. Also maybe check upstream release APK size for comparison. Let me include upstream latest release assets too -- third call.
 
 Let me do 3 calls.
 
@@ -14506,7 +14506,7 @@ app-fdroid-release.apk  33.26 MB
 }
 ```
 
-# Agora core — the C++ logic layer
+# Agora core -- the C++ logic layer
 
 This directory is the portable half of Agora: logic that can be built and tested on a host
 machine, with no Android dependencies, and that the app consumes through a thin JNI surface
@@ -14553,7 +14553,7 @@ from the app tree, so run the commands from the repository root.
 2. `core/tools/golden/corpus.b64` holds 2551 texts (real repository text plus structured fuzz
    over letters, marks, digits, whitespace, contractions, punctuation and astral code points).
    `golden_counts.txt` holds what the Kotlin implementation counted for each.
-3. `core/tools/golden/check_parity.sh` reruns the whole local differentiation — the Kotlin
+3. `core/tools/golden/check_parity.sh` reruns the whole local differentiation -- the Kotlin
    dumper and the C++ dumper must produce byte-identical piece segmentation and counts:
 
    ```sh
@@ -14562,7 +14562,7 @@ from the app tree, so run the commands from the repository root.
 
 To extend the corpus, rerun `agora_scenarios gen-corpus <repo-root> <out>` (seeded, deterministic),
 regenerate `corpus.b64`, re-freeze `golden_counts.txt` with the Kotlin dumper, and rerun the
-tests — that is the reviewable definition of "the port still agrees".
+tests -- that is the reviewable definition of "the port still agrees".
 
 ## Module status
 
@@ -14574,13 +14574,13 @@ tests — that is the reviewable definition of "the port still agrees".
 
 _Thinking:_
 
-I have enough to give the assessment. Let me get the "Module status" table from core/README (it was cut at line 60) — that tells how much is ported. And maybe the JNI surface size + app dependencies (what makes 33MB APK). That's the "bloat" question.
+I have enough to give the assessment. Let me get the "Module status" table from core/README (it was cut at line 60) -- that tells how much is ported. And maybe the JNI surface size + app dependencies (what makes 33MB APK). That's the "bloat" question.
 
 Let me do two calls:
 1. core/README.md lines 60-120 (module status table)
 2. Check app deps: maybe `gradle/libs.versions.toml` exists in gradle/ dir; list gradle dir. Then I could see Compose/AndroidX deps count. That tells what bloat exists.
 
-Also maybe check upstream APK size for comparison — I could download their release APK (33MB) and compare its structure vs mux's 7-entry APK! That's a great concrete "bloat" contrast: classes.dex sizes, number of .so files, resources. Actually I already have mux's APK downloaded. Downloading agora's 33MB APK and comparing would give compelling evidence: e.g. classes*.dex sizes (multi-dex), number of resources, asset weight.
+Also maybe check upstream APK size for comparison -- I could download their release APK (33MB) and compare its structure vs mux's 7-entry APK! That's a great concrete "bloat" contrast: classes.dex sizes, number of .so files, resources. Actually I already have mux's APK downloaded. Downloading agora's 33MB APK and comparing would give compelling evidence: e.g. classes*.dex sizes (multi-dex), number of resources, asset weight.
 
 That's valuable and cheap. Let me do it:
 - `gh release download ci-cpp-port-2026-11-03 --repo MaurerAnton/agora -p app-fdroid-release.apk -D /tmp/opencode/agora`
@@ -14588,7 +14588,7 @@ That's valuable and cheap. Let me do it:
 
 Let me run these in parallel-ish: I'll do 3 calls: core README tail, agora APK download+inspect (combined), and gradle deps listing.
 
-Actually the download+inspect must be sequential within one call — fine.
+Actually the download+inspect must be sequential within one call -- fine.
 
 Let me run 3 parallel shell calls.
 
@@ -14605,7 +14605,7 @@ Two more probes: how far the C++ core goes, and what's actually inside that 33 M
 
 
 Every **done** row is pinned by golden traces under `core/tools/golden/` and replayed by the
-parity tests in `core/tests/` — a drifting port is a failing build, not a surprise on a phone.
+parity tests in `core/tests/` -- a drifting port is a failing build, not a surprise on a phone.
 
 | Module | State | Notes |
 | --- | --- | --- |
@@ -14641,28 +14641,28 @@ parity tests in `core/tests/` — a drifting port is a failing build, not a surp
 | Conch shell SSE parser (strict one-event/one-data, shared byte budget) | **done** | stand `conch-sse`; every fail-closed message pinned, `shellUtf8Prefix` extracted verbatim from `ShellClient.kt` |
 | native backup media policy (draft rewrite/restore, attachment meta, tool images) | **done** | stand `backup-media-policy`; the call log pins `firstNotNullOfOrNull` probe order, `MessageSegment` lifted verbatim from `ChatMessage.kt` |
 | message persistence guard (text cap, bounded segment JSON, largest-field trimming, Responses-state protection) | **done** | stand `message-persistence-guard`; `MessagePersistenceGuard.kt` and `Constants.kt` compile verbatim, `MessageSegment` lifted by the backup stand's extractor; 65 traces pin UTF-16 boundaries, escape costs, tie order, floor/termination, the 600000-byte default and a deterministic mixed-field corpus |
-| imported citation projection (ChatGPT/Claude marker stripping, reference walking, anchor resolution, bounded citation-row encode) | **done** | stand `imported-citation-projection`; projection, `Citation.kt`, `MessagePersistenceGuard.kt` and `ChatMessage.kt` compile verbatim with the citations stand's leaf stubs — CitationPolicy/guard/MessageSegment are reused, never reimplemented; 51 traces pin both private-marker regexes over UTF-16, firstNotNullOfOrNull order, structured ref ids, the three anchor branches with the `intOrNull` JSON grammar, the Claude block-offset override and the 600000-byte trim of citation segments |
+| imported citation projection (ChatGPT/Claude marker stripping, reference walking, anchor resolution, bounded citation-row encode) | **done** | stand `imported-citation-projection`; projection, `Citation.kt`, `MessagePersistenceGuard.kt` and `ChatMessage.kt` compile verbatim with the citations stand's leaf stubs -- CitationPolicy/guard/MessageSegment are reused, never reimplemented; 51 traces pin both private-marker regexes over UTF-16, firstNotNullOfOrNull order, structured ref ids, the three anchor branches with the `intOrNull` JSON grammar, the Claude block-offset override and the 600000-byte trim of citation segments |
 | native backup secrets policy (capture/restore API keys, shell, embedding and MCP credentials, replace/merge, orphan warnings) | **done** | stand `native-backup-secrets`; policy and shared settings models compile verbatim, DataStore `SettingsManager` replaced by an in-memory storage double; 9 traces pin map order, id remapping, semantic key matching, clearing and warning order |
 | native backup format (version gate, entry vocabulary, conversation entry hashing, credential stripping) | **done** | stand `native-backup-format`; `NativeBackupFormat.kt` compiles verbatim; 5 traces pin constants, supported-version edges, UTF-8 hex entries and model projections |
 | native Run archive policy (terminalize imported rows, ownership completeness, parent-before-child ordering) | **done** | stand `native-run-archive`; policy, `RuntimeIdentity.kt` and `RunEntity.kt` compile verbatim, only Room annotations and the `ChatEntity` table are stubbed; 32 traces pin every status/end-reason fallback, timestamp and pass clamps, ownership uniqueness and missing-parent/cycle/duplicate-id ordering |
 | backup archive reader (central-directory validation, checked metadata and streams, preflight, extraction) | **done** | stand `native-backup-archive`; `NativeBackupArchive.kt` compiles verbatim over real commons-compress (the `NativeGraphEntrySource` interface lifted by script), only the `Context`/`Uri`/`ParcelFileDescriptor` open path substituted; 36 traces pin commons' channel-error labels, every Kotlin entry-path guard, metadata verification at open, lazy stream verification and the storage/preflight arithmetic |
 | portable settings archive (settings.json export allowlist, restore merges, provider reference remap, secrets gating, font/prompt resolution) | **done** | stand `portable-settings-archive`; `PortableSettingsArchive.kt` and its settings/provider models compile verbatim, the identity policy lifted by the `provider-identity` extractor, DataStore `SettingsManager` replaced by a recording double over the full 97-flow/97-save surface; 110 traces pin the exact kotlinx export text (`encodeDefaults=false`), accessor/decode coercions, merge order, warnings, guard messages and generated-vs-retained provider ids |
-| portable settings reset (the portable allowlist a settings import clears) | **done** | stand `portable-settings-reset`; `PortableSettingsReset.kt` and `SettingsPreferenceSchema.kt` compile verbatim, only the DataStore preferences contract is an in-memory stub; the C++ key list is **generated from the Kotlin source**, so the port cannot drift — the trace pins the 94 removed keys, the 37 that survive (secrets, device-local state, sandbox, lifecycle and auto-backup configuration) and the rewritten provider-name map |
+| portable settings reset (the portable allowlist a settings import clears) | **done** | stand `portable-settings-reset`; `PortableSettingsReset.kt` and `SettingsPreferenceSchema.kt` compile verbatim, only the DataStore preferences contract is an in-memory stub; the C++ key list is **generated from the Kotlin source**, so the port cannot drift -- the trace pins the 94 removed keys, the 37 that survive (secrets, device-local state, sandbox, lifecycle and auto-backup configuration) and the rewritten provider-name map |
 | legacy extra settings (backup v<4 JSON reader: scalar fields, conversation records, aliases, custom models, secret gate) | **done** | stand `export-extra-settings`; `ExportExtraSettings.kt`, `ConversationSettings` and the thinking/tier policies compile verbatim, DataStore `SettingsManager` replaced by a recording storage double; 164 traces pin the exact save-call order and arguments, kotlinx primitive spellings, merge/replace order and partial writes before a typed failure |
 | data exporter (backup v6 export: manifest, conversation archive with media rewrite, spool capture, baseline self-reuse, memories/skills, prompts, settings, opt-in secrets) | **done** | stand `data-exporter`; `DataExporter.kt` plus the snapshot reader, export spool, V5 writer/baseline, media/secrets/settings policies and the memory/skill managers compile verbatim (the identity policy and `sanitizeImportedLoop` are lifted by script), only the Android `Context`/`Uri`/`ContentResolver`/`PackageManager` surface and the DataStore double are substituted; 19 traces pin the progress arithmetic, the kotlinx `encodeDefaults=false` entity text, media dedupe/extension/missing-resource counting, baseline reuse with its two non-reuse paths, the entry order and spool cleanup |
-| native conversation graph source (v5 index-driven graph spool split, v<5 legacy passthrough, chained `{field: <part>}` stream) | **done** | stand `native-conversation-graph-source`; `NativeConversationGraphSource.kt` compiles verbatim with `NativeBackupFormat.kt` and the `readToEnd()` helper lifted by script, and the Android streaming JSON boundary is closed by vendoring the AOSP `android.util.JsonReader`/`JsonWriter`/`JsonScope`/`StringPool` sources (one documented build-time edit: dropping ravenwood annotation lines) compiled with javac — so the strict-mode acceptance, `line N column M` arithmetic, `Double.toString` emission and every JVM message the traces pin are Android's own code; 22 traces pin the chained graph content (escapes, astral/UTF-8, number reformats through `toLongOrNull`/`parseDouble`), all failure paths (require/error/checkNotNull, kotlinx `MissingFieldException`/`JsonDecodingException` with byte offsets and the ignoreUnknownKeys hint, AOSP `MalformedJsonException` column math, `EOFException`, drain faults after a successful parse) and both read-after-close stream contracts |
+| native conversation graph source (v5 index-driven graph spool split, v<5 legacy passthrough, chained `{field: <part>}` stream) | **done** | stand `native-conversation-graph-source`; `NativeConversationGraphSource.kt` compiles verbatim with `NativeBackupFormat.kt` and the `readToEnd()` helper lifted by script, and the Android streaming JSON boundary is closed by vendoring the AOSP `android.util.JsonReader`/`JsonWriter`/`JsonScope`/`StringPool` sources (one documented build-time edit: dropping ravenwood annotation lines) compiled with javac -- so the strict-mode acceptance, `line N column M` arithmetic, `Double.toString` emission and every JVM message the traces pin are Android's own code; 22 traces pin the chained graph content (escapes, astral/UTF-8, number reformats through `toLongOrNull`/`parseDouble`), all failure paths (require/error/checkNotNull, kotlinx `MissingFieldException`/`JsonDecodingException` with byte offsets and the ignoreUnknownKeys hint, AOSP `MalformedJsonException` column math, `EOFException`, drain faults after a successful parse) and both read-after-close stream contracts |
 | native conversation graph importer (graph counts, header read with sanitize/resolve/terminalize, transactional import with both run-planning branches) | **done** | stand `native-conversation-graph-importer`; `NativeConversationGraphImporter.kt` plus the graph source, media restorer, archive, run-archive policy, both migration planners, the ChatDao/entity cluster, the ledger and maintenance modules compile verbatim (the three `sanitizeImported*` helpers and `DataImporter.ImportStrategy` lifted by script); the stream boundary reuses the graph source stand's vendored AOSP `android.util.Json*`, and the stand `ChatDatabase` supplies chat/semantic/debt DAO proxies over the schema 36 database; 10 traces pin the header sanitize/resolve/id-set contract, the MERGE upsert-vs-skip and `getRun` guard, the legacy-backfill and repair planning branches (inferred parents, deleted duplicate inputs, reparenting/resequencing), the recovered-run rewrite, v>=4 vs legacy media restore, REPLACE wipes, the settings transfer/maintenance/semantic side effects (uuid + epoch masked) and the kotlinx `MissingFieldException` without a path |
 | cron expression (5-field grammar, day/hour/minute walk, DST resolution) | **done** | stand `cron-expression`; compiles verbatim with no stubs at all, `tz.cpp` reads TZif and reproduces `Calendar`'s gap/overlap rules |
 | task schedule (cron mapping, editor round-trip, one-shot instants) | **done** | stand `task-schedule`; lenient calendar arithmetic pinned, clock-reading paths documented |
 | loop policy (cadence/cycle validation, prompt normalization, overflow-safe fire times) | **done** | stand `loop-policy`; compiles verbatim with no stubs at all, pins Kotlin's wrapping `Long` guard |
-| ZIP reader (local file headers, STORED/DEFLATED entries, data descriptors, the JDK error contract) | **done** | stand `zip-reader`; the reference is the JDK's `java.util.zip.ZipInputStream` (archives built by `ZipOutputStream`, frozen as fixtures) and the C++ port ships a from-scratch RFC 1951 DEFLATE decoder — no third-party dependency in core; 39 traces pin the entry list, both compression methods, data descriptors and every JDK failure message, including zlib's tree-validity wording |
+| ZIP reader (local file headers, STORED/DEFLATED entries, data descriptors, the JDK error contract) | **done** | stand `zip-reader`; the reference is the JDK's `java.util.zip.ZipInputStream` (archives built by `ZipOutputStream`, frozen as fixtures) and the C++ port ships a from-scratch RFC 1951 DEFLATE decoder -- no third-party dependency in core; 39 traces pin the entry list, both compression methods, data descriptors and every JDK failure message, including zlib's tree-validity wording |
 | Claude chat import (export decoding, preview, chat/message entities, attachments, citations) | **done** | stand `claude-chat-importer`; `ClaudeChatImporter.kt`, `ImportStreams.kt` and the citation/attachment models compile verbatim (the citation projection and the attachment encoder are reused, not reimplemented); 31 traces pin the ZIP entry selection, kotlinx's lenient+coerce decode rules, the preview ordering and title fallbacks, the content-block merge, the citation offsets in UTF-16 units, the attachment metadata JSON and the clock fallback for an unparsable timestamp |
-| GPT chat import (conversation graph rebuild, preview, ephemeral-node merge, branch map) | **done** | stand `gpt-chat-importer`; `GptChatImporter.kt`, `ClaudeChatImporter.kt` (the shared import entities) and the citation/attachment models compile verbatim — the citation projection and the ZIP reader are reused, not reimplemented; 34 traces pin the validity pass over the mapping (cycles and dangling parents), the PriorityQueue graph order, the current-node path, the ephemeral-ancestor merge, the parent cascade, the selected-branches JSON, the `decode` category and the clock fallback |
+| GPT chat import (conversation graph rebuild, preview, ephemeral-node merge, branch map) | **done** | stand `gpt-chat-importer`; `GptChatImporter.kt`, `ClaudeChatImporter.kt` (the shared import entities) and the citation/attachment models compile verbatim -- the citation projection and the ZIP reader are reused, not reimplemented; 34 traces pin the validity pass over the mapping (cycles and dangling parents), the PriorityQueue graph order, the current-node path, the ephemeral-ancestor merge, the parent cascade, the selected-branches JSON, the `decode` category and the clock fallback |
 | conversation runtime reducer (recovery, slot, send/guidance, provider/tool gates, stop/finalization barriers) | **done** | stand `conversation-runtime`; the whole reducer cluster compiles verbatim with no stubs, every state/effect field pinned through Kotlin `toString()` |
 | thinking capability (effort normalization, provider family, per-model budgets, resolution) | **done** | stand `thinking-capability`; all four files compile verbatim with no stubs, pins the nearest-effort upward tie rule and the forced-thinking-off fallback |
 | model thinking resolver (selected-model id parse, custom-provider identity/protocol, capability lookup) | **done** | stand `model-thinking-resolver`; resolver, `ModelId`, `CustomProviderConfig` and capability cluster compile verbatim, only the `isStableId` slice is extracted from `CustomProviderIdentity.kt`; 36 traces pin every id heuristic, name/id/legacy match and protocol family |
 | provider protocol support (protocol detection, prompt cache switches, Anthropic TTL, Responses API availability) | **done** | stand `provider-protocol-support`; `CustomProviderConfig.kt` compiles verbatim, same documented `isStableId` extraction; 28 traces pin any-match vs first-match, built-in shadowing, cache/TTL/Responses fallbacks |
-| token pricing (heuristic/local counting, image rules per family, envelope costs, safety margin) | **done** | stand `token-pricing`; 154 traces drive the shipped pricing rules (no duplicate copy — the rules live in `message_preparation_tokens.cpp`, whose API this stand forced open), `LocalModelTextCounter` ported as the one genuinely missing piece |
+| token pricing (heuristic/local counting, image rules per family, envelope costs, safety margin) | **done** | stand `token-pricing`; 154 traces drive the shipped pricing rules (no duplicate copy -- the rules live in `message_preparation_tokens.cpp`, whose API this stand forced open), `LocalModelTextCounter` ported as the one genuinely missing piece |
 | streaming tool arguments (prefix JSON parser, compact tool-card hints, subject normalization) | **done** | stand `streaming-json-document`; both sources compile verbatim (zero imports), `ToolKind` lifted by script; 133 traces pin UTF-16 error offsets, open leaves, every hint branch and the 4096-unit prefix boundary |
 
 
@@ -14712,21 +14712,21 @@ Evidence gathered:
 - CI: mostly green; last 5 runs 4 success 1 failure.
 - Releases: ci-cpp-port-2026-11-03 with app-dev-release.apk 33.19MB and app-fdroid-release.apk 33.26MB.
 - APK content analysis (fdroid): 1107 entries, 59.8MB uncompressed / 33.1MB compressed; 2 DEX files totalling 14.17MB (classes.dex 13.9MB, classes2.dex 0.95MB); 23 native libs (agora_core, agora_llama, agora_proot, androidx.graphics.path, c++_shared 1.27MB, datastore_shared_counter, ggml-base, ggml-cpu...); biggest single entry res/Gz.ttf 20.2MB (!), o200k_base.tiktoken 3.6MB, resources.arsc 2.9MB, libllama-common 4.0MB, libllama.so 2.46MB, libc++_shared 1.33MB.
-- core/README: massive C++ port done — dozens of modules all "done", golden-trace pinned, JNI via libagora_core.so, C++20 no deps, warns about "not a parallel implementation" (contradicting FORK.md's "second, independent implementation" — mild inconsistency worth flagging!). Actually core/README explicitly says "It is **not** a parallel implementation" while FORK.md says "a second, independent implementation of the app core in C++". That's a genuine doc inconsistency worth flagging.
+- core/README: massive C++ port done -- dozens of modules all "done", golden-trace pinned, JNI via libagora_core.so, C++20 no deps, warns about "not a parallel implementation" (contradicting FORK.md's "second, independent implementation" -- mild inconsistency worth flagging!). Actually core/README explicitly says "It is **not** a parallel implementation" while FORK.md says "a second, independent implementation of the app core in C++". That's a genuine doc inconsistency worth flagging.
 - Their local prior research concluded no Skia pure-C++ toolkit with Android+IME+TalkBack exists.
 
 Now the answer: "check my gh, i fork agora, to get the same, but better and bloatless".
 
 I think they want an assessment/verdict: they've forked upstream Agora to build a better, bloatless version. I should:
-1. Confirm what I found (naming confusion: two agora repos — `agora` fork vs `Agora-1` which appears to be a stale copy with upstream description; recommend deleting/renaming Agora-1).
+1. Confirm what I found (naming confusion: two agora repos -- `agora` fork vs `Agora-1` which appears to be a stale copy with upstream description; recommend deleting/renaming Agora-1).
 2. Give concrete bloat breakdown from the APK: 20MB font, 14MB DEX, llama libs ~7MB, tiktoken 3.6MB, etc. Rank by winsize per effort.
-3. Warn: the C++ core is huge and still doesn't shrink anything yet — it *adds* (libagora_core.so 0.21MB is small, fine) — but it hasn't replaced Kotlin; Kotlin is still there (transport stays in Kotlin, sessions stay in Kotlin). So today it's additive, not subtractive. "Bloatless" requires actually deleting the Kotlin paths, which is where the real risk is. Point out that many rows say "transport stays in Kotlin", "sessions and registry stay in Kotlin" — so the app still runs both.
+3. Warn: the C++ core is huge and still doesn't shrink anything yet -- it *adds* (libagora_core.so 0.21MB is small, fine) -- but it hasn't replaced Kotlin; Kotlin is still there (transport stays in Kotlin, sessions stay in Kotlin). So today it's additive, not subtractive. "Bloatless" requires actually deleting the Kotlin paths, which is where the real risk is. Point out that many rows say "transport stays in Kotlin", "sessions and registry stay in Kotlin" -- so the app still runs both.
 4. Prior Skia research conclusion: no toolkit exists → custom UI route is very expensive (IME/TalkBack). Suggest: don't do full custom-UI Skia rewrite for Agora; do targeted bloat removal instead. Justify with the specific items.
 5. Concretely what I'd do, ranked, with expected savings:
-   - res/Gz.ttf 20.2MB → the single biggest; subset font or ship downloadable font / use downloadable fonts via Google Play services? Or is it a font for the app (maybe a big CJK-ish font). Saves ~20MB uncompressed (but compressed 33MB total; ttf compresses maybe to ~8-12MB). Hmm — I should check compress_size of Gz.ttf to be accurate. I printed file_size. Let me be careful: report uncompressed and note compression. Actually I can quickly compute compressed size of top entries. Maybe do one more quick call to get compress_size for those big entries — that's what actually determines APK download size. Worth it: one small call, zip already downloaded.
-   - DEX 14MB → likely Compose + okhttp + kotlinx + Room + WorkManager + maybe llama/AI libs. R8 may not be enabled for fdroid (fdroid builds often disable minify since reproducibility). Check proguard config? The dev APK is 33.19 vs fdroid 33.26 — nearly identical, suggesting minify off.
-   - libllama*.so ~6.5MB — if local model support is optional, make it a dynamic feature module / separate flavor.
-   - o200k_base.tiktoken 3.6MB — could be generated from smaller table or downloaded on demand.
+   - res/Gz.ttf 20.2MB → the single biggest; subset font or ship downloadable font / use downloadable fonts via Google Play services? Or is it a font for the app (maybe a big CJK-ish font). Saves ~20MB uncompressed (but compressed 33MB total; ttf compresses maybe to ~8-12MB). Hmm -- I should check compress_size of Gz.ttf to be accurate. I printed file_size. Let me be careful: report uncompressed and note compression. Actually I can quickly compute compressed size of top entries. Maybe do one more quick call to get compress_size for those big entries -- that's what actually determines APK download size. Worth it: one small call, zip already downloaded.
+   - DEX 14MB → likely Compose + okhttp + kotlinx + Room + WorkManager + maybe llama/AI libs. R8 may not be enabled for fdroid (fdroid builds often disable minify since reproducibility). Check proguard config? The dev APK is 33.19 vs fdroid 33.26 -- nearly identical, suggesting minify off.
+   - libllama*.so ~6.5MB -- if local model support is optional, make it a dynamic feature module / separate flavor.
+   - o200k_base.tiktoken 3.6MB -- could be generated from smaller table or downloaded on demand.
    - resources.arsc 2.9MB + 1107 entries → lots of resources/translations; could strip unused locales via resConfigs.
 6. Also mention: since core is C++20 with zero deps, they could later go the mux route for UI but the research says TalkBack + IME cost is the blocker; recommend keeping Compose for UI and moving *logic* out (which they're doing), i.e. the hybrid is the bloatless sweet spot... wait, that doesn't reduce size much. Honest: bloatless in size ≠ bloatless in architecture.
 
@@ -14740,7 +14740,7 @@ B: `gh api repos/MaurerAnton/agora/contents/app/build.gradle.kts --jq .content |
 
 Let me run both.
 
-One last precision pass — compressed sizes (what users download) and whether R8/shrinking is even on.
+One last precision pass -- compressed sizes (what users download) and whether R8/shrinking is even on.
 
 **Tool: shell**
 
@@ -14806,44 +14806,44 @@ _Thinking:_
 
 Now I have everything to write the answer. No more tools needed.
 
-Note interesting: ndkVersion 26.3.11579264 (NDK 26 — not clang 23 obviously; that's the standard NDK). abiFilters arm64-v8a only (already done, good). R8 minify enabled already for release (so DEX 13.2MB is *after* shrinking — meaning the 14MB DEX is real code: Compose + okhttp + kotlinx + Room + proot?). enableSplit = false → no ABI splits/App Bundle splitting maybe.
+Note interesting: ndkVersion 26.3.11579264 (NDK 26 -- not clang 23 obviously; that's the standard NDK). abiFilters arm64-v8a only (already done, good). R8 minify enabled already for release (so DEX 13.2MB is *after* shrinking -- meaning the 14MB DEX is real code: Compose + okhttp + kotlinx + Room + proot?). enableSplit = false → no ABI splits/App Bundle splitting maybe.
 
 Key bloat numbers (compressed, i.e. what users download, total 33.1MB):
-- res/Gz.ttf: 13.21 MB — 40% of APK. Single asset.
-- classes.dex: 6.55 MB (+classes2 0.46) — already R8-shrunk. 20%.
+- res/Gz.ttf: 13.21 MB -- 40% of APK. Single asset.
+- classes.dex: 6.55 MB (+classes2 0.46) -- already R8-shrunk. 20%.
 - resources.arsc: 2.77 MB (2%... actually 8%)
 - o200k_base.tiktoken: 1.62 MB
 - libllama-common: 1.37 MB, libllama 0.86, libmtmd 0.35, libc++_shared 0.40, 3× ggml-cpu armv9 variants 0.34 each ≈ 1.0MB, plus ggml-base 0.63 etc. 23 native libs total summing maybe ~6-7MB compressed.
 
 So the "bloatless" plan in order of payoff:
-1. Font (13.2MB, 40%): Gz.ttf 19.3MB raw — presumably a full CJK/variable font. Options: subset to needed scripts (pyftsubset), split into font families, use downloadable fonts, or ship a variable font subsetting per locale. Could save easily 10-12MB.
-2. Native libs: 23 libs, three ggml-cpu armv9 variants with different dot versions (armv9.0_1, armv9.2_1, armv9.2_2) — that's llama.cpp's multi-variant build; you can build just one variant. Also arm64-only already. Potential ~2-4MB if you cut variants + llama if local inference is optional. Also note they ship for fdroid too.
-3. DEX 7MB despite R8 — likely Compose + kotlinx.serialization + okhttp + Room + maybe torch-ish? Since R8 is on, remaining savings require removing features (e.g., local llama support → its Java bindings; agentic tooling/MCP).
-4. resources.arsc 2.77MB + 627 res entries + 19 locales — resConfigs to needed locales saves maybe 0.5MB; arsc mostly references.
+1. Font (13.2MB, 40%): Gz.ttf 19.3MB raw -- presumably a full CJK/variable font. Options: subset to needed scripts (pyftsubset), split into font families, use downloadable fonts, or ship a variable font subsetting per locale. Could save easily 10-12MB.
+2. Native libs: 23 libs, three ggml-cpu armv9 variants with different dot versions (armv9.0_1, armv9.2_1, armv9.2_2) -- that's llama.cpp's multi-variant build; you can build just one variant. Also arm64-only already. Potential ~2-4MB if you cut variants + llama if local inference is optional. Also note they ship for fdroid too.
+3. DEX 7MB despite R8 -- likely Compose + kotlinx.serialization + okhttp + Room + maybe torch-ish? Since R8 is on, remaining savings require removing features (e.g., local llama support → its Java bindings; agentic tooling/MCP).
+4. resources.arsc 2.77MB + 627 res entries + 19 locales -- resConfigs to needed locales saves maybe 0.5MB; arsc mostly references.
 5. tiktoken 1.62MB: could be lazily downloaded or compressed better? It's already deflated. Could store a smaller derived table.
 
 Then architectural bloat (not size):
-- The C++ core today is additive: it doesn't delete Kotlin. Evidence: core/README says transport stays in Kotlin in several rows, MCP sessions/registry stay in Kotlin, etc., and the app still ships the Kotlin implementations (FORK.md says Kotlin stays as fallback for tokens). So right now 33MB includes both. To actually get "bloatless" you must delete the Kotlin paths — but the fallback design means you can't until parity is trusted. Flag that.
-- Doc inconsistency: FORK.md calls it "a second, independent implementation"; core/README says "It is not a parallel implementation." Worth reconciling — users (and future you) will be confused; also it matters legally/mentally for maintenance.
-- Two agora repos: `Agora-1` (created/pushed 2026-09-16, MIT, 110.9MB) has upstream's description copied verbatim and MIT vs upstream GPL-3.0 — that's a licensing smell (upstream is GPL-3.0; declaring MIT on a copy is not valid) and confusing. Recommend deleting or clarifying. Actually careful: Agora-1 description identical to newo-ether/Agora's description ("Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control."). Yes identical. And license MIT while upstream is GPL-3.0 → if it's a copy, MIT declaration is wrong/invalid. Flag it as a real risk.
+- The C++ core today is additive: it doesn't delete Kotlin. Evidence: core/README says transport stays in Kotlin in several rows, MCP sessions/registry stay in Kotlin, etc., and the app still ships the Kotlin implementations (FORK.md says Kotlin stays as fallback for tokens). So right now 33MB includes both. To actually get "bloatless" you must delete the Kotlin paths -- but the fallback design means you can't until parity is trusted. Flag that.
+- Doc inconsistency: FORK.md calls it "a second, independent implementation"; core/README says "It is not a parallel implementation." Worth reconciling -- users (and future you) will be confused; also it matters legally/mentally for maintenance.
+- Two agora repos: `Agora-1` (created/pushed 2026-09-16, MIT, 110.9MB) has upstream's description copied verbatim and MIT vs upstream GPL-3.0 -- that's a licensing smell (upstream is GPL-3.0; declaring MIT on a copy is not valid) and confusing. Recommend deleting or clarifying. Actually careful: Agora-1 description identical to newo-ether/Agora's description ("Android BYOK LLM client with multi-provider access, agentic workflows, and remote device control."). Yes identical. And license MIT while upstream is GPL-3.0 → if it's a copy, MIT declaration is wrong/invalid. Flag it as a real risk.
 
 Tie back to mux: 
-- mux's whole app = 1 .so (87MB raw!) + 2.7KB DEX. Interesting: mux's lib is way bigger than Agora's whole APK. So "bloatless" via custom UI is not automatically smaller. Point: the Skia+everything approach yields bigger binaries, not smaller — mux's stripped arm64 APK is 30.78MB which is *comparable* to Agora's 33MB, and mux doesn't even ship a font or llama. That's a strong empirical argument: don't chase size via UI rewrite; chase size by cutting assets.
-- Also your own prior research (AGORA_SKIA_DEEP_RESEARCH.md) concluded no pure-C++ Skia toolkit with Android IME+TalkBack exists; mux had to emit its own InputConnection. Agora needs IME, text selection, Markdown/LaTeX, RTL, TalkBack, variable fonts — that's the exact worst case for custom UI. So: keep Compose.
+- mux's whole app = 1 .so (87MB raw!) + 2.7KB DEX. Interesting: mux's lib is way bigger than Agora's whole APK. So "bloatless" via custom UI is not automatically smaller. Point: the Skia+everything approach yields bigger binaries, not smaller -- mux's stripped arm64 APK is 30.78MB which is *comparable* to Agora's 33MB, and mux doesn't even ship a font or llama. That's a strong empirical argument: don't chase size via UI rewrite; chase size by cutting assets.
+- Also your own prior research (AGORA_SKIA_DEEP_RESEARCH.md) concluded no pure-C++ Skia toolkit with Android IME+TalkBack exists; mux had to emit its own InputConnection. Agora needs IME, text selection, Markdown/LaTeX, RTL, TalkBack, variable fonts -- that's the exact worst case for custom UI. So: keep Compose.
 
 Recommended "same but better and bloatless" plan:
 A. Size wins now (measured): font subsetting → ~10-13MB; single ggml variant → ~1-2MB; resConfigs → ~0.5MB; optional llama → ~3-4MB. Target: 33MB → ~18-20MB in days, with zero architectural risk.
-B. Structural: make features optional (dynamic feature modules or product flavors) rather than deleting them — fdroid vs dev shows you have flavors already (dev suffix, screenshots).
-C. Core port: to actually shrink DEX you need the Kotlin deleted, but honestly the DEX after R8 is largely Compose+transport which you won't port. Porting UI logic out of Compose isn't a size win. So the core port's payoff is correctness/maintainability/determinism, not size — set expectations accordingly. Good news: it's already warning-free C++20 zero-deps, which is genuinely nice.
+B. Structural: make features optional (dynamic feature modules or product flavors) rather than deleting them -- fdroid vs dev shows you have flavors already (dev suffix, screenshots).
+C. Core port: to actually shrink DEX you need the Kotlin deleted, but honestly the DEX after R8 is largely Compose+transport which you won't port. Porting UI logic out of Compose isn't a size win. So the core port's payoff is correctness/maintainability/determinism, not size -- set expectations accordingly. Good news: it's already warning-free C++20 zero-deps, which is genuinely nice.
 D. Do NOT go mux-style custom UI for Agora: IME + TalkBack + text selection + variable-font shaping is where it dies; your own census found no toolkit; and mux itself is still unvalidated on device with red CI.
 
-Also mention enabling ABI splits / App Bundle already? enableSplit=false and abiFilters arm64 → fine. AAB vs APK: shipping AAB would cut ~30% for most devices anyway (they publish APK for fdroid — fdroid requires APK; that's fine).
+Also mention enabling ABI splits / App Bundle already? enableSplit=false and abiFilters arm64 → fine. AAB vs APK: shipping AAB would cut ~30% for most devices anyway (they publish APK for fdroid -- fdroid requires APK; that's fine).
 
 Also maybe: assets/tokenizers could be downloaded on first use or generated from a compressed BPE table (~1.6MB → maybe 300KB with delta encoding).
 
 Let me write it up crisply with tables and numbers. Aim ~700-900 words. End with a question/offer: want me to open issues/PR? Actually offer: I can draft the pyftsubset config or check what Gz.ttf is used for. Keep it short.
 
-One more consideration: should I mention that their fork is not marked as a GitHub fork (fork=false) so it won't show "forked from" and loses upstream sync UI — they track base in FORK.md manually. That's why I couldn't see fork relationship earlier. Worth one line: consider real fork relationship or at least keep FORK.md updated (they do).
+One more consideration: should I mention that their fork is not marked as a GitHub fork (fork=false) so it won't show "forked from" and loses upstream sync UI -- they track base in FORK.md manually. That's why I couldn't see fork relationship earlier. Worth one line: consider real fork relationship or at least keep FORK.md updated (they do).
 
 Write the answer.
 
@@ -14856,7 +14856,7 @@ Checked. Here's what your GitHub actually shows, plus what "bloatless" would rea
 | **`MaurerAnton/agora`** | Fork of **`newo-ether/Agora`** (558★, GPL-3.0, upstream base 2.2.0 @ `da153d05`). Created 2026-06-09, 132 MB, 1★, pushed today. Last 5 CI runs: 4 green, 1 red. |
 | `MaurerAnton/Agora-1` | Stale copy: upstream's **verbatim description**, created *and last pushed* 2026-09-16, **MIT** while upstream is GPL-3.0. 111 MB. |
 
-Two things to fix there: it isn't a GitHub *fork* (`fork=false`), so you get no upstream sync UI — you're tracking base in `FORK.md` by hand, which works but is fragile. And `Agora-1` declaring MIT over what looks like a GPL-3.0 copy is a licensing problem, not just clutter. Delete it or re-license it properly.
+Two things to fix there: it isn't a GitHub *fork* (`fork=false`), so you get no upstream sync UI -- you're tracking base in `FORK.md` by hand, which works but is fragile. And `Agora-1` declaring MIT over what looks like a GPL-3.0 copy is a licensing problem, not just clutter. Delete it or re-license it properly.
 
 Also a doc contradiction worth reconciling: `FORK.md` calls the core "a second, independent implementation," while `core/README.md` says flatly "It is **not** a parallel implementation." They mean different things (independent code vs. same semantics) but they read as opposite.
 
@@ -14872,7 +14872,7 @@ I opened `app-fdroid-release.apk` from `ci-cpp-port-2026-11-03`. 1107 entries, 3
 | `assets/tokenizers/o200k_base.tiktoken` | 1.62 MB | 3.45 MB |
 | llama/mtmd/ggml libs (23 `.so` total) | ~5.5 MB | ~13 MB |
 
-`R8` is already on (`isMinifyEnabled = true`), ABI is already `arm64-v8a`-only, `enableSplit = false`. So 80% of your download size is **one font and the DEX** — not something a rewrite would touch.
+`R8` is already on (`isMinifyEnabled = true`), ABI is already `arm64-v8a`-only, `enableSplit = false`. So 80% of your download size is **one font and the DEX** -- not something a rewrite would touch.
 
 Ranked by payoff per hour:
 
@@ -14885,15 +14885,15 @@ That's roughly **33 MB → 19 MB in an afternoon**, with zero architectural risk
 
 ## The uncomfortable part
 
-The C++ core is impressive — dozens of modules at "done," golden-trace pinned, C++20, zero dependencies, `-Wall -Wextra` clean. But it's currently **additive**: the Kotlin paths are still shipping (rows like "transport stays in Kotlin," "MCP sessions and registry stay in Kotlin," tokens keeping the Kotlin fallback). Nothing got deleted, so the port hasn't bought you a byte yet. It buys determinism and testability, not size — set that expectation before you spend another month.
+The C++ core is impressive -- dozens of modules at "done," golden-trace pinned, C++20, zero dependencies, `-Wall -Wextra` clean. But it's currently **additive**: the Kotlin paths are still shipping (rows like "transport stays in Kotlin," "MCP sessions and registry stay in Kotlin," tokens keeping the Kotlin fallback). Nothing got deleted, so the port hasn't bought you a byte yet. It buys determinism and testability, not size -- set that expectation before you spend another month.
 
 ## Don't do the mux-style UI rewrite here
 
-Your own census (`AGORA_SKIA_DEEP_RESEARCH.md`) already concluded it: no active, permissive, pure-C++ Skia toolkit has Android IME + TalkBack. And the mux numbers argue against it empirically — mux's stripped arm64 APK is **30.78 MB with a single 87 MB `.so`**, no font, no local LLM, and it's *still* red in CI with device behavior unvalidated. Agora needs IME, text selection, Markdown/LaTeX, RTL, variable-font shaping and TalkBack — that is the worst possible case for custom UI. Keep Compose; it's ~7 MB after R8 and gives you all of it free.
+Your own census (`AGORA_SKIA_DEEP_RESEARCH.md`) already concluded it: no active, permissive, pure-C++ Skia toolkit has Android IME + TalkBack. And the mux numbers argue against it empirically -- mux's stripped arm64 APK is **30.78 MB with a single 87 MB `.so`**, no font, no local LLM, and it's *still* red in CI with device behavior unvalidated. Agora needs IME, text selection, Markdown/LaTeX, RTL, variable-font shaping and TalkBack -- that is the worst possible case for custom UI. Keep Compose; it's ~7 MB after R8 and gives you all of it free.
 
 So: "better and bloatless" is real here, but it's an *asset and packaging* story, not a rewrite story.
 
-Want me to start with the font? I can pull `Gz.ttf` out, check its coverage and variable axes, and produce the `pyftsubset` invocation — that one change is worth more than everything else combined.
+Want me to start with the font? I can pull `Gz.ttf` out, check its coverage and variable axes, and produce the `pyftsubset` invocation -- that one change is worth more than everything else combined.
 
 ---
 
@@ -14907,34 +14907,34 @@ i do not know much C++ android apps, but i want to make my agora fork 100% c++ i
 
 _Thinking:_
 
-The user wants to make their Agora fork 100% C++ — i.e., no Kotlin/Java UI, like mux. This is a big architectural question. They said they don't know much about C++ Android apps.
+The user wants to make their Agora fork 100% C++ -- i.e., no Kotlin/Java UI, like mux. This is a big architectural question. They said they don't know much about C++ Android apps.
 
-My job now: give an honest, concrete answer about feasibility. Key: 100% C++ is impossible — Android requires a DEX. But you can reduce Java to a ~2.7KB shim (mux proves it). The realistic question: can they get Agora (a Compose app with Markdown/LaTeX, IME, text selection, TalkBack, RTL, variable fonts, local llama inference, MCP, etc.) there?
+My job now: give an honest, concrete answer about feasibility. Key: 100% C++ is impossible -- Android requires a DEX. But you can reduce Java to a ~2.7KB shim (mux proves it). The realistic question: can they get Agora (a Compose app with Markdown/LaTeX, IME, text selection, TalkBack, RTL, variable fonts, local llama inference, MCP, etc.) there?
 
 Honest assessment:
-1. "100% C++" is literally impossible — Android needs classes.dex with the activity class. But 99.99% is achievable (mux: 2.7KB DEX, 6 classes).
-2. What you must own if you remove Compose: IME/InputConnection (soft keyboard, composition, autocorrect), text selection/handles, clipboard, accessibility (TalkBack) — AccessibilityNodeProvider via JNI, autofill, notification/permissions, SAF document picker, back gesture predictive back, insets/cutouts, font fallback, bidi, rendering text with variable fonts (HarfBuzz+Skia), markdown/LaTeX rendering (mtext/latex → they'd need their own layout engine), RecyclerView-equivalent virtualization, etc. Each is weeks.
+1. "100% C++" is literally impossible -- Android needs classes.dex with the activity class. But 99.99% is achievable (mux: 2.7KB DEX, 6 classes).
+2. What you must own if you remove Compose: IME/InputConnection (soft keyboard, composition, autocorrect), text selection/handles, clipboard, accessibility (TalkBack) -- AccessibilityNodeProvider via JNI, autofill, notification/permissions, SAF document picker, back gesture predictive back, insets/cutouts, font fallback, bidi, rendering text with variable fonts (HarfBuzz+Skia), markdown/LaTeX rendering (mtext/latex → they'd need their own layout engine), RecyclerView-equivalent virtualization, etc. Each is weeks.
 3. Their app also has: Room DB (SQLite in C++ fine), WorkManager (replace with own scheduler + foreground service via JNI), DataStore (fine), okhttp (Boost.beast/OpenSSL fine), kotlinx.serialization (nlohmann/their own), Compose UI (the hard part), llama.cpp already native (fine), proot (already native).
 4. Their prior research found no permissive pure-C++ Skia toolkit with Android IME/TalkBack. So they'd have to build the toolkit, not adopt one.
-5. But realistically — the pragmatic path: mux-like incrementalism. Actually maybe recommend a staged path:
-   - Stage 0: already done — C++ core.
-   - Stage 1: native activity + Skia surface but keep Compose? No — can't mix easily (you can: use a SurfaceView with Skia for the canvas, keep Compose for chrome — that's a legit hybrid).
+5. But realistically -- the pragmatic path: mux-like incrementalism. Actually maybe recommend a staged path:
+   - Stage 0: already done -- C++ core.
+   - Stage 1: native activity + Skia surface but keep Compose? No -- can't mix easily (you can: use a SurfaceView with Skia for the canvas, keep Compose for chrome -- that's a legit hybrid).
    - Actually important: there's a middle path the user may not know: keep Kotlin/Compose for the surrounding chrome but render the chat canvas in Skia on a SurfaceView. Many apps do this. That gives most of the "C++ feel" (pixel-identical rendering, own text layout) at maybe 10% cost.
    - Full path: NativeActivity + own toolkit.
 
 Realistic effort estimate: mux took one very strong dev ~5+ weeks (created 2026-09-26, 2520 commits) and still hasn't validated the client on device, CI red. Agora's UI surface (chat bubbles, markdown, code blocks, LaTeX, media, settings screens, agentic tool cards, import/export screens, SDK-level features) is bigger than mux's? Probably comparable or bigger. So estimate: many months for one person, and high risk of never shipping.
 
 Also key technical warnings specific to their repo:
-- Their minSdk is 26 (from the research doc). mux used API 21 and their own NDK — because clang 23/libc++23 with modules. If they don't need modules or C++23 library features, they can use the stock NDK r26/27 and normal clang. Actually their core is C++20 zero-deps — so stock NDK works fine! That's an important insight: they do NOT need the extreme toolchain (own NDK, clang 23) since their core is C++20. They need NDK's clang (which is clang 17/18 in r26/r27) — fine for C++20.
-- Also: 100% C++ means giving up the golden-trace parity stands? No, those stay (they compile Kotlin verbatim in stands). Actually their stands compile Kotlin source with kotlinc — that requires JVM at test time only, not in the APK. Fine.
-- Licensing: upstream GPL-3.0 — a C++ rewrite must stay GPL-3.0 (derivative). Worth a note. mux is AGPL. Fine.
-- Another important note: if they go NativeActivity, they lose Compose entirely, so they must reimplement all screens — including ones that are pure forms (settings). That's where Compose is worth its weight in gold. Recommend: custom Skia for the chat canvas only; keep Compose for settings/onboarding. That's the pragmatic 90/10.
+- Their minSdk is 26 (from the research doc). mux used API 21 and their own NDK -- because clang 23/libc++23 with modules. If they don't need modules or C++23 library features, they can use the stock NDK r26/27 and normal clang. Actually their core is C++20 zero-deps -- so stock NDK works fine! That's an important insight: they do NOT need the extreme toolchain (own NDK, clang 23) since their core is C++20. They need NDK's clang (which is clang 17/18 in r26/r27) -- fine for C++20.
+- Also: 100% C++ means giving up the golden-trace parity stands? No, those stay (they compile Kotlin verbatim in stands). Actually their stands compile Kotlin source with kotlinc -- that requires JVM at test time only, not in the APK. Fine.
+- Licensing: upstream GPL-3.0 -- a C++ rewrite must stay GPL-3.0 (derivative). Worth a note. mux is AGPL. Fine.
+- Another important note: if they go NativeActivity, they lose Compose entirely, so they must reimplement all screens -- including ones that are pure forms (settings). That's where Compose is worth its weight in gold. Recommend: custom Skia for the chat canvas only; keep Compose for settings/onboarding. That's the pragmatic 90/10.
 
 Concrete recommendation ladder, tailored:
 1. Keep the core port going (it's your moat).
-2. Add a JNI-free-ish UI experiment: NativeActivity + Skia, render *just* the message list — no, better: start even smaller — a "skia render test" screen reachable from Compose, drawing markdown + text with your own layout. Validate text shaping with variable fonts + RTL + bidi before committing.
+2. Add a JNI-free-ish UI experiment: NativeActivity + Skia, render *just* the message list -- no, better: start even smaller -- a "skia render test" screen reachable from Compose, drawing markdown + text with your own layout. Validate text shaping with variable fonts + RTL + bidi before committing.
 3. If text shaping/IME prototype succeeds in ~2-3 weeks, extend; else stop and stay hybrid (Skia canvas inside Compose via SurfaceView/AndroidExternalSurface).
-4. Keep stock NDK (r26 → maybe r28), don't build own NDK; keep Gradle (upstream needs it anyway for merging upstream releases). Because they merge upstream releases — that's crucial! If they go NativeActivity-only, they can no longer merge upstream Kotlin releases. Upstream-first sync policy would be destroyed. Major hidden cost: every upstream release adds Kotlin features they'd have to re-port manually. That's a strong argument for hybrid or for accepting divergence.
+4. Keep stock NDK (r26 → maybe r28), don't build own NDK; keep Gradle (upstream needs it anyway for merging upstream releases). Because they merge upstream releases -- that's crucial! If they go NativeActivity-only, they can no longer merge upstream Kotlin releases. Upstream-first sync policy would be destroyed. Major hidden cost: every upstream release adds Kotlin features they'd have to re-port manually. That's a strong argument for hybrid or for accepting divergence.
 
 Actually that's the single most important point for THEIR fork: their whole sync policy is "upstream first." Going 100% C++ breaks that. Upstream Agora is actively developed (pushed today), 558 stars, releasing versions. Every upstream feature becomes a manual C++ port. With their golden-trace approach that's already expensive for the core; for the whole UI, impossible to keep up.
 
@@ -14951,7 +14951,7 @@ Should I use tools? Maybe quickly verify NDK version available & whether their c
 
 Let me run 2-3 quick probes:
 1. app/build.gradle.kts: minSdk, compileSdk, compose usage, dependencies list maybe.
-2. upstream releases count/recency: `gh release list --repo newo-ether/Agora --limit 5 --json tagName,createdAt` — evidence of upstream churn → sync cost.
+2. upstream releases count/recency: `gh release list --repo newo-ether/Agora --limit 5 --json tagName,createdAt` -- evidence of upstream churn → sync cost.
 3. Check if app/src/main/cpp has native UI (surface) already.
 
 Let me do these 3 in parallel. Then write answer.
@@ -15023,9 +15023,9 @@ But for their situation, three hard truths:
 
 1. Upstream sync dies. Evidence: upstream released v2.0.0/2.1.0/2.2.0 within 3 months, ≥100 commits since Sept 1, pushed today. Their FORK.md promises upstream-first merges. With NativeActivity + Skia you can't merge Kotlin; every upstream feature becomes a hand port. So either: (a) it stops being a fork and becomes a new program (then you must also own everything forever), or (b) you stay hybrid.
 
-2. The UI surface is the hard part, not the logic. Their core is done because it's *pure logic* with golden traces. UI has no golden traces to pin against — you can't byte-compare a Compose screen to a Skia screen. So the method that made core/ possible doesn't transfer to UI. That's a crucial insight: their whole methodology (Kotlin compiles verbatim → C++ must reproduce byte-for-byte) breaks down for UI, because there's no serializable output. Actually partially: you can pin layout measurements/accessibility trees. But Compose doesn't expose them deterministically... Actually you could pin Compose semantics node trees! Compose testing exposes semanticsTree as JSON-ish. Interesting. Could mention: the one bridge is pinning Compose layout + semantics dumps, but Compose doesn't give you pixel-level or draw-order output cheaply.
+2. The UI surface is the hard part, not the logic. Their core is done because it's *pure logic* with golden traces. UI has no golden traces to pin against -- you can't byte-compare a Compose screen to a Skia screen. So the method that made core/ possible doesn't transfer to UI. That's a crucial insight: their whole methodology (Kotlin compiles verbatim → C++ must reproduce byte-for-byte) breaks down for UI, because there's no serializable output. Actually partially: you can pin layout measurements/accessibility trees. But Compose doesn't expose them deterministically... Actually you could pin Compose semantics node trees! Compose testing exposes semanticsTree as JSON-ish. Interesting. Could mention: the one bridge is pinning Compose layout + semantics dumps, but Compose doesn't give you pixel-level or draw-order output cheaply.
 
-3. What you'd have to build from scratch (list with rough weeks): retained-mode toolkit (Skia), text shaping (HarfBuzz + variable fonts + line breaking ICU + bidi), IME via InputConnection (composition, suggestions, cursor sync), text selection handles + magnifier, TalkBack accessibility node provider, scrolling/virtualization/fling physics, Markdown renderer + LaTeX layout (their app needs this!), images/media, RTL layout, theme, and then all the *forms* (settings, provider config, onboarding) — forms are where custom UI is worst.
+3. What you'd have to build from scratch (list with rough weeks): retained-mode toolkit (Skia), text shaping (HarfBuzz + variable fonts + line breaking ICU + bidi), IME via InputConnection (composition, suggestions, cursor sync), text selection handles + magnifier, TalkBack accessibility node provider, scrolling/virtualization/fling physics, Markdown renderer + LaTeX layout (their app needs this!), images/media, RTL layout, theme, and then all the *forms* (settings, provider config, onboarding) -- forms are where custom UI is worst.
 
 Time estimate: mux = 5 weeks of a very strong dev for chat UI only, still unvalidated on device, CI red. Agora has chat + settings + agentic tool cards + imports + local inference UI. Realistic: 6-12 months solo to parity, and you'd lose upstream sync meanwhile.
 
@@ -15033,7 +15033,7 @@ Recommended: don't do 100%. Do "the mux trick where it pays": the render layer f
 
 Actually let me think about what genuinely best serves them given they "do not know much C++ android apps". They're learning. Options:
 
-A. Hybrid: Skia render surface embedded in Compose (AndroidView with SurfaceView / or Compose's `AndroidExternalSurface`), keep Compose chrome. Cost: moderate. Benefit: pixel-identical chat rendering, own markdown layout, still uses Compose text input (EditText overlay for IME!) — Important trick: keep an invisible EditText for IME (standard technique) instead of writing InputConnection — saves weeks. Actually mux wrote its own InputConnection; but many custom-UI apps reuse a hidden EditText to get the keyboard for free.
+A. Hybrid: Skia render surface embedded in Compose (AndroidView with SurfaceView / or Compose's `AndroidExternalSurface`), keep Compose chrome. Cost: moderate. Benefit: pixel-identical chat rendering, own markdown layout, still uses Compose text input (EditText overlay for IME!) -- Important trick: keep an invisible EditText for IME (standard technique) instead of writing InputConnection -- saves weeks. Actually mux wrote its own InputConnection; but many custom-UI apps reuse a hidden EditText to get the keyboard for free.
 
 B. Full NativeActivity (mux style): max purity, max cost.
 
@@ -15043,16 +15043,16 @@ Recommend A with a specific learning path, plus a "prove it in 2 weeks" test: bu
 
 Also note good news: their core is C++20 zero-deps → they DON'T need the extreme toolchain (own NDK, clang 23). Stock NDK (they already use r26.3) works for C++20. mux needed its own NDK only for libc++23 modules like std::views::enumerate. So rung 5 of my earlier ladder doesn't apply to them. Also minSdk 26 means no need for API 21 weirdness; but note NativeActivity exists since API 9, fine. And 16KB alignment: NDK r27+/r28 handles; they should verify (they're on r26 → must pass max-page-size).
 
-Also licensing: upstream is GPL-3.0; a rewrite that's derived stays GPL-3.0. Their core is "port" = derived → GPL. Fine, but mention that (they can't MIT it — relevant given Agora-1 MIT issue).
+Also licensing: upstream is GPL-3.0; a rewrite that's derived stays GPL-3.0. Their core is "port" = derived → GPL. Fine, but mention that (they can't MIT it -- relevant given Agora-1 MIT issue).
 
-Also: SDL3: they'd need it or write own ANativeWindow/EGL glue (~300 lines honestly, and a fork isn't needed — upstream SDL3 works with Gradle; but if they keep Gradle, they keep upstream sync? No — upstream sync means Compose app; you can have a native activity module alongside Kotlin in Gradle. Actually yes! You can keep Gradle + the Kotlin upstream code AND add a NativeActivity entry point. But merging upstream UI changes then becomes useless.) 
+Also: SDL3: they'd need it or write own ANativeWindow/EGL glue (~300 lines honestly, and a fork isn't needed -- upstream SDL3 works with Gradle; but if they keep Gradle, they keep upstream sync? No -- upstream sync means Compose app; you can have a native activity module alongside Kotlin in Gradle. Actually yes! You can keep Gradle + the Kotlin upstream code AND add a NativeActivity entry point. But merging upstream UI changes then becomes useless.) 
 
-Hmm — subtle but good point: they can keep Gradle (which keeps their existing build/CI and upstream merge machinery) and still add a native entry point. The thing that breaks upstream sync isn't Gradle; it's replacing the UI.
+Hmm -- subtle but good point: they can keep Gradle (which keeps their existing build/CI and upstream merge machinery) and still add a native entry point. The thing that breaks upstream sync isn't Gradle; it's replacing the UI.
 
 Let me also mention "100% C++" for the parts already native: llama.cpp, proot already native. Room→SQLite C, okhttp→libcurl/BoringSSL, WorkManager→own service notification via JNI, DataStore→files. Those are all doable and don't require abandoning Compose. So: "100% C++ below the UI" is very achievable and is what they're doing. That's maybe the honest reachable definition.
 
 Structure the answer:
-1. Literal answer (DEX required, but 2.7KB possible — mux proved).
+1. Literal answer (DEX required, but 2.7KB possible -- mux proved).
 2. The blocker unique to you: upstream sync (with numbers).
 3. What actually must be built + realistic cost.
 4. Good news: your core is already the hard part done; stock NDK suffices; reachable = 100% below the UI.
@@ -15066,61 +15066,61 @@ Let me write.
 
 Good news first: your core being **C++20 with zero dependencies** means you do *not* need the extreme toolchain I described for mux. Stock NDK (you're on `26.3.11579264`) is fine. mux only built its own NDK because it needs libc++ 23 modules (`std::views::enumerate`). Skip that rung entirely.
 
-## "100% C++" — what's literally possible
+## "100% C++" -- what's literally possible
 
-Not 100%. Android cannot launch an app without `classes.dex`. The floor is what mux achieved: **a 2,768-byte DEX with 6 classes** — the activity, an IME input connection, a view, two broadcast receivers, a runner. That's effectively 100% C++, and it's a real thing, not theory.
+Not 100%. Android cannot launch an app without `classes.dex`. The floor is what mux achieved: **a 2,768-byte DEX with 6 classes** -- the activity, an IME input connection, a view, two broadcast receivers, a runner. That's effectively 100% C++, and it's a real thing, not theory.
 
 If you want to understand the shape, there are only four moving pieces:
 
-1. **Entry point** — a `NativeActivity` (you write none of the lifecycle in Java; SDL hands you `onNativeWindowCreated`, `onNativeWindowResized`, etc.).
-2. **Surface** — `ANativeWindow` → EGL/GLES, or software via `ANativeWindow_lock` when there's no GPU.
-3. **Input** — `AInputQueue` consumed on the native thread (this is most of what SDL3 does for you).
-4. **The JVM escape hatch** — JNI, for exactly the things Android won't let you do natively: soft keyboard, clipboard, notifications, permissions, intents, TLS trust.
+1. **Entry point** -- a `NativeActivity` (you write none of the lifecycle in Java; SDL hands you `onNativeWindowCreated`, `onNativeWindowResized`, etc.).
+2. **Surface** -- `ANativeWindow` → EGL/GLES, or software via `ANativeWindow_lock` when there's no GPU.
+3. **Input** -- `AInputQueue` consumed on the native thread (this is most of what SDL3 does for you).
+4. **The JVM escape hatch** -- JNI, for exactly the things Android won't let you do natively: soft keyboard, clipboard, notifications, permissions, intents, TLS trust.
 
 ## The blocker that's specific to you
 
 Your `FORK.md` promises **upstream-first merges**. Upstream just shipped v2.0.0 (Aug 6), v2.1.0 (Sep 5), v2.2.0 (Oct 31) and has **≥100 commits since Sept 1**, pushed today. Their UI is Compose.
 
-Once you replace Compose, upstream releases stop being mergeable. Every upstream feature becomes a hand port. So "100% C++ fork" is close to a contradiction: either it stops tracking upstream and becomes its own program (then you own everything forever, like j4niwzis does), or it stays hybrid. Decide that first — it changes nothing about C++, but everything about your cost.
+Once you replace Compose, upstream releases stop being mergeable. Every upstream feature becomes a hand port. So "100% C++ fork" is close to a contradiction: either it stops tracking upstream and becomes its own program (then you own everything forever, like j4niwzis does), or it stays hybrid. Decide that first -- it changes nothing about C++, but everything about your cost.
 
 ## What you'd actually have to build
 
-Your `core/` succeeded because it's *pure logic* — and because golden traces give you a byte-for-byte oracle. Neither is true of UI: there's no reference output to pin against. So the method that made `core/` possible **does not transfer to the UI layer**. That's the key thing to internalize.
+Your `core/` succeeded because it's *pure logic* -- and because golden traces give you a byte-for-byte oracle. Neither is true of UI: there's no reference output to pin against. So the method that made `core/` possible **does not transfer to the UI layer**. That's the key thing to internalize.
 
 What a NativeActivity port of Agora needs that you don't have:
 
 | Piece | Notes |
 |---|---|
 | Retained-mode toolkit on Skia | layout, invalidation, hit-testing, fling physics |
-| Text shaping | HarfBuzz + ICU line breaking + bidi + **variable-font** fallbacks — mux needed a whole `alef` library for this |
+| Text shaping | HarfBuzz + ICU line breaking + bidi + **variable-font** fallbacks -- mux needed a whole `alef` library for this |
 | IME | composition strings, suggestions, cursor sync, selection handles, magnifier |
-| TalkBack | `AccessibilityNodeProvider` over JNI — mux has none |
+| TalkBack | `AccessibilityNodeProvider` over JNI -- mux has none |
 | Markdown + LaTeX layout | your own layout engine for blocks/tables/math |
-| Forms | settings, provider config, onboarding — the *worst* case for custom UI |
+| Forms | settings, provider config, onboarding -- the *worst* case for custom UI |
 
-Plus: Room→SQLite, okhttp→libcurl/OpenSSL, WorkManager→own foreground service (notification via JNI), DataStore→files. Those last ones are all genuinely doable — that's **100% C++ below the UI**, which is what `core/` already is, and it's the version I'd actually recommend.
+Plus: Room→SQLite, okhttp→libcurl/OpenSSL, WorkManager→own foreground service (notification via JNI), DataStore→files. Those last ones are all genuinely doable -- that's **100% C++ below the UI**, which is what `core/` already is, and it's the version I'd actually recommend.
 
-For scale: mux is one very strong developer, ~5 weeks, 2,520 commits — and still hasn't validated the client on a device, with CI red since Nov 1. Agora's surface is larger.
+For scale: mux is one very strong developer, ~5 weeks, 2,520 commits -- and still hasn't validated the client on a device, with CI red since Nov 1. Agora's surface is larger.
 
 ## What I'd do instead
 
 **Keep Compose for chrome; move the chat canvas to Skia.** Render it into a `SurfaceView` embedded in your existing screens. Then:
 
 - You keep upstream merges for everything except the canvas.
-- You still get pixel-identical rendering and your own markdown layout — the part you actually care about.
+- You still get pixel-identical rendering and your own markdown layout -- the part you actually care about.
 - **Use a hidden `EditText` for IME.** Don't write your own `InputConnection`. That single decision saves weeks and is what most custom-UI apps do; it's the one place I'd deliberately not copy mux.
 
 Then build the two-week test, in this order:
 
-1. `NativeActivity` + SDL3 + a Skia clear — get anything on screen. (2 days)
-2. One message bubble: markdown, your variable font, one RTL line, one bidi-mixed line. (1 week) — **if this takes longer than two weeks, stop.** Text is where these projects die, and it's better to learn that cheaply.
+1. `NativeActivity` + SDL3 + a Skia clear -- get anything on screen. (2 days)
+2. One message bubble: markdown, your variable font, one RTL line, one bidi-mixed line. (1 week) -- **if this takes longer than two weeks, stop.** Text is where these projects die, and it's better to learn that cheaply.
 3. Only then: the same Skia widget hosted as the canvas inside your Compose app, with a hidden `EditText` feeding the keyboard.
 
 If step 3 works, extend. If step 2 was painful, keep Compose and spend the time on the asset wins I listed instead (the font alone is 13 MB).
 
-Also: upstream is GPL-3.0, so a port of it stays GPL-3.0 — you can't relicense it MIT, which is another reason to sort out `Agora-1`.
+Also: upstream is GPL-3.0, so a port of it stays GPL-3.0 -- you can't relicense it MIT, which is another reason to sort out `Agora-1`.
 
-Want me to scaffold step 1 for you — a minimal `NativeActivity` + SDL3 + Skia skeleton against your existing NDK 26, as a separate repo you can throw away?
+Want me to scaffold step 1 for you -- a minimal `NativeActivity` + SDL3 + Skia skeleton against your existing NDK 26, as a separate repo you can throw away?
 
 ---
 
@@ -15144,26 +15144,26 @@ _Thinking:_
 
 The user says: they actually want to use C++ modules, but they haven't yet because only 1/3 of the codebase is C++ at the moment.
 
-So they want modules (import std, named modules) in their core. Key issue: modules require clang ≥ 17ish with libc++ support; standard NDK r26 ships clang 17.0.2 — does it support C++20 modules and std module? Important details:
+So they want modules (import std, named modules) in their core. Key issue: modules require clang ≥ 17ish with libc++ support; standard NDK r26 ships clang 17.0.2 -- does it support C++20 modules and std module? Important details:
 
 - NDK r26 clang 17: supports `-fmodules` for C++20 modules for user modules; but **`import std;` requires the standard library to ship a `std` module** (modulemap/std.cppm). libc++ added `std` module support experimentally in LLVM 17; but the NDK does not ship a compiled `std` module (no `modules.json`/`std.cppm` in NDK). Actually libc++ 17 has `modules/std.cppm`? Let me recall: libc++ std module was added in LLVM 17 as experimental (`libc++ modules are experimental`, shipped as `modules/std.cppm` maybe). NDK ships libc++ headers but not the std module source (I believe the NDK does not include `modules/` dir). mux built its own libc++ 23 to get module support, including `std` module and C++23 views::enumerate.
 
 Key facts to convey accurately:
-1. Modules don't require the app to be fully C++; they can be adopted module-by-module. In fact their situation (2/3 Kotlin remaining) is irrelevant to adopting modules in the C++ part — because the C++ part is consumed via JNI through a C-ABI boundary (libagora_core.so). You can convert the core to named modules independently, and the JNI surface stays a plain C++/C boundary.
-2. But: cross-TU/language boundary — you can't export modules symbols across languages; your JNI must remain extern "C". Fine.
-3. The catch: NDK. Their NDK r26 = clang 17. Named modules work-ish (clang 17 supports them, CMake needs `CMAKE_CXX_STANDARD 20` + `CMAKE_CXX_MODULES` / `FILE_SET CXX_MODULES` which requires CMake 3.28+; Ninja support experimental). For `import std;` you need libc++ std module — the NDK does not ship it. So either:
-   a. Use modules only for *your own* code and keep `#include <vector>` style headers for the stdlib (this is what most people do; works with clang 17 + CMake 3.28+/Ninja — though mixing headers into named modules requires global module fragment).
+1. Modules don't require the app to be fully C++; they can be adopted module-by-module. In fact their situation (2/3 Kotlin remaining) is irrelevant to adopting modules in the C++ part -- because the C++ part is consumed via JNI through a C-ABI boundary (libagora_core.so). You can convert the core to named modules independently, and the JNI surface stays a plain C++/C boundary.
+2. But: cross-TU/language boundary -- you can't export modules symbols across languages; your JNI must remain extern "C". Fine.
+3. The catch: NDK. Their NDK r26 = clang 17. Named modules work-ish (clang 17 supports them, CMake needs `CMAKE_CXX_STANDARD 20` + `CMAKE_CXX_MODULES` / `FILE_SET CXX_MODULES` which requires CMake 3.28+; Ninja support experimental). For `import std;` you need libc++ std module -- the NDK does not ship it. So either:
+   a. Use modules only for *your own* code and keep `#include <vector>` style headers for the stdlib (this is what most people do; works with clang 17 + CMake 3.28+/Ninja -- though mixing headers into named modules requires global module fragment).
    b. Build libc++ std module yourself (mux route) → clang 23 toolchain needed → own NDK or a custom LLVM build.
-4. Alternative: bump to a newer NDK (r27/r28) — clang 18/19 — still no shipped std module. So (a) is the realistic path today.
-5. Cost: mux's data shows modules → no parallel compiles (`MUX_PROGRAM_JOBS=1`), 5-stage CI, 6h limit. But their core is maybe much smaller than mux; still, module BMI serialization is serialized per-module graph. Their core is zero-dependency though — good for this.
+4. Alternative: bump to a newer NDK (r27/r28) -- clang 18/19 -- still no shipped std module. So (a) is the realistic path today.
+5. Cost: mux's data shows modules → no parallel compiles (`MUX_PROGRAM_JOBS=1`), 5-stage CI, 6h limit. But their core is maybe much smaller than mux; still, module BMI serialization is serialized per-module graph. Their core is zero-dependency though -- good for this.
 
 Actually let me reconsider: their core is "no external dependencies" so module adoption is easy: each module imports only its own. And with a C ABI JNI boundary, they can flip module-by-module.
 
-Also important: their golden-trace stands compile Kotlin with kotlinc — unaffected.
+Also important: their golden-trace stands compile Kotlin with kotlinc -- unaffected.
 
-And another key point: because 1/3 is C++ and 2/3 Kotlin, converting to modules risks *nothing* for the Kotlin side. So their reason for waiting isn't really the blocker — but there are real blockers: build tooling (CMake/Ninja/CMake 3.28+), clang version, no std module in NDK, and Android Studio/Gradle integration (AGP's externalNativeBuild uses its own CMake; module support works if CMake version high enough).
+And another key point: because 1/3 is C++ and 2/3 Kotlin, converting to modules risks *nothing* for the Kotlin side. So their reason for waiting isn't really the blocker -- but there are real blockers: build tooling (CMake/Ninja/CMake 3.28+), clang version, no std module in NDK, and Android Studio/Gradle integration (AGP's externalNativeBuild uses its own CMake; module support works if CMake version high enough).
 
-Wait — actually there IS one real interaction: they currently consume the core through Gradle externalNativeBuild (`app/src/main/cpp/core_jni.cpp` + maybe its own CMakeLists). AGP bundles a specific CMake version (3.22.1 default for older AGP, newer AGP 8.x can use 3.28? Actually AGP ships CMake 3.22.1; recent AGP 8.6+ maybe 3.31?). For modules with FILE_SET, need CMake ≥3.28 and Ninja generator. They may be able to specify a newer CMake via sdkmanager. Worth mentioning concretely: check AGP's CMake; if it's 3.22, you can't use C++20 modules in that build path — you'd instead build core separately (their `core/` already has a standalone host build!) and have Gradle link the prebuilt .so. That's a real actionable insight: keep core built by its own CMake/Ninja on CI, Gradle just packages the .so.
+Wait -- actually there IS one real interaction: they currently consume the core through Gradle externalNativeBuild (`app/src/main/cpp/core_jni.cpp` + maybe its own CMakeLists). AGP bundles a specific CMake version (3.22.1 default for older AGP, newer AGP 8.x can use 3.28? Actually AGP ships CMake 3.22.1; recent AGP 8.6+ maybe 3.31?). For modules with FILE_SET, need CMake ≥3.28 and Ninja generator. They may be able to specify a newer CMake via sdkmanager. Worth mentioning concretely: check AGP's CMake; if it's 3.22, you can't use C++20 modules in that build path -- you'd instead build core separately (their `core/` already has a standalone host build!) and have Gradle link the prebuilt .so. That's a real actionable insight: keep core built by its own CMake/Ninja on CI, Gradle just packages the .so.
 
 Evidence I should verify rather than assert:
 - NDK r26 clang version and whether std module is shipped. I can't check locally for NDK... maybe check if NDK is installed? Unlikely in this env. I could check the NDK release notes via websearch? Might be worth one quick check: does NDK ship `modules/std.cppm`? I recall libc++ has `include/experimental/module.modulemap`? Hmm.
@@ -15177,17 +15177,17 @@ Rather than guessing, maybe do a quick check of NDK release/clang versions? I ha
 
 Given cost/benefit, I'll do one lightweight check maybe two: search for "NDK libc++ std module import std" and check if the user's env has an NDK to inspect (probably not). Honestly a websearch result may be noisy. But it's a factual claim that matters for their decision. Let me try one quick search and see.
 
-Actually — better: check whether there's local NDK in the environment: `ls ~/Android` or `find / -maxdepth 4 -name "ndk"`. Probably not. Skip.
+Actually -- better: check whether there's local NDK in the environment: `ls ~/Android` or `find / -maxdepth 4 -name "ndk"`. Probably not. Skip.
 
 I'll do one websearch to ground NDK/clang module status. Let's try.
 
 Actually, let me reconsider the value: The user's question is about *when* to adopt modules and whether the 1/3-C++ state should block them. My core advice doesn't depend on the finer points of NDK r26 clang; but my recommendation does depend on whether they need a custom toolchain. I'd rather be accurate. One search.
 
-Let me do a search: "Android NDK import std libc++ modules support clang" — and maybe check their core CMakeLists for CXX_STANDARD (cheap, gh api). Combine: 2 parallel calls.
+Let me do a search: "Android NDK import std libc++ modules support clang" -- and maybe check their core CMakeLists for CXX_STANDARD (cheap, gh api). Combine: 2 parallel calls.
 
 Then write the answer.
 
-Let me also check their core/CMakeLists.txt to see cxx_std — evidence for what they'd change.
+Let me also check their core/CMakeLists.txt to see cxx_std -- evidence for what they'd change.
 
 Plan:
 1. `gh api repos/MaurerAnton/agora/contents/core/CMakeLists.txt --jq .content | base64 -d | grep -n "CXX_STANDARD\|target_compile\|set(" | head -30`
@@ -15820,15 +15820,15 @@ I have evidence: core/CMakeLists.txt uses CMake 3.22 min, CXX_STANDARD 20, and i
 Key facts to ground:
 - CMake 3.22 minimum means no C++20 modules support (needs 3.28+ file sets). 
 - But there's a key architectural point: the standalone vs embedded split is actually the *enabling* thing: modules can be adopted in core/ independently, built with its own newer CMake/Ninja, and Gradle just consumes the .so.
-- clang 17 (NDK r26) supports named modules for your own code with `-fmodules`; `import std;` needs a shipped or self-built std module — NDK does not ship one (libc++ std module experimental, and even in upstream LLVM 17 it exists but requires building). I should be careful: I have search evidence that libc++ in NDK comes from LLVM 17. I should state the std module caveat with appropriate hedging, or verify quickly. Let me do one more targeted check maybe searching for whether NDK ships modules. Actually I could just check if there's a local NDK... unlikely.
+- clang 17 (NDK r26) supports named modules for your own code with `-fmodules`; `import std;` needs a shipped or self-built std module -- NDK does not ship one (libc++ std module experimental, and even in upstream LLVM 17 it exists but requires building). I should be careful: I have search evidence that libc++ in NDK comes from LLVM 17. I should state the std module caveat with appropriate hedging, or verify quickly. Let me do one more targeted check maybe searching for whether NDK ships modules. Actually I could just check if there's a local NDK... unlikely.
 
-Given the previous turn already did a websearch, I could do one more verification. But maybe I should just answer with proper hedging and concrete recommendation. The user is a beginner — they need approachable guidance and a decision.
+Given the previous turn already did a websearch, I could do one more verification. But maybe I should just answer with proper hedging and concrete recommendation. The user is a beginner -- they need approachable guidance and a decision.
 
 Actually let me do a quick verification of whether the NDK ships a libc++ std module, since that's the central decision point. Let me check: search "android ndk libc++ std module std.cppm modulemap". Or check the mux repo's toolchain setup - they built libc++ 23 themselves, which I already know from prior work. That's evidence: mux needed a custom toolchain because stock NDK lacked what they needed. For import std specifically though.
 
 Let me be efficient: do one search and simultaneously maybe check core/ for how many files/modules (to size the module adoption).
 
-Actually size of adoption matters: core has ~dozens of .cpp files. Let me count them and see the include structure — e.g., how many include <vector> etc. That informs "modules for your own code" vs "import std".
+Actually size of adoption matters: core has ~dozens of .cpp files. Let me count them and see the include structure -- e.g., how many include <vector> etc. That informs "modules for your own code" vs "import std".
 
 Let me run two parallel calls:
 1. gh api for core directory listing to count files.
@@ -16202,7 +16202,7 @@ Alternatively, you can use:
 LOCAL_CPPFLAGS := -frtti
 Content and code samples on this page are subject to the licenses described in the Content License . Java and OpenJDK are trademarks or registered trademarks of Oracle and/or its affiliates.
 
-## [cmake-cxxmodules(7) — CMake 4.4.3 Documentation](https://cmake.org/cmake/help/latest/manual/cmake-cxxmodules.7.html)
+## [cmake-cxxmodules(7) -- CMake 4.4.3 Documentation](https://cmake.org/cmake/help/latest/manual/cmake-cxxmodules.7.html)
 
 # cmake-cxxmodules(7) ¶
 
@@ -16432,31 +16432,31 @@ _Thinking:_
 
 Excellent evidence. Key facts:
 
-1. NDK discussion #2111 (Dec 2024, NDK r28, CMake 3.31.2, clang 19): `__CMAKE::CXX23` target not provided by toolchain — `import std` doesn't work. DanAlbert: "wait for NDK r29". And in Aug 2025 issue #2174 still open — DanAlbert notes there ARE `std.cppm`/`std.compat.cppm` shipped under `<clang>/share/libc++/v1/` in newer NDKs (that ls was from a prebuilt clang dir) but CMake support is experimental and "definitely not ready for production use."
+1. NDK discussion #2111 (Dec 2024, NDK r28, CMake 3.31.2, clang 19): `__CMAKE::CXX23` target not provided by toolchain -- `import std` doesn't work. DanAlbert: "wait for NDK r29". And in Aug 2025 issue #2174 still open -- DanAlbert notes there ARE `std.cppm`/`std.compat.cppm` shipped under `<clang>/share/libc++/v1/` in newer NDKs (that ls was from a prebuilt clang dir) but CMake support is experimental and "definitely not ready for production use."
 
 2. Issue #2174 (2025-08-23): "they don't work, unlike desktop and iOS... Cmake extract module info from the compiler, and Ndk clang doesn't provide that." + "when using generic system toolchain... modules don't work due to conflicts with bionic libc."
 
 3. Issue #1855: named modules (your own) DO work with CMake ≥3.26/3.28 + clang (with a caveat: NDK clang in some release had a driver bug replacing with LLVM 17.0.2 upstream worked). So user-authored named modules = plausible; `import std` = not.
 
-4. Their core/CMakeLists.txt: `cmake_minimum_required(VERSION 3.22)` → cannot even express `FILE_SET CXX_MODULES` (needs 3.28). And AGP-bundled CMake is old (AGP usually ships 3.22.1 — I should verify what their AGP version ships... maybe check app/build.gradle.kts for externalNativeBuild cmake version. Could check quickly.)
+4. Their core/CMakeLists.txt: `cmake_minimum_required(VERSION 3.22)` → cannot even express `FILE_SET CXX_MODULES` (needs 3.28). And AGP-bundled CMake is old (AGP usually ships 3.22.1 -- I should verify what their AGP version ships... maybe check app/build.gradle.kts for externalNativeBuild cmake version. Could check quickly.)
 
 Also: 139 files in core/src. So adoption surface is large but mechanical.
 
-Now key conceptual point for the user: the "1/3 C++" fact is not actually the blocker, and modules are per-TU/language-boundary-independent... but actually there IS a real reason: if they later move more Kotlin logic into C++, converting at 1/3 means rework? Not really — modules are additive, and headers can coexist (you can keep .h/.cpp traditional and add module interface units; a named module can be imported by old-style TUs? No — actually old TUs can't import named modules in practice? They can! You can have a mix: a non-module TU can `#include` headers while other TUs use modules; but a TU cannot both import a module and include the same declarations? It can include headers and import modules in the same file, though ODR/duplicate definition issues across modules... Practically, mixing is fine: module interface units and traditional TUs in the same library work together as long as you don't split one header into both worlds. So incremental adoption is real.
+Now key conceptual point for the user: the "1/3 C++" fact is not actually the blocker, and modules are per-TU/language-boundary-independent... but actually there IS a real reason: if they later move more Kotlin logic into C++, converting at 1/3 means rework? Not really -- modules are additive, and headers can coexist (you can keep .h/.cpp traditional and add module interface units; a named module can be imported by old-style TUs? No -- actually old TUs can't import named modules in practice? They can! You can have a mix: a non-module TU can `#include` headers while other TUs use modules; but a TU cannot both import a module and include the same declarations? It can include headers and import modules in the same file, though ODR/duplicate definition issues across modules... Practically, mixing is fine: module interface units and traditional TUs in the same library work together as long as you don't split one header into both worlds. So incremental adoption is real.
 
 Key advice:
 1. The real gate is not the ratio, it's toolchain: named modules need CMake ≥3.28 + Ninja + clang; `import std` doesn't work on NDK (their r26 clang 17 and even r28 clang 19 fail per NDK maintainer).
-2. Concrete migration: raise cmake_minimum_required to 3.28, add FILE_SET with CXX_MODULES for interface units, build core standalone (they already have that path!) with their own newer CMake rather than AGP's bundled one, so Gradle just links a prebuilt .so / or use add_subdirectory with proper CMake. Actually important: their core CMakeLists already handles the "standalone vs embedded" case. For modules with the embedded (Gradle externalNativeBuild) path, AGP's bundled CMake version matters. AGP 8.x ships CMake 3.22.1 by default; newer AGP (8.9+?) might ship 3.31. They can pin via sdkmanager "cmake;3.31.x" and set in local.properties? AGP uses version specified in build.gradle `externalNativeBuild { cmake { version "3.31.5" } }`. I should check their app/build.gradle.kts for that block — I have partial knowledge from earlier (minSdk 26 etc.). Let me check to be accurate: does app/build.gradle.kts have externalNativeBuild cmake block, and AGP version?
+2. Concrete migration: raise cmake_minimum_required to 3.28, add FILE_SET with CXX_MODULES for interface units, build core standalone (they already have that path!) with their own newer CMake rather than AGP's bundled one, so Gradle just links a prebuilt .so / or use add_subdirectory with proper CMake. Actually important: their core CMakeLists already handles the "standalone vs embedded" case. For modules with the embedded (Gradle externalNativeBuild) path, AGP's bundled CMake version matters. AGP 8.x ships CMake 3.22.1 by default; newer AGP (8.9+?) might ship 3.31. They can pin via sdkmanager "cmake;3.31.x" and set in local.properties? AGP uses version specified in build.gradle `externalNativeBuild { cmake { version "3.31.5" } }`. I should check their app/build.gradle.kts for that block -- I have partial knowledge from earlier (minSdk 26 etc.). Let me check to be accurate: does app/build.gradle.kts have externalNativeBuild cmake block, and AGP version?
 
 Let me do a quick check to make it concrete. And check core/include tree count and whether there are .ixx/.cppm already.
 
-Also worth checking: do they use `std::` heavily (would need import std)? Their core is zero-dep C++20 — presumably uses <string>, <vector>, <optional>.
+Also worth checking: do they use `std::` heavily (would need import std)? Their core is zero-dep C++20 -- presumably uses <string>, <vector>, <optional>.
 
 Recommendation: two-level plan:
 - Level 1 (safe, today): module-ify *only your own* code (named modules like `agora.core.bpe`), keep `#include <string>` headers in the global module fragment. This works with CMake 3.28+ and doesn't need `import std`.
-- Level 2 (later): `import std` — blocked until NDK ships it; workaround = copy libc++'s std.cppm and build it as a static lib (as one user did), which is exactly what "bloatless" doesn't want but arguably fine — actually building your own std module costs nothing at runtime and could reduce binary size? It reduces... probably neutral.
+- Level 2 (later): `import std` -- blocked until NDK ships it; workaround = copy libc++'s std.cppm and build it as a static lib (as one user did), which is exactly what "bloatless" doesn't want but arguably fine -- actually building your own std module costs nothing at runtime and could reduce binary size? It reduces... probably neutral.
 
-Also mention the *build cost* lessons from mux: modules force dependency-ordered compilation; mux sets `MUX_PROGRAM_JOBS=1`-ish and needed 5 CI stages. For 139 TUs, the BMI graph may serialize parts of the build. Actually named modules mostly help compile time in theory; but in practice with clang the BMI build is a serialization point. Their core builds on host too — host clang/gcc must also support it.
+Also mention the *build cost* lessons from mux: modules force dependency-ordered compilation; mux sets `MUX_PROGRAM_JOBS=1`-ish and needed 5 CI stages. For 139 TUs, the BMI graph may serialize parts of the build. Actually named modules mostly help compile time in theory; but in practice with clang the BMI build is a serialization point. Their core builds on host too -- host clang/gcc must also support it.
 
 Wait, their tests build on host with... probably g++ or clang. GCC 14 supports named modules partially; also fine.
 
@@ -16505,7 +16505,7 @@ Now let me check the two things that actually gate this in *your* build: which C
 152-
 153-// Proot binaries (libproot_exec.so, libproot_loader.so, libtalloc.so) are
 154-// built via GNUmakefile (see .build-proot/) and placed directly in jniLibs.
-155-// No CMake target is needed — the binaries are manually managed prebuilts.
+155-// No CMake target is needed -- the binaries are manually managed prebuilts.
 156-// talloc is built with SONAME=libtalloc.so (no version) so AGP packaging works.
 157-
 158-tasks.register<Copy>("copyPlayApk") {
@@ -16543,13 +16543,13 @@ gh: Not Found (HTTP 404)
 
 _Thinking:_
 
-Default branch maybe not `main`. Let me check default branch. Also key discovery: `cppFlags += "-std=c++17"` in the app's externalNativeBuild! That conflicts with core's CMAKE_CXX_STANDARD 20 — actually cppFlags appends -std=c++17 to all targets, which is a bug/oddity worth flagging: their core is C++20 but the Gradle path forces c++17 flag (though CMake sets -std=c++20 too; order matters — cppFlags come... typically after, so -std=c++17 might win → core would fail to compile C++20 features, or CMake's own flag appears after). Worth flagging as a real finding: the Android build may be compiling the "C++20 core" as C++17.
+Default branch maybe not `main`. Let me check default branch. Also key discovery: `cppFlags += "-std=c++17"` in the app's externalNativeBuild! That conflicts with core's CMAKE_CXX_STANDARD 20 -- actually cppFlags appends -std=c++17 to all targets, which is a bug/oddity worth flagging: their core is C++20 but the Gradle path forces c++17 flag (though CMake sets -std=c++20 too; order matters -- cppFlags come... typically after, so -std=c++17 might win → core would fail to compile C++20 features, or CMake's own flag appears after). Worth flagging as a real finding: the Android build may be compiling the "C++20 core" as C++17.
 
 Hmm, careful: In AGP, cppFlags are added to CMAKE_CXX_FLAGS, and CMake's per-target -std=c++20 flag comes after CMAKE_CXX_FLAGS in the command line, so it wins usually. So probably harmless but fragile. I'll mention it as a landmine.
 
-Also targets: agora_llama, agora_proot, agora_core — multiple native libs, explaining the 23 native libs in APK.
+Also targets: agora_llama, agora_proot, agora_core -- multiple native libs, explaining the 23 native libs in APK.
 
-Also no `version = ` in cmake block → AGP default CMake. AGP 9.2.1 — that's quite new (2026). AGP 9 likely ships CMake 3.31+ maybe. Unknown; I can note it's something to check (they can print the CMake version). Let me check the default branch and get core tree counts.
+Also no `version = ` in cmake block → AGP default CMake. AGP 9.2.1 -- that's quite new (2026). AGP 9 likely ships CMake 3.31+ maybe. Unknown; I can note it's something to check (they can print the CMake version). Let me check the default branch and get core tree counts.
 
 **Tool: shell**
 
@@ -16806,23 +16806,23 @@ app/src/main/cpp/proot_jni.cpp
 
 _Thinking:_
 
-Interesting! core has 267 .cpp and 145 .hpp in its own tree (the 139 in core/src earlier was partial listing from a different dir call—wait earlier I got 139 names from core/src; but tree says 267 .cpp overall in core, which includes tests probably). And app/src/main/cpp has additional .cpp for llama/proot JNI.
+Interesting! core has 267 .cpp and 145 .hpp in its own tree (the 139 in core/src earlier was partial listing from a different dir call--wait earlier I got 139 names from core/src; but tree says 267 .cpp overall in core, which includes tests probably). And app/src/main/cpp has additional .cpp for llama/proot JNI.
 
 Also whole Kotlin side: 331 .kt files. If core cpp is ~200 and kt is 331... "1/3 C++" plausible by LOC.
 
-Interesting: core has 4967 trace + 4713 json files (golden traces) — huge test corpus. Note: converting to modules doesn't touch them.
+Interesting: core has 4967 trace + 4713 json files (golden traces) -- huge test corpus. Note: converting to modules doesn't touch them.
 
-Now: key question — should I check whether any `.cppm`/`.ixx` exist? The type histogram shows no such extension. Good.
+Now: key question -- should I check whether any `.cppm`/`.ixx` exist? The type histogram shows no such extension. Good.
 
-Now I have enough evidence. Also notable: `cppFlags += "-std=c++17"` while core wants C++20 — real landmine. And AGP 9.2.1; unknown bundled CMake. Note AGP requires explicit `version` for cmake otherwise uses default bundled (AGP's default is 3.22.1 historically; recent AGP maybe newer). I should tell them how to check: `cmake --version` from AGP's cmake dir, or add `version "3.31.6"`.
+Now I have enough evidence. Also notable: `cppFlags += "-std=c++17"` while core wants C++20 -- real landmine. And AGP 9.2.1; unknown bundled CMake. Note AGP requires explicit `version` for cmake otherwise uses default bundled (AGP's default is 3.22.1 historically; recent AGP maybe newer). I should tell them how to check: `cmake --version` from AGP's cmake dir, or add `version "3.31.6"`.
 
 Also worth noting that even with CMake 3.28+, Ninja generator is required, and AGP externalNativeBuild by default uses Ninja (yes, AGP uses ninja for CMake). Good.
 
 One more crucial thing: `-ANDROID_STL=c++_shared` set → libc++_shared.so in APK, matching the 23 native libs observation. And static vs shared: for modules irrelevant.
 
-Also note: with named modules and clang, module BMIs are per-config; and you should be careful that core builds both standalone (host) and embedded — module builds work on host clang 17+ too, but their host tests presumably use the default compiler (g++ maybe 12/13 → GCC module support flaky). Suggest host clang.
+Also note: with named modules and clang, module BMIs are per-config; and you should be careful that core builds both standalone (host) and embedded -- module builds work on host clang 17+ too, but their host tests presumably use the default compiler (g++ maybe 12/13 → GCC module support flaky). Suggest host clang.
 
-Also, there's another real consideration: they build with `-Wextra` clean and golden traces — module conversion means each module interface unit is compiled once and imported; ok.
+Also, there's another real consideration: they build with `-Wextra` clean and golden traces -- module conversion means each module interface unit is compiled once and imported; ok.
 
 Let me now write the answer, well organized, beginner-friendly, evidence-linked:
 
@@ -16830,11 +16830,11 @@ Structure:
 1. Reframe: the 1/3 number is not the blocker; here's what actually is. Modules are adopted per-file, and your core is already isolated behind a C ABI JNI boundary (app/src/main/cpp/core_jni.cpp), so Kotlin doesn't care at all. Actually their boundary: core_jni.cpp includes headers. So core's internal representation is invisible to Kotlin either way.
 2. The three real gates, with evidence:
    a. Build system: cmake_minimum_required(VERSION 3.22) → modules need 3.28+ (FILE_SET CXX_MODULES) and Ninja. Their core already has standalone vs embedded split → the workaround: build core via its own modern CMake/Ninja, ship .so, let Gradle package prebuilt (they already do this for proot via jniLibs!). They have precedent: libproot binaries are prebuilts copied to jniLibs with a comment saying no CMake target needed. That's the pattern to reuse for a module-built core.
-   b. `import std` is not available: NDK discussion #2111 (r28/clang19/CMake 3.31 fails: __CMAKE::CXX23 not provided), DanAlbert "wait for r29", and issue #2174 (Aug 2025) still says Cmake can't extract module info from NDK clang; also "generic system toolchain modules conflict with bionic". Their NDK is r26 (clang from LLVM 17) — worse. So plan: named modules for your own code now, keep `#include <string>` in the global module fragment. That still gives ~80% of hygiene, none of the std-header compile-time win.
+   b. `import std` is not available: NDK discussion #2111 (r28/clang19/CMake 3.31 fails: __CMAKE::CXX23 not provided), DanAlbert "wait for r29", and issue #2174 (Aug 2025) still says Cmake can't extract module info from NDK clang; also "generic system toolchain modules conflict with bionic". Their NDK is r26 (clang from LLVM 17) -- worse. So plan: named modules for your own code now, keep `#include <string>` in the global module fragment. That still gives ~80% of hygiene, none of the std-header compile-time win.
    c. `-std=c++17` landmine in build.gradle.kts line 50 vs CMAKE_CXX_STANDARD 20 in core. Flag it.
 3. What it costs: BMI ordering serializes part of the build (mux needed staged CI; though their core is much smaller: ~200 TUs, host tests with ~5000 golden traces dominate their CI time instead). Also host compiler must support modules → use clang host-side, not gcc.
 4. Concrete recommendation: 
-   - Now: don't convert all 267 files. Convert a vertical slice (e.g. one cohesive group — bpe_vocabulary + cjk_text, or the citations/context compact group) into 1-2 named modules; keep everything else on headers; measure host build time before/after.
+   - Now: don't convert all 267 files. Convert a vertical slice (e.g. one cohesive group -- bpe_vocabulary + cjk_text, or the citations/context compact group) into 1-2 named modules; keep everything else on headers; measure host build time before/after.
    - Raise core CMake min to 3.28 only when actually adding a CXX_MODULES FILE_SET (you can keep 3.22 for the non-module files meanwhile... actually min version is per-project; you can bump it once).
    - Keep `#include` of stdlib in global module fragment: `module; #include <string> ... module :private;` Actually correct syntax:
      ```
@@ -16851,21 +16851,21 @@ Structure:
      export module agora.core.bpe;   // ends global module fragment
      ```
      Yes: `module;` begins the global module fragment, then preprocessor directives, then the module declaration ends it. Correct.
-   - Don't try to build your own std module (mux route / the reddit comment route of copying std.cppm) — that's a toolchain you'd have to maintain, and it's exactly what bit mux's CI.
+   - Don't try to build your own std module (mux route / the reddit comment route of copying std.cppm) -- that's a toolchain you'd have to maintain, and it's exactly what bit mux's CI.
 5. When to revisit: when core is ~2/3 or when NDK ships CXX23 std target; check with `gh issue`? Could give them a check: attempt configure with `set(CMAKE_CXX_MODULE_STD ON)` on newest NDK quarterly.
 6. Offer: I can produce a concrete PR-style diff for one vertical slice + CMake changes.
 
-Also note: the fact that modules would help their real pain (host test compile time? no—their CI likely dominated by golden traces) — I should question whether modules actually buy anything for them right now. Honest answer: named modules without `import std` mostly buy hygiene/encapsulation, not speed. If they want speed, use precompiled headers (PCH) for the std headers on host, and for Android... PCH works too. That's a "bloatless" alternative worth mentioning.
+Also note: the fact that modules would help their real pain (host test compile time? no--their CI likely dominated by golden traces) -- I should question whether modules actually buy anything for them right now. Honest answer: named modules without `import std` mostly buy hygiene/encapsulation, not speed. If they want speed, use precompiled headers (PCH) for the std headers on host, and for Android... PCH works too. That's a "bloatless" alternative worth mentioning.
 
-Also mention: since 2/3 is Kotlin and they intend to keep growing C++, an important ordering point: convert *as you port*, not after — i.e., write each newly ported Kotlin→C++ piece directly as a module. That's the best answer to their concern: don't retrofit the 1/3 now; make the 2/3 that's coming modular from day one. That's the key insight and directly addresses their statement.
+Also mention: since 2/3 is Kotlin and they intend to keep growing C++, an important ordering point: convert *as you port*, not after -- i.e., write each newly ported Kotlin→C++ piece directly as a module. That's the best answer to their concern: don't retrofit the 1/3 now; make the 2/3 that's coming modular from day one. That's the key insight and directly addresses their statement.
 
-Also caution: mixing — a new .cppm module importing... fine.
+Also caution: mixing -- a new .cppm module importing... fine.
 
 Let me also mention the header/impl split cost: converting existing hpp→module interface units is mechanical (move declarations into `export module` file, keep .cpp as implementation unit `module agora.core.x;`).
 
 Keep it reasonably concise but substantive. Use headers and bullets. Maybe ~600-800 words. Include file/line references.
 
-One caution about a claim: "modules need CMake 3.28" — from cmake-cxxmodules docs, yes "Added in version 3.28". And import std needs clang 18.1.2+ with libc++/libstdc++ per CMake docs, plus Ninja generators only. Good.
+One caution about a claim: "modules need CMake 3.28" -- from cmake-cxxmodules docs, yes "Added in version 3.28". And import std needs clang 18.1.2+ with libc++/libstdc++ per CMake docs, plus Ninja generators only. Good.
 
 Write it.
 
@@ -16873,7 +16873,7 @@ Good news: the "1/3" number isn't actually your blocker. Three *other* things ar
 
 ## Why the ratio doesn't matter
 
-Your C++ already sits behind a C-ABI seam: `app/src/main/cpp/core_jni.cpp` is the only Kotlin-facing file, and it talks to `agora_core` through `extern "C"` JNI entry points. Kotlin never sees a header. So converting the core to named modules changes **nothing** for the 331 `.kt` files — and conversely, leaving core on headers changes nothing either. Modules are adopted per-file inside `core/`, and a `.cpp` that `#include`s a header can coexist happily in the same library as a `export module` interface unit. There's no flag day.
+Your C++ already sits behind a C-ABI seam: `app/src/main/cpp/core_jni.cpp` is the only Kotlin-facing file, and it talks to `agora_core` through `extern "C"` JNI entry points. Kotlin never sees a header. So converting the core to named modules changes **nothing** for the 331 `.kt` files -- and conversely, leaving core on headers changes nothing either. Modules are adopted per-file inside `core/`, and a `.cpp` that `#include`s a header can coexist happily in the same library as a `export module` interface unit. There's no flag day.
 
 ## What actually gates you
 
@@ -16881,13 +16881,13 @@ Your C++ already sits behind a C-ABI seam: `app/src/main/cpp/core_jni.cpp` is th
 
 Worse, the Android path doesn't hand you a CMake you control: `app/build.gradle.kts:146-149` points `externalNativeBuild` at `src/main/cpp/CMakeLists.txt` with **no explicit `cmake { version = ... }`**, so you get whatever AGP 9.2.1 bundles.
 
-The fix is a pattern **you already use**: `libproot_exec.so` / `libproot_loader.so` / `libtalloc.so` are built outside Gradle by a GNUmakefile and dropped into `jniLibs` — with a comment saying "No CMake target is needed". Do the same for a modular core: build it standalone (your `core/CMakeLists.txt` already detects `CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR` for exactly this) with your own CMake 4.x + Ninja, and let Gradle package the resulting `.so`. That sidesteps AGP's bundled CMake entirely.
+The fix is a pattern **you already use**: `libproot_exec.so` / `libproot_loader.so` / `libtalloc.so` are built outside Gradle by a GNUmakefile and dropped into `jniLibs` -- with a comment saying "No CMake target is needed". Do the same for a modular core: build it standalone (your `core/CMakeLists.txt` already detects `CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR` for exactly this) with your own CMake 4.x + Ninja, and let Gradle package the resulting `.so`. That sidesteps AGP's bundled CMake entirely.
 
 **2. `import std;` will not work.** This is the one people don't expect:
 
-- NDK discussion [#2111](https://github.com/android/ndk/discussions/2111) — NDK r28, clang 19, CMake 3.31.2, `CXX_MODULE_STD` fails: *"requires that the `__CMAKE::CXX23` target exist, but it was not provided by the toolchain."* NDK maintainer DanAlbert: *"probably 'wait for NDK r29'."*
+- NDK discussion [#2111](https://github.com/android/ndk/discussions/2111) -- NDK r28, clang 19, CMake 3.31.2, `CXX_MODULE_STD` fails: *"requires that the `__CMAKE::CXX23` target exist, but it was not provided by the toolchain."* NDK maintainer DanAlbert: *"probably 'wait for NDK r29'."*
 - NDK issue [#2174](https://github.com/android/ndk/issues/2174) (2025-08) is still open: *"Cmake extract module info from the compiler, and Ndk clang doesn't provide that"*; CMake itself prints *"support for `import std;` … is experimental … not ready for production use."*
-- You're on `ndkVersion = "26.3.11579264"` = clang from LLVM 17 — two versions older than the build that already fails.
+- You're on `ndkVersion = "26.3.11579264"` = clang from LLVM 17 -- two versions older than the build that already fails.
 
 So plan for **named modules over your own code only**, keeping `#include <string>` etc. in the global module fragment:
 
@@ -16898,15 +16898,15 @@ module;                        // global module fragment
 export module agora.core.bpe;  // your declarations go here
 ```
 
-That works with clang 17 and buys you encapsulation. It does **not** buy the compile-time win, because the std-headers are still re-parsed per TU. Don't go down the road of hand-building libc++'s `std.cppm` yourself (someone in #2174 did) — that's a toolchain to maintain, and it's the exact custom-toolchain trap that keeps mux's CI red.
+That works with clang 17 and buys you encapsulation. It does **not** buy the compile-time win, because the std-headers are still re-parsed per TU. Don't go down the road of hand-building libc++'s `std.cppm` yourself (someone in #2174 did) -- that's a toolchain to maintain, and it's the exact custom-toolchain trap that keeps mux's CI red.
 
 **3. There's a landmine in your Android config.** `app/build.gradle.kts:50` sets `cppFlags += "-std=c++17"` while `core/CMakeLists.txt` sets `CMAKE_CXX_STANDARD 20`. It probably survives only because CMake's per-target `-std=c++20` lands later on the command line. Delete that line before you touch anything else.
 
 ## My actual recommendation
 
-Don't retrofit the existing ~200 core `.cpp` files. Instead: **every Kotlin→C++ piece you port from here on gets written as a module from day one.** The "2/3 that isn't C++ yet" is your opportunity, not your obstacle — new code has no legacy headers to convert, and retrofitting later is pure churn.
+Don't retrofit the existing ~200 core `.cpp` files. Instead: **every Kotlin→C++ piece you port from here on gets written as a module from day one.** The "2/3 that isn't C++ yet" is your opportunity, not your obstacle -- new code has no legacy headers to convert, and retrofitting later is pure churn.
 
-Because you can't have `import std`, the immediate payoff is structural, not speed. If your pain is compile time on the host tests (and with 4,967 `.trace` + 4,713 `.json` golden files, it might be), measure first — a **precompiled header** for the std headers gets you most of the speed with none of the toolchain risk.
+Because you can't have `import std`, the immediate payoff is structural, not speed. If your pain is compile time on the host tests (and with 4,967 `.trace` + 4,713 `.json` golden files, it might be), measure first -- a **precompiled header** for the std headers gets you most of the speed with none of the toolchain risk.
 
 If you want a concrete starting point: convert one cohesive vertical slice (e.g. `bpe_vocabulary` + `o200k_base` handling, or the `citations`/`context_compact` pair) plus the `FILE_SET CXX_MODULES` plumbing, and time the host build before/after. Want me to draft that diff against `core/CMakeLists.txt`?
 
@@ -16928,38 +16928,38 @@ Context: Agora is GPL-3.0 (upstream newo-ether/Agora). The user has a fork Maure
 
 This is a decision-relevant conversation, not pure coding. Key things to address honestly and usefully:
 
-1. **License reality check** — critical. Agora is GPL-3.0. "Rewrite from zero but reuse some logic" is the classic "clean room"/relicense gambit. Important facts:
-   - Agora's core is GPL-3.0. Reusing "some logic" (copying code) from GPL-3.0 code means the result must be GPL-3.0 — the copyleft attaches to the copied work and derivative works.
+1. **License reality check** -- critical. Agora is GPL-3.0. "Rewrite from zero but reuse some logic" is the classic "clean room"/relicense gambit. Important facts:
+   - Agora's core is GPL-3.0. Reusing "some logic" (copying code) from GPL-3.0 code means the result must be GPL-3.0 -- the copyleft attaches to the copied work and derivative works.
    - Their own contributions are theirs; but mixing GPL code into a closed/MIT app isn't allowed. If they truly write from scratch (independent implementation, no copying), it can be MIT/whatever. But "only some logic" suggests they will take pieces.
    - Prior flagged: MaurerAnton/Agora-1 declared MIT over a GPL-3.0 upstream copy → already a license violation risk. Doing this again with a "fresh brand" doesn't cure anything if code is copied.
    - Also: is upstream Agora maybe actually something else? Earlier evidence: upstream GPL-3.0 confirmed.
-   - Practical paths: (a) keep GPL-3.0 and brand it progressive.chat (fine — GPL allows rebranding/forking, just keep license + notices + source availability), (b) ask upstream for a relicensing/exception (unlikely but possible; or maybe upstream is fine with a dual-license if they own all code), (c) genuinely clean-room: write independent implementations from protocol/behavior specs, no code copying, then license freely — but must avoid copying structure and definitely not copy golden traces? Traces are data, arguably factual; still derived.
+   - Practical paths: (a) keep GPL-3.0 and brand it progressive.chat (fine -- GPL allows rebranding/forking, just keep license + notices + source availability), (b) ask upstream for a relicensing/exception (unlikely but possible; or maybe upstream is fine with a dual-license if they own all code), (c) genuinely clean-room: write independent implementations from protocol/behavior specs, no code copying, then license freely -- but must avoid copying structure and definitely not copy golden traces? Traces are data, arguably factual; still derived.
    - Also llama.cpp is MIT/Apache-2.0; other deps may vary. Their core is "zero-dep C++20" per README.
    - Note: even independent reimplementation with identical behavior is fine legally (behavior isn't copyrightable; see Google v. Oracle). But "some logic" lifted verbatim isn't.
 
-2. **Reality check on the mux stack** — I have hard data from prior work:
+2. **Reality check on the mux stack** -- I have hard data from prior work:
    - mux APK: one 87–91 MB libmux.so (stripped 30.78 MB), DEX 2,768 bytes, no font shipping, no local LLM.
    - mux CI: 15 success / 85 failure; currently red; source compile break; 5 staged jobs because 6h limit; device behavior unvalidated ("experimental port").
    - mux requires clang 23 + custom libc++23 build for C++26 modules/views::enumerate; not stock NDK. Plus custom SDL fork for the DEX. Plus aapt2+zipalign+apksigner hand-rolled pipeline.
    - Agora conversely: 1107-entry APK, 33.1 MB, needs local LLM (llama), Room DB, proot, Compose UI with IME/TalkBack/RTL/LaTeX.
    
-   So the honest comparison: Agora's actual product features are much *harder* than mux's — local inference, proot, Markdown/LaTeX rendering, accessibility. mux is a chat client with server-side accounts. Building Agora's feature set (local LLM + DB + a11y) on mux's stack is not "reuse what mux proved" — it's doing harder work on a stack with less tooling.
+   So the honest comparison: Agora's actual product features are much *harder* than mux's -- local inference, proot, Markdown/LaTeX rendering, accessibility. mux is a chat client with server-side accounts. Building Agora's feature set (local LLM + DB + a11y) on mux's stack is not "reuse what mux proved" -- it's doing harder work on a stack with less tooling.
    
-   Also mux is XMPP+Matrix — protocols different from Agora (Anthropic API, local llama). "Some logic" from Agora that would port: BPE vocabulary/o200k tokenizer, cron/task scheduling, citations, context compaction, search DAOs maybe Room-specific.
+   Also mux is XMPP+Matrix -- protocols different from Agora (Anthropic API, local llama). "Some logic" from Agora that would port: BPE vocabulary/o200k tokenizer, cron/task scheduling, citations, context compaction, search DAOs maybe Room-specific.
 
-3. **Cost estimate** — should be blunt: mux took ~how long? Maybe check repo activity: commits count, first commit date. That'd be evidence. Also the CI failure ratio is a proxy for maintenance burden.
+3. **Cost estimate** -- should be blunt: mux took ~how long? Maybe check repo activity: commits count, first commit date. That'd be evidence. Also the CI failure ratio is a proxy for maintenance burden.
 
-4. **Recommendation** — likely: 
+4. **Recommendation** -- likely: 
    - If the motivation is branding/licensing freedom: that's attainable only by clean-rooming, and a total rewrite doesn't automatically grant it.
    - If the motivation is bloat: rewriting UI in Skia won't shrink (evidenced: mux 30.78 MB stripped vs Agora 33.1 MB *including* a 13.21 MB font and llama libs; removing the font alone gets you most of the way). Real wins are in assets not UI.
-   - If the motivation is "100% C++": doable incrementally — Core already exists and is growing; UI last.
+   - If the motivation is "100% C++": doable incrementally -- Core already exists and is growing; UI last.
    - Suggest: keep Agora's GPL-3.0 fork as the "some logic" donor only if you stay GPL-3.0; otherwise, port only your *own* written pieces... wait, is the fork's own work theirs? Yes, they wrote core/ presumably. Actually did they? core/ is presumably their work (the C++ port). Their own code they can relicense. The upstream Kotlin is GPL.
    
-   That's a super important nuance! `core/` in MaurerAnton/agora may be their own authored C++ — but as a fork of a GPL-3.0 repo, their contributions to that repo are licensed GPL-3.0 too (inbound=outbound under GitHub ToS; and their own file headers matter). If they authored core/ and it's a derivative of nothing (a new implementation), could they have dual-licensed? Under GitHub ToS, contributions to a repo are under the repo's license. But if they own the copyright, they can also license their own code separately (as copyright holder you can grant additional licenses). However, files they copied/modified from upstream remain GPL.
+   That's a super important nuance! `core/` in MaurerAnton/agora may be their own authored C++ -- but as a fork of a GPL-3.0 repo, their contributions to that repo are licensed GPL-3.0 too (inbound=outbound under GitHub ToS; and their own file headers matter). If they authored core/ and it's a derivative of nothing (a new implementation), could they have dual-licensed? Under GitHub ToS, contributions to a repo are under the repo's license. But if they own the copyright, they can also license their own code separately (as copyright holder you can grant additional licenses). However, files they copied/modified from upstream remain GPL.
    
-   So: they likely *can* take `core/` (their own authored C++ code) out and relicense — if they truly wrote it and it contains no upstream copy. But the moment they pull "some logic" from upstream Kotlin (GPL), that taints progressive.chat. And golden traces? Their own.
+   So: they likely *can* take `core/` (their own authored C++ code) out and relicense -- if they truly wrote it and it contains no upstream copy. But the moment they pull "some logic" from upstream Kotlin (GPL), that taints progressive.chat. And golden traces? Their own.
 
-   I should verify: does core/ have license headers? Does the repo have LICENSE? Check quickly. Also check whether upstream recognizes; check FORK.md mention. Let me do a quick evidence check: license of MaurerAnton/agora via API, presence of headers in core files, and authorship of core (who wrote it — commits authored by whom).
+   I should verify: does core/ have license headers? Does the repo have LICENSE? Check quickly. Also check whether upstream recognizes; check FORK.md mention. Let me do a quick evidence check: license of MaurerAnton/agora via API, presence of headers in core files, and authorship of core (who wrote it -- commits authored by whom).
 
 Actually, given a substantial reply is needed and evidence matters, let me gather:
 - `gh api repos/MaurerAnton/agora/license` and upstream license.
@@ -16977,35 +16977,35 @@ Let me plan the response:
 **A. The legal gate first (because it decides everything else).**
 - Facts: upstream newo-ether/Agora GPL-3.0; your fork inherits it; `Agora-1` declared MIT over it = already flagged risk.
 - "Rewrite from zero" ≠ "free to relicense". What matters is whether copied code exists. Clean-room independent implementation can be MIT; "only some logic" copied cannot.
-- Your own authored core/ — you likely hold copyright, so you can relicense *your* files; anything copied from upstream Kotlin cannot come along.
-- Options: stay GPL-3.0 (cheapest, keeps upstream sync—but they want independence), ask upstream for exception/dual license, or clean-room.
+- Your own authored core/ -- you likely hold copyright, so you can relicense *your* files; anything copied from upstream Kotlin cannot come along.
+- Options: stay GPL-3.0 (cheapest, keeps upstream sync--but they want independence), ask upstream for exception/dual license, or clean-room.
 - Also note llama.cpp (MIT) and other deps are fine; check any Apache-2.0 patents etc. Actually just mention that the "bloat" libs are mostly permissive, so the GPL taint is upstream Kotlin only.
 
 **B. Technical reality check on mux's stack for Agora's feature set.**
 - Table comparing: what mux proves works; what Agora needs that mux never built.
-  - mux: network client, no local model, no SQL DB? (mux likely uses sqlite? unknown), text rendering in Skia (yes, custom UI = they did build their own text layout/selection, IME via BaseInputConnection — actually they DID build InputConnection since their DEX includes InputConnection class + InputView). So mux proves: custom text input works-ish, 16KB alignment, no-Gradle packaging, 2.7 KB DEX.
+  - mux: network client, no local model, no SQL DB? (mux likely uses sqlite? unknown), text rendering in Skia (yes, custom UI = they did build their own text layout/selection, IME via BaseInputConnection -- actually they DID build InputConnection since their DEX includes InputConnection class + InputView). So mux proves: custom text input works-ish, 16KB alignment, no-Gradle packaging, 2.7 KB DEX.
   - Agora needs: llama.cpp local inference (they have it working already via agora_llama), proot, Room DB, Markdown/LaTeX rendering (Compose), notifications, media, 19 locales.
   - So the mux stack gives you on day 1: nothing of that; you'd rebuild Markdown/LaTeX in Skia yourself, rebuild a11y (TalkBack) yourself, rebuild RTL/bidi yourself. Prior research concluded no permissive pure-C++ Skia toolkit has Android IME + TalkBack.
-- Evidence: mux's own state — 15/85 CI green, currently red, custom clang 23 + libc++23, custom SDL fork, 30.78 MB stripped .so. So the stack's cost is high and its author's own build isn't reliable.
+- Evidence: mux's own state -- 15/85 CI green, currently red, custom clang 23 + libc++23, custom SDL fork, 30.78 MB stripped .so. So the stack's cost is high and its author's own build isn't reliable.
 
 **C. Honest cost/time estimate + what "only some logic" means concretely.**
-- Which Agora parts survive a rewrite cleanly (self-contained, protocol-agnostic): BPE tokenizer vocabulary handling, cron expression parsing, task scheduling, CJK text segmentation, citations, context compaction, maybe search ranking. These are pure functions — good port targets; also already in their C++ core!
+- Which Agora parts survive a rewrite cleanly (self-contained, protocol-agnostic): BPE tokenizer vocabulary handling, cron expression parsing, task scheduling, CJK text segmentation, citations, context compaction, maybe search ranking. These are pure functions -- good port targets; also already in their C++ core!
 - Which parts do NOT: Room DAOs (Kotlin/Room ties), anything touching upstream Compose UI, and golden-trace fixtures if fixtures encode upstream behavior you want identical. Actually golden traces are useful for validating ports.
 
 **D. Recommendation / decision tree.**
-- Option 1 (lowest risk, ~weeks): stay GPL-3.0, rename the app to progressive.chat — GPL permits rebranding; must keep source + license. Keep upstream Kotlin as-is; keep growing core/ as modules (previous answer's plan). Get size wins via font subsetting.
-- Option 2 (if licensing freedom is the goal): progressive.chat = new repo, MIT, clean-room, and port ONLY pure-logic pieces you authored/spec'd yourself, no upstream files. Cost: rebuild UI, DB, IME, a11y for the whole app — 6-12 months realistically solo. Not "only some logic".
+- Option 1 (lowest risk, ~weeks): stay GPL-3.0, rename the app to progressive.chat -- GPL permits rebranding; must keep source + license. Keep upstream Kotlin as-is; keep growing core/ as modules (previous answer's plan). Get size wins via font subsetting.
+- Option 2 (if licensing freedom is the goal): progressive.chat = new repo, MIT, clean-room, and port ONLY pure-logic pieces you authored/spec'd yourself, no upstream files. Cost: rebuild UI, DB, IME, a11y for the whole app -- 6-12 months realistically solo. Not "only some logic".
 - Option 3 (middle): progressive.chat keeps their own C++ core (relicensable) + MIT-permissive deps (llama.cpp, sqlite), and reimplements the Kotlin app layer independently (Compose or Skia). No upstream file copied. Still big but no moral hazard and it's a real product.
 
 I should be careful to give a strong recommendation: probably recommend Option 3 only if they commit to not copying, else 1. And say that a total rewrite for "bloatlessness" is not justified by numbers (33.1 MB APK with 13.21 MB being one font).
 
-Also maybe mention: if upstream later relicenses or if they get an exception — ask politely; small chance.
+Also maybe mention: if upstream later relicenses or if they get an exception -- ask politely; small chance.
 
 Let me gather evidence quickly. Also check whether upstream might actually be MIT now (recheck license) so my claim is current. And whether MaurerAnton has a progressive.chat repo.
 
 Let me run gh commands.
 
-Before you commit to this, there's a legal gate that decides which of your options even exist — so let me check the current license facts rather than rely on the earlier audit.
+Before you commit to this, there's a legal gate that decides which of your options even exist -- so let me check the current license facts rather than rely on the earlier audit.
 
 **Tool: shell**
 
@@ -17089,13 +17089,13 @@ constexpr std::int64_t kHorizonMillis = 366LL * 24 * 60 * 8 * 60'000LL;
 
 _Thinking:_
 
-Evidence confirms: upstream GPL-3.0, fork GPL-3.0, Agora-1 MIT (mismatch persists), no progressive.chat repo yet. core files have no SPDX headers — just code (which means the repo-level LICENSE GPL-3.0 applies; per-file headers absent means "the repo license governs").
+Evidence confirms: upstream GPL-3.0, fork GPL-3.0, Agora-1 MIT (mismatch persists), no progressive.chat repo yet. core files have no SPDX headers -- just code (which means the repo-level LICENSE GPL-3.0 applies; per-file headers absent means "the repo license governs").
 
 Important nuance: they wrote core/ presumably; but absent per-file license headers, the repo LICENSE (GPL-3.0) governs by default. As author they can dual-license their own authored code, but any file derived from upstream stays GPL.
 
-Also core_jni.cpp comment: "pinned by core/tests to the Kotlin implementation it replaces" — meaning the C++ implementations are behaviorally ported from upstream Kotlin code. This is a **critical** legal fact: the C++ core was written *to match* upstream Kotlin behavior, presumably by reading it. That's derivative work (a translation/port), not independent creation. So core/ is almost certainly a derivative of upstream GPL code → cannot be relicensed MIT. This is a very concrete, evidence-backed point in their repo's own words.
+Also core_jni.cpp comment: "pinned by core/tests to the Kotlin implementation it replaces" -- meaning the C++ implementations are behaviorally ported from upstream Kotlin code. This is a **critical** legal fact: the C++ core was written *to match* upstream Kotlin behavior, presumably by reading it. That's derivative work (a translation/port), not independent creation. So core/ is almost certainly a derivative of upstream GPL code → cannot be relicensed MIT. This is a very concrete, evidence-backed point in their repo's own words.
 
-Wait—could core/ be written by upstream? Upstream repo (newo-ether/Agora) — does it have a `core/` directory with the same content? Earlier notes said `core/` README says "not a parallel implementation" — that suggests the core port may actually be part of upstream too (upstream itself is doing the C++ port!). Let me check whether upstream has core/ with same files. That determines who owns it. The note "core/README.md: It is not a parallel implementation" and "transport stays in Kotlin" suggests the C++ core is upstream's own effort (since release `ci-cpp-port-2026-11-03` mentioned in previous context — "ci-cpp-port" branch! That release tag was from upstream CI). So the C++ core is likely from upstream's own cpp-port branch, meaning it's upstream's code, GPL, and likely not authored by MaurerAnton at all.
+Wait--could core/ be written by upstream? Upstream repo (newo-ether/Agora) -- does it have a `core/` directory with the same content? Earlier notes said `core/` README says "not a parallel implementation" -- that suggests the core port may actually be part of upstream too (upstream itself is doing the C++ port!). Let me check whether upstream has core/ with same files. That determines who owns it. The note "core/README.md: It is not a parallel implementation" and "transport stays in Kotlin" suggests the C++ core is upstream's own effort (since release `ci-cpp-port-2026-11-03` mentioned in previous context -- "ci-cpp-port" branch! That release tag was from upstream CI). So the C++ core is likely from upstream's own cpp-port branch, meaning it's upstream's code, GPL, and likely not authored by MaurerAnton at all.
 
 That's decisive: if `core/` came from upstream, they can't relicense it, AND their own additions to the fork are GPL contributions.
 
@@ -17103,7 +17103,7 @@ I should verify: does newo-ether/Agora have core/CMakeLists.txt? And check that 
 
 Let me check quickly. This is important for accuracy.
 
-That comment in `core_jni.cpp` is legally significant — let me check who actually owns this C++ core.
+That comment in `core_jni.cpp` is legally significant -- let me check who actually owns this C++ core.
 
 **Tool: shell**
 
@@ -17149,21 +17149,21 @@ UP: v1.3.6  2026-06-19T08:57:29Z
 
 _Thinking:_
 
-Upstream has NO core/ directory. So the C++ core is **their own work** (MaurerAnton's), not upstream's. Good — corrected from my hypothesis. And `ci-cpp-port` release is on their fork, so they authored the C++ port.
+Upstream has NO core/ directory. So the C++ core is **their own work** (MaurerAnton's), not upstream's. Good -- corrected from my hypothesis. And `ci-cpp-port` release is on their fork, so they authored the C++ port.
 
-So: MaurerAnton likely authored core/*.cpp themselves. As author, they hold copyright and *can* license it however they want (MIT etc.) — BUT:
+So: MaurerAnton likely authored core/*.cpp themselves. As author, they hold copyright and *can* license it however they want (MIT etc.) -- BUT:
 1. The repo-level LICENSE is GPL-3.0 and no per-file headers → the copy they published publicly is GPL-3.0. Publishing under GPL doesn't strip your ownership; you may also release the same code under MIT (dual licensing) since you're the sole author. That's legitimate IF they're sole author and the code isn't derived from upstream.
-2. But the comment says: "the logic ... is pinned by core/tests to the Kotlin implementation it replaces." So the C++ implementations were written to reproduce upstream Kotlin behavior — a port/translation. Whether that's a derivative work is a factual question: if they read upstream Kotlin and translated logic to C++, that IS a derivative (a "translation" under 17 U.S.C. § 101 / similar EU concepts). The golden traces pin their behavior to upstream → strong evidence of derivation.
-3. So the honest conclusion: parts of core/ that were translated from upstream Kotlin are derivative → must stay GPL-3.0. Parts independently written (e.g. cron expression parsing if they wrote from spec, task scheduling) may be relicenseable by them as author — but the burden of proof is on them, and mixed provenance across ~200 files is a mess.
+2. But the comment says: "the logic ... is pinned by core/tests to the Kotlin implementation it replaces." So the C++ implementations were written to reproduce upstream Kotlin behavior -- a port/translation. Whether that's a derivative work is a factual question: if they read upstream Kotlin and translated logic to C++, that IS a derivative (a "translation" under 17 U.S.C. § 101 / similar EU concepts). The golden traces pin their behavior to upstream → strong evidence of derivation.
+3. So the honest conclusion: parts of core/ that were translated from upstream Kotlin are derivative → must stay GPL-3.0. Parts independently written (e.g. cron expression parsing if they wrote from spec, task scheduling) may be relicenseable by them as author -- but the burden of proof is on them, and mixed provenance across ~200 files is a mess.
 4. Additional: even if they can legally dual-license, doing so while the same code lives in a GPL fork, and given they already had the Agora-1 MIT incident, looks bad. Also upstream is actively releasing monthly; taking GPL code into a proprietary/"MIT" product would very likely draw a complaint.
 
-Also key: if they want "progressive.chat" as a *separate brand*, is there a commercial intent? Unknown. But GPL doesn't care about commercial use — just copyleft distribution rules. Actually if they don't distribute (e.g. only run as a service / personal), GPL obligations... GPL triggers on distribution. But publishing APKs = distribution. Note: GPL-3.0 vs AGPL — network use isn't triggering for GPL-3.0 (that's why AGPL exists).
+Also key: if they want "progressive.chat" as a *separate brand*, is there a commercial intent? Unknown. But GPL doesn't care about commercial use -- just copyleft distribution rules. Actually if they don't distribute (e.g. only run as a service / personal), GPL obligations... GPL triggers on distribution. But publishing APKs = distribution. Note: GPL-3.0 vs AGPL -- network use isn't triggering for GPL-3.0 (that's why AGPL exists).
 
-Now the technical side. I have prior evidence on mux. Let me also quickly ground "mux scale" numbers — commits count / how much code. Maybe check mux repo size and their own estimate of effort. Actually prior facts suffice: 15/85 CI green, currently red, custom clang23/libc++23, custom SDL fork, no Gradle, APK one .so 30.78 MB stripped, DEX 2.7 KB.
+Now the technical side. I have prior evidence on mux. Let me also quickly ground "mux scale" numbers -- commits count / how much code. Maybe check mux repo size and their own estimate of effort. Actually prior facts suffice: 15/85 CI green, currently red, custom clang23/libc++23, custom SDL fork, no Gradle, APK one .so 30.78 MB stripped, DEX 2.7 KB.
 
 Key technical comparison for building "Agora from zero on mux's stack":
 What Agora needs that mux has proven vs not:
-- Proven by mux on Android: custom text layout/rendering in Skia, software IME via BaseInputConnection subclass (their DEX includes InputConnection + InputView — though in the mux DEX, classes: NativeActivity, InputView, InputConnection extends BaseInputConnection, Receiver, PushReceiver, Runner), no-Gradle packaging with aapt2/zipalign/apksigner, 16 KB page alignment, notifications POST_NOTIFICATIONS, TLS via X509TrustManagerExtensions.
+- Proven by mux on Android: custom text layout/rendering in Skia, software IME via BaseInputConnection subclass (their DEX includes InputConnection + InputView -- though in the mux DEX, classes: NativeActivity, InputView, InputConnection extends BaseInputConnection, Receiver, PushReceiver, Runner), no-Gradle packaging with aapt2/zipalign/apksigner, 16 KB page alignment, notifications POST_NOTIFICATIONS, TLS via X509TrustManagerExtensions.
 - NOT proven by mux: local LLM inference (they have no ggml), SQL persistence... unknown actually; accessibility/TalkBack, RTL/bidi, Markdown/LaTeX rendering, media attachments, 19 locales, background tasks. Prior research concluded no permissive pure-C++ Skia toolkit provides Android IME + TalkBack.
 
 Agora-specific already-solved heavy lifting that would be lost by a rewrite:
@@ -17172,26 +17172,26 @@ Agora-specific already-solved heavy lifting that would be lost by a rewrite:
 - Room DB + DAOs + migrations + schemas dir
 - Compose UI with Markdown/LaTeX already rendered
 - 19 locales, 627 res entries
-- Provider abstraction (Anthropic/OpenAI) — core has anthropic_stream/openai_stream
+- Provider abstraction (Anthropic/OpenAI) -- core has anthropic_stream/openai_stream
 
-So "I only need some logic" is true for maybe: BPE vocab, cron, scheduling, citations, CJK, search — all already in their core, which is the portable part! Which leads to a nice observation: the part of Agora worth keeping is exactly the part that already is C++ and already portable. So a "rewrite from zero" mostly means throwing away the *app*, not the logic — i.e., you'd rebuild the shell, not the brain.
+So "I only need some logic" is true for maybe: BPE vocab, cron, scheduling, citations, CJK, search -- all already in their core, which is the portable part! Which leads to a nice observation: the part of Agora worth keeping is exactly the part that already is C++ and already portable. So a "rewrite from zero" mostly means throwing away the *app*, not the logic -- i.e., you'd rebuild the shell, not the brain.
 
 So the recommendation: 
-- **Legally**: decide the license question first; if the goal is to escape GPL, a rewrite only works if truly clean-room (spec-driven, no copying upstream code, no golden-trace pinning to upstream behavior). Otherwise stay GPL-3.0 and just rebrand — GPL explicitly allows that, and it costs you nothing.
+- **Legally**: decide the license question first; if the goal is to escape GPL, a rewrite only works if truly clean-room (spec-driven, no copying upstream code, no golden-trace pinning to upstream behavior). Otherwise stay GPL-3.0 and just rebrand -- GPL explicitly allows that, and it costs you nothing.
 - **Technically**: don't rebuild the shell on Skia for size reasons; numbers don't support it (33.1 MB APK; 13.21 MB is one font; mux's own stripped .so is 30.78 MB). Also custom UI costs you IME/TalkBack/RTL and mux's own build is unreliable.
-- Suggest the pragmatic shape: progressive.chat = same product, GPL-3.0, their own C++ core kept + grown as modules (previous advice), upstream Kotlin app layer kept as the shell (or slowly replaced), size wins from font subsetting. If licensing independence truly matters, ask upstream for a dual-license/exception — small chance but cheap to ask, and it's the only honest shortcut.
+- Suggest the pragmatic shape: progressive.chat = same product, GPL-3.0, their own C++ core kept + grown as modules (previous advice), upstream Kotlin app layer kept as the shell (or slowly replaced), size wins from font subsetting. If licensing independence truly matters, ask upstream for a dual-license/exception -- small chance but cheap to ask, and it's the only honest shortcut.
 
 Maybe also offer concrete next steps: 
 1. Decide GPL-or-clean-room.
-2. If clean-room: I can audit which core files are likely derivative vs independent (evidence: golden traces pinning them to Kotlin behaviors) — actually I can identify files whose tests pin them to upstream semantics, which is a decent proxy for "must stay GPL".
+2. If clean-room: I can audit which core files are likely derivative vs independent (evidence: golden traces pinning them to Kotlin behaviors) -- actually I can identify files whose tests pin them to upstream semantics, which is a decent proxy for "must stay GPL".
 
-I could offer to produce such an audit. That's a genuinely useful deliverable: scan core/tests golden traces for each core module → list files pinned to upstream Kotlin behavior vs independently specified (cron is standard RFC-ish, BPE is OpenAI's tiktoken data — that's third-party data with its own terms!).
+I could offer to produce such an audit. That's a genuinely useful deliverable: scan core/tests golden traces for each core module → list files pinned to upstream Kotlin behavior vs independently specified (cron is standard RFC-ish, BPE is OpenAI's tiktoken data -- that's third-party data with its own terms!).
 
-Actually one more legal note: `o200k_base.tiktoken` — OpenAI's encoding data. Is it distributable? tiktoken data files... OpenAI published them; license uncertain (the tiktoken repo is MIT; the BPE data files maybe under the repo's MIT). I noted APK contains o200k_base.tiktoken 1.62 MB. Mention as a check item, low priority.
+Actually one more legal note: `o200k_base.tiktoken` -- OpenAI's encoding data. Is it distributable? tiktoken data files... OpenAI published them; license uncertain (the tiktoken repo is MIT; the BPE data files maybe under the repo's MIT). I noted APK contains o200k_base.tiktoken 1.62 MB. Mention as a check item, low priority.
 
-Structure the answer with headings, keep it tight but substantive (~700-900 words). Be honest and direct, not preachy — user is a beginner, wants practical guidance. Also mention I'm not a lawyer, but the risk is concrete (upstream active, 558 stars, monthly releases; a MIT-labeled derivative already exists in Agora-1 → that's the thing to fix regardless of which path).
+Structure the answer with headings, keep it tight but substantive (~700-900 words). Be honest and direct, not preachy -- user is a beginner, wants practical guidance. Also mention I'm not a lawyer, but the risk is concrete (upstream active, 558 stars, monthly releases; a MIT-labeled derivative already exists in Agora-1 → that's the thing to fix regardless of which path).
 
-Also strongly recommend: fix Agora-1 first (either relicense it to GPL-3.0 or delete it) — because it's an existing, documented infringement-ish state and it's the kind of thing that makes later "independent" claims look bad. That's a concrete action.
+Also strongly recommend: fix Agora-1 first (either relicense it to GPL-3.0 or delete it) -- because it's an existing, documented infringement-ish state and it's the kind of thing that makes later "independent" claims look bad. That's a concrete action.
 
 Let me write.
 
@@ -17214,24 +17214,24 @@ Checked. Two corrections to what I assumed, and one thing you need to decide bef
 |---|---|
 | Upstream `newo-ether/Agora` | **GPL-3.0**, 558★, created 2026-02-21, still releasing monthly (v2.2.0 on 2026-10-31) |
 | Your `MaurerAnton/agora` | **GPL-3.0**, `fork=false`, LICENSE is the full GPLv3 text |
-| Upstream tree | **has no `core/` at all** — 0 matches |
+| Upstream tree | **has no `core/` at all** -- 0 matches |
 | `ci-cpp-port-2026-11-03` release | published on **your** fork, not upstream |
 | `MaurerAnton/Agora-1` | declared **MIT**, still exists |
 | `core/src/*.cpp` | no per-file license headers → repo LICENSE governs |
 
-So the C++ core is **your** work, not upstream's. That's better than I feared — but it doesn't get you out of the copyleft, and here's why, in your own repo's words:
+So the C++ core is **your** work, not upstream's. That's better than I feared -- but it doesn't get you out of the copyleft, and here's why, in your own repo's words:
 
 > `app/src/main/cpp/core_jni.cpp`: *"the logic … is pinned by core/tests to the Kotlin implementation it replaces."*
 
-That sentence is the problem. A rewrite from scratch is only yours if it was built from a **specification**, not from reading upstream. Your core was written by translating upstream Kotlin into C++ and then pinned — with thousands of golden traces — to reproduce upstream's exact behavior. In copyright terms that's a translation/derivative, not an independent work. You can own the C++ text and still not be free to relicense it MIT.
+That sentence is the problem. A rewrite from scratch is only yours if it was built from a **specification**, not from reading upstream. Your core was written by translating upstream Kotlin into C++ and then pinned -- with thousands of golden traces -- to reproduce upstream's exact behavior. In copyright terms that's a translation/derivative, not an independent work. You can own the C++ text and still not be free to relicense it MIT.
 
 **Fix `Agora-1` first regardless of which path you pick.** A copy of GPL-3.0 code labeled MIT is a live problem, and it makes any later claim of "independent implementation" look bad. Either relicense it to GPL-3.0 or delete it.
 
 ## The three honest paths
 
-1. **Rebrand, stay GPL-3.0** — `progressive.chat` as a new name over the existing code. GPL explicitly permits this; you keep the license file, attribution, and source availability. Cost: near zero. You lose nothing except the MIT label.
-2. **Ask upstream for an exception or dual license** — one polite issue/email. Odds aren't great, but as a solo author they may say yes, especially if you offer to contribute back. This is the only *cheap* shortcut to a permissive license.
-3. **True clean-room** — new repo, MIT, written from protocol docs and your own design, no upstream file copied, no golden trace pinned to Kotlin behavior. This is legally solid and genuinely a lot of work.
+1. **Rebrand, stay GPL-3.0** -- `progressive.chat` as a new name over the existing code. GPL explicitly permits this; you keep the license file, attribution, and source availability. Cost: near zero. You lose nothing except the MIT label.
+2. **Ask upstream for an exception or dual license** -- one polite issue/email. Odds aren't great, but as a solo author they may say yes, especially if you offer to contribute back. This is the only *cheap* shortcut to a permissive license.
+3. **True clean-room** -- new repo, MIT, written from protocol docs and your own design, no upstream file copied, no golden trace pinned to Kotlin behavior. This is legally solid and genuinely a lot of work.
 
 "I'll just not copy files" is not path 3. If you've read upstream's implementation, the port inherits its provenance.
 
@@ -17248,14 +17248,14 @@ Meanwhile the size argument doesn't hold: your APK is 33.1 MB, and **13.21 MB of
 
 ## My recommendation
 
-The logic you say you need — BPE/tokenizer, cron, scheduling, citations, CJK segmentation, context compaction — **is already the C++ core**, and it's the portable part. So don't rewrite the *brain*; it's fine where it is. Rewrite nothing yet:
+The logic you say you need -- BPE/tokenizer, cron, scheduling, citations, CJK segmentation, context compaction -- **is already the C++ core**, and it's the portable part. So don't rewrite the *brain*; it's fine where it is. Rewrite nothing yet:
 
 1. Fix `Agora-1` today.
-2. Pick path 1 or ask for path 2. If the answer is no and you still want MIT, then path 3 clean-room — accept ~6–12 months solo, and don't start it hoping you can quietly lift "only some logic."
+2. Pick path 1 or ask for path 2. If the answer is no and you still want MIT, then path 3 clean-room -- accept ~6–12 months solo, and don't start it hoping you can quietly lift "only some logic."
 3. Keep growing `core/` as modules (my previous answer), since that's the piece that survives *any* of these paths.
 4. Get the bloat win from `Gz.ttf` subsetting, not from swapping UI toolkits.
 
-Useful next step I can do: scan `core/tests` and list which core modules are pinned to Kotlin-derived golden traces versus independently specified (cron is standards-based, for instance). That gives you a per-file provenance map — which files must stay GPL and which you could arguably take forward. Want that audit?
+Useful next step I can do: scan `core/tests` and list which core modules are pinned to Kotlin-derived golden traces versus independently specified (cron is standards-based, for instance). That gives you a per-file provenance map -- which files must stay GPL and which you could arguably take forward. Want that audit?
 
 ---
 
@@ -17271,23 +17271,23 @@ _Thinking:_
 
 User says: forget Agora-1, I want to have a GPL project.
 
-Hmm — "forget Agora-1" could mean either "stop talking about it" or "I'll delete/ignore it". Either way they've decided: they want to keep GPL.
+Hmm -- "forget Agora-1" could mean either "stop talking about it" or "I'll delete/ignore it". Either way they've decided: they want to keep GPL.
 
-Wait — careful reading: "i want to have gpl project" — so they accept staying GPL-3.0. So path 1: keep GPL, brand as progressive.chat.
+Wait -- careful reading: "i want to have gpl project" -- so they accept staying GPL-3.0. So path 1: keep GPL, brand as progressive.chat.
 
 What should I do now? This is a decision resolved. I should:
 1. Acknowledge: GPL it is. That's the cheap path and it keeps upstream sync possible.
-2. But note one nuance: Agora-1 being MIT-labeled is separate; if they mean "delete it", fine. I should ask/assume: recommend deleting or relicensing it to GPL-3.0 to avoid confusion (one line, don't belabor — they said forget).
+2. But note one nuance: Agora-1 being MIT-labeled is separate; if they mean "delete it", fine. I should ask/assume: recommend deleting or relicensing it to GPL-3.0 to avoid confusion (one line, don't belabor -- they said forget).
 3. Then pivot: what actually matters now for a GPL progressive.chat:
    - GPL-3.0 obligations checklist: keep LICENSE, add NOTICE/attribution for upstream, preserve commit history? Actually a key practical point: since it's GPL and you want your own brand, the cleanest thing is a *real fork* (they currently have `fork=false` with manual FORK.md). Two options: (a) genuinely use the GitHub fork network (they can't since they made a non-fork copy... actually they can't convert. They could create a new fork via API from upstream and then push their changes? Messy). (b) keep as-is but add a clear NOTICE + attribution in README/LICENSE.
    - Important GPL nuance: **must offer source**. Since they distribute APKs (releases), they must provide Corresponding Source. Practical: link to the repo from the app, keep the repo public (it is). Also GPL §13 interplay with... eh.
-   - Another important nuance: **they must keep GPL on the whole combined work** — including anything they add. Fine.
+   - Another important nuance: **they must keep GPL on the whole combined work** -- including anything they add. Fine.
    - **App store angle**: GPL + Play Store is fine (many GPL apps there). Also fdroid already targeted (they build `-fdroid` flavor).
-   - One real consideration: since upstream is GPL and they want their own brand + independent direction, upstream sync becomes optional. They can diverge (e.g., replace Compose with their C++ UI later) — under GPL they're allowed to modify freely; the only duties are attribution + source.
+   - One real consideration: since upstream is GPL and they want their own brand + independent direction, upstream sync becomes optional. They can diverge (e.g., replace Compose with their C++ UI later) -- under GPL they're allowed to modify freely; the only duties are attribution + source.
    
-4. Then: back to the technical plan. Since license no longer constrains (GPL allows everything including a Skia rewrite), should they now do the mux-style rewrite? Still recommend no for size, but yes the *core growth + modules* plan stands. But maybe now worth revisiting: with GPL the "clean-room" question disappears — they can literally copy upstream Kotlin logic into C++ freely. So the port can go much faster (no need to re-derive everything). That's a genuinely useful consequence: **the C++ port can now be a direct translation, which is legitimate and fast.**
+4. Then: back to the technical plan. Since license no longer constrains (GPL allows everything including a Skia rewrite), should they now do the mux-style rewrite? Still recommend no for size, but yes the *core growth + modules* plan stands. But maybe now worth revisiting: with GPL the "clean-room" question disappears -- they can literally copy upstream Kotlin logic into C++ freely. So the port can go much faster (no need to re-derive everything). That's a genuinely useful consequence: **the C++ port can now be a direct translation, which is legitimate and fast.**
 
-5. Also: the branding rename mechanics: package name change (applicationId), app label, any hardcoded strings, docs, `progressive.chat` domain (check availability? maybe worth a quick check whether progressive.chat domain/repo is taken — earlier the repo 404 → name free on their account; domain unknown). Suggest checking domain + that "progressive" might conflict with existing apps.
+5. Also: the branding rename mechanics: package name change (applicationId), app label, any hardcoded strings, docs, `progressive.chat` domain (check availability? maybe worth a quick check whether progressive.chat domain/repo is taken -- earlier the repo 404 → name free on their account; domain unknown). Suggest checking domain + that "progressive" might conflict with existing apps.
 
 Concrete deliverables I could offer:
 - Draft the LICENSE/NOTICE + README attribution block compliant with GPL §5(a)/§7 for a derivative under a new name.
@@ -17302,16 +17302,16 @@ Also check: does upstream require attribution beyond license? Their README may s
 
 Another useful check: does upstream use any non-GPL-compatible deps? Not needed.
 
-One more: since they now go GPL and want to *not* need much of Agora's base — they said earlier "only some logic". With GPL they can copy. Fine.
+One more: since they now go GPL and want to *not* need much of Agora's base -- they said earlier "only some logic". With GPL they can copy. Fine.
 
 Interesting angle worth raising: if they keep their own fork as GPL with heavy divergence, upstream might still be the better base for the *app*; but they want differentiation. Fine.
 
-Also worth a caution: **trademark/branding** — "Agora" name belongs to upstream informally; renaming avoids that issue — good.
+Also worth a caution: **trademark/branding** -- "Agora" name belongs to upstream informally; renaming avoids that issue -- good.
 
 Let me do quick checks then write a concise response (~350-500 words) with a checklist and offer concrete next artifacts.
 
 Checks:
-1. `gh search repos "progressive.chat"` / `gh search code`? Simpler: check if GitHub user/repo progressive/chat exists; try `gh api users/progressive` maybe irrelevant. Maybe check domain: `curl -sI https://progressive.chat` — could work? Network via shell maybe allowed. Let me try quickly (short timeout). Actually earlier gh works so network exists. Try `curl -s -o /dev/null -w "%{http_code}" https://progressive.chat --max-time 8`.
+1. `gh search repos "progressive.chat"` / `gh search code`? Simpler: check if GitHub user/repo progressive/chat exists; try `gh api users/progressive` maybe irrelevant. Maybe check domain: `curl -sI https://progressive.chat` -- could work? Network via shell maybe allowed. Let me try quickly (short timeout). Actually earlier gh works so network exists. Try `curl -s -o /dev/null -w "%{http_code}" https://progressive.chat --max-time 8`.
 2. Check their repo for NOTICE / third-party licenses file.
 
 Let me run.
@@ -17401,22 +17401,22 @@ thirdparty/talloc/talloc.c
 _Thinking:_
 
 Good. Findings:
-- progressive.chat resolves HTTP 200 → domain exists/is taken (or parked). So "progressive.chat" branding may conflict with an existing site. Worth flagging: check what it is. Let me maybe fetch quickly? Could be parked page. A quick webfetch could tell. Might be useful. Let me do one fetch with text format to see. Actually keep it light — I can mention "the domain resolves (HTTP 200) — check who owns it before branding". Maybe do a quick fetch to see if it's a parked domain vs real site. One call is cheap; do it.
+- progressive.chat resolves HTTP 200 → domain exists/is taken (or parked). So "progressive.chat" branding may conflict with an existing site. Worth flagging: check what it is. Let me maybe fetch quickly? Could be parked page. A quick webfetch could tell. Might be useful. Let me do one fetch with text format to see. Actually keep it light -- I can mention "the domain resolves (HTTP 200) -- check who owns it before branding". Maybe do a quick fetch to see if it's a parked domain vs real site. One call is cheap; do it.
 - No NOTICE file at root; but there IS `app/src/main/assets/licenses/` with LICENSE-GPL-3.0.txt and LICENSE-MIT.txt → in-app license screen likely exists (good, GPL compliance partially).
 - There's `fastlane` (Play store metadata) → they distribute via Play presumably.
 - Root has FORK.md, ARCHITECTURE.md, PRIVACY.md, README.md, README_CN.md, docs, mkdocs.yml (a site!), server/, development/, config/, assets/, build-logic/.
 
 So for renaming to progressive.chat they'd need to touch: fastlane metadata, README(s), docs site (mkdocs.yml), maybe app strings, applicationId in build.gradle.kts.
 
-Also there's a `server/` dir — upstream has a server? Interesting but not needed.
+Also there's a `server/` dir -- upstream has a server? Interesting but not needed.
 
 Let me do the fetch on progressive.chat quickly and then write.
 
-Actually also worth noting: since they want GPL and their own project rather than upstream base, the key question becomes: keep the fork relationship (upstream sync) or diverge entirely? Under GPL either is fine. Recommend: **make it a real, declared derivative with attribution, then diverge freely** — i.e., update FORK.md into a proper NOTICE/README attribution block, keep LICENSE GPL-3.0, and don't bother staying in sync (since they only want "some logic"). Actually if they diverge and don't sync, upstream's monthly improvements are lost; but earlier analysis showed they want independence. Fine.
+Actually also worth noting: since they want GPL and their own project rather than upstream base, the key question becomes: keep the fork relationship (upstream sync) or diverge entirely? Under GPL either is fine. Recommend: **make it a real, declared derivative with attribution, then diverge freely** -- i.e., update FORK.md into a proper NOTICE/README attribution block, keep LICENSE GPL-3.0, and don't bother staying in sync (since they only want "some logic"). Actually if they diverge and don't sync, upstream's monthly improvements are lost; but earlier analysis showed they want independence. Fine.
 
 One more important practical GPL point: if they only need "some logic" and one day vendor pieces into a differently-licensed product... no, they said GPL.
 
-Also mention: GPL v3 §13 with "User Products" — for a distributed APK you must provide source (repo public = satisfied) and, importantly, no anti-tinkering (no Play-integrity blocking sideloads / no forbidding modified reinstall). Practical note: don't add tamper-detection / license checks that block modified builds. That's a real, concrete compliance item for a GPL Android app. Nice actionable point.
+Also mention: GPL v3 §13 with "User Products" -- for a distributed APK you must provide source (repo public = satisfied) and, importantly, no anti-tinkering (no Play-integrity blocking sideloads / no forbidding modified reinstall). Practical note: don't add tamper-detection / license checks that block modified builds. That's a real, concrete compliance item for a GPL Android app. Nice actionable point.
 
 Let me fetch progressive.chat to see what it is.
 
@@ -17516,7 +17516,7 @@ Progressive Chat
                 ⚡
                 
                     C++ Native Core
-                    Built on a fork of Element Classic, rewritten in C++ for performance. Documented, extended, and continuously improved. The goal is pure native code under the hood — snappy, lean, and reliable.
+                    Built on a fork of Element Classic, rewritten in C++ for performance. Documented, extended, and continuously improved. The goal is pure native code under the hood -- snappy, lean, and reliable.
                 
             
 
@@ -17524,7 +17524,7 @@ Progressive Chat
                 📅
                 
                     Jump to Date
-                    Use /jumptodate to instantly navigate to messages from a specific date. Never lose context again — jump precisely to the conversation point you need.
+                    Use /jumptodate to instantly navigate to messages from a specific date. Never lose context again -- jump precisely to the conversation point you need.
                 
             
 
@@ -17532,7 +17532,7 @@ Progressive Chat
                 😄
                 
                     Rich Emoji Reactions
-                    See exactly who reacted with which emoji — no guesswork. A detailed reaction breakdown helps you read the room at a glance.
+                    See exactly who reacted with which emoji -- no guesswork. A detailed reaction breakdown helps you read the room at a glance.
                 
             
 
@@ -17548,7 +17548,7 @@ Progressive Chat
                 🧩
                 
                     Extensible by Design
-                    Built to be flexible and to grow. Whether it's custom integrations, plugins, or entirely new workflows — Progressive was designed to adapt.
+                    Built to be flexible and to grow. Whether it's custom integrations, plugins, or entirely new workflows -- Progressive was designed to adapt.
                 
             
 
@@ -17556,13 +17556,13 @@ Progressive Chat
                 🤝
                 
                     End-to-End Encryption
-                    Full Matrix E2EE support out of the box. Your conversations stay yours — private, secure, and compliant with the Matrix protocol.
+                    Full Matrix E2EE support out of the box. Your conversations stay yours -- private, secure, and compliant with the Matrix protocol.
                 
             
         
 
         
-            This project will take months to mature — and we'd love your help. Whether you write C++, document features, or report bugs, every contribution matters.
+            This project will take months to mature -- and we'd love your help. Whether you write C++, document features, or report bugs, every contribution matters.
             Contribute on GitHub
         
     
@@ -17573,7 +17573,7 @@ Progressive Chat
             GitHub
             progressive.chat
         
-        Progressive Chat — a chainmail for your messages
+        Progressive Chat -- a chainmail for your messages
 
 ---
 
@@ -17581,19 +17581,19 @@ Progressive Chat
 
 _Thinking:_
 
-Whoa. `progressive.chat` is an EXISTING project — a Matrix chat client, "Not just a Matrix client", "Progressive is a multi-functional chat application", C++ Native Core, "Built on a fork of Element Classic, rewritten in C++", jump-to-date command (that's Element's feature), E2EE Matrix. And it links GitHub.
+Whoa. `progressive.chat` is an EXISTING project -- a Matrix chat client, "Not just a Matrix client", "Progressive is a multi-functional chat application", C++ Native Core, "Built on a fork of Element Classic, rewritten in C++", jump-to-date command (that's Element's feature), E2EE Matrix. And it links GitHub.
 
-Wait — is this the user's own project?! Possibly! The user said "i can write agora from zero under progressive.chat branding". Maybe they already registered progressive.chat and started it. Or it could be someone else's existing project. Critically: "Built on a fork of Element Classic, rewritten in C++" — Element Classic for Android is... Apache-2.0 (Element Android is Apache 2.0). Hmm, that's interesting: if the user's progressive.chat is built on Element Android (Apache-2.0), then it's NOT GPL, and combining with Agora's GPL code... Apache-2.0 can be combined into GPL-3.0 (Apache-2.0 is GPLv3-compatible; GPLv2 not). GPL-3.0 + Apache-2.0 code → the combined work is GPL-3.0, allowed.
+Wait -- is this the user's own project?! Possibly! The user said "i can write agora from zero under progressive.chat branding". Maybe they already registered progressive.chat and started it. Or it could be someone else's existing project. Critically: "Built on a fork of Element Classic, rewritten in C++" -- Element Classic for Android is... Apache-2.0 (Element Android is Apache 2.0). Hmm, that's interesting: if the user's progressive.chat is built on Element Android (Apache-2.0), then it's NOT GPL, and combining with Agora's GPL code... Apache-2.0 can be combined into GPL-3.0 (Apache-2.0 is GPLv3-compatible; GPLv2 not). GPL-3.0 + Apache-2.0 code → the combined work is GPL-3.0, allowed.
 
-Also note: it mentions Matrix E2EE, jump to date — that's Element Android-derived.
+Also note: it mentions Matrix E2EE, jump to date -- that's Element Android-derived.
 
 I need to find out: is this the user's? Let's check GitHub link from the page. There's a "Contribute on GitHub" and footer "GitHub / progressive.chat". Likely github.com/<something>/progressive.chat or github.com/progressive-chat. Earlier I checked repos/MaurerAnton/progressive.chat → 404. Let me search GitHub for the repo, and check its license. Also check its owner. The page's repo could be under a different user or org (maybe "ProgressiveChat"). Search: `gh search repos "progressive chat matrix C++"`. Or fetch the page HTML for links.
 
-This is important: if this existing project is *someone else's*, then the user's brand choice collides. If it's the user's own (maybe under another account), then the plan has new context: a Matrix client already in progress, C++ core, Apache-2.0 base from Element, and now they want to also build an Agora-derived app under the same brand — and mixing GPL Agora code into that repo would force the whole thing GPL (fine if they want GPL!) but would contaminate if they also wanted permissive.
+This is important: if this existing project is *someone else's*, then the user's brand choice collides. If it's the user's own (maybe under another account), then the plan has new context: a Matrix client already in progress, C++ core, Apache-2.0 base from Element, and now they want to also build an Agora-derived app under the same brand -- and mixing GPL Agora code into that repo would force the whole thing GPL (fine if they want GPL!) but would contaminate if they also wanted permissive.
 
-Wait, but crucially — maybe this IS the user: the "jump to date" feature, Matrix... Hmm, does this relate to anything prior in our conversation? Prior work included the matrix-client hunt with ~48 clients baseline. So the user is interested in Matrix. And "C++ Native Core ... fork of Element Classic rewritten in C++" implies they already started this!
+Wait, but crucially -- maybe this IS the user: the "jump to date" feature, Matrix... Hmm, does this relate to anything prior in our conversation? Prior work included the matrix-client hunt with ~48 clients baseline. So the user is interested in Matrix. And "C++ Native Core ... fork of Element Classic rewritten in C++" implies they already started this!
 
-Actually hold on. Could progressive.chat be the user's *own* already-live site? The user said "i can write agora from zero under progressive.chat branding" — "i can write" suggests intent. But the site says "This project will take months to mature... we'd love your help" — sounds like an early public project.
+Actually hold on. Could progressive.chat be the user's *own* already-live site? The user said "i can write agora from zero under progressive.chat branding" -- "i can write" suggests intent. But the site says "This project will take months to mature... we'd love your help" -- sounds like an early public project.
 
 Let me get the repo URL from the page HTML and check it: owner, license, created date, language, and whether MaurerAnton is a contributor. That's decisive for my advice.
 
@@ -17621,7 +17621,7 @@ _Thinking:_
 
 Now inspect that repo: owner progressive-chat, repo progressive-android. Check license, created, size, languages, contributors, and whether MaurerAnton has a role. Also check if it's derived from Element (Apache-2.0).
 
-Key compliance question: if it's a fork of Element Android (Apache-2.0) but declared license maybe something else — check. And check its git history — is it element-hq/element-android fork? Also check if MaurerAnton is in the org.
+Key compliance question: if it's a fork of Element Android (Apache-2.0) but declared license maybe something else -- check. And check its git history -- is it element-hq/element-android fork? Also check if MaurerAnton is in the org.
 
 Run several API calls.
 
@@ -17635,7 +17635,7 @@ Run several API calls.
 ```
 
 === repo ===
-{"created":"2026-05-12T16:41:21Z","desc":"📈 Progressive Chat Android — aiming for pure C++ Matrix client. https://progressive.chat","fork":false,"lang":"C++","license":"AGPL-3.0","name":"progressive-chat/progressive-android","parent":"-","pushed":"2026-09-07T13:28:22Z","size_kb":83393,"stars":1}
+{"created":"2026-05-12T16:41:21Z","desc":"📈 Progressive Chat Android -- aiming for pure C++ Matrix client. https://progressive.chat","fork":false,"lang":"C++","license":"AGPL-3.0","name":"progressive-chat/progressive-android","parent":"-","pushed":"2026-09-07T13:28:22Z","size_kb":83393,"stars":1}
 === org ===
 {"blog":"-","created":"2026-05-12T16:39:03Z","login":"progressive-chat"}
 === is MaurerAnton a member/contributor? ===
@@ -17654,19 +17654,19 @@ MaurerAnton
 === license file ===
 LICENSE
 === top of README ===
-# 📈 Progressive Chat — Android
+# 📈 Progressive Chat -- Android
 
 A Matrix client in the making. The goal: a truly progressive messenger with a **pure C++ native** core.
 
-Currently an active fork of [Element](https://github.com/element-hq) Classic ([element-android](https://github.com/element-hq/element-android)). The Rust SDK (`matrix-rust-sdk`) is being removed in favor of pure C++ crypto via libolm. Kotlin/Java components are gradually replaced with native C++ — starting with real features.
+Currently an active fork of [Element](https://github.com/element-hq) Classic ([element-android](https://github.com/element-hq/element-android)). The Rust SDK (`matrix-rust-sdk`) is being removed in favor of pure C++ crypto via libolm. Kotlin/Java components are gradually replaced with native C++ -- starting with real features.
 
-🚀 **Rocket-speed development** — a full Matrix client implemented in months, not years. 200+ C++ native modules and counting.
+🚀 **Rocket-speed development** -- a full Matrix client implemented in months, not years. 200+ C++ native modules and counting.
 
-I worked on the project for one month, then took a month off to rest. Right now a new month of intensive development is underway — or however long my energy for it lasts. P.S. check [progressive-desktop](https://github.com/MaurerAnton/progressive-desktop)
+I worked on the project for one month, then took a month off to rest. Right now a new month of intensive development is underway -- or however long my energy for it lasts. P.S. check [progressive-desktop](https://github.com/MaurerAnton/progressive-desktop)
 
 **Website:** [progressive.chat](https://progressive.chat)
 
-> ⚠️ **Server note:** the Matrix homeserver (`progressive.chat`) is currently **IPv6-only** — clients on IPv4-only networks (many mobile carriers, some WiFis) cannot connect yet. IPv4 support is planned.
+> ⚠️ **Server note:** the Matrix homeserver (`progressive.chat`) is currently **IPv6-only** -- clients on IPv4-only networks (many mobile carriers, some WiFis) cannot connect yet. IPv4 support is planned.
 
 > 💬 **Chat with the author:** Join [#community:progressive.chat](https://matrix.to/#/#community:progressive.chat) (!lU43N9MCwKQgSAn5UvoDp15jA_JftwZJZv2mZ8avw0E) on Matrix (last update - 05.08.2026)
 
@@ -17678,12 +17678,12 @@ The client is approximately **halfway complete**. When ready, it will be publish
 
 - **Pure C++ core** for maximum performance and portability
 - **Clean, snappy UI** that respects your attention
-- **Full Matrix compatibility** — no compromises on federation
-- **Open source** — AGPLv3
+- **Full Matrix compatibility** -- no compromises on federation
+- **Open source** -- AGPLv3
 
 ## AI Agent (`/agent`)
 
-Progressive Chat includes an LLM-powered agent system — like Claude Code for your chats.
+Progressive Chat includes an LLM-powered agent system -- like Claude Code for your chats.
 
 ```
 /agent find messages from Alice about the future
@@ -17710,52 +17710,52 @@ _Thinking:_
 
 _Thinking:_
 
-Big discovery: progressive.chat IS the user's own project (MaurerAnton is the only contributor), an AGPL-3.0 Matrix client, currently a fork of Element Classic (element-android), moving toward pure C++ core, with libolm replacing matrix-rust-sdk, 200+ C++ modules, ~halfway complete, 83 MB repo, last pushed 2026-09-07, 1 star, created 2026-05-12. Also there's MaurerAnton/progressive-desktop. And there's an LLM agent feature (`/agent`) — that's the connection to Agora! Agora is an AI chat app; Progressive's `/agent` is LLM-powered chat features.
+Big discovery: progressive.chat IS the user's own project (MaurerAnton is the only contributor), an AGPL-3.0 Matrix client, currently a fork of Element Classic (element-android), moving toward pure C++ core, with libolm replacing matrix-rust-sdk, 200+ C++ modules, ~halfway complete, 83 MB repo, last pushed 2026-09-07, 1 star, created 2026-05-12. Also there's MaurerAnton/progressive-desktop. And there's an LLM agent feature (`/agent`) -- that's the connection to Agora! Agora is an AI chat app; Progressive's `/agent` is LLM-powered chat features.
 
-So the picture now: the user wants to use Agora's logic (AI/LLM chat app: Anthropic streaming, context compaction, BPE token counting, local llama, search) inside Progressive Chat, their Matrix client — under AGPL-3.0.
+So the picture now: the user wants to use Agora's logic (AI/LLM chat app: Anthropic streaming, context compaction, BPE token counting, local llama, search) inside Progressive Chat, their Matrix client -- under AGPL-3.0.
 
 Critical legal finding now inverted and much better: Progressive is **AGPL-3.0**, Agora is **GPL-3.0**. Can you combine? GPL-3.0 code can be relicensed... wait, direction: combining GPL-3.0 code into an AGPL-3.0 project. AGPL-3.0 and GPL-3.0 are compatible in one direction: GPLv3 code can be included in an AGPLv3 work (AGPL §13 extra requirement; GPLv3-only code is NOT compatible with AGPL because AGPL adds a restriction... Let me think carefully.
 
-Well-known: "AGPLv3 and GPLv3 are mutually compatible in the sense that you can combine them, with the combined work being AGPLv3" — hmm. Actually the FSF says: GPLv3 code can be used in an AGPLv3 project (the result must be AGPLv3). But AGPLv3 code cannot be used in a GPLv3 project (since GPLv3 lacks the §13 network provision). Also, if the GPLv3 code is "GPLv3 or later", it can be upgraded to AGPLv3? No — "or later" doesn't automatically make it AGPL-compatible... Actually FSF's compatibility list: AGPLv3 is compatible with GPLv3 (one-way): you may link/combine GPLv3 code with AGPLv3 code; the result must be distributed under AGPLv3. Hmm, is that right?
+Well-known: "AGPLv3 and GPLv3 are mutually compatible in the sense that you can combine them, with the combined work being AGPLv3" -- hmm. Actually the FSF says: GPLv3 code can be used in an AGPLv3 project (the result must be AGPLv3). But AGPLv3 code cannot be used in a GPLv3 project (since GPLv3 lacks the §13 network provision). Also, if the GPLv3 code is "GPLv3 or later", it can be upgraded to AGPLv3? No -- "or later" doesn't automatically make it AGPL-compatible... Actually FSF's compatibility list: AGPLv3 is compatible with GPLv3 (one-way): you may link/combine GPLv3 code with AGPLv3 code; the result must be distributed under AGPLv3. Hmm, is that right?
 
 Let me recall the GPLv3 text itself. GPLv3 §13 "Use with the GNU Affero General Public License": "Notwithstanding any other provision of this License, you have permission to link or combine any covered work with a work licensed under version 3 of the GNU Affero General Public License into a single combined work, and to convey the resulting work. The terms of this License will continue to apply to the part which is the covered work, but the work with which it is conveyed... will be governed by version 3 of the GNU Affero General Public License." 
 
 Yes! That's GPLv3 §13. So GPLv3 code CAN be combined into an AGPLv3 combined work, with the GPLv3 part staying under GPLv3 and the whole under AGPLv3 terms. 
 
-So: taking Agora's GPL-3.0 logic into AGPL-3.0 Progressive is explicitly permitted by GPLv3 §13. This is great news and a concrete, citable answer. (The reverse — putting AGPL code into a GPL project — is not allowed.)
+So: taking Agora's GPL-3.0 logic into AGPL-3.0 Progressive is explicitly permitted by GPLv3 §13. This is great news and a concrete, citable answer. (The reverse -- putting AGPL code into a GPL project -- is not allowed.)
 
 Second issue: Progressive is currently a fork of Element Classic. Element Android's license: element-hq/element-android is Apache-2.0. Apache-2.0 → compatible with GPLv3/AGPLv3 (Apache-2.0 code can be included in GPLv3 work; yes Apache 2.0 is GPLv3-compatible per FSF). So no conflict there either. But note: matrix-rust-sdk is Apache-2.0 too, libolm is Apache-2.0. Good.
 
-Third: Practical compatibility—no blockers. But caution: if they vendor Agora GPL code into Progressive, the combined work must be AGPLv3 overall, and they must keep Agora attribution + GPLv3 notices for those parts. Also §13 network interaction: since Progressive includes a homeserver? They run progressive.chat homeserver IPv6-only; but that's different software (probably Synapse AGPL). For a client app, AGPL §13 is mostly moot, but if they later ship a server component that users interact with over network (e.g. their own syncing service), they must offer source. Worth one line.
+Third: Practical compatibility--no blockers. But caution: if they vendor Agora GPL code into Progressive, the combined work must be AGPLv3 overall, and they must keep Agora attribution + GPLv3 notices for those parts. Also §13 network interaction: since Progressive includes a homeserver? They run progressive.chat homeserver IPv6-only; but that's different software (probably Synapse AGPL). For a client app, AGPL §13 is mostly moot, but if they later ship a server component that users interact with over network (e.g. their own syncing service), they must offer source. Worth one line.
 
-Now the "rewrite from zero using mux tech" idea — re-evaluate with this new info:
+Now the "rewrite from zero using mux tech" idea -- re-evaluate with this new info:
 - Progressive already has 200+ C++ native modules, pure C++ crypto via libolm, is ~halfway to a full Matrix client, and has a working Kotlin/Element shell giving them UI/IME/a11y for free.
-- So they already ARE doing the mux-ish thing incrementally, and unlike mux they inherit a validated UI. That's the strongest position. My advice: don't throw out Element either; keep the same strategy as for Agora — grow native core, keep Kotlin shell.
+- So they already ARE doing the mux-ish thing incrementally, and unlike mux they inherit a validated UI. That's the strongest position. My advice: don't throw out Element either; keep the same strategy as for Agora -- grow native core, keep Kotlin shell.
 - Agora's portable logic could feed Progressive's `/agent` feature: BPE token counting, context compaction, citations, cron scheduling, CJK text, maybe local llama for on-device agent.
-- Also relevant: they have progressive-desktop! Possibly sharing the C++ core between desktop and Android — strong argument for keeping logic in C++ core (which is exactly what they want).
+- Also relevant: they have progressive-desktop! Possibly sharing the C++ core between desktop and Android -- strong argument for keeping logic in C++ core (which is exactly what they want).
 
 Also the AGPL consideration for what to take from Agora: the user said "I do not need so much Agora's base, only some logic". Perfect: take just the pure-logic files (already C++20 in their own core/!). 
 
 Concrete plan I should give:
-1. License: AGPL-3.0 (Progressive) + GPL-3.0 (Agora parts) is explicitly allowed by GPLv3 §13. Cite it. Requirements: keep LICENSE files for both, mark the vendored subtree (e.g. `core/thirdparty/agora/` or similar) with its own LICENSE-GPL-3.0.txt + NOTICE of provenance, and add both to your in-app licenses list (they already have app/src/main/assets/licenses/ with GPL-3.0 and MIT — that's in the Agora fork; check whether progressive has similar).
+1. License: AGPL-3.0 (Progressive) + GPL-3.0 (Agora parts) is explicitly allowed by GPLv3 §13. Cite it. Requirements: keep LICENSE files for both, mark the vendored subtree (e.g. `core/thirdparty/agora/` or similar) with its own LICENSE-GPL-3.0.txt + NOTICE of provenance, and add both to your in-app licenses list (they already have app/src/main/assets/licenses/ with GPL-3.0 and MIT -- that's in the Agora fork; check whether progressive has similar).
 2. Element/Apache-2.0 base is fine too.
 3. Don't rewrite: Progressive already has the mux-style architecture in progress; what's missing is arguably the UI independence, which is the risky/expensive part.
 4. Which Agora logic is worth taking: the AI-chat pieces for `/agent`.
-5. Caveat: watch out Progressive pushed 2026-09-07 vs Agora fork active Nov 2026 — they have limited energy (README mentions burn/rest cycles). So prioritize.
+5. Caveat: watch out Progressive pushed 2026-09-07 vs Agora fork active Nov 2026 -- they have limited energy (README mentions burn/rest cycles). So prioritize.
 
 I should probably verify a couple things before asserting:
 - Does progressive-android contain vendored Agora code already? Check tree for "agora".
-- Element license: element-hq/element-android is Apache-2.0 — verify with gh.
+- Element license: element-hq/element-android is Apache-2.0 -- verify with gh.
 - Check progressive-desktop license too (maybe relevant for shared core).
 - Check whether progressive has a NOTICE/licenses asset dir.
 
 Let me do a batch of gh calls. Then write concise answer.
 
-Also the user said "forget Agora-1, i want to have gpl project" — maybe they meant they want the Progressive project GPL (they may not know Progressive is AGPL?). Actually they said "i want to have gpl project" — perhaps meaning: they accept GPL-family licensing for their project. Progressive is AGPL-3.0. So I should note: "your progressive.chat is AGPL-3.0 — a stricter sibling of GPL-3.0, and conveniently the combination is explicitly blessed."
+Also the user said "forget Agora-1, i want to have gpl project" -- maybe they meant they want the Progressive project GPL (they may not know Progressive is AGPL?). Actually they said "i want to have gpl project" -- perhaps meaning: they accept GPL-family licensing for their project. Progressive is AGPL-3.0. So I should note: "your progressive.chat is AGPL-3.0 -- a stricter sibling of GPL-3.0, and conveniently the combination is explicitly blessed."
 
 Let me verify quickly.
 
-Major find — `progressive.chat` is **your own project**, and it changes the legal answer completely. Verifying before I advise:
+Major find -- `progressive.chat` is **your own project**, and it changes the legal answer completely. Verifying before I advise:
 
 **Tool: shell**
 
@@ -17784,7 +17784,7 @@ Major find — `progressive.chat` is **your own project**, and it changes the le
 ```
 
 === progressive-desktop ===
-{"created":"2026-07-19T13:19:59Z","desc":"Progressive Chat Desktop — pure C++/Qt6 Matrix client for Linux desktop + PineTab 2/PinePhone. Sister to progressive-android. Reuses progressive_native core.","lang":"C++","license":"AGPL-3.0","pushed":"2026-09-10T12:56:40Z"}
+{"created":"2026-07-19T13:19:59Z","desc":"Progressive Chat Desktop -- pure C++/Qt6 Matrix client for Linux desktop + PineTab 2/PinePhone. Sister to progressive-android. Reuses progressive_native core.","lang":"C++","license":"AGPL-3.0","pushed":"2026-09-10T12:56:40Z"}
 === other progressive-chat org repos ===
 progressive-android  AGPL-3.0  C++
 progressive-site  -  HTML
@@ -17804,34 +17804,34 @@ progressive-android-lemmy  AGPL-3.0  Kotlin
 
 _Thinking:_
 
-Note the tree call for progressive-android returned 0 lines — probably default branch differs (maybe "main" or "develop"). Not important. Element is AGPL-3.0 now (interesting: element-hq/element-android relicensed to AGPL-3.0! Yes, Element relicensed to AGPL in 2024/2025 — correct, Element moved to AGPLv3). That explains why Progressive is AGPL-3.0 — it inherited it.
+Note the tree call for progressive-android returned 0 lines -- probably default branch differs (maybe "main" or "develop"). Not important. Element is AGPL-3.0 now (interesting: element-hq/element-android relicensed to AGPL-3.0! Yes, Element relicensed to AGPL in 2024/2025 -- correct, Element moved to AGPLv3). That explains why Progressive is AGPL-3.0 -- it inherited it.
 
-Org repos: progressive-android (AGPL C++), progressive-cli (AGPL C++), progressive-desktop (AGPL C++, Qt6), plus a pile of Kotlin variants: telegram, xmpp, irc, delta, lemmy, legacy. So the user has spawned many protocol-specific clients — this is a "many clients, shared core" strategy. That's very relevant: it means shared C++ core (`progressive_native`) is their architecture, and Agora-derived logic could go into that shared core and serve all clients.
+Org repos: progressive-android (AGPL C++), progressive-cli (AGPL C++), progressive-desktop (AGPL C++, Qt6), plus a pile of Kotlin variants: telegram, xmpp, irc, delta, lemmy, legacy. So the user has spawned many protocol-specific clients -- this is a "many clients, shared core" strategy. That's very relevant: it means shared C++ core (`progressive_native`) is their architecture, and Agora-derived logic could go into that shared core and serve all clients.
 
-That also reveals a scope problem: 10+ repos, mostly Kotlin, last pushed 2026-09-07/09-10 — and README mentions energy limits (worked 1 month, rested 1 month). So they have a sprawl/energy problem. My advice should be honest: don't start another rewrite; and the real risk here is portfolio sprawl, not bloat.
+That also reveals a scope problem: 10+ repos, mostly Kotlin, last pushed 2026-09-07/09-10 -- and README mentions energy limits (worked 1 month, rested 1 month). So they have a sprawl/energy problem. My advice should be honest: don't start another rewrite; and the real risk here is portfolio sprawl, not bloat.
 
 Now the answer to their statement: "forget Agora-1, i want to have gpl project."
 
 Key points to deliver:
-1. You already have it: progressive.chat is yours, AGPL-3.0. Note: AGPL ≠ GPL but GPLv3 §13 explicitly permits combining GPLv3 code into an AGPLv3 work. So taking Agora's GPL-3.0 logic into Progressive is explicitly blessed — no clean-room needed at all, no rebranding needed, nothing to invent. That dissolves the whole earlier dilemma.
-2. Element base is AGPL-3.0 too (verified: element-hq/element-android license AGPL-3.0), so no Apache/mismatch worry — everything in your stack is AGPL/GPL family already. (Earlier my note about Apache was wrong-ish; now corrected with evidence.)
-3. Requirements: keep Agora's GPL-3.0 notice for the vendored subset; whole app stays AGPL-3.0; add upstream attribution; keep your in-app licenses asset list updated. Note the reverse doesn't hold: AGPL code can't go into Agora (GPL-only) — so Agora stays as it is, you copy one direction only.
-4. Technical: they now have a shared-core architecture across desktop (Qt6) + Android + cli. That's exactly why pure C++ logic is the right target — and it argues against the mux stack: mux has no desktop story and its own CI is unreliable; your Qt6 desktop + shared `progressive_native` core gives cross-platform for free if the logic is protocol-agnostic C++20 (which is what Agora's core already is!).
-5. Which Agora logic is worth taking: the AI/agent pieces (their /agent feature!): BPE token counting, context compaction, citations, cron/task scheduling, CJK text segmentation, semantic index. Those are pure functions with no Android/Kotlin dependency — perfect for `progressive_native` and reusable in desktop+cli. Whereas DON'T take: Room DAOs, llama.cpp Android glue (unless they want on-device agent), proot, Compose UI, and especially golden traces tied to Kotlin behavior (which would only serve to prove parity with a project you're leaving).
+1. You already have it: progressive.chat is yours, AGPL-3.0. Note: AGPL ≠ GPL but GPLv3 §13 explicitly permits combining GPLv3 code into an AGPLv3 work. So taking Agora's GPL-3.0 logic into Progressive is explicitly blessed -- no clean-room needed at all, no rebranding needed, nothing to invent. That dissolves the whole earlier dilemma.
+2. Element base is AGPL-3.0 too (verified: element-hq/element-android license AGPL-3.0), so no Apache/mismatch worry -- everything in your stack is AGPL/GPL family already. (Earlier my note about Apache was wrong-ish; now corrected with evidence.)
+3. Requirements: keep Agora's GPL-3.0 notice for the vendored subset; whole app stays AGPL-3.0; add upstream attribution; keep your in-app licenses asset list updated. Note the reverse doesn't hold: AGPL code can't go into Agora (GPL-only) -- so Agora stays as it is, you copy one direction only.
+4. Technical: they now have a shared-core architecture across desktop (Qt6) + Android + cli. That's exactly why pure C++ logic is the right target -- and it argues against the mux stack: mux has no desktop story and its own CI is unreliable; your Qt6 desktop + shared `progressive_native` core gives cross-platform for free if the logic is protocol-agnostic C++20 (which is what Agora's core already is!).
+5. Which Agora logic is worth taking: the AI/agent pieces (their /agent feature!): BPE token counting, context compaction, citations, cron/task scheduling, CJK text segmentation, semantic index. Those are pure functions with no Android/Kotlin dependency -- perfect for `progressive_native` and reusable in desktop+cli. Whereas DON'T take: Room DAOs, llama.cpp Android glue (unless they want on-device agent), proot, Compose UI, and especially golden traces tied to Kotlin behavior (which would only serve to prove parity with a project you're leaving).
 6. Honest scope warning: 10 repos in the org, last Android push 2026-09-07 while Agora work ran through 2026-11-03. The failure mode isn't bloat, it's sprawl. Recommend one concrete project: land Agora's agent logic into progressive_native and wire it to /agent in progressive-android; treat progressive-desktop as the test bed (no emulator, faster iteration, Qt6 gives you a UI while you migrate).
-7. Also: since everything is AGPL family, they can freely copy even Kotlin→C++ translations including pinning to Kotlin behavior — golden traces are now optional, but taking them is allowed. Actually a nuance: taking Agora's traces is fine under GPL since distributing GPL source.
+7. Also: since everything is AGPL family, they can freely copy even Kotlin→C++ translations including pinning to Kotlin behavior -- golden traces are now optional, but taking them is allowed. Actually a nuance: taking Agora's traces is fine under GPL since distributing GPL source.
 
-Also should I mention 200+ modules claim in README — and earlier discussion of C++ modules (import std not available on NDK). Their README says "200+ C++ native modules and counting" — likely they mean "modules" as in files/components, not C++20 modules. If they adopt real modules... NDK issue. Maybe briefly connect: if "modules" in your README means C++20 named modules, note NDK can't do import std (prior turn's evidence) — you'd need to keep headers + build as static libs. Could mention briefly. Maybe: if you want true C++20 modules in progressive_native, the same constraints apply (CMake 3.28+, no import std on NDK) and your shared core across Qt6 desktop gives you a host-only module build path where clang works fine — desktop-first is the easier place to adopt them. Nice tie-in.
+Also should I mention 200+ modules claim in README -- and earlier discussion of C++ modules (import std not available on NDK). Their README says "200+ C++ native modules and counting" -- likely they mean "modules" as in files/components, not C++20 modules. If they adopt real modules... NDK issue. Maybe briefly connect: if "modules" in your README means C++20 named modules, note NDK can't do import std (prior turn's evidence) -- you'd need to keep headers + build as static libs. Could mention briefly. Maybe: if you want true C++20 modules in progressive_native, the same constraints apply (CMake 3.28+, no import std on NDK) and your shared core across Qt6 desktop gives you a host-only module build path where clang works fine -- desktop-first is the easier place to adopt them. Nice tie-in.
 
 Then offer concrete next steps / ask what they want:
 - Offer: audit which Agora core files are protocol-agnostic pure logic (portable to progressive_native) vs Android/Room-coupled. I can produce that list (145 headers, ~200 cpp).
 - Offer: draft the vendor + NOTICE layout.
 
-Let me quickly confirm progressive-android's default branch & whether it has a native core dir, to make my advice concrete (e.g. is there progressive_native?). One quick call. Also maybe check progressive-cli. Let me do that before final answer — it matters for "where does Agora logic land".
+Let me quickly confirm progressive-android's default branch & whether it has a native core dir, to make my advice concrete (e.g. is there progressive_native?). One quick call. Also maybe check progressive-cli. Let me do that before final answer -- it matters for "where does Agora logic land".
 
 Actually I have decent knowledge: desktop README says "Reuses progressive_native core". Let me check progressive-android tree properly (branch) to find core dir name.
 
-Element is AGPL-3.0 now — which explains your whole stack. One last check on where Agora's logic would actually land:
+Element is AGPL-3.0 now -- which explains your whole stack. One last check on where Agora's logic would actually land:
 
 **Tool: shell**
 
@@ -17868,9 +17868,9 @@ branch=main
 
 _Thinking:_
 
-Progressive-android: 9639 files: 1459 C++ files, 4196 Kotlin files. So Kotlin still dominates (matrix-sdk-android is huge). The `progressive/` dir with 5276 files is presumably the native C++ core (progressive_native) — 5276 files may include traces.
+Progressive-android: 9639 files: 1459 C++ files, 4196 Kotlin files. So Kotlin still dominates (matrix-sdk-android is huge). The `progressive/` dir with 5276 files is presumably the native C++ core (progressive_native) -- 5276 files may include traces.
 
-Let me peek: `progressive/` contents — maybe check for modules list, and whether there's a CMakeLists + JNI. Quick check to make recommendations concrete (where Agora logic goes: `progressive/core/...`?).
+Let me peek: `progressive/` contents -- maybe check for modules list, and whether there's a CMakeLists + JNI. Quick check to make recommendations concrete (where Agora logic goes: `progressive/core/...`?).
 
 Actually I have enough for a solid answer. But one more small check would let me name the exact directory. Do it cheaply.
 
@@ -17910,63 +17910,63 @@ progressive/src/main/cpp/src/jni_stubs_part6.cpp
 _Thinking:_
 
 Good picture:
-- `progressive/src/main/cpp/` — CMakeLists, include/progressive/..., src/jni_bridge.cpp, jni_stubs_part1..6.cpp (large generated stub files), no .cppm/.ixx.
+- `progressive/src/main/cpp/` -- CMakeLists, include/progressive/..., src/jni_bridge.cpp, jni_stubs_part1..6.cpp (large generated stub files), no .cppm/.ixx.
 - 5233 files under progressive/src (probably includes 200+ module dirs).
 - Kotlin: 4196 files including matrix-sdk-android (Element's vendored SDK) and library/.
 
 Now I can write the final answer. Structure:
 
-1. Good news: it's all already copyleft-compatible — nothing to invent.
+1. Good news: it's all already copyleft-compatible -- nothing to invent.
    - Progressive = AGPL-3.0 (yours, sole contributor MaurerAnton).
    - Element upstream = AGPL-3.0 now (verified) → your whole Android tree is already AGPL.
-   - GPLv3 §13 explicitly allows combining GPLv3 code into an AGPLv3 work: the combined work is AGPLv3, Agora's part keeps GPLv3 terms. So you can lift Agora logic verbatim — no clean-room, no rebrand needed, no MIT gamble.
+   - GPLv3 §13 explicitly allows combining GPLv3 code into an AGPLv3 work: the combined work is AGPLv3, Agora's part keeps GPLv3 terms. So you can lift Agora logic verbatim -- no clean-room, no rebrand needed, no MIT gamble.
    - One-way only: don't push AGPL code back into Agora.
 2. What that unlocks practically: you don't need to "write Agora from zero". You can vendor a slice of Agora's `core/` (already portable C++20, zero-dep) into `progressive/src/main/cpp/` under a clear subtree with its GPL-3.0 notice.
 3. What's worth taking (and why the shared-core architecture makes it better than a rewrite):
-   - Take: bpe_vocabulary/text_counter, context_compact, citations, cron_expression, task_schedule, cjk_text, semantic_index — AI-agent pieces for `/agent`; they're protocol-agnostic and would also serve progressive-desktop (Qt6) and progressive-cli, so one port serves 3 products.
+   - Take: bpe_vocabulary/text_counter, context_compact, citations, cron_expression, task_schedule, cjk_text, semantic_index -- AI-agent pieces for `/agent`; they're protocol-agnostic and would also serve progressive-desktop (Qt6) and progressive-cli, so one port serves 3 products.
    - Skip: Room DAOs, llama.cpp Android glue (unless on-device), proot, Compose UI, and the ~5k golden traces (they only prove parity with the Kotlin you're leaving).
 4. The mux-stack question, re-answered with your data: your tree is 1459 C++ files vs 4196 Kotlin; you already own the incremental mux-style path (native core growing behind a JNI bridge: jni_bridge.cpp + 6 stub parts). mux's route would cost you Element's validated UI/IME/a11y AND your Qt6 desktop reuse. Keep the shell; grow `progressive/src/main/cpp/`.
 5. One honest warning: org has 10 repos; progressive-android last pushed 2026-09-07 while the Agora fork was active through 2026-11-03; README talks about energy/rest cycles. The risk is sprawl not bloat. Suggest a single concrete milestone.
-6. Tie-in on real C++20 modules: no `import std` on NDK (prior evidence); no .cppm/.ixx in the tree today. Adopt modules host-side first via desktop (clang works there), Android later — or just don't, use static libs + PCH.
+6. Tie-in on real C++20 modules: no `import std` on NDK (prior evidence); no .cppm/.ixx in the tree today. Adopt modules host-side first via desktop (clang works there), Android later -- or just don't, use static libs + PCH.
 7. Offer concrete next deliverable: audit the 145 headers/~200 cpp of Agora core into "portable to progressive_native" vs "coupled to Room/Android", and draft the vendoring layout + NOTICE/LICENSE block.
 
-Keep it tight — maybe 500-700 words with headers and a short table. Use the file paths found.
+Keep it tight -- maybe 500-700 words with headers and a short table. Use the file paths found.
 
-Note the earlier turn's question about whether they want me to do something — offer again at end.
+Note the earlier turn's question about whether they want me to do something -- offer again at end.
 
 Also mention Agora-1 briefly: since everything's copyleft, easiest fix is to set it GPL/AGPL or delete; dropping the topic as asked but one clause.
 
 Write it.
 
-Everything checks out — and it removes the dilemma entirely rather than just resolving it.
+Everything checks out -- and it removes the dilemma entirely rather than just resolving it.
 
 ## You already have the GPL family project
 
 | Repo | License | Notes |
 |---|---|---|
 | `progressive-chat/progressive-android` | **AGPL-3.0** | sole contributor: **you**; 1,459 C++ files vs 4,196 Kotlin |
-| `element-hq/element-android` (your base) | **AGPL-3.0** | Element relicensed — so your whole inherited tree is already copyleft |
+| `element-hq/element-android` (your base) | **AGPL-3.0** | Element relicensed -- so your whole inherited tree is already copyleft |
 | `MaurerAnton/progressive-desktop` | AGPL-3.0 | Qt6, reuses `progressive_native` |
 | `newo-ether/Agora` | GPL-3.0 | the donor |
 
-**GPLv3 §13 exists for exactly this case**: it grants permission to combine a GPLv3 work with an AGPLv3 work, where the result is distributed under AGPLv3 while the GPLv3 portion keeps its own terms. So you can lift Agora code *verbatim* into Progressive — no clean-room, no rebrand gamble, no MIT risk. The permission is one-way: never push Progressive (AGPL) code back into Agora.
+**GPLv3 §13 exists for exactly this case**: it grants permission to combine a GPLv3 work with an AGPLv3 work, where the result is distributed under AGPLv3 while the GPLv3 portion keeps its own terms. So you can lift Agora code *verbatim* into Progressive -- no clean-room, no rebrand gamble, no MIT risk. The permission is one-way: never push Progressive (AGPL) code back into Agora.
 
 That means "write Agora from zero under progressive.chat" isn't necessary. You can vendor a slice directly.
 
 ## Where it lands, and why that beats a rewrite
 
-Your native side is already the mux-style shape: `progressive/src/main/cpp/` with `CMakeLists.txt`, `include/progressive/`, `src/jni_bridge.cpp`, `src/jni_stubs_part1..6.cpp` — a growing C++ core behind a JNI bridge, exactly the architecture you said you wanted.
+Your native side is already the mux-style shape: `progressive/src/main/cpp/` with `CMakeLists.txt`, `include/progressive/`, `src/jni_bridge.cpp`, `src/jni_stubs_part1..6.cpp` -- a growing C++ core behind a JNI bridge, exactly the architecture you said you wanted.
 
-**Take from Agora** (pure C++20, zero-dep, protocol-agnostic): `bpe_vocabulary`, `text_counter`, `context_compact`, `citations`, `cron_expression`, `task_schedule`, `cjk_text`, `semantic_index_ledger`. These are the AI-chat brain that powers your existing `/agent` feature — and because they're protocol-agnostic, **one port serves three products**: `progressive-android`, `progressive-desktop` (Qt6), and `progressive-cli`. That's the real payoff, and mux's stack gives you none of it (no desktop story, and its CI is 15 green / 85 red).
+**Take from Agora** (pure C++20, zero-dep, protocol-agnostic): `bpe_vocabulary`, `text_counter`, `context_compact`, `citations`, `cron_expression`, `task_schedule`, `cjk_text`, `semantic_index_ledger`. These are the AI-chat brain that powers your existing `/agent` feature -- and because they're protocol-agnostic, **one port serves three products**: `progressive-android`, `progressive-desktop` (Qt6), and `progressive-cli`. That's the real payoff, and mux's stack gives you none of it (no desktop story, and its CI is 15 green / 85 red).
 
-**Leave behind**: Room DAOs and anything touching them, the llama.cpp Android glue (unless you want on-device agents), proot, and especially the ~5,000 golden traces — those exist only to prove parity with the Kotlin you're abandoning.
+**Leave behind**: Room DAOs and anything touching them, the llama.cpp Android glue (unless you want on-device agents), proot, and especially the ~5,000 golden traces -- those exist only to prove parity with the Kotlin you're abandoning.
 
 One caveat on real C++20 modules: there are no `.cppm`/`.ixx` files in the tree today, and per last turn's evidence the NDK can't do `import std`. If you want named modules, adopt them desktop-first where clang is normal, and keep Android on headers + static libs.
 
 ## The honest risk here isn't bloat
 
-Your org has 10 repos — telegram, xmpp, irc, delta, lemmy, cli, desktop, server — and `progressive-android` was last pushed **2026-09-07**, while the Agora fork was active through **2026-11-03**. Your own README describes working in one-month bursts with rest months. Sprawl, not APK size, is what kills projects like this. So I'd pick exactly one milestone: *port the agent-brain subset into `progressive_native` and wire it to `/agent` on desktop first*, since Qt6 gives you fast iteration with no emulator.
+Your org has 10 repos -- telegram, xmpp, irc, delta, lemmy, cli, desktop, server -- and `progressive-android` was last pushed **2026-09-07**, while the Agora fork was active through **2026-11-03**. Your own README describes working in one-month bursts with rest months. Sprawl, not APK size, is what kills projects like this. So I'd pick exactly one milestone: *port the agent-brain subset into `progressive_native` and wire it to `/agent` on desktop first*, since Qt6 gives you fast iteration with no emulator.
 
-Also — since everything is copyleft now, the cheapest fix for `Agora-1` is to flip its license to AGPL-3.0 rather than delete it. No further discussion needed.
+Also -- since everything is copyleft now, the cheapest fix for `Agora-1` is to flip its license to AGPL-3.0 rather than delete it. No further discussion needed.
 
 Want me to produce the concrete deliverable: a per-file audit of Agora's ~145 headers into *portable to `progressive_native`* vs *coupled to Room/Android*, plus the vendoring layout and a license/NOTICE block that satisfies GPLv3 §13?

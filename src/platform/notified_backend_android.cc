@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.platform.notified.backend -- Android's notifications: one posted
 // through NotificationManager, in a channel of this program's own (Android 8
-// and later need one, and list an app that has none among those that send
-// nothing), opening the program when it is pressed. Asked through JNI, from
-// whichever thread asks: SDL attaches it to the virtual machine.
+// and later need one and list an app without one among those that send
+// nothing), opening the program when pressed. Asked through JNI on whichever
+// thread asks: SDL attaches it to the virtual machine.
 //
-// Android 13 and later post a notification only for an app the user let post
-// them: the first press asks for that, and shows nothing, because the answer
-// is not given while this call is in it. It is the system's to keep, so it is
-// asked once and never again.
+// Android 13 and later post only for an app the user let post them: the first
+// press asks for that and shows nothing, the answer not being given while
+// this call runs. The system keeps the grant, so it is asked once and never
+// again.
 module;
 #include <SDL3/SDL.h>
 #include <jni.h>
@@ -20,8 +20,8 @@ import pchat.platform.jni;
 
 namespace {
 
-// The channel a test notification is posted in, made each time: making one
-// again changes nothing the user has set in it.
+// The channel a test notification is posted in, made each time: making it
+// again changes nothing the user set.
 constexpr const char *channel_id = "tests";
 constexpr const char *channel_name = "Tests";
 constexpr jint importance_high = 4;  // NotificationManager.IMPORTANCE_HIGH
@@ -37,8 +37,8 @@ bool let_post(JNIEnv *env, jobject activity) {
                                 "android.permission.POST_NOTIFICATIONS")) == 0;
 }
 
-// Asked for it once, where it was not given yet: the system's own asking, for
-// whose answer nothing here waits.
+// Asked for it once, where it was not given yet: the system's own request;
+// nothing here waits for its answer.
 void ask_to_post(JNIEnv *env, jobject activity) {
   jobjectArray asked = env->NewObjectArray(
       1, env->FindClass("java/lang/String"), nullptr);
@@ -89,8 +89,8 @@ jobject opening(JNIEnv *env, jobject activity, int sdk) {
                        "(Ljava/lang/String;)Landroid/content/Intent;"),
       name);
   if (!intent) return nullptr;
-  // FLAG_IMMUTABLE, which Android 12 and later ask of every PendingIntent;
-  // FLAG_UPDATE_CURRENT, the intent the newest one it was given.
+  // FLAG_IMMUTABLE, required of every PendingIntent on Android 12 and later;
+  // FLAG_UPDATE_CURRENT, the intent the newest one given.
   constexpr jint immutable = 0x04000000, update_current = 0x08000000;
   jclass pending = env->FindClass("android/app/PendingIntent");
   if (!pending) return nullptr;
@@ -103,8 +103,8 @@ jobject opening(JNIEnv *env, jobject activity, int sdk) {
       activity, 1, intent, (sdk >= 23 ? immutable : 0) | update_current);
 }
 
-// The small icon at its left: the platform's own chat icon, asked for by name
-// -- this program ships no drawable of its own.
+// The small icon at its left: the platform's own chat icon, asked for by
+// name. This program ships no drawable of its own.
 jint icon(JNIEnv *env, jobject activity) {
   jclass context = env->FindClass("android/content/Context");
   if (!context) return 0;
@@ -173,8 +173,8 @@ bool say(std::string_view title, std::string_view text) {
       pchat::platform::string_of(env, title));
   set("setContentText", says_builder, pchat::platform::string_of(env, text));
   set("setAutoCancel", "(Z)Landroid/app/Notification$Builder;", JNI_TRUE);
-  // Priority and sound, which a channel says itself from Android 8 on: high,
-  // shown at once, with the system's own sound.
+  // Priority and sound, which a channel sets itself from Android 8 on: high,
+  // shown at once, with the system's sound.
   constexpr jint priority_high = 1, default_sound = 1;
   set("setPriority", "(I)Landroid/app/Notification$Builder;", priority_high);
   set("setDefaults", "(I)Landroid/app/Notification$Builder;", default_sound);

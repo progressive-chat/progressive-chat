@@ -21,7 +21,7 @@ struct stored {
 };
 
 // Every file in, the whole archive out: a ZIP whose entries are deflated the
-// way the port's writer deflates them, so that the reader beside it -- the same
+// way the port's writer deflates them, so the reader beside it -- the same
 // port's -- reads back everything written here (test/prgrssv_test.cc).
 [[nodiscard]] std::string zipped(std::span<const stored> files);
 

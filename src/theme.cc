@@ -3,8 +3,8 @@
 // at the tone each of its roles has, light or dark, from one seed.
 //
 // Nothing here names a colour of its own. A seed becomes six ramps; every
-// role is one of those ramps at one tone, which is what makes a light and a
-// dark scheme out of the same seed read as a pair.
+// role is one of those ramps at one tone, which makes a light and a dark
+// scheme out of the same seed read as a pair.
 export module pchat.theme;
 
 import std;
@@ -15,9 +15,8 @@ export namespace pchat {
 // Which ramps the seed makes, and how far the accents are pushed.
 enum class scheme_style { tonal_spot, expressive, vibrant, neutral };
 
-// The seeds offered. They are the ones Agora offers, and each is a colour
-// whose name is what it looks like: midnight blue, nordic slate, forest
-// green.
+// The seeds Agora offers: each is a colour whose name is what it looks
+// like -- midnight blue, nordic slate, forest green.
 enum class scheme_preset { midnight, nordic, forest, sunset, rose, lavender, slate, ocean };
 
 inline constexpr scheme_preset default_preset = scheme_preset::forest;
@@ -51,7 +50,7 @@ constexpr std::string_view name_of(scheme_preset preset) {
 }
 
 // What each style asks the ramps for: the accents' hues turned off the seed's
-// and their chroma, and how much colour the greys carry. Chroma is said in
+// and their chroma, and how much colour the greys carry. Chroma is in
 // CAM16's figures (Material's own) and becomes an OKLab chroma in the ramp.
 struct ramp_figures {
   double primary_turn, primary_chroma;
@@ -126,7 +125,7 @@ constexpr scheme_ramp_set ramps_of(argb seed, scheme_style style) {
           .neutral_variant = palette::ramp(palette::turned(hue, figures.neutral_variant_turn),
                                            figures.neutral_variant_chroma),
           // Red, kept away from the seed's hue: whatever the seed is, an
-          // error is still red, and still reads as one beside it.
+          // error is still red and still reads as one beside it.
           .error = palette::ramp(25.0 * 3.14159265358979323846 / 180.0, 40.0)};
 }
 
@@ -211,9 +210,9 @@ constexpr color_scheme scheme_for(scheme_preset preset, scheme_style style = def
   return dark ? dark_scheme(ramps) : light_scheme(ramps);
 }
 
-// AMOLED: the deepest black there is, or the brightest white. A screen that
-// is switched off pixel by pixel draws nothing where its surface is, so the
-// surfaces stop being surfaces and become the background.
+// AMOLED: the deepest black there is, or the brightest white. A screen
+// switched off pixel by pixel draws nothing where its surface is, so the
+// surfaces become the background.
 constexpr color_scheme with_amoled(color_scheme scheme, bool dark, bool enabled) {
   const argb deepest = dark ? 0xFF000000 : 0xFFFFFFFF;
   if (!enabled) return scheme;

@@ -2,13 +2,13 @@
 // pchat.theme.palette -- A Material palette made from one seed colour.
 //
 // A palette is a ramp of the same hue through the tones of a perceptual
-// lightness scale, and a scheme is that ramp read at the tones Material gives
+// lightness scale; a scheme is that ramp read at the tones Material gives
 // each of its roles. Material builds its ramps in CAM16 (HCT); this one is
-// built in OKLab, which is the same kind of space -- cube-root lightness, a
-// chroma and a hue -- and whose numbers are short enough to carry here whole.
-// Both ramps are ramps of one hue at one chroma through the same tones, so
-// they read the same; Material's chroma figures are CAM16's, and a CAM16
-// chroma over 240 is the OKLab chroma beside it.
+// built in OKLab, the same kind of space -- cube-root lightness, a chroma
+// and a hue -- whose numbers are short enough to carry here whole. Both
+// ramps run one hue at one chroma through the same tones, so they read the
+// same. Material's chroma figures are CAM16's, and a CAM16 chroma over 240
+// is the OKLab chroma beside it.
 export module pchat.theme.palette;
 
 import std;
@@ -21,7 +21,7 @@ using argb = std::uint32_t;
 namespace palette {
 
 // How much of a CAM16 chroma an OKLab chroma is: 36 of Material's is 0.15
-// here, and it reads as the same colour of green.
+// here, and it is the same colour of green.
 inline constexpr double kCamChroma = 240.0;
 
 struct oklch {
@@ -50,7 +50,7 @@ constexpr srgb to_srgb(argb colour) {
 }
 
 // sRGB's gamut: a colour outside it cannot be shown, and it is what a ramp
-// runs into at its bright or its dark end.
+// hits at its bright or its dark end.
 constexpr bool in_gamut(const srgb& value) {
   return value.r >= -0.0005 && value.r <= 1.0005
       && value.g >= -0.0005 && value.g <= 1.0005
@@ -83,9 +83,9 @@ constexpr srgb from_oklch_unclipped(oklch colour) {
           .b = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s};
 }
 
-// A colour too far out for sRGB: the same hue and lightness, and as much of
-// its chroma as there is room for -- found by bisection, twenty-four times
-// over, which is finer than a byte of a channel.
+// A colour too far out for sRGB: the same hue and lightness, with as much
+// of its chroma as fits -- found by bisection, twenty-four times over, finer
+// than a byte of a channel.
 constexpr srgb from_oklch(oklch colour) {
   if (in_gamut(from_oklch_unclipped(colour))) return from_oklch_unclipped(colour);
   double least = 0.0, most = colour.c;

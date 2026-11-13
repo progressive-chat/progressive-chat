@@ -6,7 +6,7 @@
 // Behind it is what the platform gives (src/platform/notified_backend*.cc):
 // a notification of Android's own on a phone, and nothing at all everywhere
 // else, which this says in what it answers with. Nothing above this knows
-// which of them it got.
+// which it got.
 export module pchat.platform.notified;
 
 import std;

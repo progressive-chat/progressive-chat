@@ -42,8 +42,8 @@ struct anthropic_state {
 anthropic_state *anthropic_open();
 void anthropic_close(anthropic_state *state);
 
-// One payload -- whatever the `data:` lines of one frame said -- read whole:
-// what the wire's events decided, and the end of it where it said there was one.
+// One payload, the `data:` lines of one frame, read whole: the events the
+// wire decided, and its end where it said there was one.
 std::vector<anthropic_frame> anthropic_step(anthropic_state *state, std::string_view payload);
 
 // The ceiling of one model's output in the tokens Anthropic allows (agora's

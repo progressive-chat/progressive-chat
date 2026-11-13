@@ -55,20 +55,20 @@ struct crash_watcher {
 // which is the only thread anything is said to and the only thread anybody
 // waits for an answer from.
 //
-// It was given a thread of its own before, so that it would have room to
-// grow in: Android answers a thread asked for no stack in particular with
-// about a megabyte, and a window's tree of nodes did not fit in that once.
-// That thread, though, is not the thread spoken to. Everything a machine
-// says to a program -- a press, a finger, the window shown, the window gone
-// -- is said to the thread SDL was given, and from anywhere else there is
-// nothing said and nobody waiting to be answered: twenty seconds to start
-// and nothing answered afterwards is what that looks like from outside.
+// It was given a thread of its own before, so it would have room to grow in:
+// Android answers a thread asked for no stack in particular with about a
+// megabyte, and a window's tree of nodes did not fit in that once. That
+// thread, though, is not the thread spoken to. Everything a machine says to a
+// program -- a press, a finger, the window shown, the window gone -- is said
+// to the thread SDL was given, and from anywhere else there is nothing said
+// and nobody waiting to be answered: twenty seconds to start and nothing
+// answered afterwards is what that looks like from outside.
 //
 // Tried next was swapping the stack and not the thread, which is what
 // getcontext and makecontext are for; the NDK no longer has them. There is
 // no third way to have room without being elsewhere, and being elsewhere is
-// the thing that was wrong, so it runs here -- where the tree it grows is
-// in static storage and none of it is on this stack at all.
+// the thing that was wrong, so it runs here, where the tree it grows is in
+// static storage and none of it is on this stack at all.
 std::atomic<unsigned> how_many_said{0};
 
 bool said_what_arrived(void *, SDL_Event *one) {
@@ -157,13 +157,13 @@ void stderr_to_logcat() {
 
 int run(int, char **) {
   stderr_to_logcat();
-  // Said before it starts, so that it can be told from a program that went
-  // before this ever was: nothing at all in the log is as much of an answer
-  // as a line saying it began.
+  // Said before it starts, so it can be told from a program that went before
+  // this ever was: nothing at all in the log is as much of an answer as a
+  // line saying it began.
   __android_log_print(ANDROID_LOG_INFO, what_it_is_called, "started");
   say_stack_height();
-  // Watched before the window is asked for, so that nothing said to it is
-  // said before it is heard.
+  // Watched before the window is asked for, so nothing said to it is said
+  // before it is heard.
   SDL_AddEventWatch(&said_what_arrived, nullptr);
   const int said = pchat_main();
   __android_log_print(ANDROID_LOG_INFO, what_it_is_called, "it answered %d",

@@ -7,17 +7,17 @@ module;
 // pchat.platform.carry -- One body handed to the platform the program is
 // running on, and the bytes it answers with, taken back out of it.
 //
-// Nothing here knows what it carries or what it means: a place, its headers
-// and a body go in, and whatever arrives comes back out in the sizes it
-// arrived in. Which is all a provider's stream needs, and all that differs
-// between a page, a window and a phone.
+// Nothing here knows what it carries or what it means: a place, its
+// headers and a body go in, and what arrives comes back out in the
+// sizes it arrived in. That is all a provider's stream needs, and all that
+// differs between a page, a window and a phone.
 //
-// Only the page carries anything today -- through the browser's own fetch,
-// because that is what a page has -- and everywhere else this says so
-// (`any()`): everything not written for the page is built with an empty
-// carrying in it, and asking it for bytes asks nobody anything. What a desk
-// and a phone will carry with (Asio on fibers, as mux carries Matrix) is
-// written here when it is written, and nothing above changes.
+// Only the page carries anything today, through the browser's own fetch, and
+// everywhere else this says so (`any()`): everything not written for the
+// page is built with an empty carrying in it, and asking it for bytes asks
+// nobody anything. What a desk and a phone will carry with (Asio on
+// fibers, as mux carries Matrix) is written here when it is written, and
+// nothing above changes.
 export module pchat.platform.carry;
 
 import std;
@@ -34,7 +34,7 @@ public:
   carrying &operator=(const carrying &) = delete;
 
   // Given away whole and never in two places at once: what the browser was
-  // asked for is one request, and closing it twice is not a thing to want.
+  // asked for is one request; closing it twice would close one twice.
   carrying(carrying &&gone)
       : place_(std::move(gone.place_)), wrote_(std::move(gone.wrote_)),
         fields_(std::move(gone.fields_)), flat_(std::move(gone.flat_)),
@@ -63,7 +63,7 @@ public:
   }
 
   // Whether this platform hands bytes over at all: everything that can be
-  // asked of it is nothing where it cannot, so that nothing else here has to
+  // asked of it is nothing where it cannot, so nothing else here has to
   // be a different program on each platform.
   [[nodiscard]] bool any() const {
 #if defined(__EMSCRIPTEN__)
@@ -85,9 +85,9 @@ public:
       fields_.push_back(name);
       fields_.push_back(value);
     }
-    // The browser reads the names and the values where they were written, and
-    // keeps reading them until it is answered: so they are kept here, whole,
-    // and not only for the length of this call.
+    // The browser reads the names and the values where they were written and
+    // keeps reading them until it is answered, so they are kept here whole,
+    // not only for the length of this call.
     flat_.reserve(fields_.size() + 1);
     for (const std::string &one : fields_)
       flat_.push_back(one.c_str());
@@ -103,8 +103,8 @@ public:
     asking.requestData = wrote_.data();
     asking.requestDataSize = wrote_.size();
     // Both: the whole of it is wanted even where a browser never hands it
-    // over a piece at a time, and where it does, what answers arrives while
-    // it is read, which is what an arriving answer looks like.
+    // over a piece at a time. Where it does, what answers arrives while
+    // it is read.
     asking.attributes =
         EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_STREAM_DATA;
     asking.userData = this;
@@ -145,13 +145,13 @@ public:
   void stop() { shut(); }
 
 private:
-  // Kept for the one C API this is written against, which answers a request
-  // through a pointer to a function and not to anything of ours: each one is
+  // Kept for the one C API this is written against: it answers a request
+  // through a pointer to a function, so each one is
   // given this object back in `userData` and says everything to it.
 #if defined(__EMSCRIPTEN__)
   // A piece arrived, and where the piece says it arrived: take what of it has
   // not been taken yet, and nothing of it twice. A browser that hands the
-  // whole body over at once instead says this too, once.
+  // whole body over at once says this too, once.
   static void went_along(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
     if (!one->data || one->numBytes == 0)
@@ -174,8 +174,8 @@ private:
   }
   static void went_well(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
-    // Everything in one piece, where the browser never handed it over in
-    // pieces: taken once, and not again on top of what already came.
+    // Everything in one piece: the browser never handed it over in pieces,
+    // so it is taken once, not again on top of what already
     if (self.read_ == 0 && one->data && one->numBytes)
       self.arrived_.append(one->data, static_cast<std::size_t>(one->numBytes));
     self.over_ = true;

@@ -2,8 +2,8 @@
 
 The settings page offers a row to each of seven things, and each row says
 whether that thing is offered at all. This is what they are, what is kept when
-one is moved, and — said plainly, because it is easy to read the page and
-think otherwise — **what each one would still have to be given before it does
+one is moved, and -- said plainly, because it is easy to read the page and
+think otherwise -- **what each one would still have to be given before it does
 what its row says it does**. As of 2026-11-08 none of the seven is read by
 anything beyond the row that draws it.
 
@@ -34,13 +34,13 @@ difference is worth holding next to this:
 
 | row | default | what it would take to be true to its words |
 | --- | --- | --- |
-| Read a picture into words | on | a way in for a picture beside the field — the clip already stands there — and something that reads one into words: either the model asked through the wire with the picture carried along, or a reader of its own. Nothing that asks for a picture exists yet, so a probe of what the page says cannot see this row change anything. |
+| Read a picture into words | on | a way in for a picture beside the field -- the clip already stands there -- and something that reads one into words: either the model asked through the wire with the picture carried along, or a reader of its own. Nothing that asks for a picture exists yet, so a probe of what the page says cannot see this row change anything. |
 | Make a picture out of words | on | the other half of the same thing, and somewhere to put what comes back. Nothing in this tree asks for a picture to be made. |
 | Speak through another program | **off** | an address to ask through, and the asking itself going through it instead of straight to the provider. What carries a request today is the browser's own fetch to the server that served the page (`docs/PROTOCOL.md`); a proxy is not part of that yet. |
 | Be served as a page of its own | **off** | something serving it, which is the back end being written apart from this tree. While nothing serves it, nothing can be switched to ask for it. |
 | Keep what has been said here | on | somewhere kept, and every conversation read out of it rather than out of the sample in `src/app/sample.cc`. This one is the closest to the back end already being written, and it is the one whose effect will be visible first: the same conversation seen again after the page was put away. |
 | Keep what it has been taught | on | somewhere for what it has been taught to stand, and something that reads it and says it to the wire. Nothing holds such a thing today. |
-| Keep what has been given to it | on | the same for anything handed to it — a file, a picture, a name — and somewhere that anything is put. |
+| Keep what has been given to it | on | the same for anything handed to it -- a file, a picture, a name -- and somewhere that anything is put. |
 
 Two of the seven are **off** when nothing has been pressed, and that is said
 in `asking::switches` with the reason kept beside it: *"but the two that put
@@ -53,7 +53,7 @@ Proved on the page in a browser (`tools/probe_switches.mjs`, read again
 2026-11-08): every one of the seven is **drawn**, every one **moves** when its
 row is pressed, and the pill it moves is read back out of the row differently
 afterwards. The probe finds each row by its words, wheels it into the room,
-and presses it there — it does not trust the square the mirror gives it, which
+and presses it there -- it does not trust the square the mirror gives it, which
 for rows this far down is a square of layout and not of the glass
 (`docs/probes.md`).
 
@@ -67,9 +67,9 @@ that is written the honest reading of this page is "seven rows held ready", not
 
 Put beside the three tools, which are the same shape and already read:
 
-1. What the row asks is answered — already true for the seven, in
+1. What the row asks is answered -- already true for the seven, in
    `src/app/screens.cc`.
-2. What the switch is offered for exists as something the program can do — a
+2. What the switch is offered for exists as something the program can do -- a
    picture read, an address asked through, somewhere kept.
 3. What it changes is written where the thing happens. For a tool that place
    is `tools_of(how)` in `src/tools.cc`, which turns what is kept into what a

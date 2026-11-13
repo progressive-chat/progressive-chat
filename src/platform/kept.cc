@@ -12,11 +12,11 @@ import std;
 export namespace pchat::platform {
 
 // The programs are compiled from what the tree asks to be painted -- every
-// kind of stroke, every kind of shadow -- and a phone compiles them slowly:
-// where they are not kept, every run pays for all of them again before the
-// first frame is drawn, which is twenty seconds of a screen that answers
-// nothing. Asked for here, and given to the window, they are compiled once
-// and read back at every run after it.
+// kind of stroke, every kind of shadow -- and a phone compiles them slowly.
+// Where they are not kept, every run pays for all of them again before the
+// first frame is drawn: twenty seconds of a screen that answers nothing.
+// Asked for here and given to the window, they are compiled once and read
+// back at every run after it.
 //
 // Where nothing can be written -- the page, whose files are not files -- it
 // is empty, and the window compiles them as it always did.

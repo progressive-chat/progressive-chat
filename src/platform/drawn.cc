@@ -3,23 +3,21 @@
 // asked once, before the window is made, of a window nobody will ever see.
 module;
 #include <SDL3/SDL.h>
-// SPDX-License-Identifier: AGPL-3.0-only
+
 export module pchat.platform.drawn;
 
 import std;
 
 export namespace pchat::platform {
 
-// Where there is no GL at all -- a video driver with none in it, a display
-// server that was never started, a page whose browser has WebGL turned off
-// -- Skia asks GL what it has, is answered with a pointer that is nothing,
-// and goes inside its own answer: the program is gone before its first
-// frame, and all that is left to read of it is a tombstone. Asked here first,
-// the window is told to draw in software instead, which is slower and is a
-// window nonetheless.
+// With no GL -- no video driver, a display server that was never started,
+// WebGL turned off in the page -- Skia asks GL what it has, is answered with
+// a null pointer, and reads through it: the program dies before its first
+// frame and leaves only a crash. Probed here first, so the window can be told
+// to draw in software, which is slower and still a window.
 //
-// A phone is not asked: it has one, and the asking itself would take a
-// window that SDL will not always give back afterwards.
+// A phone is not probed: it always has GL, and probing takes a window SDL
+// will not always give back.
 bool gpu_can_be_had() {
 #if defined(__ANDROID__) || defined(__EMSCRIPTEN__)
   return true;

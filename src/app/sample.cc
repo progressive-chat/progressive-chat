@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// pchat.app.sample -- A model with something in it, so that the window shows
+// pchat.app.sample -- A model with something in it, so the window shows
 // what the screens look like before the program's own protocols are here.
 //
-// Nothing here is the program. It is what the screens are drawn against until
-// the accounts start filling the model themselves -- and every number here is
-// a number made up, that the layout may be seen with something in it.
+// Nothing here is the program. It is what the screens are drawn against
+// until the accounts start filling the model themselves. Every number here
+// is made up, so the layout can be seen with something in it.
 export module pchat.app.sample;
 
 import std;
@@ -15,18 +15,17 @@ export namespace pchat::app {
 // Four chats of questions and answers, and what was said in each of them:
 // what was asked in bubbles on the right, what answered in text the whole
 // breadth of the room, with what thought before it folded above it. The
-// times are fixed so that the drawer's order is the same on every machine.
+// times are fixed so the drawer's order is the same on every machine.
 [[nodiscard]] inline chats_root sample_chats() {
   const account mine{account_id{"@reader:example.org"}, "Reader", "example.org",
                      membership::joined, presence::online};
   chats_root root;
   root.accounts.push_back(mine);
   root.conversations = {
-      // Two answerers in the first of them, so that the top edge is seen with
+      // Two answerers in the first of them, so the top edge is seen with
       // more than one bubble on it: each has the whole of what this chat has
-      // been worth said of it today, and both of them the same room of a
-      // window, because what one answerer's window is is not a thing this
-      // sample keeps apart from another's yet.
+      // been worth said of it today, and both have the same room of a
+      // window. The sample does not keep one answerer's window apart.
       {conversation_id{"kitchen"}, mine.id, "What is in the kitchen",
        conversation_kind::direct, 1'763'000'400'000, 0, true, false,
        {"haiku-4", "opus-4"}, "", 4'120, 1'000'000, 0.31f},

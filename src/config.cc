@@ -23,9 +23,9 @@ struct looks {
   theme_mode mode = theme_mode::dark;
   bool amoled = false;
   bool reduce_motion = false;
-  // What a row in the drawer is asked for, and is asked for nowhere by
-  // default: a circle with the conversation's first letter in it, in the
-  // row's own colours, and how long ago what was said last was said.
+  // What a row in the drawer is asked for, off by default: a circle with the
+  // conversation's first letter in it, in the row's own colours, and how long
+  // ago what was said last was said.
   bool avatars = false;
   bool row_times = false;
   double font_scale = 1.0;
@@ -49,27 +49,27 @@ constexpr color_scheme colors_of(const looks& shown, bool system_dark = true) {
   return with_amoled(scheme_for(shown.preset, shown.style, dark), dark, shown.amoled);
 }
 
-// The tools this program owns itself (pchat.tools), said by which is which
-// because a row in the settings and a body written for a wire both have to
-// name the same one.
+// The tools this program owns itself (pchat.tools), said by which is which:
+// a row in the settings and a body written for a wire both have to name the
+// same one.
 enum class tool_choice { conversation_search, how_much, when_it_is };
 inline constexpr std::size_t tools_owned = 3u;
 
-// Seven things a switch is offered for, said by which is which because a
-// row in the settings and what the program keeps have to name the same one:
-// two that a picture is asked about, two that are how this program reaches
-// other programs, and three that it keeps afterwards.
+// Seven things a switch is offered for, said by which is which: a row in the
+// settings and what the program keeps have to name the same one. Two that a
+// picture is asked about, two that are how this program reaches other
+// programs, three that it keeps afterwards.
 enum class switch_choice { picture_to_words, words_to_picture, proxy,
                            own_page, remember, skills, data_held };
 inline constexpr std::size_t switches_owned = 7u;
 
 // How an answer is asked for: what a model is told to do with its own choices
 // while it writes one, whichever wire it is asked through. Five of them, and
-// none of them anything this program answers itself -- every one is said as
-// part of every body written for a provider (pchat.provider, `wanted`).
+// none anything this program answers itself: every one is said as part of
+// every body written for a provider (pchat.provider, `wanted`).
 // How hard a model is to think before it answers, in the only four ways any
 // wire is asked for it: a little, some, most of what it can, or all of it.
-// Said once here and written as each family names it by pchat.provider.
+// Said once here, written as each family names it by pchat.provider.
 enum class effort { least, some, most, all };
 
 // The next of the four, whichever of them stands now: what one press behind
@@ -247,7 +247,7 @@ inline constexpr looks default_looks{};
 
 // The answerers offered, and the room each one's window has: named here
 // because which ones there are to answer with is not a screen's to decide,
-// and because adding one to a conversation has to add one that answers.
+// and adding one to a conversation has to add one that answers.
 struct answerer_choice {
   // What a wire is given, which is not what it is called: `deepseek-v4-1-flash`
   // is what a body says, and `DeepSeek V4.1 Flash` is what a reader reads.
@@ -272,7 +272,7 @@ inline constexpr std::array<answerer_choice, 7> answerers_offered{{
 // What one of them is called on the screen: the model as it is named, and the
 // provider it is asked through after it in brackets -- `Claude Haiku 4
 // (anthropic)`. One that is offered but nameless says the id it is asked
-// through, whole, so that nothing is said of it that is not known.
+// through, whole, so nothing unknown is said of it.
 [[nodiscard]] inline std::string said_as_a_model(std::string_view name) {
   for (const answerer_choice &one : answerers_offered)
     if (one.name == name)
@@ -299,8 +299,8 @@ inline constexpr std::array<answerer_choice, 7> answerers_offered{{
 
 // One of them put into a chat, or taken out of it: put in at the end of the
 // ones already answering, taken out from wherever it stood, and never the
-// last one of them -- a chat with nothing to answer in it is not a thing any
-// page can say, so taking out is left undone where it would leave none.
+// last one -- a chat with nothing to answer in it is not a thing any page can
+// say, so taking out is left undone where it would leave none.
 [[nodiscard]] inline std::vector<std::string>
 models_with(std::span<const std::string> models, std::string_view name,
             bool wanted) {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.platform.notified.backend -- Where nothing puts notifications: this
-// program asks the machine for none, and is told that none was shown. What a
+// program asks the machine for none and is told that none was shown. What a
 // window and a page say until they are given one of their own.
 export module pchat.platform.notified.backend;
 

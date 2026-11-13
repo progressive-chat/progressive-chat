@@ -38,7 +38,7 @@ using compose::row;
                                   .origin = scene::anchor::kCentre}));
 }
 
-// A plate rounded all the way round: a pill with its label centred in it.
+// A plate rounded all the way round: a pill with its label centred.
 [[nodiscard]] inline auto pill(const scene::Spec &spec, scene::Colour colour, std::string label, float size,
                                scene::Colour text, bool bold = false) {
   scene::Spec made = spec;
@@ -67,8 +67,8 @@ using compose::row;
                          caption(std::move(under), size - 2.0f, look.dim));
 }
 
-// A field to type in, rounded the whole way round, with its hint inside it:
-// what the drawer searches with. What is typed is handed to `given` on Enter.
+// A field to type in, rounded the whole way round, with its hint inside: what
+// the drawer searches with. What is typed is handed to `given` on Enter.
 template <class OnSubmit>
 [[nodiscard]] inline auto search_field(const paints &look, std::string hint, OnSubmit given,
                                        const scene::Spec &spec = {}) {

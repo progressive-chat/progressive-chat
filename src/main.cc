@@ -16,7 +16,7 @@ import pchat.app.program;
 using namespace pchat::app;
 
 // The window: what the host draws it through. Declared here, in a unit that
-// is no module's, so that either host -- window_host.cc for SDL3,
+// is no module's, so either host -- window_host.cc for SDL3,
 // browser_host.cc for the page -- can define it.
 int pchat_run(program &one, const skiff::platform::window::options &how,
               const skiff::platform::events::kinds &kinds);
@@ -32,8 +32,8 @@ int pchat_main() {
   program &one = held.emplace();
   // Where the programs the GPU compiled are kept between runs: compiled
   // again at every run without it, and a phone is slow at it.
-  // Drawn in software where there is no GPU to draw through: without this
-  // it went before its first frame wherever GL was not to be had.
+  // Software drawing when no GPU can be drawn through: without this it went
+  // before its first frame wherever GL was not to be had.
   const skiff::platform::window::options how{
       .title = "progressive-chat",
       .width = 1100,

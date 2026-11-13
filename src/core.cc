@@ -11,8 +11,7 @@ import std;
 
 export namespace pchat {
 
-// Ids are strings and nothing else: whatever a protocol calls one, it is
-// compared, sorted and used as a key, never read into parts.
+// Ids are opaque strings: compared and sorted, never parsed.
 struct account_id {
   std::string value;
   friend bool operator==(const account_id &, const account_id &) = default;
@@ -31,8 +30,8 @@ struct message_id {
   friend auto operator<=>(const message_id &, const message_id &) = default;
 };
 
-// A moment, as milliseconds since the epoch: what every protocol says and
-// what nothing else has to be told twice.
+// Milliseconds since the epoch: what a protocol sends and nothing converts
+// again.
 using moment = std::int64_t;
 
 enum class delivery { writing, sending, sent, failed, seen };
@@ -50,11 +49,9 @@ struct account {
   friend bool operator==(const account &, const account &) = default;
 };
 
-// A conversation: one row of the drawer, whatever the protocol's own name
-// for it is.
-// What every answer is told before anything else is said to it, where a
-// conversation has said nothing of its own: brief, plain, and named for the
-// program it is said in.
+// A conversation: one row of the drawer.
+// The system prompt used when the conversation sets none: brief, plain, and
+// named for the program.
 inline constexpr std::string_view default_told =
     "You are answering in Progressive Chat, briefly and plainly.";
 
@@ -67,26 +64,20 @@ struct conversation {
   std::uint32_t unread = 0;
   bool pinned = false;
   bool muted = false;
-  // Which models answer in it -- said once in what is written in, and never
-  // above an answer of it -- one or more, and the first of them the one the
-  // foot writes to today. What this chat has been worth so far, how much room
-  // an answerer's window has: none of it to all of it.
+  // Models that answer here. The first is the one the foot writes to.
+  // tokens = what this chat has cost so far; window = room left in the
+  // answerer's window.
   std::vector<std::string> models;
-  // What every one of them is told before anything else is said to it: this
-  // conversation's own words, and, where it has none, what every answer is
-  // given wherever nothing else has been said.
+  // The system prompt this conversation sets; empty means the default.
   std::string told;
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
   float context_used = 0.0f;
-  // Which model writes here when nothing else has been said: the first of
-  // them, and nothing where there is none.
+  // The model that writes here by default: the first one, or none.
   [[nodiscard]] std::string leading_model() const {
     return models.empty() ? std::string{} : models.front();
   }
-  // What they are told, said once for all of them: this conversation's own
-  // words where it has them, and what the program tells every answer where
-  // it has not.
+  // The system prompt actually sent: this conversation's, else the default.
   [[nodiscard]] std::string told_for() const {
     return told.empty() ? std::string(default_told) : told;
   }
@@ -97,9 +88,9 @@ struct conversation {
 // it was thinking, how many tool calls it made on the way, and what it
 // wrote to itself while it was (its greentext).
 // One tool a model stopped to ask for on its way to an answer: which one,
-// what it asked it for, and what that tool said back to it. Kept against the
-// thought that asked for it, so that what is folded above an answer can say
-// each of them and not only how many there were.
+// what it asked it for, and what the tool said back. Kept against the thought
+// that asked for it, so the fold above an answer can list each one and not
+// only how many there were.
 struct call_made {
   std::string tool;
   std::string asked;

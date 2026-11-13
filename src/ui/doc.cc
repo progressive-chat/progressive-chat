@@ -24,9 +24,9 @@ namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 namespace logic = pchat::logic;
 
-// How many lines the room keeps. The design is not this long yet, and the
-// lines are made once, with the window, whether they are filled in or not:
-// a column built again every frame is not a thing any machine was asked for.
+// How many lines the room keeps. The design is not this long yet. The lines
+// are made once, with the window, filled in or not: the column is not built
+// again every frame.
 inline constexpr std::size_t max_doc_lines = 320;
 // The size each kind of line is said in, and what is left between two of
 // them by the column's own spacing.
@@ -38,18 +38,16 @@ inline constexpr float doc_gap = 4.0f;
 // What a line of a list says in front of itself.
 inline constexpr std::string_view doc_bullet = "•  ";
 
-// One line of it: the words in their own size. Of its own kind, and not an
-// array of text: text asks for the size it is said in before there is a
-// size to say, so it cannot be made first and told later, and three hundred
-// of them want a made one each.
+// One line: the words, in the size that line is said in. Its own node, and
+// not a text array: nodes::Text takes its size when made and cannot be told
+// it later, so each line needs a made one.
 struct doc_line_node {
   nodes::Text said{"", doc_size_words, 0u};
 };
 
 // The lines themselves, one under the next.
 struct doc_body : nodes::Stack {
-  // Kept on the heap: three hundred nodes is not a thing a machine's stack
-  // was asked to hold, as a member it would be twice over.
+  // Heap: 320 nodes as members would not fit the stack.
   std::unique_ptr<std::array<doc_line_node, max_doc_lines>> fLines =
       std::make_unique<std::array<doc_line_node, max_doc_lines>>();
 

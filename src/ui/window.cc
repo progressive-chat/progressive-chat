@@ -4,9 +4,9 @@
 // write in at the foot, and the settings page over the whole of it when it is
 // opened.
 //
-// The parts are made once, with the window, and filled in again by
-// `again`: the tree's shape never changes, only what its parts say and
-// where they stand -- which is what the window's own size asks for.
+// The parts are made once, with the window, and filled in again by `again`:
+// the tree's shape never changes, only what its parts say and where they
+// stand, as the window's own size asks.
 export module pchat.ui:window;
 
 import std;
@@ -30,12 +30,10 @@ export namespace pchat::ui {
 namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 
-// What of the program is open, said as one thing rather than as six rights
-// and wrongs in a row: asked for in this order, they said nothing at all in
-// it about which was which, and a call read like
-// `again(look, root, shown, how, query, true, false, false, true, false)`.
-// Which of them is open is the program's own reading of its own state, and
-// what the window does with it is said here, once, in words.
+// What of the program is open, as one thing instead of six bools in a row:
+// asked for in that order, a call read like `again(look, root, shown, how,
+// query, true, false, false, true, false)`. Which are open is the program's
+// own state; what the window does with them is said here, in words.
 struct what_is_open {
   bool settings = false;
   bool design = false;
@@ -48,28 +46,27 @@ struct what_is_open {
   bool editor_menu = false;
   // The card of faces, opened by the face beside the clip.
   bool faces = false;
-  // The drawer, come over the messages where the room is too narrow for it
-  // to stand beside them.
+  // The drawer, over the messages where the room is too narrow for it to
+  // stand beside them.
   bool drawer = false;
   friend bool operator==(const what_is_open &, const what_is_open &) = default;
 };
 
 // Everything the program shows, as one node a Scene can hold. Made with the
-// requests it hands its controls -- a control asks, and the program answers
-// between frames.
+// requests it hands its controls: a control asks, the program answers between
+// frames.
 struct app_window : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Box<> fMessages{0u};
   ask_box fShade{};
   // What puts away what three dots opened, wherever they stand: nothing
   // painted and everything pressed, taking the whole room while either card
-  // is out and nothing of it at all when none is. It stands here, above the
-  // messages and below the bar and the card, because a press is taken by
-  // what was painted last over the place: the messages, the list and the
-  // drawer hand their presses to it, while the bar, the card and every row
-  // either of them opened are painted after it and keep theirs. Which is
-  // what a card opened over the room asks for: a press anywhere below it
-  // puts it away, and one on the card itself, on its three dots or on a row
+  // is out and none of it when none is. It stands here, above the messages
+  // and below the bar and the card: a press is taken by what was painted last
+  // over the place. The messages, the list and the drawer hand their presses
+  // to it; the bar, the card and every row either opened are painted after it
+  // and keep theirs. So a card opened over the room is put away by a press
+  // anywhere below it, while a press on the card, its three dots or a row
   // behind them does what that one says.
   ask_box fAway{};
   drawer_screen fDrawer{360.0f};
@@ -84,9 +81,9 @@ struct app_window : scene::Node {
     this->apply({.fill = true});
     fPaper.apply({.fill = true});
     fMessages.apply({.background = 0u});
-    // A conversation is read at its foot: the messages are shown from their
-    // last one, and stay there as they grow -- until the reader scrolls away,
-    // which the list keeps instead.
+    // A conversation is read at its foot: messages show from their last one
+    // and stay there as they grow, until the reader scrolls away, which the
+    // list keeps instead.
     fList.scrollToEnd(false);
   }
 
@@ -105,8 +102,8 @@ struct app_window : scene::Node {
              const what_is_open &open,
              const std::vector<std::string> &faces_lately, float width,
              float height, app::requests *asked) {
-    // The conversation the window has open, as it is named: none of them,
-    // where none is open.
+    // The conversation the window has open, as it is named: none, where none
+    // is open.
     const std::string opened = root.opened ? root.opened->value : std::string{};
     const bool wide = width >= side_by_side_from;
     const float breadth =
@@ -114,14 +111,14 @@ struct app_window : scene::Node {
     const bool in_chat = wide || !open.drawer;
     const float column = in_chat ? width - (wide ? breadth : 0.0f) : width;
     const bool aside = wide || open.drawer;
-    // The messages are drawn under the drawer where the drawer has come over
-    // them as well: what is left of them beside it is read there, and pressed
-    // it is what puts it away again.
+    // The messages are drawn under the drawer where the drawer covers them
+    // too: what is left beside it is read there, and pressing it puts the
+    // drawer away again.
     const float left = wide ? breadth : 0.0f;
     fPaper.setColour(look.paper);
-    // The messages' own ground, beside the drawer.
-    // A size in pixels, not a share: what these were made to fill once is
-    // said again here as nothing, or the number is read as parts of one.
+    // The messages' own ground, beside the drawer. A size in pixels, not a
+    // share: `relativeSize` is none here, or the number reads as parts of
+    // one.
     fMessages.apply({.anchor = scene::anchor::kTopLeft,
                      .x = left,
                      .y = 0.0f,
@@ -131,8 +128,8 @@ struct app_window : scene::Node {
                      .background = look.paper,
                      .visible = true});
     // The drawer: beside the messages when the window is wide, over them when
-    // it is not -- and over them it leaves a strip of them in sight, which is
-    // what the reader presses to put it away again.
+    // not. Over them it leaves a strip of them in sight; the reader presses
+    // that strip to put it away again.
     const float drawer_breadth =
         wide ? breadth
              : std::min(width, std::max(breadth, width - drawer_open_room));
@@ -163,26 +160,25 @@ struct app_window : scene::Node {
                 .width = column,
                 .height = top_scrim,
                 .visible = true});
-    // The pill that opens the drawer is there where a drawer can be opened:
-    // a window wide enough to keep it beside the messages has none to open.
+    // The pill that opens the drawer shows where a drawer can be opened: a
+    // window wide enough to keep it beside the messages has none to open.
     const conversation *open_chat = nullptr;
     for (const conversation &one : root.conversations)
       if (one.id.value == opened)
         open_chat = &one;
-    // Which answerers answer in the conversation open: what the settings
-    // say of them is said of this one chat, and of no other.
+    // Which answerers answer in the conversation open: what the settings say
+    // of them is said of this one chat, no other.
     std::vector<std::string> answering;
     if (open_chat)
       answering = open_chat->models;
     // The bar says what the chat has been worth; the card under it names the
-    // model that answers in it and how full its window this chat has made it.
+    // model answering in it and how full its window this chat has made it.
     fTop.again(asked, look, !wide, !wide, open.more, title_of(root, opened),
                open_chat);
-    // Over what the messages were, where the drawer has come over them:
-    // pressed, it puts the drawer away again. What a card of three dots is
-    // put away by, in the bar's own case or in the card's, each of those two
-    // parts keeps to itself: see `pchat.ui:composer`, what stands behind its
-    // three dots.
+    // Over what the messages were, where the drawer covers them: pressing it
+    // puts the drawer away again. What puts a card of three dots away -- the
+    // bar's or the card's -- each part keeps to itself: see
+    // `pchat.ui:composer`, what stands behind its three dots.
     fShade.apply({.anchor = scene::anchor::kTopLeft,
                   .x = 0.0f,
                   .y = 0.0f,
@@ -193,11 +189,10 @@ struct app_window : scene::Node {
     fShade.again(asked, app::toggle_drawer{}, look.scrim);
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
-    // What answered in this chat, said where About asks about it: the room
-    // itself never names it, so the rows are told it only to keep it for
-    // that one line.
-    // Every model that answers here, said as one -- the About row names them
-    // all together, where the bubbles name each one apart.
+    // What answered in this chat, said where About asks: the room itself
+    // never names it, so the rows are given it only to keep it for that one
+    // line. Every model that answers here, as one string: the About row names
+    // them together, the bubbles name each apart.
     std::string answerers;
     if (open_chat)
       for (const std::string &one : open_chat->models) {
@@ -228,9 +223,9 @@ struct app_window : scene::Node {
     if (open_chat)
       fComposer.again(look, *open_chat, how, asked, open.editor_menu,
                       open.faces, faces_lately);
-    // Any of the three cards, put away by a press on anything below them:
-    // the bar's three dots first where two of them are out at once, and then
-    // the one written into, on a second press of the same kind.
+    // Any of the three cards, put away by a press on anything below them: the
+    // bar's three dots first where two are out at once, then the one written
+    // into, on a second press of the same kind.
     const bool card_out = open.more || open.editor_menu || open.faces;
     fAway.apply({.anchor = scene::anchor::kTopLeft,
                  .x = 0.0f,
@@ -252,14 +247,14 @@ struct app_window : scene::Node {
                       height);
     else
       fSettings.hide();
-    // The design said in the room, when it is opened: over everything, as a
-    // page of words it is, and put away again whole.
+    // The design shown in the room when opened: over everything, a page of
+    // words, and put away again whole.
     if (open.design)
       fDesign.again(asked, look, std::min(width, 760.0f), height);
     else
       fDesign.hide();
-    // What every model is told here, when it is opened: over everything, and
-    // put away again with what was written in it kept.
+    // What every model is told here when opened: over everything, put away
+    // again with what was written in it kept.
     if (open.prompt)
       fPrompt.again(asked, look, open_chat, width, height);
     else

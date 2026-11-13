@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// pchat.tokens -- What text is worth in tokens, asked of the counters Agora
-// counts with: the character-class heuristic until a vocabulary was handed in,
-// the real o200k BPE from there on. The counting itself stands in
-// ports/agora-core and is reached through one header that imports nothing --
-// agora's own headers stay out of a module unit, where they would sit beside
-// the imported standard and give clang two declarations of everything.
+// pchat.tokens -- What text is worth in tokens, counted by Agora's counters:
+// the character-class heuristic until a vocabulary is handed in, the real
+// o200k BPE from there on. The counting stands in ports/agora-core and is
+// reached through one header that imports nothing -- agora's own headers
+// stay out of a module unit, where they would sit beside the imported
+// standard and give clang two declarations of everything.
 //
 // Which vocabulary a model family takes is not asked here: a vocabulary is
 // handed in as the text of its .tiktoken file, and none has been yet, so the

@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="560" viewBox="0 0 940 560" font-family="ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a7f37"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect x="0" y="0" width="940" height="560" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="470" y="34" text-anchor="middle" font-size="19" font-weight="600" fill="#1f2328">The boundary: read once, into types</text>
+  <text x="470" y="57" text-anchor="middle" font-size="13" fill="#57606a">Whatever comes in — JSON, XML, a protocol's fields, a config file, a name, a key —</text>
+  <text x="470" y="75" text-anchor="middle" font-size="13" fill="#57606a">is read once, where it comes in. Code past the boundary works on the types.</text>
+
+  <!-- ============ OUTSIDE column ============ -->
+  <rect x="30" y="110" width="300" height="400" rx="10" fill="#fff8e6" stroke="#d4a72c" stroke-width="1.5"/>
+  <text x="180" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#7d5300">OUTSIDE — untyped</text>
+
+  <!-- protocol message (the fields) -->
+  <rect x="52" y="158" width="256" height="86" rx="7" fill="#ffffff" stroke="#d4a72c"/>
+  <text x="66" y="178" font-size="12" font-weight="600" fill="#7d5300">wire message — "a protocol's fields"</text>
+  <text x="66" y="198" font-family="ui-monospace, monospace" font-size="11" fill="#24292f">{ "role": "assistant",</text>
+  <text x="66" y="214" font-family="ui-monospace, monospace" font-size="11" fill="#24292f">  "content": "hi", "ts": 1712345 }</text>
+  <text x="66" y="234" font-size="10.5" fill="#57606a">pchat.json · provider.run / .stream</text>
+
+  <!-- other inputs -->
+  <rect x="52" y="256" width="256" height="38" rx="7" fill="#ffffff" stroke="#d4a72c"/>
+  <text x="66" y="280" font-size="12" fill="#24292f">JSON  ·  XML  ·  a config file</text>
+
+  <rect x="52" y="304" width="256" height="38" rx="7" fill="#ffffff" stroke="#d4a72c"/>
+  <text x="66" y="328" font-size="12" fill="#24292f">a name  ·  a key  ·  a model id</text>
+
+  <!-- raw-tree warning -->
+  <rect x="52" y="356" width="256" height="72" rx="7" fill="#fff1f0" stroke="#cf222e"/>
+  <text x="66" y="378" font-size="11.5" font-weight="600" fill="#a40e26">what is NOT done past the boundary</text>
+  <text x="66" y="397" font-size="11" fill="#a40e26">· no raw JSON tree to dig through</text>
+  <text x="66" y="414" font-size="11" fill="#a40e26">· no name == "..." string chains</text>
+
+  <text x="180" y="470" text-anchor="middle" font-size="11.5" fill="#7d5300">bytes arrive from outside —</text>
+  <text x="180" y="487" text-anchor="middle" font-size="11.5" fill="#7d5300">no type of our own yet</text>
+
+  <!-- ============ BOUNDARY column ============ -->
+  <rect x="370" y="110" width="200" height="400" rx="10" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="470" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#24292f">BOUNDARY</text>
+  <text x="470" y="158" text-anchor="middle" font-size="12" fill="#57606a">read ONCE, here</text>
+
+  <rect x="388" y="176" width="164" height="118" rx="7" fill="#ffffff" stroke="#8c959f"/>
+  <text x="470" y="197" text-anchor="middle" font-size="12" font-weight="600" fill="#24292f">parse boundary</text>
+  <text x="400" y="220" font-family="ui-monospace, monospace" font-size="10.5" fill="#0550ae">json::value =</text>
+  <text x="400" y="236" font-family="ui-monospace, monospace" font-size="10" fill="#0550ae">variant&lt;nothing, bool,</text>
+  <text x="400" y="250" font-family="ui-monospace, monospace" font-size="10" fill="#0550ae">double, string,</text>
+  <text x="400" y="264" font-family="ui-monospace, monospace" font-size="10" fill="#0550ae">list, thing&gt;</text>
+  <text x="400" y="284" font-size="10.5" fill="#57606a">pchat.json</text>
+
+  <rect x="388" y="308" width="164" height="70" rx="7" fill="#ffffff" stroke="#8c959f"/>
+  <text x="470" y="328" text-anchor="middle" font-size="11.5" font-weight="600" fill="#24292f">*_of functions</text>
+  <text x="400" y="348" font-size="10.5" fill="#57606a">turns_of · wire_of ·</text>
+  <text x="400" y="364" font-size="10.5" fill="#57606a">role_of (table, not ifs)</text>
+
+  <text x="470" y="430" text-anchor="middle" font-size="11.5" fill="#57606a">one conversion —</text>
+  <text x="470" y="447" text-anchor="middle" font-size="11.5" fill="#57606a">never re-parsed as text</text>
+
+  <!-- ============ INSIDE column ============ -->
+  <rect x="610" y="110" width="300" height="400" rx="10" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
+  <text x="760" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#0a5c2b">INSIDE — typed</text>
+
+  <rect x="632" y="158" width="256" height="86" rx="7" fill="#ffffff" stroke="#1a7f37"/>
+  <text x="646" y="178" font-size="12" font-weight="600" fill="#0a5c2b">struct turn / message</text>
+  <text x="646" y="198" font-family="ui-monospace, monospace" font-size="11" fill="#24292f">role role;   // enum class</text>
+  <text x="646" y="214" font-family="ui-monospace, monospace" font-size="11" fill="#24292f">{system,user,</text>
+  <text x="646" y="230" font-family="ui-monospace, monospace" font-size="11" fill="#24292f">           assistant,tool}</text>
+
+  <rect x="632" y="256" width="256" height="38" rx="7" fill="#ffffff" stroke="#1a7f37"/>
+  <text x="646" y="280" font-family="ui-monospace, monospace" font-size="11.5" fill="#24292f">struct message · Endpoint</text>
+
+  <rect x="632" y="304" width="256" height="38" rx="7" fill="#ffffff" stroke="#1a7f37"/>
+  <text x="646" y="328" font-size="12" fill="#24292f">enums · variants of our own</text>
+
+  <rect x="632" y="356" width="256" height="72" rx="7" fill="#ffffff" stroke="#1a7f37"/>
+  <text x="646" y="378" font-size="11.5" font-weight="600" fill="#0a5c2b">past here, only types</text>
+  <text x="646" y="397" font-size="11" fill="#0a5c2b">· visit / overload, not ifs</text>
+  <text x="646" y="414" font-size="11" fill="#0a5c2b">· no typed→JSON→typed trips</text>
+
+  <text x="760" y="470" text-anchor="middle" font-size="11.5" fill="#0a5c2b">code works on these —</text>
+  <text x="760" y="487" text-anchor="middle" font-size="11.5" fill="#0a5c2b">the raw bytes are behind it</text>
+
+  <!-- arrows across -->
+  <line x1="330" y1="200" x2="384" y2="200" stroke="#57606a" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="330" y1="275" x2="384" y2="275" stroke="#57606a" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="330" y1="323" x2="384" y2="323" stroke="#57606a" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <line x1="552" y1="235" x2="606" y2="200" stroke="#1a7f37" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <line x1="552" y1="343" x2="606" y2="323" stroke="#1a7f37" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <text x="470" y="536" text-anchor="middle" font-size="11.5" fill="#57606a">CODE_STYLE.md · Types at the boundary</text>
+</svg>
