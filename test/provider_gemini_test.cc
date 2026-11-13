@@ -91,7 +91,7 @@ SAID(gemini, a_body_is_written_the_way_generateContent_reads_it) {
   const endpoint one{.base = "https://generativelanguage.googleapis.com/v1beta",
                      .key = "test-key",
                      .model = "gemini-2.5-flash",
-                     .told = "Answer shortly."};
+                     .system_prompt = "Answer shortly."};
   const std::vector<turn> turns{
       {.who = role::user, .text = "Two eggs?"},
       {.who = role::assistant,

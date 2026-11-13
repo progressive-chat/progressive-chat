@@ -27,17 +27,17 @@ export namespace pchat::tools {
 [[nodiscard]] inline std::vector<provider::offered> every_offered() {
   return {
       {.name = "look_up_in_this_conversation",
-       .told = "Read back what was said in this very conversation: the "
+       .description = "Read back what was said in this very conversation: the "
                "messages that mention the words asked about, oldest first, "
                "and who said each of them.",
        .taken = {{"what", "the words to look for, as one string"}}},
       {.name = "how_much_has_been_said",
-       .told = "How much has been said in this conversation: how many "
+       .description = "How much has been said in this conversation: how many "
                "messages, how many came from the reader, and how many "
                "tokens they counted as a whole.",
        .taken = {}},
       {.name = "when_this_is_being_asked",
-       .told = "What time it is for this program right now, as "
+       .description = "What time it is for this program right now, as "
                "milliseconds since 1970, and nothing else: say nothing "
                "about the time unless a question needs it.",
        .taken = {}}};

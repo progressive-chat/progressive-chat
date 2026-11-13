@@ -235,7 +235,7 @@ public:
             [&](const set_system_prompt &asking) {
               for (conversation &one : root_.conversations)
                 if (one.id == asking.chat)
-                  one.told = asking.text;
+                  one.system_prompt = asking.text;
             },
             [&](const open_system_prompt &) {
               more_ = false;
@@ -435,7 +435,7 @@ private:
       return;
     const provider::endpoint at{.base = opened_.base,
                                 .model = ending_of(chat),
-                                .told = told_of(chat)};
+                                .system_prompt = system_prompt_of(chat)};
     // Not const: a view over messages is asked of more than once and read
     // more than once, and a const view says no to a second reading.
     auto turns = root_.messages |
@@ -620,11 +620,11 @@ private:
     return {};
   }
   // What every answerer in a chat is told before anything is said to it.
-  [[nodiscard]] std::string told_of(const conversation_id &chat) const {
+  [[nodiscard]] std::string system_prompt_of(const conversation_id &chat) const {
     for (const conversation &one : root_.conversations)
       if (one.id == chat)
-        return one.told_for();
-    return std::string(default_told);
+        return one.system_prompt_for();
+    return std::string(default_system_prompt);
   }
   // What this chat has spent of its answerer's room: said again whole after
   // any message enters or leaves it, and after the window changes, so the
@@ -684,7 +684,7 @@ private:
   // that server's own to know.
   const provider::endpoint opened_{
       .base = "/v1",
-      .told = "You are answering in Progressive Chat, briefly and plainly."};
+      .system_prompt = "You are answering in Progressive Chat, briefly and plainly."};
   window_scene scene_{std::in_place};
   chats_root root_;
   looks shown_;
