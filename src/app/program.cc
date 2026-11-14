@@ -90,6 +90,13 @@ struct program {
   // screens' to build, and this is where the path is handed over.
   void save_path_chosen(std::string path) { view.write_archive(path); }
 
+  // What the machine's dialog chose for the clip: handed whole to the screens,
+  // which hold it for what the next message carries (skiff's window hooks call
+  // this by name where the program has it).
+  void files_given(std::vector<std::string> paths, bool dropped) {
+    view.files_given(std::move(paths), dropped);
+  }
+
   // Between events: what was asked for, done, and what the window shows drawn
   // again from the model. The size it lays itself out by is the one the last
   // frame left it.

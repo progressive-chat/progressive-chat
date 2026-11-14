@@ -378,7 +378,10 @@ struct composer : scene::Node {
   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
                                           message_given{fSink}};
-  nodes::Icon fClip{shape::clip(), 0u};
+  // The clip, pressed: asks for a picture from the machine's own files (the
+  // dialog stands over the window; what it answers comes back through the
+  // program as what the next message carries).
+  press_box fClip{shape::clip()};
   // The face beside the clip: a plate under a mark and both of them take the
   // press, for the same reason the three dots' do. Pressed, it opens the
   // card of faces above it, and pressed again, or anywhere else in the room
@@ -509,7 +512,6 @@ struct composer : scene::Node {
       fField.setText(whole);
     }
     fCard.setColour(look.card);
-    fClip.setColour(look.faint);
     fFace.again(asked,
                 {.width = dots_size,
                  .height = dots_size,
@@ -519,6 +521,18 @@ struct composer : scene::Node {
                  .y = 68.0f},
                 app::toggle_faces{}, faces_open ? look.raised : 0u);
     fFace.mark_colour(faces_open ? look.primary : look.faint);
+    // The clip beside it, pressed the same way: asks for a picture (the row
+    // "Read a picture into words" is the switch this rides; the press itself
+    // is the same ask whether the row is on or off, and what the wire does
+    // with it is the wire's own).
+    fClip.again(asked,
+                {.width = 22.0f,
+                 .height = 22.0f,
+                 .anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kCentre,
+                 .x = -(edge + send_size + 44.0f),
+                 .y = 68.0f},
+                app::attach_picture{}, look.faint);
     // What every answer in this chat is asked with, behind three dots beside
     // the ring: opened by a press on them and put away by another.
     fDots.again(asked,
