@@ -101,8 +101,10 @@ public:
   // call is still open, and whether the failure was already said. Built from
   // what the stream saw, and read by whoever decides whether to ask again.
   [[nodiscard]] termination ended_by() const {
-    return {ended_, std::string(finish_), !text_.empty() || !thought_.empty(),
-            !partial_.empty(), failed_, false};
+    // Produced content is the ported rule's answer, not this tree's: a call
+    // carries output as much as text does, and a thought's signature counts.
+    return {ended_, std::string(finish_), produced_, !partial_.empty(),
+            failed_, false};
   }
 
 private:
@@ -136,6 +138,8 @@ private:
   // accumulators the chat wire fills, so nothing reading an answer can tell
   // which of the two shapes it arrived in.
   void anthropic_said(const anthropic_frame &one) {
+    // The shaped wires carry the ported rule's answer on the frame itself.
+    produced_ = produced_ || one.carried;
     switch (one.what) {
     case anthropic_frame::kind::text:
       answer_said(one.text);
@@ -215,6 +219,7 @@ private:
     // tell which of the three shapes it arrived in. A gemini call comes whole
     // with a name and no id, and the id stays empty rather than invented.
     void gemini_said(const gemini_frame &one) {
+      produced_ = produced_ || one.carried;
       switch (one.what) {
       case gemini_frame::kind::text:
         answer_said(one.text);
@@ -533,6 +538,8 @@ private:
   void thought_said(std::string_view piece) {
     if (piece.empty())
       return;
+    // The ported rule: a thought that said something carries output.
+    produced_ = true;
     thought_.append(piece);
     said_.push_back(event{.what = event::kind::thought, .said = std::string(piece)});
   }
@@ -540,6 +547,7 @@ private:
   void answer_said(std::string_view piece) {
     if (piece.empty())
       return;
+    produced_ = true;
     text_.append(piece);
     said_.push_back(event{.what = event::kind::text, .said = std::string(piece)});
     tools_written_in(text_);
@@ -671,6 +679,8 @@ private:
   // the thought above the answer as its greentext. What arrived of the
   // arguments is what the call had.
   void tools_done() {
+    // The ported rule: a call the model asked for carries what it said.
+    produced_ = produced_ || !partial_.empty();
     for (tool_call &kept : partial_) {
       if (kept.name.empty() && kept.arguments.empty())
         continue;
@@ -734,6 +744,8 @@ private:
   std::string finish_;
   std::string failure_;
   failure failed_why_;
+  // Whether anything the model said reached the screen, by the ported rule.
+  bool produced_ = false;
   bool ended_ = false;
   bool failed_ = false;
 };

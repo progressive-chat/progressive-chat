@@ -88,6 +88,7 @@ std::string error_text(const sn::GenerationError &error) {
 // updates behind it are display material for a screen that has none here, and
 // citations wait for a screen that reads them.
 void frame_of(const as::StreamEvent &event, std::vector<anthropic_frame> &out) {
+  const std::size_t before = out.size();
   using frame = anthropic_frame;
   if (const auto *text = std::get_if<as::TextChunk>(&event)) {
     out.push_back(frame{.what = frame::kind::text, .text = text->text});
@@ -127,6 +128,11 @@ void frame_of(const as::StreamEvent &event, std::vector<anthropic_frame> &out) {
     out.push_back(frame{.what = frame::kind::citation,
                         .cited = citation_of(cited->citation)});
   }
+  // The ported rule says whether this event carries what the model said:
+  // set on the one frame this event made, so the end of the stream can
+  // ask it without keeping the event.
+  if (!out.empty() && out.size() > before)
+    out.back().carried = as::carries_model_output(event);
 }
 
 }  // namespace

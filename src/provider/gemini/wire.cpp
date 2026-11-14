@@ -90,6 +90,7 @@ std::string error_text(const sn::GenerationError &error) {
 // hosted calls and the citations say is display material for a screen that has
 // none here yet.
 void frame_of(const gs::StreamEvent &event, std::vector<gemini_frame> &out) {
+  const std::size_t before = out.size();
   using frame = gemini_frame;
   if (const auto *text = std::get_if<sn::TextChunk>(&event)) {
     out.push_back(frame{.what = frame::kind::text, .text = text->text});
@@ -131,6 +132,11 @@ void frame_of(const gs::StreamEvent &event, std::vector<gemini_frame> &out) {
     out.push_back(frame{.what = frame::kind::citation,
                         .cited = citation_of(cited->citation)});
   }
+  // The ported rule says whether this event carries what the model said:
+  // set on the one frame this event made, so the end of the stream can
+  // ask it without keeping the event.
+  if (!out.empty() && out.size() > before)
+    out.back().carried = gs::carries_model_output(event);
 }
 
 }  // namespace

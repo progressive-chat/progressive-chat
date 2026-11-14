@@ -141,6 +141,24 @@ SAID(anthropic, a_stream_that_spoke_says_it_produced_something) {
   EXPECT_TRUE(one.ended_by().produced_content);
 }
 
+// An answer that asked for a call and said no text: the ported rule counts a
+// call as what the model said, so it is an answer that produced something --
+// where a rule that reads only text and thought would say it did not.
+SAID(anthropic, an_answer_that_asked_for_a_call_produced_something) {
+  stream one{wire::anthropic};
+  one.feed(R"(data: {"type":"content_block_start","index":0,)"
+           "\"content_block\":{\"type\":\"tool_use\",\"id\":\"toolu_1\","
+           "\"name\":\"weather\",\"input\":{}}})"
+           "\n\n"
+           "data: {\"type\":\"content_block_delta\",\"index\":0,"
+           "\"delta\":{\"type\":\"input_json_delta\","
+           "\"partial_json\":\"{}\"}})"
+           "\n\n"
+           "data: {\"type\":\"content_block_stop\",\"index\":0})"
+           "\n\n");
+  EXPECT_TRUE(one.ended_by().produced_content);
+}
+
 SAID(anthropic, a_stream_that_never_spoke_says_it_produced_nothing) {
   stream one{wire::anthropic};
   EXPECT_FALSE(one.ended_by().produced_content);
