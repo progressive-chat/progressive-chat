@@ -145,9 +145,13 @@ struct message {
   // the braces a sample or a test writes whole keep their meaning.
   std::optional<std::string> why_failed;
   // The sources this answer leaned on, in the order the wire named them:
-  // nothing where it cited none. Last of the fields, so the braces a sample
-  // writes whole keep their meaning.
+  // nothing where it cited none.
   std::vector<citation> citations;
+  // What was clipped in beside the words -- a picture each, whole as the data
+  // URI a wire reads it as, in the order they were clipped. Nothing where
+  // none. Last of the fields, so the braces a sample or a test writes whole
+  // keep their meaning.
+  std::vector<std::string> pictures;
   friend bool operator==(const message &, const message &) = default;
 };
 

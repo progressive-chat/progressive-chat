@@ -103,6 +103,7 @@ public:
                                 .said = said.thought,
                                 .calls = {}};
         }
+        kept.pictures = said.pictures;
         root_.messages.push_back(std::move(kept));
       }
     }
@@ -136,6 +137,7 @@ public:
       row.why_failed = *one.why_failed;
     if (one.before)
       row.thought = one.before->said;
+    row.pictures = one.pictures;
     return row;
   }
 

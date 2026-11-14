@@ -199,6 +199,7 @@ void keep_message(message_row one) {
     entity.thoughts = one.thought;
   if (!one.model.empty())
     entity.model_name = one.model;
+  entity.images = one.pictures;
   the_dao->upsert_message(entity);
 }
 
@@ -250,6 +251,7 @@ std::vector<message_row> messages_of(const std::string &conversation_id) {
       one.thought = *each.thoughts;
     if (each.model_name)
       one.model = *each.model_name;
+    one.pictures = each.images;
     out.push_back(std::move(one));
   }
   return out;
