@@ -9,6 +9,7 @@
 module;
 #include "provider/anthropic/wire.h"
 #include "agora/core/anthropic_request.hpp"
+#include "agora/core/json.hpp"
 
 export module pchat.provider;
 
@@ -264,7 +265,12 @@ struct wanted {
       use.id = call.id;
       use.name = call.name;
       const std::string input = call.arguments.empty() ? "{}" : call.arguments;
-      use.input = json::read(input).value();
+      // The input is the call's own arguments, parsed by the ported reader:
+      // the value the ported writer puts back out, not our own read of it.
+      const agora::core::json::ParseResult parsed =
+          agora::core::json::parse(input);
+      if (parsed.value)
+        use.input = *parsed.value;
       out.content.push_back(std::move(use));
     }
   } else {
