@@ -625,7 +625,7 @@ struct settings_rows : scene::Node {
   // is which.
   [[nodiscard]] float say_rows(group_rows rows, app::requests *asked,
                                const paints &look, const looks &shown,
-                               const asking &how,
+                               const asking &how, const std::string &kept_said,
                                std::span<const std::string> answerers,
                                bool dark, float breadth, float row_width,
                                float base, std::size_t from,
@@ -640,7 +640,8 @@ struct settings_rows : scene::Node {
     case group_rows::tools:
       return say_tools(asked, look, how, row_width, base);
     case group_rows::switches:
-      return say_switches(asked, look, how, row_width, base, from, said);
+      return say_switches(asked, look, how, kept_said, row_width, base, from,
+                          said);
     case group_rows::answerers:
       return say_answerers(asked, look, answerers, row_width, base);
     case group_rows::notified:
@@ -674,12 +675,18 @@ struct settings_rows : scene::Node {
   // standing under the item they belong under. Each says what it is switched
   // to, and pressing one asks for the other.
   [[nodiscard]] float say_switches(app::requests *asked, const paints &look,
-                                   const asking &how, float row_width,
-                                   float base, std::size_t from,
+                                   const asking &how, const std::string &kept_said,
+                                   float row_width, float base, std::size_t from,
                                    std::size_t said) {
     float at = base;
     for (std::size_t one = from; one < from + said; ++one) {
       const switch_row_name &named = switch_names[one];
+      // The one row that says what its switch does to the program: the kept
+      // words are said with its name, so the mirror reads how much stands in
+      // the store while the switch is on, and what stands when it is off.
+      std::string words{named.name};
+      if (named.which == switch_choice::remember)
+        words += offered_of(how, named.which) ? " - " + kept_said : " - kept off";
       fSwitches[one].again(asked,
                            {.anchor = scene::anchor::kTopLeft,
                             .x = 16.0f,
@@ -689,7 +696,7 @@ struct settings_rows : scene::Node {
                             .height = settings_row_height,
                             .cornerRadius = 14.0f,
                             .visible = true},
-                           look, named.name, offered_of(how, named.which),
+                           look, words, offered_of(how, named.which),
                            app::set_switch{named.which,
                                            !offered_of(how, named.which)});
       at += settings_row_stride;
@@ -870,8 +877,9 @@ struct settings_rows : scene::Node {
     return top + read_at + settings_row_height + settings_group_gap;
   }
   void again(app::requests *asked, const paints &look, const looks &shown,
-             const asking &how, std::span<const std::string> answerers,
-             bool dark, float breadth) {
+             const asking &how, const std::string &kept_said,
+             std::span<const std::string> answerers, bool dark,
+             float breadth) {
     // Where the next thing said stands: every row in here says where it
     // stands, so the page is laid out as it is read. One group after the
     // last, nothing left to count by hand.
@@ -915,9 +923,9 @@ struct settings_rows : scene::Node {
         // Under one of its items a group says more than its name: what it
         // is made of, in the room the items after it would have taken.
         if (named.drawn_at == one)
-          at = say_rows(named.drawn, asked, look, shown, how, answerers, dark,
-                        breadth, row_width, at, named.switch_from,
-                        named.switches_said);
+          at = say_rows(named.drawn, asked, look, shown, how, kept_said,
+                        answerers, dark, breadth, row_width, at,
+                        named.switch_from, named.switches_said);
       }
       at += settings_group_gap;
     }
@@ -998,8 +1006,9 @@ struct settings_screen : scene::Node {
   }
 
   void again(app::requests *asked, const paints &look, const looks &shown,
-             const asking &how, std::span<const std::string> answerers,
-             bool dark, float width, float height) {
+             const asking &how, const std::string &kept_said,
+             std::span<const std::string> answerers, bool dark, float width,
+             float height) {
     this->setVisible(true);
     // Opened anew, it is read from its beginning. Left alone it stood at
     // its end: the column is taller than the room, and while it was still
@@ -1036,7 +1045,7 @@ struct settings_screen : scene::Node {
                  app::close_settings{}, look.raised);
     fClose.mark_colour(look.text);
     std::get<0>(fRows.fChildren)
-        .again(asked, look, shown, how, answerers, dark,
+        .again(asked, look, shown, how, kept_said, answerers, dark,
                breadth - 2.0f * edge);
     fRows.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,

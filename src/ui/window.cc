@@ -241,10 +241,18 @@ struct app_window : scene::Node {
                       ? app::request{app::toggle_editor_menu{}}
                       : app::request{app::toggle_faces{}},
                   look.away);
-    // The settings page, over everything, when it is opened.
-    if (open.settings)
-      fSettings.again(asked, look, shown, how, answering, dark, width,
+    // The settings page, over everything, when it is opened. The words the
+    // keeping row says beside its name: what the model carries now, which is
+    // what the store holds while that switch is on (it writes every change),
+    // and what the row stands next to while it is off.
+    if (open.settings) {
+      std::string kept{"Kept here: " +
+                       std::to_string(root.conversations.size()) +
+                       " conversations, " +
+                       std::to_string(root.messages.size()) + " messages"};
+      fSettings.again(asked, look, shown, how, kept, answering, dark, width,
                       height);
+    }
     else
       fSettings.hide();
     // The design shown in the room when opened: over everything, a page of

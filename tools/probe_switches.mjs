@@ -74,6 +74,22 @@ const drawn = await said();
 for (const one of names)
   console.log(`${one}: ${drawn[one] ? 'drawn' : 'NOT DRAWN'}`);
 
+// What the keeping row says beside its name, before it is pressed: the one
+// row that says what its switch does -- the kept counts while the switch is
+// on, "kept off" while it is not. Read as the row's whole text, because that
+// is what it says.
+const keep_name = 'Keep what has been said here';
+const keep_words = () => page.evaluate((one) => {
+  for (const row of document.getElementById('skiff').querySelectorAll('*')) {
+    const words = (row.textContent || '').trim();
+    if (row.children.length === 0 && words.startsWith(one))
+      return words;
+  }
+  return null;
+}, keep_name);
+const before_words = await keep_words();
+console.log(`keep row says: ${before_words}`);
+
 let moved = 0, still = 0;
 for (const one of names) {
   let now = await said();
@@ -95,6 +111,13 @@ for (const one of names) {
   const after = await said();
   const same = after[one] && after[one].row === now[one].row;
   console.log(`pressed ${one}: ${same ? 'nothing moved' : 'its pill moved'}`);
+  // The keeping row said its own words again after its press: what its
+  // switch does to the program is on the page, where a reader can see it.
+  if (one === keep_name) {
+    const after_words = await keep_words();
+    console.log(`keep row after press: ${after_words}`);
+    console.log(`keep row moved: ${after_words !== before_words}`);
+  }
   if (same)
     still += 1;
   else

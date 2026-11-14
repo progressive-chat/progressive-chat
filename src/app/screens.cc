@@ -60,14 +60,18 @@ public:
     const std::string where = store_path();
     if (where.empty() ? !pchat::keep::open() : !pchat::keep::open_at(where))
       return;
-    for (const pchat::keep::conversation_row &row : pchat::keep::conversations()) {
+    const std::vector<pchat::keep::conversation_row> held =
+        pchat::keep::conversations();
+    // What a last run kept is what the drawer shows, not the sample under it:
+    // a store with rows in it stands for the conversations, and the sample is
+    // what a first run has (and what a fresh page, whose files are not files,
+    // has every time). An empty store leaves the sample exactly as it was.
+    if (!held.empty()) {
+      root_.conversations.clear();
+      root_.messages.clear();
+    }
+    for (const pchat::keep::conversation_row &row : held) {
       const conversation_id id{row.id};
-      bool held = false;
-      for (const conversation &one : root_.conversations)
-        if (one.id == id)
-          held = true;
-      if (held)
-        continue;
       conversation fresh{id, root_.accounts.empty() ? account_id{}
                                                   : root_.accounts.front().id,
                          row.title, conversation_kind::direct,
@@ -94,6 +98,19 @@ public:
         root_.messages.push_back(std::move(kept));
       }
     }
+    if (!held.empty()) {
+      // The sample's chat is not among them: opened points at what is.
+      if (root_.conversations.empty())
+        root_.opened.reset();
+      else if (root_.opened) {
+        bool still = false;
+        for (const conversation &one : root_.conversations)
+          if (one.id == *root_.opened)
+            still = true;
+        if (!still)
+          root_.opened = root_.conversations.front().id;
+      }
+    }
     recount_all();
   }
 
@@ -114,11 +131,20 @@ public:
     return row;
   }
 
+  // Whether the store keeps at all: the row "Keep what has been said here"
+  // decides it here and nowhere else, so a press on that row changes what
+  // happens from that moment on -- on, what changes is kept as it changes;
+  // off, nothing more is written (what a run already kept stands).
+  [[nodiscard]] bool remembered() const {
+    return offered_of(how_, switch_choice::remember) &&
+           pchat::keep::is_open();
+  }
+
   // What changed is said to the store at once, so a run that ends any time
   // after it already holds it: the conversation under a message, the message
   // whole.
   void stored(const conversation &one) {
-    if (!pchat::keep::is_open())
+    if (!remembered())
       return;
     pchat::keep::keep_conversation(pchat::keep::conversation_row{
         .id = one.id.value,
@@ -129,7 +155,7 @@ public:
   }
 
   void stored(const message &one) {
-    if (!pchat::keep::is_open())
+    if (!remembered())
       return;
     stored_chat(one.chat);
     pchat::keep::keep_message(row_of(one));
@@ -420,6 +446,19 @@ public:
             // said, and nothing of the others.
             [&](const set_switch &asking) {
               how_ = set_of(how_, asking.which, asking.on);
+              // The one switch whose press IS the store's on or off: the row
+              // "Keep what has been said here" opens the store when it is put
+              // on and lets it go when it is put off, so what it says is true
+              // the moment it is said. What a run already kept stands either
+              // way; this decides what is kept from here.
+              if (asking.which == switch_choice::remember) {
+                if (asking.on) {
+                  if (!pchat::keep::is_open())
+                    open_store();
+                } else {
+                  pchat::keep::close();
+                }
+              }
             },
             // The archive asked for: which files are kept where is the
             // machine's own to say; this only names the file. The bytes are

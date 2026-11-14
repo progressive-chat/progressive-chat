@@ -4,8 +4,8 @@ The settings page offers a row to each of seven things, and each row says
 whether that thing is offered at all. This is what they are, what is kept when
 one is moved, and -- said plainly, because it is easy to read the page and
 think otherwise -- **what each one would still have to be given before it does
-what its row says it does**. As of 2026-11-08 none of the seven is read by
-anything beyond the row that draws it.
+what its row says it does**. As of 2026-11-14 one of the seven is read beyond
+the row that draws it; the other six are read by the row alone.
 
 ## What one of them is
 
@@ -38,7 +38,7 @@ difference is worth holding next to this:
 | Make a picture out of words | on | the other half of the same thing, and somewhere to put what comes back. Nothing in this tree asks for a picture to be made. |
 | Speak through another program | **off** | an address to ask through, and the asking itself going through it instead of straight to the provider. What carries a request today is the browser's own fetch to the server that served the page (`docs/PROTOCOL.md`); a proxy is not part of that yet. |
 | Be served as a page of its own | **off** | something serving it, which is the back end being written apart from this tree. While nothing serves it, nothing can be switched to ask for it. |
-| Keep what has been said here | on | somewhere kept, and every conversation read out of it rather than out of the sample in `src/app/sample.cc`. This one is the closest to the back end already being written, and it is the one whose effect will be visible first: the same conversation seen again after the page was put away. |
+| Keep what has been said here | on | **wired 2026-11-14.** On, every change is written to the store at the moment it happens (`screens.cc`, `remembered()`), a run that ends keeps what it had, and at the next start the conversations come from the store rather than from the sample in `src/app/sample.cc` -- an empty store still leaves the sample standing, which is what a first run and a fresh page have. Off, nothing more is written and the store is let go; what a run already kept stands. The row says what stands there beside its own name ("Kept here: N conversations, M messages" while on, "kept off" while not), which is what `tools/probe_switches.mjs` now reads back after its press. Its own state still starts at the default each run -- no setting outlives a run today, the switch among them. |
 | Keep what it has been taught | on | somewhere for what it has been taught to stand, and something that reads it and says it to the wire. Nothing holds such a thing today. |
 | Keep what has been given to it | on | the same for anything handed to it -- a file, a picture, a name -- and somewhere that anything is put. |
 
@@ -57,11 +57,11 @@ and presses it there -- it does not trust the square the mirror gives it, which
 for rows this far down is a square of layout and not of the glass
 (`docs/probes.md`).
 
-Not proved, and not claimable from this page: that any of the seven changes
-anything when it is on. There is nothing yet for it to change. A row says that
+Not proved from this page: that the six still unwired change anything when
+they are on -- there is nothing yet for them to change. A row says that
 something is offered; **what offering it changes is the rest of it**, and until
-that is written the honest reading of this page is "seven rows held ready", not
-"seven things that work".
+that is written for each, the honest reading of the page is six rows held ready
+and one (keeping) wired, not "seven things that work".
 
 ## How one of them gets wired, when its time comes
 
