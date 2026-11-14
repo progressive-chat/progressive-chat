@@ -100,8 +100,8 @@ void frame_of(const as::StreamEvent &event, std::vector<anthropic_frame> &out) {
     const int input = usage->usage.input_token_count.value_or(0);
     const int output = usage->usage.output_token_count.value_or(0);
     out.push_back(frame{.what = frame::kind::usage,
-                        .input_tokens = static_cast<std::uint32_t>(input > 0 ? input : 0),
-                        .output_tokens = static_cast<std::uint32_t>(output > 0 ? output : 0)});
+                        .input_token_count = static_cast<std::uint32_t>(input > 0 ? input : 0),
+                        .output_token_count = static_cast<std::uint32_t>(output > 0 ? output : 0)});
   } else if (const auto *call = std::get_if<as::ToolCallRequest>(&event)) {
     out.push_back(frame{.what = frame::kind::tool,
                         .id = call->id,
