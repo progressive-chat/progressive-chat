@@ -9,6 +9,7 @@ module;
 #include "../provider/retry/retry.h"
 #include "../keep.h"
 #include "../serve.h"
+#include "agora/core/crypto_primitives.hpp"
 
 export module pchat.app.screens;
 
@@ -320,7 +321,9 @@ public:
             [&](const send_message &asking) {
               const logic::sent_message said = logic::send(
                   logic::sending_request{
-                      asking.chat, asking.text, {}, std::nullopt},
+                      asking.chat, asking.text,
+                      std::exchange(pending_pictures_, {}),
+                      std::nullopt},
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
               recount(asking.chat);
@@ -590,6 +593,15 @@ public:
               if (dialogs_)
                 dialogs_->choose_save_path("progressive-chat.prgrssv");
             },
+            // The clip beside the field, pressed: the machine's own dialog is
+            // asked for a file, and what it answers comes back through the
+            // program (files_given) as what the next message carries. A page
+            // has no system dialog over its window yet; nothing stands there
+            // and nothing changes.
+            [&](const attach_picture &) {
+              if (dialogs_)
+                dialogs_->choose_files();
+            },
             // An answerer put into the open conversation or taken out of
             // it: the window then writes to the first one left, and its
             // window is that model's own.
@@ -644,6 +656,45 @@ public:
   // comes back through the program (save_path_chosen).
   void dialogs_from(skiff::platform::dialogs::dialogs &one) {
     dialogs_ = &one;
+  }
+
+  // What the machine's dialog chose, whole as a picture the wire reads: the
+  // bytes of each file, encoded as its data URI, held for what the next
+  // message carries (the clip's own round -- chosen here, sent from the send
+  // handler). A file that cannot be read as one picture is left out; nothing
+  // chosen is an error the row can say, so it says nothing.
+  // `dropped` is how the file arrived (a dialog's choice or a drop) -- either
+  // way it lands the same here: the bytes are what the message carries.
+  void files_given(std::vector<std::string> paths, bool) {
+    for (const std::string &path : paths) {
+      std::ifstream file(path, std::ios::binary);
+      if (!file)
+        continue;
+      const std::string bytes{std::istreambuf_iterator<char>(file),
+                              std::istreambuf_iterator<char>()};
+      if (bytes.empty())
+        continue;
+      pending_pictures_.push_back("data:" + mime_of(path) + ";base64," +
+                                  agora::core::crypto::base64_encode(
+                                      std::as_bytes(std::span{bytes}), false,
+                                      true));
+    }
+  }
+
+  // What one file's bytes are called on the wire, by what its name ends in:
+  // the three a picture comes in as, and the generic one where it does not
+  // name itself.
+  [[nodiscard]] static std::string mime_of(const std::string &path) {
+    const std::size_t dot = path.rfind('.');
+    const std::string ext = dot == std::string::npos ? std::string{}
+                                                      : path.substr(dot);
+    if (ext == ".png")
+      return "image/png";
+    if (ext == ".gif")
+      return "image/gif";
+    if (ext == ".webp")
+      return "image/webp";
+    return "image/jpeg";
   }
 
   // Where the machine said the archive stands: the bytes built whole and
@@ -1054,6 +1105,9 @@ private:
   std::string query_;
   bool dark_ = true;
   bool settings_ = false;
+  // What the clip chose and the next message has not carried yet: whole data
+  // URIs, in the order the dialog named them.
+  std::vector<std::string> pending_pictures_;
   // The drawer is beside the messages where the window has room for both,
   // and comes over them only where the pill asks for it. It was asked for
   // from the first frame onwards: a wide window answered by showing it

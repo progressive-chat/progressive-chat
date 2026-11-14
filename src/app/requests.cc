@@ -173,6 +173,11 @@ struct set_answerer {
   std::string name;
   bool wanted = false;
 };
+// The clip beside the field, pressed: what stands in the machine's files is
+// asked for through the system's own dialog (skiff.platform.dialogs,
+// choose_files), and what it answers comes back through the program
+// (pchat.app.program, files_given) as what the next message carries.
+struct attach_picture {};
 // The archive of everything this program holds, written into one .prgrssv file
 // where the machine keeps files: asked for on the settings page's About, and
 // answered with a save dialog of the machine's own -- the chosen path comes
@@ -197,7 +202,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 set_avatars, set_row_times,
                                 send_test_notification,
                                 set_generation, set_tool, set_switch,
-                              set_answerer, copy_text, save_archive>;
+                              set_answerer, copy_text, save_archive,
+                              attach_picture>;
 
 class requests {
 public:
