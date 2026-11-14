@@ -55,6 +55,27 @@ namespace pchat::prgrssv {
   return "seen";
 }
 
+}  // namespace pchat::prgrssv
+
+// What an archive and the store say, exported: every name written into a
+// settings text and read back out of it -- the five said_of/enumerator pairs
+// (each written whole above), the keys settings_of writes each tool and switch
+// under (the enumerators' own words: the rows draw labels; these are what a
+// file keeps), and the archive's own words.
+export namespace pchat::prgrssv {
+
+inline constexpr std::array<std::string_view, tools_owned> tool_keys{
+    "conversation_search", "how_much", "when_it_is"};
+inline constexpr std::array<std::string_view, switches_owned> switch_keys{
+    "picture_to_words", "words_to_picture", "proxy",
+    "own_page",         "remember",         "skills", "data_held"};
+
+// What every archive calls itself, and how far it has got: said in the
+// manifest, so anything reading one file knows what the rest of them are
+// written as.
+inline constexpr std::string_view format = "prgrssv";
+inline constexpr std::int64_t version = 1;
+
 [[nodiscard]] std::string_view said_of(theme_mode one) {
   switch (one) {
   case theme_mode::light:
@@ -129,24 +150,6 @@ namespace pchat::prgrssv {
   return "neutral";
 }
 
-}  // namespace pchat::prgrssv
-
-// The keys settings_of writes each tool and switch under -- the enumerators'
-// own words, exported beside it so what was written reads back by the same
-// names anywhere (the rows draw labels; these are what the store keeps).
-export namespace pchat::prgrssv {
-
-inline constexpr std::array<std::string_view, tools_owned> tool_keys{
-    "conversation_search", "how_much", "when_it_is"};
-inline constexpr std::array<std::string_view, switches_owned> switch_keys{
-    "picture_to_words", "words_to_picture", "proxy",
-    "own_page",         "remember",         "skills", "data_held"};
-
-// What every archive calls itself, and how far it has got: said in the
-// manifest, so anything reading one file knows what the rest of them are
-// written as.
-inline constexpr std::string_view format = "prgrssv";
-inline constexpr std::int64_t version = 1;
 
 // The other way of each of those five names: what a word said in a file means
 // back to the enumerator it was said from, or the default where the word is
