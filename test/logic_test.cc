@@ -61,6 +61,27 @@ SAID(logic, sending_makes_one_message_and_an_empty_field) {
   EXPECT_FALSE(logic::can_send(logic::composer_state{.text = "  \n"}));
 }
 
+// What was clipped in beside the words rides the message out of the send:
+// the pictures the field held are put where the message keeps them (the wire,
+// the store and the archive read them from there). And a picture alone --
+// no words -- is still something sent, not an empty line.
+SAID(logic, what_was_clipped_in_rides_the_message_out) {
+  const logic::sent_message said = logic::send(
+      logic::sending_request{conversation_id{"general"}, "look at this",
+                             {"data:image/png;base64,AAAA"}, std::nullopt},
+      "Reader", 9);
+  EXPECT_TRUE(said.said.pictures.size() == 1);
+  if (said.said.pictures.size() == 1)
+    EXPECT_EQ(said.said.pictures[0], std::string("data:image/png;base64,AAAA"));
+  EXPECT_EQ(said.said.text, std::string("look at this"));
+  const logic::sent_message only_picture = logic::send(
+      logic::sending_request{conversation_id{"general"}, "",
+                             {"data:image/png;base64,BBBB"}, std::nullopt},
+      "Reader", 10);
+  EXPECT_TRUE(only_picture.said.pictures.size() == 1);
+  EXPECT_TRUE(only_picture.said.text.empty());
+}
+
 SAID(logic, marks_make_runs_of_style) {
   const std::string said = "**bold** and `code`";
   const std::vector<logic::run> runs = logic::runs_of(said);
