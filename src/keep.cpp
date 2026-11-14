@@ -96,6 +96,12 @@ const char kSchema[] =
 "CREATE TABLE IF NOT EXISTS `attachment_reference_state` (`id` INTEGER NOT NULL, `phase` INTEGER NOT NULL, `afterId` TEXT, `revision` INTEGER NOT NULL, PRIMARY KEY(`id`));\n"
 "";
 
+// The store's own table: one row for the settings the page keeps, keyed by
+// its name so a later setting of another kind can stand beside it.
+const char kOurSchema[] =
+    "CREATE TABLE IF NOT EXISTS pchat_settings (name TEXT NOT NULL PRIMARY "
+    "KEY, value TEXT NOT NULL)";
+
 std::unique_ptr<agora::core::SqliteExecutor> the_store;
 agora::core::chat_dao::ChatDao *the_dao = nullptr;
 
@@ -118,6 +124,14 @@ namespace {
     auto made = std::make_unique<agora::core::SqliteExecutor>(where);
     char *error = nullptr;
     if (sqlite3_exec(made->handle(), kSchema, nullptr, nullptr, &error) !=
+        SQLITE_OK) {
+      sqlite3_free(error);
+      return false;
+    }
+    // One table of this store's own, for the page's settings: the ported
+    // schema has no row for them (its settings are the platform's to keep),
+    // and what a run set is asked of at the next run by this program alone.
+    if (sqlite3_exec(made->handle(), kOurSchema, nullptr, nullptr, &error) !=
         SQLITE_OK) {
       sqlite3_free(error);
       return false;
@@ -241,6 +255,55 @@ std::vector<message_row> messages_of(const std::string &conversation_id) {
   return out;
 }
 
+namespace {
+
+// One row of the store's own table, by its name: the value, or nothing where
+// the name was never written. The SQL is this store's own -- it is its own
+// table, and the ported ChatDao carries no face for a row that is not its.
+[[nodiscard]] std::optional<std::string> own_row(const char *sql,
+                                                  const char *name) {
+  if (!the_dao)
+    return std::nullopt;
+  sqlite3_stmt *said = nullptr;
+  if (sqlite3_prepare_v2(the_store->handle(), sql, -1, &said, nullptr) !=
+      SQLITE_OK)
+    return std::nullopt;
+  sqlite3_bind_text(said, 1, name, -1, SQLITE_TRANSIENT);
+  std::optional<std::string> out;
+  if (sqlite3_step(said) == SQLITE_ROW) {
+    const auto *text =
+        reinterpret_cast<const char *>(sqlite3_column_text(said, 0));
+    if (text)
+      out = std::string{text};
+  }
+  sqlite3_finalize(said);
+  return out;
+}
+
+}  // namespace
+
+std::string settings() {
+  const std::optional<std::string> got =
+      own_row("SELECT value FROM pchat_settings WHERE name = ?", "page");
+  return got ? *got : std::string{};
+}
+
+void keep_settings(const std::string &json) {
+  if (!the_dao || json.empty())
+    return;
+  sqlite3_stmt *put = nullptr;
+  if (sqlite3_prepare_v2(the_store->handle(),
+                         "INSERT INTO pchat_settings (name, value) VALUES (?, "
+                         "?) ON CONFLICT(name) DO UPDATE SET value = "
+                         "excluded.value",
+                         -1, &put, nullptr) != SQLITE_OK)
+    return;
+  sqlite3_bind_text(put, 1, "page", -1, SQLITE_TRANSIENT);
+  sqlite3_bind_text(put, 2, json.c_str(), -1, SQLITE_TRANSIENT);
+  sqlite3_step(put);
+  sqlite3_finalize(put);
+}
+
 }  // namespace pchat::keep
 
 #else  // AGORA_CORE_HAVE_SQLITE3
@@ -265,6 +328,10 @@ std::vector<conversation_row> conversations() { return {}; }
 std::vector<message_row> messages_of(const std::string &) { return {}; }
 
 kept_of_row kept_of(const std::string &) { return {}; }
+
+std::string settings() { return {}; }
+
+void keep_settings(const std::string &) {}
 
 }  // namespace pchat::keep
 

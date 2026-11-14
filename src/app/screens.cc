@@ -29,6 +29,7 @@ import pchat.platform.carry;
 import pchat.provider.loop;
 import pchat.tools;
 import pchat.prgrssv;
+import pchat.json;
 import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
@@ -49,6 +50,7 @@ public:
       : root_(sample_chats()), shown_(default_looks),
         look_(ui::paints_of(colors_of(shown_, true), true)) {
     open_store();
+    restore_settings();
   }
 
   // The store at the path this run can write, and what it holds read in: a
@@ -56,6 +58,11 @@ public:
   // store (nothing read back) where it does not -- a page has no files beside
   // it. What came back from a last run stands under the sample, its rows kept
   // whole; what was not in the store stays as the sample said.
+  //
+  // Opened whether the keeping row is on or off: the page's settings are read
+  // from it next (the row's own state is among them), and only what is SAID
+  // after that asks the row. A store with the row off opens to be read, and
+  // keeps no conversation.
   void open_store() {
     const std::string where = store_path();
     if (where.empty() ? !pchat::keep::open() : !pchat::keep::open_at(where))
@@ -140,6 +147,99 @@ public:
            pchat::keep::is_open();
   }
 
+  // What the page kept from an earlier run, read back: the same text the rows
+  // write (prgrssv::settings_of), walked name by name, every name it does not
+  // hold left at its default. Asked of the store only while one is open -- a
+  // run with no store starts as the page has always started.
+  void restore_settings() {
+    if (!pchat::keep::is_open())
+      return;
+    const std::string held = pchat::keep::settings();
+    if (held.empty())
+      return;
+    const std::expected<json::value, json::read_error> read =
+        json::read(held);
+    if (!read)
+      return;
+    const json::value *looks = json::said(*read, "looks");
+    if (looks) {
+      if (const json::value *at = json::said(*looks, "preset"))
+        if (const auto text = json::text_of(*at))
+          shown_.preset = prgrssv::preset_of(*text);
+      if (const json::value *at = json::said(*looks, "style"))
+        if (const auto text = json::text_of(*at))
+          shown_.style = prgrssv::style_of(*text);
+      if (const json::value *at = json::said(*looks, "mode"))
+        if (const auto text = json::text_of(*at))
+          shown_.mode = prgrssv::theme_mode_of(*text);
+      if (const json::value *at = json::said(*looks, "amoled"))
+        if (const auto truth = json::truth_of(*at))
+          shown_.amoled = *truth;
+      if (const json::value *at = json::said(*looks, "reduce_motion"))
+        if (const auto truth = json::truth_of(*at))
+          shown_.reduce_motion = *truth;
+      if (const json::value *at = json::said(*looks, "avatars"))
+        if (const auto truth = json::truth_of(*at))
+          shown_.avatars = *truth;
+      if (const json::value *at = json::said(*looks, "row_times"))
+        if (const auto truth = json::truth_of(*at))
+          shown_.row_times = *truth;
+      if (const json::value *at = json::said(*looks, "font_scale"))
+        if (const auto number = json::number_of(*at))
+          shown_.font_scale = static_cast<float>(*number);
+      if (const json::value *at = json::said(*looks, "font"))
+        if (const auto text = json::text_of(*at))
+          shown_.font = prgrssv::font_choice_of(*text);
+    }
+    const json::value *asking = json::said(*read, "asking");
+    if (asking) {
+      if (const json::value *at = json::said(*asking, "thinking"))
+        if (const auto truth = json::truth_of(*at))
+          how_.thinking = *truth;
+      if (const json::value *at = json::said(*asking, "how_hard"))
+        if (const auto text = json::text_of(*at))
+          how_.how_hard = prgrssv::effort_of(*text);
+      if (const json::value *at = json::said(*asking, "temperature"))
+        if (const auto number = json::number_of(*at))
+          how_.temperature = *number;
+      if (const json::value *at = json::said(*asking, "top_p"))
+        if (const auto number = json::number_of(*at))
+          how_.top_p = *number;
+      if (const json::value *at = json::said(*asking, "max_tokens"))
+        if (const auto number = json::number_of(*at))
+          how_.max_tokens = static_cast<std::uint32_t>(*number);
+      if (const json::value *at = json::said(*asking, "presence"))
+        if (const auto number = json::number_of(*at))
+          how_.presence = *number;
+      if (const json::value *at = json::said(*asking, "often"))
+        if (const auto number = json::number_of(*at))
+          how_.often = *number;
+      if (const json::value *tools = json::said(*asking, "tools"))
+        for (std::size_t at = 0u; at < tools_owned; ++at)
+          if (const json::value *one =
+                  json::said(*tools, prgrssv::tool_keys[at]))
+            if (const auto truth = json::truth_of(*one))
+              how_.tools[at] = *truth;
+      if (const json::value *switches = json::said(*asking, "switches"))
+        for (std::size_t at = 0u; at < switches_owned; ++at)
+          if (const json::value *one =
+                  json::said(*switches, prgrssv::switch_keys[at]))
+            if (const auto truth = json::truth_of(*one))
+              how_.switches[at] = *truth;
+    }
+    dark_ = dark_of(shown_.mode, true);
+    look_.size = ui::body_size * static_cast<float>(shown_.font_scale);
+  }
+
+  // What the page has now, said to the store: asked after every change to how
+  // the page looks or how an answer is asked, so the next run starts where
+  // this one was set. Nothing while no store is open.
+  void said_settings() {
+    if (!pchat::keep::is_open())
+      return;
+    pchat::keep::keep_settings(prgrssv::settings_of(shown_, how_));
+  }
+
   // What changed is said to the store at once, so a run that ends any time
   // after it already holds it: the conversation under a message, the message
   // whole.
@@ -195,7 +295,10 @@ public:
   // How answers are asked for now: one of the five, kept inside its lines,
   // as a settings row may move it.
   [[nodiscard]] const asking &how() const noexcept { return how_; }
-  void how(asking_what field, double value) { how_ = set_of(how_, field, value); }
+  void how(asking_what field, double value) {
+    how_ = set_of(how_, field, value);
+    said_settings();
+  }
 
   // Answered between frames: what the controls asked for, oldest first.
   void take(const request &one) {
@@ -377,8 +480,14 @@ public:
               if (faces_lately_.size() > ui::faces_lately_kept)
                 faces_lately_.resize(ui::faces_lately_kept);
             },
-            [&](const set_thinking &asking) { how_.thinking = asking.on; },
-            [&](const set_effort &asking) { how_.how_hard = asking.how_hard; },
+            [&](const set_thinking &asking) {
+              how_.thinking = asking.on;
+              said_settings();
+            },
+            [&](const set_effort &asking) {
+              how_.how_hard = asking.how_hard;
+              said_settings();
+            },
             // What every model is told before anything is said to it: read
             // and written whole, kept by the conversation as it is typed.
             [&](const set_system_prompt &asking) {
@@ -404,17 +513,23 @@ public:
             // page staying open to look at.
             [&](const pick_seed &asking) {
               shown_.preset = asking.preset;
+              said_settings();
               recolour();
             },
             [&](const set_amoled &asking) {
               shown_.amoled = asking.enabled;
+              said_settings();
               recolour();
             },
             // What the drawer's rows are then drawn with: no colour grows
             // out of either of these, so nothing is grown again.
-            [&](const set_avatars &asking) { shown_.avatars = asking.enabled; },
+            [&](const set_avatars &asking) {
+              shown_.avatars = asking.enabled;
+              said_settings();
+            },
             [&](const set_row_times &asking) {
               shown_.row_times = asking.enabled;
+              said_settings();
             },
             // A test notification: nothing here can know whether the machine
             // will show it, so this only asks the platform and goes on.
@@ -427,11 +542,13 @@ public:
             // what the answers are written in.
             [&](const set_font_scale &asking) {
               shown_.font_scale = asking.scale;
+              said_settings();
               recolour();
             },
             [&](const pick_theme &asking) {
               shown_.mode = asking.mode;
               dark_ = dark_of(shown_.mode, true);
+              said_settings();
               recolour();
             },
             // How an answer is asked for: the one of the five a row was
@@ -441,11 +558,13 @@ public:
             // it is switched to.
             [&](const set_tool &asking) {
               how_ = set_of(how_, asking.which, asking.on);
+              said_settings();
             },
             // One of the seven switched: what a row of the settings page
             // said, and nothing of the others.
             [&](const set_switch &asking) {
               how_ = set_of(how_, asking.which, asking.on);
+              said_settings();
               // The one switch whose press IS the store's on or off: the row
               // "Keep what has been said here" opens the store when it is put
               // on and lets it go when it is put off, so what it says is true

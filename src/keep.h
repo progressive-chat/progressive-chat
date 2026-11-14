@@ -86,6 +86,14 @@ struct kept_of_row {
 // The message with this id, whole, from the store.
 [[nodiscard]] kept_of_row kept_of(const std::string &message_id);
 
+// The settings one row holds: what the page keeps (the asking the rows move,
+// the looks they choose) as one JSON text. This store's own table -- the
+// ported schema carries no settings row (its settings are the platform's own
+// to keep), so it is one plain table beside the ported ones, written by this
+// program alone. Nothing where nothing was saved.
+[[nodiscard]] std::string settings();
+void keep_settings(const std::string &json);
+
 }  // namespace pchat::keep
 
 #endif  // PCHAT_KEEP_H

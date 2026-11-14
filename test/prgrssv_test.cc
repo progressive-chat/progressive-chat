@@ -201,6 +201,63 @@ SAID(prgrssv, everything_held_comes_back_as_it_was) {
   }
 }
 
+// Every name said_of writes reads back to the enumerator it was said from --
+// the pair the settings restore walks: a word from an earlier run means what
+// it meant then, and a word never said keeps the default.
+SAID(prgrssv, every_name_said_reads_back_as_it_was) {
+  EXPECT_TRUE(prgrssv::theme_mode_of(prgrssv::said_of(theme_mode::light)) ==
+              theme_mode::light);
+  EXPECT_TRUE(prgrssv::theme_mode_of(prgrssv::said_of(theme_mode::system)) ==
+              theme_mode::system);
+  EXPECT_TRUE(prgrssv::effort_of(prgrssv::said_of(effort::least)) ==
+              effort::least);
+  EXPECT_TRUE(prgrssv::effort_of(prgrssv::said_of(effort::all)) ==
+              effort::all);
+  EXPECT_TRUE(prgrssv::font_choice_of(prgrssv::said_of(font_choice::custom)) ==
+              font_choice::custom);
+  EXPECT_TRUE(prgrssv::preset_of(prgrssv::said_of(scheme_preset::forest)) ==
+              scheme_preset::forest);
+  EXPECT_TRUE(prgrssv::preset_of("never-said") == default_preset);
+  EXPECT_TRUE(prgrssv::style_of(prgrssv::said_of(scheme_style::expressive)) ==
+              scheme_style::expressive);
+  EXPECT_TRUE(prgrssv::style_of("") == default_style);
+}
+
+// What settings_of writes, read back the way the program reads it: the same
+// walk restore_settings makes -- each name in the text meaning what it meant
+// when the rows wrote it.
+SAID(prgrssv, settings_said_come_back_as_they_were) {
+  looks shown;
+  shown.preset = scheme_preset::ocean;
+  shown.mode = theme_mode::light;
+  shown.font_scale = 1.5;
+  shown.avatars = true;
+  asking how;
+  how.how_hard = effort::most;
+  how.temperature = 1.25;
+  how.max_tokens = 4096;
+  how.tools[1] = false;
+  how.switches[static_cast<std::size_t>(switch_choice::remember)] = false;
+
+  const std::string text = prgrssv::settings_of(shown, how);
+  const std::expected<json::value, json::read_error> read = json::read(text);
+  EXPECT_TRUE(read.has_value());
+  if (!read)
+    return;
+  EXPECT_EQ(text_at(*read, "looks/preset"), std::string_view("ocean"));
+  EXPECT_EQ(text_at(*read, "looks/mode"), std::string_view("light"));
+  EXPECT_EQ(number_at(*read, "looks/font_scale"), 1.5);
+  EXPECT_TRUE(truth_at(*read, "looks/avatars").value_or(false));
+  EXPECT_EQ(text_at(*read, "asking/how_hard"), std::string_view("most"));
+  EXPECT_EQ(number_at(*read, "asking/temperature"), 1.25);
+  EXPECT_EQ(number_at(*read, "asking/max_tokens"), 4096.0);
+  EXPECT_TRUE(truth_at(*read, "asking/tools/how_much").value_or(false));
+  EXPECT_TRUE(truth_at(*read, "asking/tools/conversation_search")
+                  .value_or(true) == false);
+  EXPECT_TRUE(
+      truth_at(*read, "asking/switches/remember").value_or(true) == false);
+}
+
 SAID(prgrssv, an_empty_program_still_writes_a_whole_archive) {
   const chats_root none;
   const std::string bytes =
