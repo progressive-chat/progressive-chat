@@ -16,7 +16,7 @@ export namespace pchat::platform::opened {
 bool open(std::string_view target) {
   if (target.empty())
     return false;
-  // A "_blank" whose name is forgotten, so every link opens a tab of its own
+  // A "_blank" whose name is forgotten, so every link opens a tab by itself
   // and two links do not share one; and "noopener", without which the page
   // opened is given the window this one was opened from -- this program's
   // whole tree -- and could reach into it.

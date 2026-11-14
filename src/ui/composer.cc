@@ -73,7 +73,7 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
 // read out of the field at the press, which is why this is its own node and
 // not the press-box the other marks of its kind share (`src/ui/base.cc`).
 struct send_circle : scene::Node {
-  // A plate that takes no press of its own -- a walk up from anywhere in the
+  // A plate that takes no press by itself -- a walk up from anywhere in the
   // button, mark or not, reaches this node and is answered here.
   nodes::Box<> fPlate{0u};
   nodes::Icon fMark{shape::send(), 0u};
@@ -191,7 +191,7 @@ struct editor_row : scene::Node {
 // What the three dots beside the card's ring hold: whether what answers in
 // this chat is asked to think, and how hard where it is, and the way into
 // the large settings for everything else a wire is told about choosing
-// words. A card of its own over the messages, put away by one press of what
+// words. A card by itself over the messages, put away by one press of what
 // opened it (design-doc.md, "The editor's row").
 //
 // Thinking and how hard are kept with everything else an answer is asked

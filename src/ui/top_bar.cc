@@ -220,7 +220,7 @@ struct more_menu : scene::Node {
 
 // The bar itself: its fading band behind the pills, the name in the middle,
 // the pill that opens the drawer at one side, where a drawer can be opened (a
-// wide window has none), and nothing else: no search of its own, the drawer
+// wide window has none), and nothing else: no search by itself, the drawer
 // is what searches.
 struct top_bar : scene::Node {
   nodes::Box<> fScrim{0u};

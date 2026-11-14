@@ -593,7 +593,7 @@ struct settings_rows : scene::Node {
     // the bytes follow when a path is said back (screens, save_archive).
     // The words are laid out the way the page's other words are: a width to
     // be laid out against first, then where they stand. An anchored text with
-    // no width of its own is measured to none and drawn where nothing shows
+    // no width by itself is measured to none and drawn where nothing shows
     // it.
     fArchive.again(asked, app::save_archive{}, look.raised);
     fArchive.apply({.anchor = scene::anchor::kTopLeft,

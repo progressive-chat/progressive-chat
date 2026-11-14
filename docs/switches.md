@@ -11,7 +11,7 @@ anything beyond the row that draws it.
 
 | where | what it is |
 | --- | --- |
-| `src/config.cc`, `enum class switch_choice` | the seven, named once, so that a row and what the program keeps say the same thing |
+| `src/config.cc`, `enum class switch_choice` | the seven, named once, so a row and what the program keeps say the same thing |
 | `src/config.cc`, `asking::switches` | whether each of them is offered, seven `bool`s in one struct |
 | `src/ui/settings.cc`, the names beside `switch_choice` | the words each row says, kept beside the name it belongs to |
 | `src/ui/settings.cc`, `settings_rows` | each row drawn with `offered_of(how, named.which)` deciding which way its pill stands |
@@ -34,7 +34,7 @@ difference is worth holding next to this:
 
 | row | default | what it would take to be true to its words |
 | --- | --- | --- |
-| Read a picture into words | on | a way in for a picture beside the field -- the clip already stands there -- and something that reads one into words: either the model asked through the wire with the picture carried along, or a reader of its own. Nothing that asks for a picture exists yet, so a probe of what the page says cannot see this row change anything. |
+| Read a picture into words | on | a way in for a picture beside the field -- the clip already stands there -- and something that reads one into words: either the model asked through the wire with the picture carried along, or a separate reader. Nothing that asks for a picture exists yet, and a probe of what the page says cannot see this row change anything. |
 | Make a picture out of words | on | the other half of the same thing, and somewhere to put what comes back. Nothing in this tree asks for a picture to be made. |
 | Speak through another program | **off** | an address to ask through, and the asking itself going through it instead of straight to the provider. What carries a request today is the browser's own fetch to the server that served the page (`docs/PROTOCOL.md`); a proxy is not part of that yet. |
 | Be served as a page of its own | **off** | something serving it, which is the back end being written apart from this tree. While nothing serves it, nothing can be switched to ask for it. |
@@ -74,7 +74,7 @@ Put beside the three tools, which are the same shape and already read:
 3. What it changes is written where the thing happens. For a tool that place
    is `tools_of(how)` in `src/tools.cc`, which turns what is kept into what a
    wire is told.
-4. What it changes is **said on the page**, so that a probe can ask it. This is
+4. What it changes is **said on the page**, so a probe can ask it. This is
    the step that is easy to skip and expensive to skip: three probes of this
    tree spent a night reporting things as broken that merely had no visible
    effect to read. Nothing is done, in this repository, until a probe can be

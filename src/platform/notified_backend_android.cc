@@ -104,7 +104,7 @@ jobject opening(JNIEnv *env, jobject activity, int sdk) {
 }
 
 // The small icon at its left: the platform's own chat icon, asked for by
-// name. This program ships no drawable of its own.
+// name. This program ships no drawable by itself.
 jint icon(JNIEnv *env, jobject activity) {
   jclass context = env->FindClass("android/content/Context");
   if (!context) return 0;

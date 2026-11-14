@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The zipped half of an archive: the port's own writer, reached only from this
-// file, so that its headers stay out of module units the way they do
+// file, so its headers stay out of module units the way they do
 // everywhere else in this program (src/tokens_worth.cpp, the same rule).
 #include "prgrssv_zip.h"
 

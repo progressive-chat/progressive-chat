@@ -15,6 +15,7 @@ namespace {
 
 using pchat::provider::failure;
 using pchat::provider::failure_kind;
+using pchat::provider::termination;
 
 // A failure a wire says is worth waiting out: the rate limit, the server that
 // is down, the window that ran out.
@@ -70,6 +71,25 @@ SAID(provider_retry, a_status_the_policy_refuses_is_not_asked_again) {
   const failure denied{failure_kind::network, std::string(), std::string(),
                        "Unauthorized", 401};
   EXPECT_FALSE(pchat::provider::worth_asking_again(denied));
+}
+
+// A stream the transport closed before the wire named its end: Agora reads it
+// from its termination -- no terminal marker means it is asked again -- and a
+// stream that named its end is not. The tool call still open and what reached
+// the screen are what the policy weighs.
+SAID(provider_retry, a_stream_cut_short_is_asked_again) {
+  const termination cut{/*saw_terminal_marker*/ false, std::string(),
+                        /*produced_content*/ true,
+                        /*tool_call_in_flight*/ false,
+                        /*already_reported_error*/ false,
+                        /*timed_out*/ false};
+  EXPECT_TRUE(pchat::provider::worth_asking_again(cut));
+}
+
+SAID(provider_retry, a_stream_that_named_its_end_is_not_asked_again) {
+  const termination done{/*saw_terminal_marker*/ true, "stop",
+                         /*produced_content*/ true, false, false, false};
+  EXPECT_FALSE(pchat::provider::worth_asking_again(done));
 }
 
 // The waits Agora gives its own retries: one second and a half at most for the

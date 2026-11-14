@@ -55,7 +55,7 @@ struct crash_watcher {
 // which is the only thread anything is said to and the only thread anybody
 // waits for an answer from.
 //
-// It was given a thread of its own before, so it would have room to grow in:
+// It was given a thread by itself before, so it would have room to grow in:
 // Android answers a thread asked for no stack in particular with about a
 // megabyte, and a window's tree of nodes did not fit in that once. That
 // thread, though, is not the thread spoken to. Everything a machine says to a
@@ -110,7 +110,7 @@ void say_stack_height() {
 // the one line saying whether it is drawn through OpenGL or in software --
 // and Android throws stderr away: none of it was ever seen, and every
 // question a phone could have answered was guessed at instead. A pipe is put
-// in its place and a thread of its own gives each line to logcat, under this
+// in its place and a thread by itself gives each line to logcat, under this
 // program's name, where `adb logcat -d -s progressive-chat` reads it. Once a
 // process: an activity made again keeps it.
 void stderr_to_logcat() {

@@ -115,7 +115,7 @@ public:
               cut_away(asking.said);
               ask_a_model(asking.chat);
             },
-            // Into a chat of its own: everything asked and answered up to
+            // Into a chat by itself: everything asked and answered up to
             // this answer, nothing said after it.
             [&](const fork_answer &asking) {
               const conversation_id made{"chat-" +
@@ -531,9 +531,19 @@ private:
     // A failure worth asking again: the answer is not kept yet -- nothing it
     // said is appended, since the ask is made again and what it said comes
     // back whole -- and the next ask is made when Agora's backoff says.
-    if (one.asked->ended() == provider::over::failed &&
-        provider::worth_asking_again(one.asked->why_failed()) &&
-        provider::wait_before_again(one.attempt) > 0) {
+    // A failure worth asking again, or a stream the transport closed before
+    // the wire named its end: the answer is not kept yet -- nothing it said is
+    // appended, since the ask is made again and what it said comes back whole
+    // -- and the next ask is made when Agora's backoff says. The cut is the
+    // case Agora reads from its termination and this tree had called complete.
+    const bool failed =
+        one.asked->ended() == provider::over::failed &&
+        provider::worth_asking_again(one.asked->why_failed());
+    const provider::termination how = one.asked->ended_by();
+    const bool cut = one.asked->ended() == provider::over::complete &&
+                     !how.saw_terminal_marker &&
+                     provider::worth_asking_again(how);
+    if ((failed || cut) && provider::wait_before_again(one.attempt) > 0) {
       one.attempt += 1;
       one.again_at = now_ms() + provider::wait_before_again(one.attempt - 1);
       one.asked.reset();

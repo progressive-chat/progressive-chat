@@ -83,3 +83,29 @@ jobs:
             echo "$long"
             exit 1
           fi
+      - name: No prose a comment is not
+        run: |
+          # A comment says the fact and nothing around it. The connectors this
+          # rule bans -- "whatever", "so that", "of its own", "where there is",
+          # "said once", "as it were", "not a thing" -- are the shape of a
+          # sentence written for its own sound. A string is what a screen says,
+          # so strings are read as empty, and CODE_STYLE.md quotes the ban in
+          # the rule that gives it, so it is left out.
+          hits=$(git ls-files 'src/*.cc' 'src/*/*.cc' 'src/*.h' 'src/*.cpp' \
+                   'src/*/*.h' 'src/*/*.cpp' \
+                 | xargs sed -E 's/"[^"]*"//g' \
+                 | grep -nE 'whatever |so that |of its own|where there is|said once|as it were|not a thing' || true)
+          # switches.md quotes a screen's label in its first column -- what a
+          # screen says, not prose -- so that column is taken out before the
+          # rest of the line is read.
+          doc=$(grep -niE 'whatever |so that |of its own|where there is|said once|as it were|not a thing' \
+                  README.md TODO.md design-doc.md docs/README.md || true)
+          switches=$(sed -E 's/^\|[^|]*\|//' docs/switches.md \
+                     | grep -niE 'whatever |so that |of its own|where there is|said once|as it were|not a thing' || true)
+          if [ -n "$hits" ] || [ -n "$doc" ] || [ -n "$switches" ]; then
+            echo "These lines write a comment as prose:"
+            echo "$hits"
+            echo "$doc"
+            echo "$switches"
+            exit 1
+          fi

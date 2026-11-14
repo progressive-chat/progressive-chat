@@ -94,7 +94,7 @@ inline constexpr mark marks[] = {
 // A link written the way writing writes one: [what it is called](where it
 // goes); nothing after either of them is part of it. What it is called
 // is drawn as it stands, one run of the line, and nothing in it is read for
-// marks of its own.
+// marks by itself.
 [[nodiscard]] inline std::optional<std::tuple<std::string_view, std::string_view, std::size_t>>
 link_written_at(std::string_view text, std::size_t at) {
   const std::size_t shut = text.find("](", at + 1);

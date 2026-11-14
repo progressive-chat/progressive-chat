@@ -5,7 +5,7 @@
 // going into the conversation as they are typed -- not when the card is put
 // away, which would keep two copies of a message sent only once.
 //
-// What every answer is given where a conversation has said nothing of its own
+// What every answer is given where a conversation has said nothing by itself
 // stands in the field as its hint, and is never written in: what is told for
 // a conversation is this conversation's words, or the program's, and which of
 // the two it is said by the conversation itself and not by what is drawn.
