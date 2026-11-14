@@ -10,6 +10,7 @@
 // test with no network under it, and the same answer be carried later by a
 // page's fetch, a socket, or fibers.
 module;
+#include "citation.h"
 #include "retry/retry.h"
 
 export module pchat.provider.run;
@@ -54,11 +55,20 @@ struct put_in {
 // or one question asked again before it was answered. Author, place, duration
 // and failed where nothing of it came, set here so both callers say the same
 // thing twice.
+// The wire's citation, as the message holds it: the same parts, said in core's
+// words, because a message is core's and a frame is the provider's.
+[[nodiscard]] inline pchat::citation as_citation(
+    const pchat::provider::citation &one) {
+  return {one.source_id, one.provider, one.kind, one.title, one.url,
+          one.excerpt};
+}
+
 [[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
                                        std::string_view thinking,
                                        std::size_t asking, usage cost,
                                        bool failed,
-                                       const std::optional<std::string> &why = {}) {
+                                       const std::optional<std::string> &why = {},
+                                       const std::vector<pchat::citation> &cited = {}) {
   message out{.id = into.id,
               .chat = into.chat,
               .author = into.author,
@@ -77,6 +87,9 @@ struct put_in {
     out.before = ::pchat::thought{.took_ms = into.took_ms,
                                   .tool_calls = static_cast<std::uint32_t>(asking),
                                   .said = std::string(thinking)};
+  // The sources this answer leaned on: kept whole, so what was built from
+  // them is said beside what was built.
+  out.citations = cited;
   return out;
 }
 
@@ -171,6 +184,10 @@ public:
   [[nodiscard]] const std::vector<tool_call> &partial_calls() const {
     return coming_.partial_calls();
   }
+  // The sources this answer leaned on, in the order the wire named them.
+  [[nodiscard]] const std::vector<citation> &citations() const {
+    return coming_.citations();
+  }
   // Why the wire says it stopped: stop, length, tool_calls, content_filter.
   [[nodiscard]] std::string_view finish() const { return coming_.finish(); }
 
@@ -184,8 +201,11 @@ public:
   // and nothing here is put into a conversation: where it goes is asked
   // elsewhere.
   [[nodiscard]] message answer_of(const put_in &into) const {
+    std::vector<pchat::citation> cited;
+    for (const pchat::provider::citation &one : coming_.citations())
+      cited.push_back(as_citation(one));
     return provider::answer_of(into, said(), thought(), tool_calls(), cost(),
-                               ended_ == over::failed, trouble_);
+                               ended_ == over::failed, trouble_, cited);
   }
 
 private:

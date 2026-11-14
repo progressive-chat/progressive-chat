@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <string>
 
+#include "../citation.h"
 #include "../retry/retry.h"
 #include <string_view>
 #include <vector>
@@ -23,7 +24,7 @@ namespace pchat::provider {
 // tool call whole (the router finishes its arguments before it says one), what
 // it cost with input and output kept apart, why it stopped, or why it failed.
 struct anthropic_frame {
-  enum class kind { text, thought, tool, tool_partial, usage, ended, failed } what = kind::text;
+  enum class kind { text, thought, tool, tool_partial, citation, usage, ended, failed } what = kind::text;
   // The piece of text or of thought, or -- where it failed -- why.
   std::string text;
   std::string id;
@@ -36,6 +37,8 @@ struct anthropic_frame {
   // Why it failed, the way Agora says it -- the kind of it and what came with
   // it -- set only on a frame whose kind is failed.
   failure why_failed;
+  // One source this answer cited, set only on a frame whose kind is citation.
+  citation cited;
 };
 
 // The reader, one per stream: the wire's own router held behind a pointer so

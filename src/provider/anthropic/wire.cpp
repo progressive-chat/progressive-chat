@@ -75,6 +75,14 @@ std::string error_text(const sn::GenerationError &error) {
           "the wire stopped the answer", 0};
 }
 
+// The citation, said the way citation.h says it: the ported record's fields a
+// screen shows, so no module unit sees the ported header.
+[[nodiscard]] citation citation_of(const agora::core::citations::CitationRecord &record) {
+  return {record.source_id, record.provider, record.kind, record.title,
+          record.url.value_or(std::string()),
+          record.excerpt.value_or(std::string{})};
+}
+
 // One event of the wire, in the frames this folder hands over. A tool call is
 // only said whole (the router finishes its arguments first), the incremental
 // updates behind it are display material for a screen that has none here, and
@@ -112,9 +120,13 @@ void frame_of(const as::StreamEvent &event, std::vector<anthropic_frame> &out) {
     out.push_back(frame{.what = frame::kind::failed,
                         .text = error_text(failure->error),
                         .why_failed = failure_of(failure->error)});
+  } else if (const auto *cited = std::get_if<as::CitationUpdate>(&event)) {
+    // A source the answer leaned on: what it came from, what it is called,
+    // where to read it -- said as the wire sent it, kept so a screen can show
+    // what the answer was built from.
+    out.push_back(frame{.what = frame::kind::citation,
+                        .cited = citation_of(cited->citation)});
   }
-  // as::CitationUpdate: display material for a screen that reads citations,
-  // which this tree has not got yet.
 }
 
 }  // namespace

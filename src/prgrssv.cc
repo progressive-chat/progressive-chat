@@ -213,6 +213,22 @@ inline constexpr std::int64_t version = 1;
       written.name("state").text(said_of(one.state));
       if (one.why_failed)
         written.name("why").text(*one.why_failed);
+      // What the answer leaned on, each one's own parts: nothing where it
+      // cited nothing.
+      if (!one.citations.empty()) {
+        written.name("citations").list();
+        for (const citation &cited : one.citations) {
+          written.thing();
+          written.name("source_id").text(cited.source_id);
+          written.name("provider").text(cited.provider);
+          written.name("kind").text(cited.kind);
+          written.name("title").text(cited.title);
+          written.name("url").text(cited.url);
+          written.name("excerpt").text(cited.excerpt);
+          written.shut();
+        }
+        written.shut();  // citations
+      }
       written.name("tokens").number(static_cast<std::int64_t>(one.tokens));
       if (one.replies_to)
         written.name("replies_to").text(one.replies_to->value);
