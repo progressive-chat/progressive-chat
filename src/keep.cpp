@@ -17,6 +17,7 @@
 // so at open() and keeps nothing, so the program builds everywhere.
 #ifdef AGORA_CORE_HAVE_SQLITE3
 
+#include <exception>
 #include <memory>
 #include <sqlite3.h>
 #include <vector>
@@ -102,22 +103,45 @@ agora::core::chat_dao::ChatDao *the_dao = nullptr;
 
 namespace pchat::keep {
 
-bool open() {
+namespace {
+
+// Where the store stands, once: at a file when a path was given, in memory
+// when not -- opened whole, schema first, the way the ported stand applies it
+// before a row is written.
+[[nodiscard]] bool open_where(const std::string &where) {
   if (the_store)
     return true;
-  // An empty store of this process: no path is asked of it, so nothing can be
-  // lost and nothing else can be read. The schema is applied whole, the way
-  // the ported stand applies it before its own tests write a row.
-  auto made = std::make_unique<agora::core::SqliteExecutor>(":memory:");
-  char *error = nullptr;
-  if (sqlite3_exec(made->handle(), kSchema, nullptr, nullptr, &error) !=
-      SQLITE_OK) {
-    sqlite3_free(error);
+  // The executor throws where the file cannot stand (a directory that is not
+  // there, a path that cannot be written): a store that cannot open says so
+  // and keeps nothing, so the program goes on without one.
+  try {
+    auto made = std::make_unique<agora::core::SqliteExecutor>(where);
+    char *error = nullptr;
+    if (sqlite3_exec(made->handle(), kSchema, nullptr, nullptr, &error) !=
+        SQLITE_OK) {
+      sqlite3_free(error);
+      return false;
+    }
+    the_dao = new agora::core::chat_dao::ChatDao(*made);
+    the_store = std::move(made);
+    return true;
+  } catch (const std::exception &) {
     return false;
   }
-  the_dao = new agora::core::chat_dao::ChatDao(*made);
-  the_store = std::move(made);
-  return true;
+}
+
+}  // namespace
+
+bool open() {
+  // A store of this process and no other: no path is asked of it, so nothing
+  // can be lost and nothing earlier can be read.
+  return open_where(":memory:");
+}
+
+bool open_at(const std::string &path) {
+  if (path.empty())
+    return open();
+  return open_where(path);
 }
 
 bool is_open() { return the_dao != nullptr; }
@@ -135,6 +159,9 @@ void keep_conversation(conversation_row one) {
   entity.id = one.id;
   entity.title = one.title;
   entity.last_updated = one.last_updated;
+  entity.is_pinned = one.pinned;
+  if (!one.model_id.empty())
+    entity.model_id = one.model_id;
   the_dao->upsert_conversation(entity);
 }
 
@@ -147,6 +174,17 @@ void keep_message(message_row one) {
   entity.text = one.text;
   entity.token_count = one.token_count;
   entity.timestamp = one.timestamp;
+  // Who said it, and how it ended: the store's two words for the same facts
+  // (participant, status), the words the ported wire uses for them.
+  entity.participant = one.outgoing ? agora::core::run_recovery::Participant::user
+                                    : agora::core::run_recovery::Participant::model;
+  entity.status = one.why_failed.empty()
+                      ? agora::core::run_recovery::MessageStatus::success
+                      : agora::core::run_recovery::MessageStatus::error;
+  if (!one.thought.empty())
+    entity.thoughts = one.thought;
+  if (!one.model.empty())
+    entity.model_name = one.model;
   the_dao->upsert_message(entity);
 }
 
@@ -154,9 +192,30 @@ std::vector<conversation_row> conversations() {
   std::vector<conversation_row> out;
   if (!the_dao)
     return out;
-  for (const agora::core::chat_dao::ChatConversation &each : the_dao->get_all_conversations())
-    out.push_back(conversation_row{each.id, each.title, 0});
+  for (const agora::core::chat_dao::ChatConversation &each : the_dao->get_all_conversations()) {
+    conversation_row one;
+    one.id = each.id;
+    one.title = each.title;
+    one.pinned = each.is_pinned;
+    if (each.model_id)
+      one.model_id = *each.model_id;
+    out.push_back(std::move(one));
+  }
   return out;
+}
+
+kept_of_row kept_of(const std::string &message_id) {
+  if (!the_dao)
+    return {};
+  for (const agora::core::MessageEntity &each :
+       the_dao->get_messages_page(std::nullopt, 1000)) {
+    if (each.id != message_id)
+      continue;
+    return kept_of_row{.found = true,
+                       .conversation_id = each.conversation_id,
+                       .text = each.text};
+  }
+  return {};
 }
 
 std::vector<message_row> messages_of(const std::string &conversation_id) {
@@ -165,9 +224,20 @@ std::vector<message_row> messages_of(const std::string &conversation_id) {
     return out;
   for (const agora::core::MessageEntity &each :
        the_dao->get_conversation_messages_page(conversation_id, std::nullopt,
-                                               1000))
-    out.push_back(message_row{each.id, each.conversation_id, each.text,
-                              each.token_count, each.timestamp});
+                                               1000)) {
+    message_row one;
+    one.id = each.id;
+    one.conversation_id = each.conversation_id;
+    one.text = each.text;
+    one.token_count = each.token_count;
+    one.timestamp = each.timestamp;
+    one.outgoing = each.participant == agora::core::run_recovery::Participant::user;
+    if (each.thoughts)
+      one.thought = *each.thoughts;
+    if (each.model_name)
+      one.model = *each.model_name;
+    out.push_back(std::move(one));
+  }
   return out;
 }
 
@@ -180,6 +250,8 @@ namespace pchat::keep {
 
 bool open() { return false; }
 
+bool open_at(const std::string &) { return false; }
+
 bool is_open() { return false; }
 
 void close() {}
@@ -191,6 +263,8 @@ void keep_message(message_row) {}
 std::vector<conversation_row> conversations() { return {}; }
 
 std::vector<message_row> messages_of(const std::string &) { return {}; }
+
+kept_of_row kept_of(const std::string &) { return {}; }
 
 }  // namespace pchat::keep
 

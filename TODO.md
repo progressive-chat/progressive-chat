@@ -76,6 +76,19 @@ Not a full plan. What is wrong or missing today, kept between builds.
       `native_backup_format`): writing them would be writing Agora's archive,
       not this tree's, and this tree's archive is a zip of JSON by its own
       choice (`src/prgrssv.cc`). What is wanted is a decision, not a rewrite.
+- [ ] **The store cannot forget, and has no fork parent.** `src/keep.cpp`
+      holds what the screens say to it -- a question, an answer, a new chat, a
+      fork -- and reads it back at the next run (through
+      `PCHAT_STORE`/`$HOME/.progressive-chat/keep.sqlite`). Two things the
+      ported tree can do that it cannot: a deleted answer's row stays (the
+      face has no delete, and the ported `ChatDao` rows are read through its
+      own pages), and a fork's row carries no `parentConversationId` --
+      `ChatDao.upsert_conversation` writes no such column and
+      `get_all_conversations` keeps only rows where it is NULL, so a fork
+      stored there could not be read back. Both are wanted as decisions, not
+      hidden: the first is what this tree's archive does too; the second is
+      where a fork's being a fork would have to be written by a SQL of our
+      own beside the ported one.
 - [ ] **No back end.** `src/app/sample.cc` answers for now, so nothing counted
       -- tokens, tool calls, answer duration -- is counted for real.
 - [x] **Copy to clipboard** -- read back 2026-11-07: a page in a browser,

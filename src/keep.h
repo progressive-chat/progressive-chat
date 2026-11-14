@@ -22,6 +22,8 @@ struct conversation_row {
   std::string id;
   std::string title;
   std::int64_t last_updated = 0;
+  bool pinned = false;
+  std::string model_id;
 };
 
 // One message as the store knows it: what its row says.
@@ -31,12 +33,26 @@ struct message_row {
   std::string text;
   int token_count = 0;
   std::int64_t timestamp = 0;
+  bool outgoing = false;
+  std::string why_failed;
+  // What thought it, before it said: the thought's own text, empty where
+  // nothing was thought. Its times and calls stay in the program's tree --
+  // the store keeps the words.
+  std::string thought;
+  // The model that answered (empty: the reader wrote this one).
+  std::string model;
 };
 
 // Opens the store's own database, empty, with the ported schema on it: a
-// store of one process, kept in memory until a path is given to it. Says
-// whether it opened at all.
+// store of one process. No path says a store that is here and nowhere after
+// this run -- the rows live in memory and go with it. Says whether it opened
+// at all.
 [[nodiscard]] bool open();
+
+// The same, at a file: the rows are read back from what a last run kept and
+// written to it from here. Says whether it opened -- a page has no files beside
+// it, and where the file cannot stand, no store does.
+[[nodiscard]] bool open_at(const std::string &path);
 
 // Whether the store is open and answering.
 [[nodiscard]] bool is_open();
@@ -56,6 +72,19 @@ void keep_message(message_row one);
 
 // The messages of one conversation, in the order they were kept.
 [[nodiscard]] std::vector<message_row> messages_of(const std::string &conversation_id);
+
+// One message held out of the store by its id: what it said, under the
+// conversation it said it in. Nothing where the id is not held -- a line an
+// answer was cut off mid-write, or a message the store never saw, is asked
+// of again, not read back half.
+struct kept_of_row {
+  bool found = false;
+  std::string conversation_id;
+  std::string text;
+};
+
+// The message with this id, whole, from the store.
+[[nodiscard]] kept_of_row kept_of(const std::string &message_id);
 
 }  // namespace pchat::keep
 

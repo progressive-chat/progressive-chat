@@ -7,6 +7,7 @@
 // client does.
 module;
 #include "../provider/retry/retry.h"
+#include "../keep.h"
 
 export module pchat.app.screens;
 
@@ -46,7 +47,122 @@ class screens {
 public:
   screens()
       : root_(sample_chats()), shown_(default_looks),
-        look_(ui::paints_of(colors_of(shown_, true), true)) {}
+        look_(ui::paints_of(colors_of(shown_, true), true)) {
+    open_store();
+  }
+
+  // The store at the path this run can write, and what it holds read in: a
+  // file beside the program where the platform gives it one, and the in-memory
+  // store (nothing read back) where it does not -- a page has no files beside
+  // it. What came back from a last run stands under the sample, its rows kept
+  // whole; what was not in the store stays as the sample said.
+  void open_store() {
+    const std::string where = store_path();
+    if (where.empty() ? !pchat::keep::open() : !pchat::keep::open_at(where))
+      return;
+    for (const pchat::keep::conversation_row &row : pchat::keep::conversations()) {
+      const conversation_id id{row.id};
+      bool held = false;
+      for (const conversation &one : root_.conversations)
+        if (one.id == id)
+          held = true;
+      if (held)
+        continue;
+      conversation fresh{id, root_.accounts.empty() ? account_id{}
+                                                  : root_.accounts.front().id,
+                         row.title, conversation_kind::direct,
+                         row.last_updated, 0, row.pinned, false, {}, "", 0, 0,
+                         0.0f};
+      if (!row.model_id.empty())
+        fresh.models.push_back(row.model_id);
+      root_.conversations.push_back(std::move(fresh));
+      for (const pchat::keep::message_row &said :
+           pchat::keep::messages_of(row.id)) {
+        message kept{message_id{said.id}, id, ending_of(id), said.outgoing,
+                     said.text, said.timestamp,
+                     said.why_failed.empty() ? delivery::sent : delivery::failed,
+                     std::nullopt, {}, static_cast<std::uint32_t>(said.token_count),
+                     said.why_failed.empty()
+                         ? std::nullopt
+                         : std::optional<std::string>{said.why_failed}, {}};
+        if (!said.thought.empty()) {
+          kept.before = thought{.took_ms = 0,
+                                .tool_calls = 0,
+                                .said = said.thought,
+                                .calls = {}};
+        }
+        root_.messages.push_back(std::move(kept));
+      }
+    }
+    recount_all();
+  }
+
+  // One row of the tree, as the store holds it: said the moment it was said,
+  // not when a frame drew it.
+  [[nodiscard]] static pchat::keep::message_row row_of(const message &one) {
+    pchat::keep::message_row row;
+    row.id = one.id.value;
+    row.conversation_id = one.chat.value;
+    row.text = one.text;
+    row.token_count = static_cast<int>(one.tokens);
+    row.timestamp = one.sent;
+    row.outgoing = one.outgoing;
+    if (one.why_failed)
+      row.why_failed = *one.why_failed;
+    if (one.before)
+      row.thought = one.before->said;
+    return row;
+  }
+
+  // What changed is said to the store at once, so a run that ends any time
+  // after it already holds it: the conversation under a message, the message
+  // whole.
+  void stored(const conversation &one) {
+    if (!pchat::keep::is_open())
+      return;
+    pchat::keep::keep_conversation(pchat::keep::conversation_row{
+        .id = one.id.value,
+        .title = one.title,
+        .last_updated = one.last_activity,
+        .pinned = one.pinned,
+        .model_id = one.leading_model()});
+  }
+
+  void stored(const message &one) {
+    if (!pchat::keep::is_open())
+      return;
+    stored_chat(one.chat);
+    pchat::keep::keep_message(row_of(one));
+  }
+
+  void stored_chat(const conversation_id &chat) {
+    for (const conversation &one : root_.conversations)
+      if (one.id == chat)
+        stored(one);
+  }
+
+  // Where this run keeps its rows: beside the program where the platform says
+  // there is a beside, and nowhere (the in-memory store) where it does not.
+  [[nodiscard]] static std::string store_path() {
+    const char *asked = std::getenv("PCHAT_STORE");
+    if (asked && *asked)
+      return asked;
+    if (const char *home = std::getenv("HOME"); home && *home) {
+      // The directory the store stands in, made here: a first run has nothing
+      // yet and sqlite cannot open a file under a directory that is not there.
+      const std::string dir = std::string{home} + "/.progressive-chat";
+      std::error_code made;
+      std::filesystem::create_directories(dir, made);
+      if (made)
+        return {};
+      return dir + "/keep.sqlite";
+    }
+    return {};
+  }
+
+  // The store let go when the program is: rows are already written as they
+  // change, so nothing is only here.
+  ~screens() { pchat::keep::close(); }
 
   [[nodiscard]] window_scene &window() noexcept { return scene_; }
 
@@ -76,6 +192,7 @@ public:
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
               recount(asking.chat);
+              stored(said.said);
               ask_a_model(asking.chat);
               // The sent text left the field, and the card that writes into
               // it goes with it: nothing left open can write into a field
@@ -98,6 +215,7 @@ public:
               fresh.window = window_of(fresh.leading_model());
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(fresh));
+              stored_chat(made);
               root_.opened = made;
               if (width_ < ui::side_by_side_from)
                 drawer_ = false;
@@ -129,6 +247,7 @@ public:
               forked.tokens = tokens_up_to(asking.chat, asking.said);
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(forked));
+              stored_chat(made);
               const std::size_t up_to = said_at(asking.said);
               for (std::size_t at = 0; at < up_to; ++at) {
                 message copy = root_.messages[at];
@@ -137,6 +256,7 @@ public:
                 copy.chat = made;
                 copy.id = message_id{made.value + "-" + copy.id.value};
                 root_.messages.push_back(std::move(copy));
+                stored(copy);
               }
               recount(made);
               root_.opened = made;
@@ -187,8 +307,11 @@ public:
                                               : conversation_id{};
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(forked));
-              for (message &copy : taken)
-                root_.messages.push_back(std::move(copy));
+              stored_chat(made);
+              for (message &copy : taken) {
+                root_.messages.push_back(copy);
+                stored(copy);
+              }
               root_.opened = made;
               recount(made);
               (void)kept;
@@ -586,6 +709,8 @@ private:
       // what it wrote to itself is read beside them.
       if (there->before)
         there->before->calls = one.calls;
+      // The answer over: said to the store whole, the moment it stands.
+      stored(*there);
     }
     recount(one.chat);
     answering_.reset();
@@ -689,6 +814,13 @@ private:
             : static_cast<float>(spent) / static_cast<float>(one->window);
   }
 
+  // Every conversation's own count, the way recount does one: the store put
+  // rows in that no press has counted yet.
+  void recount_all() {
+    for (const conversation &one : root_.conversations)
+      recount(one.id);
+  }
+
   // What one said and everything before it in its chat was worth.
   [[nodiscard]] std::uint32_t tokens_up_to(const conversation_id &chat,
                                            const message_id &said) const {
@@ -718,6 +850,11 @@ private:
         kept.push_back(root_.messages[one]);
     root_.messages = std::move(kept);
     recount(chat);
+    // What is left of the chat is said whole. The store keeps every row it
+    // was given -- it has no way to forget one, so the cut answer's row stands
+    // there as what this tree's own archive also keeps: a cut here takes it
+    // from the screen, not from what was kept.
+    stored_chat(chat);
   }
 
   // The door a model is spoken through, while this is only a client: the
