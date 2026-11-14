@@ -519,11 +519,18 @@ private:
     // could not ask at all.
     provider::failure transport;
     if (one.carried.status() != 0) {
-      // The status decides it; the message is only what a screen shows.
-      const std::string words = one.carried.status_text().empty()
-                                    ? "the server answered " +
-                                          std::to_string(one.carried.status())
-                                    : one.carried.status_text();
+      // The status decides it; the message is what the ported rules read: the
+      // server's own body where it gave one, because that is the text Agora's
+      // permanent and upstream rules are written against -- a phrase only
+      // where the body was not handed over.
+      const std::string body = one.carried.error_body();
+      const std::string words =
+          !body.empty()
+              ? body
+              : (one.carried.status_text().empty()
+                     ? "the server answered " +
+                           std::to_string(one.carried.status())
+                     : one.carried.status_text());
       transport = {provider::failure_kind::network, std::string{},
                    std::string{}, words, one.carried.status()};
     }

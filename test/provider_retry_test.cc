@@ -64,6 +64,28 @@ SAID(provider_retry, a_status_the_policy_waits_out_is_asked_again) {
   EXPECT_TRUE(pchat::provider::worth_asking_again(busy));
 }
 
+// The refusal's own body, the way a transport hands it over: Agora's upstream
+// and permanent rules are written against that text, so a server that says
+// "temporarily unavailable" in its body passes and one that says the key was
+// refused does not -- read from the body, not from a phrase beside the number.
+SAID(provider_retry, a_refusal_whose_body_says_unavailable_is_asked_again) {
+  // 501 is not a code the policy treats as passing on its own: what makes
+  // this askable is the body the server sent with it.
+  const failure down{failure_kind::network, std::string(), std::string(),
+                     "{\"error\":{\"message\":\"temporarily unavailable\"}}",
+                     501};
+  EXPECT_TRUE(pchat::provider::worth_asking_again(down));
+  // The same code with a body that says nothing the rules know: not asked.
+  const failure unknown{failure_kind::network, std::string(), std::string(),
+                        "{\"error\":{\"message\":\"no such thing\"}}", 501};
+  EXPECT_FALSE(pchat::provider::worth_asking_again(unknown));
+  // A refusal the policy refuses outright: a client error the body cannot save.
+  const failure refused{failure_kind::network, std::string(), std::string(),
+                        "{\"error\":{\"type\":\"authentication_error\"}}",
+                        401};
+  EXPECT_FALSE(pchat::provider::worth_asking_again(refused));
+}
+
 SAID(provider_retry, a_status_the_policy_refuses_is_not_asked_again) {
   const failure bad{failure_kind::network, std::string(), std::string(),
                     "Bad Request", 400};
