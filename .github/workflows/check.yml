@@ -109,3 +109,24 @@ jobs:
             echo "$switches"
             exit 1
           fi
+      - name: A name the ported tree already has
+        run: |
+          # A name this tree chose for itself where Agora already spells the
+          # same thing: the frames' fields, the endpoint's base, the prompt a
+          # model is told. Agora says id, name, arguments, input_tokens,
+          # output_tokens, text, stop_reason, base_url, system_prompt,
+          # description. Where a name here was one of ours, the ported tree's
+          # spelling is the one kept -- so the old spelling, as a field or a
+          # member, is asked to be gone. A word that is still right elsewhere
+          # (a chip that says told, a variable that holds one) is not a field
+          # named that, and is left alone.
+          old_fields=$(grep -rnE 'std::string (told|base);' src \
+                         --include='*.cc' --include='*.h' || true)
+          old_members=$(grep -rnE '\b(call_arguments|call_name|used_in|used_out)\b' src \
+                          --include='*.cc' --include='*.h' --include='*.cpp' || true)
+          if [ -n "$old_fields" ] || [ -n "$old_members" ]; then
+            echo "These names say what the ported tree says another way:"
+            echo "$old_fields"
+            echo "$old_members"
+            exit 1
+          fi
