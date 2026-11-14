@@ -73,6 +73,60 @@ SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
                   .value_or(false));
 }
 
+// The anthropic body's messages, written by the ported tree's own writer: a
+// tool's answer tied to the call it answers, and a model's call beside the
+// text it said, each in the parts the wire reads. Said through the real body
+// writer, so what goes out is one serializer's word.
+SAID(provider, the_anthropic_body_says_each_message_in_parts) {
+  const provider::endpoint at{.base_url = "https://api.anthropic.com/v1",
+                              .model = "claude-4"};
+  const std::vector<provider::turn> turns = {
+      provider::turn{.who = provider::role::assistant,
+                     .text = "Snow.",
+                     .calls = std::vector<provider::tool_call>{
+                         {.id = "toolu_1", .name = "weather", .arguments = "{}"}}},
+      provider::turn{.who = provider::role::tool,
+                     .text = "Rome: sun",
+                     .own = "toolu_1"}};
+  const std::string body = provider::anthropic_body_of(at, turns);
+  auto read = json::read(body);
+  EXPECT_TRUE(read.has_value());
+  if (!read.has_value())
+    return;
+  const json::value *messages = json::said(*read, "messages");
+  EXPECT_TRUE(messages != nullptr);
+  if (messages == nullptr)
+    return;
+  EXPECT_EQ(json::said(messages, 0u) != nullptr, true);
+  // The assistant's message: text and the call beside it, each its own part.
+  const json::value *first = json::said(messages, 0u);
+  const json::value *content = first ? json::said(first, "content") : nullptr;
+  EXPECT_TRUE(content != nullptr);
+  if (content == nullptr)
+    return;
+  const json::value *part = json::said(content, 0u);
+  EXPECT_TRUE(part != nullptr);
+  if (part == nullptr)
+    return;
+  EXPECT_EQ(std::string(json::text_of(*json::said(part, "type")).value_or("")),
+            std::string("text"));
+  // The tool's answer: tied to the call it answers.
+  const json::value *second = json::said(messages, 1u);
+  const json::value *answer = second ? json::said(second, "content") : nullptr;
+  EXPECT_TRUE(answer != nullptr);
+  if (answer == nullptr)
+    return;
+  const json::value *result = json::said(answer, 0u);
+  EXPECT_TRUE(result != nullptr);
+  if (result == nullptr)
+    return;
+  EXPECT_EQ(std::string(json::text_of(*json::said(result, "type")).value_or("")),
+            std::string("tool_result"));
+  EXPECT_EQ(
+      std::string(json::text_of(*json::said(result, "tool_use_id")).value_or("")),
+      std::string("toolu_1"));
+}
+
 SAID(provider, how_the_program_asks_is_said_in_the_body) {
   const provider::endpoint at{.base_url = "https://api.openai.com/v1",
                               .model = "o4-mini"};
