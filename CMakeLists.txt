@@ -195,9 +195,15 @@ endif()
 
 # skiff's components, as progressive-chat draws with them: the system's fonts
 # read from their directory, text shaped by HarfBuzz and laid out by
-# Unicode's rules, GL where asked for.
+# Unicode's rules, GL where asked for -- and the codecs for the pictures the
+# clip reads (a build that asks skiff for anything at all asks for nothing
+# more, so png jpeg and gif have to be said here to reach Skia. WebP is
+# left out: Skia's system-libwebp path links webpmux, and the libwebp this
+# build takes provides the decode and encode libraries only -- a WebP named
+# here would fail the link, and a WebP the clip reads decodes to nothing,
+# which draws as nothing.
 option(PCHAT_GL "Draw on the GPU through OpenGL, besides in software" ON)
-set(pchat_skiff_components fontmgr-directory text-shaping)
+set(pchat_skiff_components fontmgr-directory text-shaping png jpeg gif)
 if(PCHAT_GL)
   list(APPEND pchat_skiff_components gl)
 endif()
