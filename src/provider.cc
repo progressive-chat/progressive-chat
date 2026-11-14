@@ -8,6 +8,8 @@
 // can be exercised with no network.
 module;
 #include "provider/anthropic/wire.h"
+#include "agora/core/anthropic_request.hpp"
+#include "agora/core/json.hpp"
 
 export module pchat.provider;
 
@@ -234,6 +236,52 @@ struct wanted {
                 .frequency_penalty = how.often};
 }
 
+// One turn said in the ported tree's own words, so the ported writer writes it:
+// the role the wire reads, and the content parts -- a tool's answer tied to the
+// call it answers, the calls a model stopped to ask for beside the text it
+// said, or the text alone. The ported tree serializes it; this builds it.
+[[nodiscard]] inline agora::core::anthropic::AnthropicMessage as_anthropic(
+    const turn &said) {
+  using agora::core::anthropic::AnthropicContentPart;
+  using agora::core::anthropic::AnthropicMessage;
+  AnthropicMessage out;
+  out.role = said_by(said.who);
+  if (said.who == role::tool && !said.own.empty()) {
+    AnthropicContentPart part;
+    part.type = "tool_result";
+    part.tool_use_id = said.own;
+    part.content = said.text;
+    out.content.push_back(std::move(part));
+  } else if (!said.calls.empty()) {
+    if (!said.text.empty()) {
+      AnthropicContentPart text;
+      text.type = "text";
+      text.text = said.text;
+      out.content.push_back(std::move(text));
+    }
+    for (const tool_call &call : said.calls) {
+      AnthropicContentPart use;
+      use.type = "tool_use";
+      use.id = call.id;
+      use.name = call.name;
+      const std::string input = call.arguments.empty() ? "{}" : call.arguments;
+      // The input is the call's own arguments, parsed by the ported reader:
+      // the value the ported writer puts back out, not our own read of it.
+      const agora::core::json::ParseResult parsed =
+          agora::core::json::parse(input);
+      if (parsed.value)
+        use.input = *parsed.value;
+      out.content.push_back(std::move(use));
+    }
+  } else {
+    AnthropicContentPart text;
+    text.type = "text";
+    text.text = said.text;
+    out.content.push_back(std::move(text));
+  }
+  return out;
+}
+
 // What an anthropic wire wants said to it: the same things in its own words
 // -- the turns as content blocks, what it is told as a field named `system`,
 // and the choices written in the order its own writer writes them (port
@@ -257,32 +305,11 @@ template <std::ranges::forward_range Turns>
       system += said.text;
       continue;
     }
-    out.thing().name("role").text(said_by(said.who)).name("content").list();
-    if (said.who == role::tool && !said.own.empty()) {
-      // One answered call, as the wire reads it back: tied to the call it
-      // answers, nothing else in this message.
-      out.thing()
-          .name("type").text("tool_result")
-          .name("tool_use_id").text(said.own)
-          .name("content").text(said.text)
-          .shut();
-    } else if (!said.calls.empty()) {
-      // What it answered, then every call it stopped to ask for, each block
-      // its own: the wire keeps text and tool_use side by side.
-      if (!said.text.empty())
-        out.thing().name("type").text("text").name("text").text(said.text).shut();
-      for (const tool_call &call : said.calls)
-        out.thing()
-            .name("type").text("tool_use")
-            .name("id").text(call.id)
-            .name("name").text(call.name)
-            .name("input").raw(call.arguments.empty() ? "{}" : call.arguments)
-            .shut();
-    } else {
-      out.thing().name("type").text("text").name("text").text(said.text).shut();
-    }
-    out.shut();
-    out.shut();
+    // One message written by the ported tree's own writer: as_anthropic says
+    // the turn in the ported shape, and the ported writer sends its bytes
+    // into this list as they are. What the wire reads is one serializer's word
+    // for it now, not two.
+    out.raw(agora::core::anthropic::write_anthropic_message(as_anthropic(said)));
   }
   out.shut();
   if (!system.empty())
