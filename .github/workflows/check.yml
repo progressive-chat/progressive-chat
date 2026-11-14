@@ -139,6 +139,6 @@ jobs:
           # a name called because the program does something with it -- so it
           # is written down here to be seen, not to be kept at some height.
           headers=$(grep -rho '#include "agora/[^"]*"' src | sort -u | wc -l)
-          names=$(grep -rhoE '\b(agora::core::[a-z_:]+|as::[a-z_]+|gs::[a-z_]+|sn::[a-z_]+|zip::[a-z_]+)[a-zA-Z_:]*' src | sort -u | wc -l)
+          names=$(grep -rhoE '\b(agora::core::[a-zA-Z_][a-zA-Z0-9_:]*|as::[a-zA-Z_][a-zA-Z0-9_:]*|gs::[a-zA-Z_][a-zA-Z0-9_:]*|sn::[a-zA-Z_][a-zA-Z0-9_:]*|zip::[a-zA-Z_][a-zA-Z0-9_:]*)' src | sort -u | wc -l)
           echo "Agora headers this program includes: $headers"
           echo "Agora names this program calls:      $names"
