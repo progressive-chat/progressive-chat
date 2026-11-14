@@ -35,7 +35,7 @@ constexpr std::string_view one_answer =
     "data: [DONE]\n"
     "\n";
 
-// The ported server stands on a thread of its own: accept and answer there,
+// The ported server takes the threading with it: it accepts and answers there,
 // the window's thread none the wiser.
 // The ported server takes its own thread (accept and one per connection), so
 // standing is the door being made and stopped -- nothing of it to run here.

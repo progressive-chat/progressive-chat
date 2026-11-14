@@ -6,7 +6,6 @@
 //
 //   progressive-chat   the conversations of the sample, which is all the
 //                      model has until the back end's own half fills it
-module;
 #include "serve.h"
 
 import std;
