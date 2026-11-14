@@ -539,10 +539,10 @@ private:
     const bool failed =
         one.asked->ended() == provider::over::failed &&
         provider::worth_asking_again(one.asked->why_failed());
-    const provider::termination ended = one.asked->ended_by();
+    const provider::termination how = one.asked->ended_by();
     const bool cut = one.asked->ended() == provider::over::complete &&
-                     !ended.saw_terminal_marker &&
-                     provider::worth_asking_again(ended);
+                     !how.saw_terminal_marker &&
+                     provider::worth_asking_again(how);
     if ((failed || cut) && provider::wait_before_again(one.attempt) > 0) {
       one.attempt += 1;
       one.again_at = now_ms() + provider::wait_before_again(one.attempt - 1);
