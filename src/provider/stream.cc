@@ -83,6 +83,12 @@ public:
   [[nodiscard]] const std::vector<tool_call> &partial_calls() const {
     return partial_;
   }
+  // The sources this answer leaned on, in the order the wire named them: what
+  // it came from, what it is called, where to read it. A screen shows them
+  // beside what was built from them.
+  [[nodiscard]] const std::vector<citation> &citations() const {
+    return citations_;
+  }
   [[nodiscard]] usage cost() const { return cost_; }
   [[nodiscard]] bool ended() const { return ended_; }
   [[nodiscard]] bool failed() const { return failed_; }
@@ -152,6 +158,9 @@ private:
       partial_.clear();
       return;
     }
+    case anthropic_frame::kind::citation:
+      citations_.push_back(one.cited);
+      return;
     case anthropic_frame::kind::usage:
       cost_.in = one.input_tokens;
       cost_.out = one.output_tokens;
@@ -227,6 +236,9 @@ private:
         partial_.clear();
         return;
       }
+      case gemini_frame::kind::citation:
+        citations_.push_back(one.cited);
+        return;
       case gemini_frame::kind::usage:
         cost_.in = one.input_tokens;
         cost_.out = one.output_tokens;
@@ -717,6 +729,7 @@ private:
   std::string thought_;
   std::vector<tool_call> calls_;
   std::vector<tool_call> partial_;
+  std::vector<citation> citations_;
   usage cost_;
   std::string finish_;
   std::string failure_;

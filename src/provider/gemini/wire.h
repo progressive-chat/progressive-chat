@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <string>
 
+#include "../citation.h"
 #include "../retry/retry.h"
 #include <string_view>
 #include <vector>
@@ -24,7 +25,7 @@ namespace pchat::provider {
 // why it failed -- the same seven things every wire's frames say here, in the
 // words the reader already knows.
 struct gemini_frame {
-  enum class kind { text, thought, tool, tool_partial, usage, ended, failed } what = kind::text;
+  enum class kind { text, thought, tool, tool_partial, citation, usage, ended, failed } what = kind::text;
   // The piece of text or of thought, or -- where it failed -- why.
   std::string text;
   // Gemini names a call where Anthropic gives it an id: an id is left empty
@@ -39,6 +40,8 @@ struct gemini_frame {
   // Why it failed, the way Agora says it -- the kind of it and what came with
   // it -- set only on a frame whose kind is failed.
   failure why_failed;
+  // One source this answer cited, set only on a frame whose kind is citation.
+  citation cited;
 };
 
 // The reader, one per stream: the wire's own router held behind a pointer so

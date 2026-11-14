@@ -108,6 +108,29 @@ SAID(anthropic, a_call_the_wire_never_finished_keeps_what_arrived) {
   }
 }
 
+// A source the answer leaned on: the wire sends it with the block it belongs
+// to, and it is kept -- where it came from, what it is called, where to read
+// it -- so a screen can show what the answer was built from. Nothing kept
+// where it cited nothing.
+SAID(anthropic, a_source_the_answer_leaned_on_is_kept) {
+  stream one{wire::anthropic};
+  const std::string frame =
+      R"(data: {"type":"content_block_start","index":0,)"
+      R"("content_block":{"type":"text","text":"Snow.",)"
+      R"("citations":[{"type":"web_search_result_location","cited_text":"Snow",)"
+      R"("document_index":0,"document_title":"Weather",)"
+      R"("start_char_index":0,"end_char_index":4,)"
+      R"("url":"https://example.test/snow"}]}})";
+  one.feed(frame + "\n\n"
+           R"(data: {"type":"content_block_stop","index":0})" "\n\n");
+  EXPECT_TRUE(!one.citations().empty());
+  if (!one.citations().empty()) {
+    EXPECT_EQ(one.citations().front().title, std::string("Weather"));
+    EXPECT_EQ(one.citations().front().url,
+              std::string("https://example.test/snow"));
+  }
+}
+
 SAID(anthropic, a_failure_the_wire_reports_inside_the_stream_says_why) {
   stream one{wire::anthropic};
   one.feed(R"(data: {"type":"error","error":{"type":"api_error","message":"overloaded"}})"

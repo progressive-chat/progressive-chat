@@ -423,6 +423,10 @@ struct answer_row : nodes::Stack {
   // Why this answer is a failure, said under what it did manage to say.
   // Nothing drawn where the answer went through.
   nodes::Text fWhy{"", 13.0f, 0u};
+  // What the answer leaned on, said under what it said: one line to each
+  // source, in the order the wire named them. Nothing drawn where it cited
+  // nothing.
+  nodes::Text fCites{"", 11.0f, 0u};
   nodes::Text fInfo{"", 11.0f, 0u};
   foot_row fFoot;
 
@@ -432,6 +436,7 @@ struct answer_row : nodes::Stack {
               .spacingY = answer_gap};
     fFoot.apply({.fillX = true, .autoSize = scene::axes::kY});
     fWhy.setVisible(false);
+    fCites.setVisible(false);
     fInfo.setVisible(false);
     this->blank();
   }
@@ -444,6 +449,8 @@ struct answer_row : nodes::Stack {
     fBody.setStyles({}, 0u);
     fWhy.setText("");
     fWhy.setVisible(false);
+    fCites.setText("");
+    fCites.setVisible(false);
     fInfo.setText("");
   }
 
@@ -474,6 +481,29 @@ struct answer_row : nodes::Stack {
       fWhy.setText("");
       fWhy.setVisible(false);
     }
+    // What it leaned on: a line to each source -- where it came from and what
+    // it is called -- drawn small under the answer, in the dim colour. Empty
+    // where it cited nothing, and then nothing is drawn.
+    if (!said.citations.empty()) {
+      std::string cites;
+      for (const citation &one : said.citations) {
+        if (!cites.empty())
+          cites += "\n";
+        if (!one.title.empty())
+          cites += one.title;
+        else if (!one.source_id.empty())
+          cites += one.source_id;
+        if (!one.url.empty())
+          cites += " · " + one.url;
+      }
+      fCites.setText(cites);
+      fCites.setColour(look.dim);
+      fCites.apply({.maxWidth = widest});
+      fCites.setVisible(true);
+    } else {
+      fCites.setText("");
+      fCites.setVisible(false);
+    }
     fFoot.again(sink, look, said);
     // What About tells: what answered, and what this answer came to -- the
     // model that keeps this chat, then how long it thought, how often it
@@ -496,6 +526,7 @@ struct answer_row : nodes::Stack {
     f(fFold);
     f(fBody);
     f(fWhy);
+    f(fCites);
     f(fFoot);
     f(fInfo);
   }

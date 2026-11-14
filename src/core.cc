@@ -112,6 +112,19 @@ struct thought {
 
 // A message: one thing said in one conversation, by somebody or by its
 // reader. Which of the two decides where it is drawn.
+// One source an answer leaned on: where it came from, what it is called, and
+// what of it was quoted. The shapes a screen shows; the wire sends them as it
+// finds them.
+struct citation {
+  std::string source_id;
+  std::string provider;
+  std::string kind;
+  std::string title;
+  std::string url;
+  std::string excerpt;
+  friend bool operator==(const citation &, const citation &) = default;
+};
+
 struct message {
   message_id id;
   conversation_id chat;
@@ -131,6 +144,10 @@ struct message {
   // answered, and for every state that is not failed. Last of the fields, so
   // the braces a sample or a test writes whole keep their meaning.
   std::optional<std::string> why_failed;
+  // The sources this answer leaned on, in the order the wire named them:
+  // nothing where it cited none. Last of the fields, so the braces a sample
+  // writes whole keep their meaning.
+  std::vector<citation> citations;
   friend bool operator==(const message &, const message &) = default;
 };
 
