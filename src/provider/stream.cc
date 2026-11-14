@@ -166,8 +166,8 @@ private:
       citations_.push_back(one.cited);
       return;
     case anthropic_frame::kind::usage:
-      cost_.in = one.input_tokens;
-      cost_.out = one.output_tokens;
+      cost_.in = one.input_token_count;
+      cost_.out = one.output_token_count;
       said_.push_back(event{.what = event::kind::usage, .cost = cost_});
       return;
     case anthropic_frame::kind::ended:
@@ -245,8 +245,8 @@ private:
         citations_.push_back(one.cited);
         return;
       case gemini_frame::kind::usage:
-        cost_.in = one.input_tokens;
-        cost_.out = one.output_tokens;
+        cost_.in = one.input_token_count;
+        cost_.out = one.output_token_count;
         said_.push_back(event{.what = event::kind::usage, .cost = cost_});
         return;
       case gemini_frame::kind::ended:

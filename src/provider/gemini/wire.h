@@ -33,8 +33,8 @@ struct gemini_frame {
   std::string id;
   std::string name;
   std::string arguments;
-  std::uint32_t input_tokens = 0;
-  std::uint32_t output_tokens = 0;
+  std::uint32_t input_token_count = 0;
+  std::uint32_t output_token_count = 0;
   // Why it stopped, as the wire said it: empty only where it did not say.
   std::string stop_reason;
   // Why it failed, the way Agora says it -- the kind of it and what came with
