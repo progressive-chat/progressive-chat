@@ -278,6 +278,7 @@ endif()
 # The store and the program's own door, each behind a plain header: agora's
 # ChatDao and HTTP server are read in these two and nowhere else.
 target_sources(pchat_core PRIVATE src/tokens_worth.cpp src/prgrssv_zip.cpp
+                                  src/prgrssv_read.cpp
                                   src/keep.cpp src/serve.cpp
                                   "${pchat_vocab_source}")
 # Agora's text counters, and everything they read behind them, linked into the

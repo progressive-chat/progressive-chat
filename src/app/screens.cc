@@ -9,6 +9,7 @@ module;
 #include "../provider/retry/retry.h"
 #include "../keep.h"
 #include "../serve.h"
+#include "../prgrssv_read.h"
 #include "agora/core/crypto_primitives.hpp"
 
 export module pchat.app.screens;
@@ -674,6 +675,14 @@ public:
                               std::istreambuf_iterator<char>()};
       if (bytes.empty())
         continue;
+      // An archive this program wrote, read back whole: the conversations it
+      // holds stand again beside the ones here (a row already here keeps its
+      // own), and everything said in them is kept to the store the moment it
+      // lands. Anything else is a picture for what the next message carries.
+      if (path.ends_with(".prgrssv")) {
+        restored(bytes);
+        continue;
+      }
       pending_pictures_.push_back("data:" + mime_of(path) + ";base64," +
                                   agora::core::crypto::base64_encode(
                                       std::span<const std::uint8_t>{
@@ -681,6 +690,186 @@ public:
                                               bytes.data()),
                                           bytes.size()},
                                       false, true));
+    }
+  }
+
+namespace {
+// What one level of a read thing says by its name: nothing of any kind where
+// the name is not there -- a field an older archive did not write keeps what
+// the default is, the way a settings text read back does.
+[[nodiscard]] std::string text_of(const json::value &one,
+                                  std::string_view name) {
+  const json::value *at = json::said(one, name);
+  const auto text = at ? json::text_of(*at) : std::optional<std::string_view>{};
+  return text ? std::string{*text} : std::string{};
+}
+[[nodiscard]] double number_of(const json::value &one,
+                               std::string_view name) {
+  const json::value *at = json::said(one, name);
+  const auto number = at ? json::number_of(*at) : std::optional<double>{};
+  return number.value_or(0.0);
+}
+[[nodiscard]] std::optional<bool> truth_of(const json::value &one,
+                                           std::string_view name) {
+  const json::value *at = json::said(one, name);
+  return at ? json::truth_of(*at) : std::optional<bool>{};
+}
+// What the archive says a delivery was, as this tree names it: anything it
+// does not name reads as sent -- the state a message is in where nothing
+// said otherwise.
+[[nodiscard]] delivery delivery_of(std::string_view said) {
+  if (said == "writing")
+    return delivery::writing;
+  if (said == "sending")
+    return delivery::sending;
+  if (said == "failed")
+    return delivery::failed;
+  if (said == "seen")
+    return delivery::seen;
+  return delivery::sent;
+}
+}  // namespace
+
+  // What one archive says, read back: every conversation file in it, whole,
+  // into the tree this window draws and into the store beside it. A file that
+  // is not this program's own archive says nothing (the ported reader throws
+  // on bytes that are not a zip) and leaves everything as it stood -- nothing
+  // catches it above, so a wrong file is a no-op, not a crash: caught here.
+  void restored(const std::string &bytes) {
+    std::vector<pchat::prgrssv::held> files;
+    try {
+      files = pchat::prgrssv::read(bytes);
+    } catch (const std::exception &) {
+      return;
+    }
+    for (const pchat::prgrssv::held &one : files) {
+      if (!one.name.starts_with("conversations/") ||
+          !one.name.ends_with(".json"))
+        continue;
+      const std::expected<json::value, json::read_error> room =
+          json::read(one.body);
+      if (!room)
+        continue;
+      restored_room(*room);
+    }
+    recount_all();
+    // What is open now stands among what came back: where it is not, the
+    // first conversation of the column is opened instead.
+    if (root_.conversations.empty())
+      root_.opened.reset();
+    else if (root_.opened) {
+      bool still = false;
+      for (const conversation &each : root_.conversations)
+        if (each.id == *root_.opened)
+          still = true;
+      if (!still)
+        root_.opened = root_.conversations.front().id;
+    }
+  }
+
+  // One conversation file, whole: the row the archive said and every message
+  // under it, into the tree and into the store -- the same rows a last run
+  // would have written, written now.
+  void restored_room(const json::value &room) {
+    const std::string id = std::string(text_of(room, "id"));
+    if (id.empty())
+      return;
+    const conversation_id chat{id};
+    bool held = false;
+    for (const conversation &each : root_.conversations)
+      if (each.id == chat)
+        held = true;
+    if (!held) {
+      conversation fresh;
+      fresh.id = chat;
+      fresh.account = root_.accounts.empty() ? account_id{}
+                                             : root_.accounts.front().id;
+      fresh.title = std::string(text_of(room, "title"));
+      fresh.last_activity = static_cast<moment>(
+          number_of(room, "last_activity"));
+      fresh.pinned = truth_of(room, "pinned").value_or(false);
+      fresh.muted = truth_of(room, "muted").value_or(false);
+      fresh.system_prompt = std::string(text_of(room, "system_prompt"));
+      fresh.tokens = static_cast<std::uint32_t>(number_of(room, "tokens"));
+      fresh.window = static_cast<std::uint32_t>(number_of(room, "window"));
+      fresh.context_used =
+          static_cast<float>(number_of(room, "context_used"));
+      if (const json::value *models = json::said(room, "models"))
+        for (std::size_t at = 0u; json::said(models, at); ++at)
+          if (const auto text = json::text_of(*json::said(models, at)))
+            fresh.models.push_back(std::string{*text});
+      root_.conversations.push_back(std::move(fresh));
+      stored_chat(chat);
+    }
+    const json::value *messages = json::said(room, "messages");
+    if (!messages)
+      return;
+    for (std::size_t at = 0u;; ++at) {
+      const json::value *one = json::said(messages, at);
+      if (!one)
+        break;
+      const std::string said_id = std::string(text_of(*one, "id"));
+      if (said_id.empty())
+        continue;
+      bool said_held = false;
+      for (const message &each : root_.messages)
+        if (each.id == message_id{said_id} && each.chat == chat)
+          said_held = true;
+      if (said_held)
+        continue;
+      message kept{message_id{said_id},
+                   chat,
+                   std::string(text_of(*one, "author")),
+                   truth_of(*one, "outgoing").value_or(false),
+                   std::string(text_of(*one, "text")),
+                   static_cast<moment>(number_of(*one, "sent")),
+                   delivery_of(std::string(text_of(*one, "state")))};
+      if (const auto why = json::text_of(*one, "why"))
+        kept.why_failed = std::string{*why};
+      kept.tokens = static_cast<std::uint32_t>(number_of(*one, "tokens"));
+      if (const auto to = json::text_of(*one, "replies_to"))
+        kept.replies_to = message_id{std::string{*to}};
+      if (const json::value *thought_said = json::said(*one, "thought")) {
+        kept.before = thought{
+            .took_ms = static_cast<std::int64_t>(
+                number_of(*thought_said, "took_ms")),
+            .tool_calls = static_cast<std::uint32_t>(
+                number_of(*thought_said, "tool_calls")),
+            .said = std::string(text_of(*thought_said, "said"))};
+        if (const json::value *calls = json::said(*thought_said, "calls"))
+          for (std::size_t call_at = 0u;; ++call_at) {
+            const json::value *call = json::said(calls, call_at);
+            if (!call)
+              break;
+            kept.before->calls.push_back(call_made{
+                .tool = std::string(text_of(*call, "tool")),
+                .asked = std::string(text_of(*call, "asked")),
+                .answered = std::string(text_of(*call, "answered"))});
+          }
+      }
+      if (const json::value *pictures = json::said(*one, "pictures"))
+        for (std::size_t pic_at = 0u;; ++pic_at) {
+          const json::value *picture = json::said(pictures, pic_at);
+          if (!picture)
+            break;
+          if (const auto text = json::text_of(*picture))
+            kept.pictures.push_back(std::string{*text});
+        }
+      if (const json::value *cites = json::said(*one, "citations"))
+        for (std::size_t cite_at = 0u;; ++cite_at) {
+          const json::value *cited = json::said(cites, cite_at);
+          if (!cited)
+            break;
+          kept.citations.push_back(citation{
+              .source_id = std::string(text_of(*cited, "source_id")),
+              .provider = std::string(text_of(*cited, "provider")),
+              .kind = std::string(text_of(*cited, "kind")),
+              .title = std::string(text_of(*cited, "title")),
+              .url = std::string(text_of(*cited, "url")),
+              .excerpt = std::string(text_of(*cited, "excerpt"))});
+        }
+      root_.messages.push_back(std::move(kept));
+      stored(root_.messages.back());
     }
   }
 
