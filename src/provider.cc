@@ -75,7 +75,7 @@ struct usage {
 // A model, and the door it is spoken through: where the wire is, the key that
 // opens it, which model answers, and what it is told before anything is asked.
 struct endpoint {
-  std::string base;   // as far as its version: https://api.openai.com/v1
+  std::string base_url;  // as far as its version: https://api.openai.com/v1
   std::string key;
   std::string model;
   std::string system_prompt;  // what the model is told about itself
@@ -98,8 +98,8 @@ enum class wire { chat, responses, anthropic, gemini };
   // asked of the model, not of the base's suffix.
   if (family_of(one.model) == "gemini")
     return wire::gemini;
-  const std::string_view base(one.base);
-  if (base.ends_with("/v1beta") || base.ends_with("/responses"))
+  const std::string_view base_url(one.base_url);
+  if (base_url.ends_with("/v1beta") || base_url.ends_with("/responses"))
     return wire::responses;
   return wire::chat;
 }
@@ -124,13 +124,13 @@ enum class wire { chat, responses, anthropic, gemini };
   // stream of events: base, model, method, and the form saying the events are
   // the stream and not one blob.
   if (wire_of(one) == wire::gemini) {
-    std::string out = one.base;
+    std::string out = one.base_url;
     out += "/models/";
     out += one.model;
     out += ":streamGenerateContent?alt=sse";
     return out;
   }
-  std::string out = one.base;
+  std::string out = one.base_url;
   out += path_of(wire_of(one));
   return out;
 }
@@ -479,10 +479,10 @@ template <std::ranges::forward_range Turns>
   // about how to choose.
   if (wants.thinking && wants.how_hard) {
     const std::string hard = std::string(said_by(*wants.how_hard));
-    const std::string_view base(one.base);
-    if (base.find("openrouter") != std::string::npos)
+    const std::string_view base_url(one.base_url);
+    if (base_url.find("openrouter") != std::string::npos)
       out.name("reasoning").thing().name("effort").text(hard).shut();
-    else if (base.find("deepseek") == std::string::npos)
+    else if (base_url.find("deepseek") == std::string::npos)
       out.name("reasoning_effort").text(hard);
   }
   if (wants.temperature)

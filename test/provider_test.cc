@@ -45,7 +45,7 @@ constexpr std::string_view one_stream =
 }  // namespace
 
 SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
-  const provider::endpoint at{.base = "https://api.openai.com/v1",
+  const provider::endpoint at{.base_url = "https://api.openai.com/v1",
                               .model = "o4-mini",
                               .system_prompt = "You are brief."};
   EXPECT_EQ(provider::wire_of(at), provider::wire::chat);
@@ -74,7 +74,7 @@ SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
 }
 
 SAID(provider, how_the_program_asks_is_said_in_the_body) {
-  const provider::endpoint at{.base = "https://api.openai.com/v1",
+  const provider::endpoint at{.base_url = "https://api.openai.com/v1",
                               .model = "o4-mini"};
   const std::vector<provider::turn> turns{
       provider::turn{.who = provider::role::user, .text = "Say go"}};
@@ -99,7 +99,7 @@ SAID(provider, how_the_program_asks_is_said_in_the_body) {
 }
 
 SAID(provider, a_body_asked_for_nothing_about_choosing_says_nothing_of_it) {
-  const provider::endpoint at{.base = "https://api.openai.com/v1",
+  const provider::endpoint at{.base_url = "https://api.openai.com/v1",
                               .model = "o4-mini"};
   const std::vector<provider::turn> turns{
       provider::turn{.who = provider::role::user, .text = "Say go"}};
@@ -111,7 +111,7 @@ SAID(provider, a_body_asked_for_nothing_about_choosing_says_nothing_of_it) {
 }
 
 SAID(provider, a_second_wire_is_known_by_how_its_base_ends) {
-  provider::endpoint one{.base = "https://generativelanguage.googleapis.com/v1beta"};
+  provider::endpoint one{.base_url = "https://generativelanguage.googleapis.com/v1beta"};
   EXPECT_EQ(provider::wire_of(one), provider::wire::responses);
   EXPECT_EQ(provider::url_of(one),
             std::string("https://generativelanguage.googleapis.com/v1beta/responses"));
@@ -282,9 +282,9 @@ SAID(provider, a_tool_opened_when_the_stream_ends_still_says_what_it_got) {
 SAID(provider, thinking_is_asked_for_as_each_family_names_it) {
   const std::vector<provider::turn> no_turns;
   const provider::wanted most{.thinking = true, .how_hard = effort::most};
-  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
-  const provider::endpoint relay{.base = "https://openrouter.ai/api/v1", .model = "o4-mini"};
-  const provider::endpoint deep{.base = "https://api.deepseek.com/v1", .model = "deepseek-r1"};
+  const provider::endpoint openai{.base_url = "https://api.openai.com/v1", .model = "o4-mini"};
+  const provider::endpoint relay{.base_url = "https://openrouter.ai/api/v1", .model = "o4-mini"};
+  const provider::endpoint deep{.base_url = "https://api.deepseek.com/v1", .model = "deepseek-r1"};
   EXPECT_TRUE(provider::body_of(openai, no_turns, most).find("\"reasoning_effort\":\"high\"") !=
               std::string::npos);
   EXPECT_TRUE(provider::body_of(relay, no_turns, most).find(
@@ -295,7 +295,7 @@ SAID(provider, thinking_is_asked_for_as_each_family_names_it) {
 SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
   const std::vector<provider::turn> no_turns;
   const provider::wanted none{.thinking = false};
-  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
+  const provider::endpoint openai{.base_url = "https://api.openai.com/v1", .model = "o4-mini"};
   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
 }
 

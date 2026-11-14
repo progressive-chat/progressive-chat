@@ -88,7 +88,7 @@ SAID(gemini, a_failure_the_wire_reports_inside_the_stream_says_why) {
 }
 
 SAID(gemini, a_body_is_written_the_way_generateContent_reads_it) {
-  const endpoint one{.base = "https://generativelanguage.googleapis.com/v1beta",
+  const endpoint one{.base_url = "https://generativelanguage.googleapis.com/v1beta",
                      .key = "test-key",
                      .model = "gemini-2.5-flash",
                      .system_prompt = "Answer shortly."};

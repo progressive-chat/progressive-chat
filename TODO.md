@@ -33,8 +33,8 @@ Not a full plan. What is wrong or missing today, kept between builds.
       (`"gl to be had: {"webgl":false,"webgl2":false}"`) still paints the
       whole room, the same 1785 characters a software-GL browser paints
       (`tools/probe_no_gpu.mjs`). What asks is `pchat.platform.drawn`, and
-      where there is nothing the window is told to draw in software
-      (`src/main.cc`). So only the phone is left to say it of.
+      the window is told to draw in software where nothing else will
+      (`src/main.cc`). Only the phone is left to say it does not.
 - [x] **Settings read at its end** -- done 2026-11-06. Scrolling kept the end
       it had followed while the column was still being built, so Settings was
       at -2163 and every group before the middle of a column twice the room's
@@ -128,7 +128,7 @@ Not a full plan. What is wrong or missing today, kept between builds.
       face answers too, since 2026-11-08: pressed it opens twenty-eight faces
       over the messages, and a face pressed writes itself into the field, which
       nothing asked for could do -- no request reaches where the pen stands, so
-      the card keeps one string of its own and reads it empty again before the
+      the card keeps its own string and reads it empty again before the
       next frame (`tools/probe_faces.mjs` says the three of it: opened,
       written, put away by the room). The clip alone still asks what nothing
       answers.
@@ -163,7 +163,7 @@ Not a full plan. What is wrong or missing today, kept between builds.
       an answer is asked with draw under their row, each said as it stands and
       moved one step either way by a press (`src/ui/settings.cc`, `knob_row`;
       `src/config.cc`, `asking`). Where each stops, and how far one press moves
-      it, is said once and asked for by both the row and the program that keeps
+      it, is named once and asked for by both the row and the program that keeps
       it. From there they go into every body written for a wire
       (`src/provider.cc`, `wants_of`), which is what the tests read back out of
       the json.
