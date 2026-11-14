@@ -1,7 +1,13 @@
 module;
+#include "../serve.h"
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/console.h>
 #include <emscripten/fetch.h>
+#else
+#include <arpa/inet.h>
+#include <cstdlib>
+#include <sys/socket.h>
+#include <unistd.h>
 #endif
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.platform.carry -- One body handed to the platform the program is
@@ -74,7 +80,11 @@ public:
 #if defined(__EMSCRIPTEN__)
     return true;
 #else
-    return false;
+    // A host carries only where it knows the way: the program's own door, up
+    // on the loopback (serve.h says its port). The asking side asks this
+    // before it makes a request, so a host with no door asks nobody and says
+    // nothing.
+    return pchat::serve::port() > 0;
 #endif
   }
 
@@ -122,6 +132,114 @@ public:
       trouble_ = "the page would not ask for it";
       over_ = true;
     }
+#else
+    // A host asks its own door whole: connect to the loopback, send the
+    // request, and read the answer back -- status line, headers, then the
+    // body the length names. One pass, because the door answers over a
+    // connection it closes at the end of it.
+    read_ = 0;
+    place_ = std::string(url);
+    wrote_ = std::string(body);
+    const std::string where = place_;
+    const std::size_t scheme = where.find("://");
+    const std::string host_port =
+        scheme == std::string::npos
+            ? std::string{}
+            : where.substr(scheme + 3, where.find('/', scheme + 3) - (scheme + 3));
+    const std::string path = scheme == std::string::npos
+                                 ? where
+                                 : where.substr(where.find('/', scheme + 3));
+    const std::size_t colon = host_port.rfind(':');
+    const std::string host =
+        colon == std::string::npos ? host_port : host_port.substr(0, colon);
+    const int port = colon == std::string::npos
+                         ? 80
+                         : std::atoi(host_port.c_str() + colon + 1);
+    if (host != "127.0.0.1" && host != "localhost") {
+      // The only door a host knows the way to: its own, on the loopback.
+      // Anything else would need a client this build does not carry, and
+      // saying so is what the asking side reads.
+      trouble_ = "this build carries its own door only";
+      over_ = true;
+      return;
+    }
+    const int socket_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    sockaddr_in there{};
+    there.sin_family = AF_INET;
+    there.sin_port = htons(static_cast<std::uint16_t>(port));
+    ::inet_pton(AF_INET, "127.0.0.1", &there.sin_addr);
+    if (socket_fd < 0 ||
+        ::connect(socket_fd, reinterpret_cast<sockaddr *>(&there),
+                  sizeof(there)) != 0) {
+      if (socket_fd >= 0)
+        ::close(socket_fd);
+      trouble_ = "the door did not answer the connection";
+      over_ = true;
+      return;
+    }
+    std::string flat_head = "POST " + path +
+                            " HTTP/1.1\r\nHost: " + host_port +
+                            "\r\nConnection: close\r\n";
+    for (const auto &[name, value] : headers)
+      flat_head += name + ": " + value + "\r\n";
+    flat_head += "Content-Length: " + std::to_string(wrote_.size()) +
+                 "\r\n\r\n";
+    const std::string all = flat_head + wrote_;
+    if (::send(socket_fd, all.data(), all.size(), 0) < 0) {
+      ::close(socket_fd);
+      trouble_ = "the door would not take the question";
+      over_ = true;
+      return;
+    }
+    std::string said;
+    char piece[4096];
+    for (;;) {
+      const ssize_t got_some = ::read(socket_fd, piece, sizeof(piece));
+      if (got_some <= 0)
+        break;
+      said.append(piece, static_cast<std::size_t>(got_some));
+    }
+    ::close(socket_fd);
+    const std::size_t line_end = said.find("\r\n");
+    const std::size_t head_end = said.find("\r\n\r\n");
+    if (line_end == std::string::npos || head_end == std::string::npos) {
+      trouble_ = "the door said nothing whole";
+      over_ = true;
+      return;
+    }
+    // "HTTP/1.0 200 OK" -- the number and the words beside it, kept the way
+    // the page keeps them: a refusal read the same either side.
+    const std::size_t space = said.find(' ');
+    const std::size_t second = space == std::string::npos
+                                   ? std::string::npos
+                                   : said.find(' ', space + 1);
+    const std::string status_line =
+        space == std::string::npos ? std::string{} : said.substr(0, space);
+    const std::string status_words =
+        second == std::string::npos ? std::string{}
+                                    : said.substr(second + 1,
+                                                  line_end - second - 1);
+    const int status = space == std::string::npos
+                           ? 0
+                           : std::atoi(said.c_str() + space + 1);
+    const std::string heads = said.substr(0, head_end);
+    const std::string rest = said.substr(head_end + 4);
+    std::size_t length = rest.size();
+    const std::size_t length_at = heads.find("Content-Length:");
+    if (length_at != std::string::npos)
+      length = static_cast<std::size_t>(
+          std::atol(heads.c_str() + length_at + 15));
+    arrived_ = rest.substr(0, length);
+    read_ = arrived_.size();
+    if (status >= 400) {
+      status_ = status;
+      status_text_ = status_words;
+      body_ = arrived_;
+      trouble_ = "the server answered " + std::to_string(status) +
+                 (status_words.empty() ? std::string{} : ": " + status_words);
+    }
+    (void)status_line;
+    over_ = true;
 #endif
   }
 
