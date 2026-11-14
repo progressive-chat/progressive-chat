@@ -60,7 +60,12 @@ struct sent_message {
     // What the reader asked for, worth what Agora's counter says it is
     // worth, counted as it is written rather than at some later projection.
     said.tokens = static_cast<std::uint32_t>(pchat::tokens::of(said.text));
-  if (said.text.empty() && asking.attachments.empty()) said.text = std::string{};
+  // What was clipped in beside the words: the pictures ride the message now
+  // (the wire, the store and the archive all read them from there), so what
+  // the field held is put where the message keeps them.
+  said.pictures = std::move(asking.attachments);
+  if (said.text.empty() && said.pictures.empty())
+    said.text = std::string{};
   return {.said = std::move(said), .cleared = composer_state{}};
 }
 
