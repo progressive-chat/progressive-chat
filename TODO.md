@@ -42,6 +42,19 @@ Not a full plan. What is wrong or missing today, kept between builds.
       (`src/ui/settings.cc`, `scrollToStart`). Worth keeping: the mirror gives
       where each line stands as well as what it says; one probe read those
       places out.
+- [ ] **The chat body's message shape, and the parser's duplicate rule.**
+      Agora writes a chat message's content as a list of parts and collapses a
+      duplicated name last-wins; this tree writes content as one string and
+      keeps both of a duplicated name, reading the first. Measured 2026-11-14:
+      **no payload in this tree's tests carries a duplicated name**, so the
+      order rule changes nothing today -- adopting Agora's last-wins is a
+      match to the reference with no behaviour change, once the parser's value
+      type can carry it (Agora's holds a number and a `true` as one literal
+      where ours separates them). The **content shape** is a real choice: a
+      list is what Agora's serializer sends and what OpenAI accepts both ways,
+      but relays behind this wire may read only the string this tree has
+      always sent, and the tests pin it. Decide before the body writer is
+      swapped.
 - [ ] **The two parts of Agora this tree reads by hand, left by choice.**
       `src/json.cc`'s `read()` and Agora's `parse()` do one job in two designs:
       ours keeps both of a duplicated name and lets the caller decide what it
