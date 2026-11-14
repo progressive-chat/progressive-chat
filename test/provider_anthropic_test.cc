@@ -82,6 +82,32 @@ SAID(anthropic, one_answer_is_read_in_the_words_every_wire_uses) {
   EXPECT_TRUE(saw_ended);
 }
 
+// A call the wire opened and never finished: its arguments arrive piece by
+// piece, and what arrived is kept as the call it is building -- said, not
+// dropped -- so a screen can show it while it is still being said. The whole
+// call comes when the block stops, and replaces what was arriving.
+SAID(anthropic, a_call_the_wire_never_finished_keeps_what_arrived) {
+  stream one{wire::anthropic};
+  const std::string frame_one =
+      R"(data: {"type":"content_block_start","index":0,)"
+      R"("content_block":{"type":"tool_use","id":"toolu_01",)"
+      R"("name":"get_time","input":{}}})";
+  const std::string frame_two =
+      R"(data: {"type":"content_block_delta","index":0,)"
+      R"("delta":{"type":"input_json_delta",)"
+      R"("partial_json":"{\"tz\":\"Rome\"}"}})";
+  one.feed(frame_one + "\n\n" + frame_two + "\n\n");
+  // The wire never sent the block stop: the call is not whole, so it is not
+  // among the calls, but what arrived of it is kept.
+  EXPECT_EQ(one.calls().size(), std::size_t(0));
+  EXPECT_TRUE(!one.partial_calls().empty());
+  if (!one.partial_calls().empty()) {
+    EXPECT_EQ(one.partial_calls().front().name, std::string("get_time"));
+    EXPECT_EQ(one.partial_calls().front().arguments,
+              std::string("{\"tz\":\"Rome\"}"));
+  }
+}
+
 SAID(anthropic, a_failure_the_wire_reports_inside_the_stream_says_why) {
   stream one{wire::anthropic};
   one.feed(R"(data: {"type":"error","error":{"type":"api_error","message":"overloaded"}})"

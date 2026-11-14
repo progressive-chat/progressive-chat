@@ -78,6 +78,11 @@ public:
   // Every tool it asked for, whole and in the order it asked for them: what
   // an answer is asked again with.
   [[nodiscard]] const std::vector<tool_call> &calls() const { return calls_; }
+  // The calls whose arguments are still arriving, as the wire has sent them
+  // so far. Empty once the whole calls have come in and replaced them.
+  [[nodiscard]] const std::vector<tool_call> &partial_calls() const {
+    return partial_;
+  }
   [[nodiscard]] usage cost() const { return cost_; }
   [[nodiscard]] bool ended() const { return ended_; }
   [[nodiscard]] bool failed() const { return failed_; }
@@ -132,11 +137,19 @@ private:
     case anthropic_frame::kind::thought:
       thought_said(one.text);
       return;
+    case anthropic_frame::kind::tool_partial:
+      // A call its arguments are still arriving for: kept here as it arrives,
+      // and said whole when the wire sends the call it belongs to. Nothing is
+      // lost between the two.
+      partial_said(one.id, one.name, one.arguments);
+      return;
     case anthropic_frame::kind::tool: {
       const tool_call call{
           .id = one.id, .name = one.name, .arguments = one.arguments};
       calls_.push_back(call);
       said_.push_back(event{.what = event::kind::tool, .call = call});
+      // The whole call replaces what was arriving for it.
+      partial_.clear();
       return;
     }
     case anthropic_frame::kind::usage:
@@ -200,11 +213,18 @@ private:
       case gemini_frame::kind::thought:
         thought_said(one.text);
         return;
+      case gemini_frame::kind::tool_partial:
+        // A call its arguments are still arriving for: kept here as it
+        // arrives, and said whole when the wire sends the call it belongs to.
+        partial_said(one.id, one.name, one.arguments);
+        return;
       case gemini_frame::kind::tool: {
         const tool_call call{
             .id = one.id, .name = one.name, .arguments = one.arguments};
         calls_.push_back(call);
         said_.push_back(event{.what = event::kind::tool, .call = call});
+        // The whole call replaces what was arriving for it.
+        partial_.clear();
         return;
       }
       case gemini_frame::kind::usage:
@@ -598,6 +618,23 @@ private:
   // Tool calls come as deltas over an index: which of them, what it is
   // called, and a piece of the arguments each time. Kept by index until the
   // frame that says they were all it wanted.
+  // A call whose arguments are still arriving: kept by the id the wire gave
+  // it, so the pieces arriving after one another land on one call and not on
+  // one each. Where the wire gave no id, the stream key stands in for it.
+  void partial_said(std::string id, std::string name, std::string arguments) {
+    for (tool_call &kept : partial_) {
+      if (kept.id == id || (!id.empty() && kept.id.empty())) {
+        if (!name.empty())
+          kept.name = std::move(name);
+        kept.arguments = std::move(arguments);
+        return;
+      }
+    }
+    partial_.push_back(tool_call{.id = std::move(id),
+                                 .name = std::move(name),
+                                 .arguments = std::move(arguments)});
+  }
+
   void tools_said(const json::value *said) {
     for (std::size_t at = 0; const json::value *one = json::said(said, at); ++at) {
       std::size_t which = 0;

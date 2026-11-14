@@ -100,9 +100,25 @@ void frame_of(const gs::StreamEvent &event, std::vector<gemini_frame> &out) {
                         .id = call->id,
                         .name = call->name,
                         .arguments = call->arguments});
+  } else if (const auto *update = std::get_if<sn::ToolCallUpdate>(&event)) {
+    // A call its arguments are still arriving for: named, and as much of its
+    // arguments as the wire has sent. The whole call comes as a request when
+    // the block stops; this says what stood in between. Where the wire gave no
+    // id, the stream key is what it is called by.
+    out.push_back(frame{.what = frame::kind::tool_partial,
+                        .id = update->id.value_or(update->stream_key),
+                        .name = update->name,
+                        .arguments = update->arguments});
+  } else if (const auto *hosted = std::get_if<sn::HostedToolCallUpdate>(&event)) {
+    // A call the wire runs itself -- a search, a code execution -- said as it
+    // runs: its name, what it was given, and what came back where it is back.
+    out.push_back(frame{.what = frame::kind::tool_partial,
+                        .id = hosted->stream_key,
+                        .name = hosted->name,
+                        .arguments = hosted->arguments});
   }
-  // sn::ToolCallUpdate, sn::HostedToolCallUpdate, gs::CitationUpdate: nothing
-  // to say here yet.
+  // gs::CitationUpdate: display material for a screen that reads citations,
+  // which this tree has not got yet.
 }
 
 }  // namespace
