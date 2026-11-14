@@ -8,6 +8,7 @@
 module;
 #include "../provider/retry/retry.h"
 #include "../keep.h"
+#include "../serve.h"
 
 export module pchat.app.screens;
 
@@ -714,9 +715,26 @@ private:
     platform::carrying carried;
     if (!carried.any())
       return;
-    const provider::endpoint at{.base_url = opened_.base_url,
-                                .model = ending_of(chat),
-                                .system_prompt = system_prompt_of(chat)};
+    // Where the question goes, and whether anything can carry it: on a page
+    // the address is the one this window has always asked through (its own
+    // origin). On a host the door is the only place a body can go, so the row
+    // "Be served as a page of its own" decides the ask at all -- on, the
+    // question goes to this program's own door; off, a host asks nobody, as
+    // it always has. A page has no door standing, so the row changes nothing
+    // there yet (said in switches.md).
+    const bool to_door = offered_of(how_, switch_choice::own_page) &&
+                         pchat::serve::port() > 0;
+#if !defined(__EMSCRIPTEN__)
+    if (!to_door)
+      return;
+#endif
+    const provider::endpoint at{
+        .base_url = to_door
+                        ? "http://127.0.0.1:" +
+                              std::to_string(pchat::serve::port()) + "/v1"
+                        : opened_.base_url,
+        .model = ending_of(chat),
+        .system_prompt = system_prompt_of(chat)};
     // Not const: a view over messages is asked of more than once and read
     // more than once, and a const view says no to a second reading.
     auto turns = root_.messages |
