@@ -40,11 +40,49 @@ import pchat.logic.lists;
 
 namespace scene = skiff::scene;
 
+namespace {
+// What one level of a read thing says by its name: nothing of any kind where
+// the name is not there -- a field an older archive did not write keeps what
+// the default is, the way a settings text read back does.
+[[nodiscard]] std::string text_of(const json::value &one,
+                                  std::string_view name) {
+  const json::value *at = json::said(one, name);
+  const auto text = at ? json::text_of(*at) : std::optional<std::string_view>{};
+  return text ? std::string{*text} : std::string{};
+}
+[[nodiscard]] double number_of(const json::value &one,
+                               std::string_view name) {
+  const json::value *at = json::said(one, name);
+  const auto number = at ? json::number_of(*at) : std::optional<double>{};
+  return number.value_or(0.0);
+}
+[[nodiscard]] std::optional<bool> truth_of(const json::value &one,
+                                           std::string_view name) {
+  const json::value *at = json::said(one, name);
+  return at ? json::truth_of(*at) : std::optional<bool>{};
+}
+// What the archive says a delivery was, as this tree names it: anything it
+// does not name reads as sent -- the state a message is in where nothing
+// said otherwise.
+[[nodiscard]] delivery delivery_of(std::string_view said) {
+  if (said == "writing")
+    return delivery::writing;
+  if (said == "sending")
+    return delivery::sending;
+  if (said == "failed")
+    return delivery::failed;
+  if (said == "seen")
+    return delivery::seen;
+  return delivery::sent;
+}
+}  // namespace
+
 export namespace pchat::app {
 
 // The tree the host draws, held by a Scene. Declared here so the program
 // needs nothing of the screens but these.
 using window_scene = scene::Scene<ui::window_type>;
+
 
 // Everything shown, and what is done with what was asked for.
 class screens {
@@ -693,42 +731,6 @@ public:
     }
   }
 
-namespace {
-// What one level of a read thing says by its name: nothing of any kind where
-// the name is not there -- a field an older archive did not write keeps what
-// the default is, the way a settings text read back does.
-[[nodiscard]] std::string text_of(const json::value &one,
-                                  std::string_view name) {
-  const json::value *at = json::said(one, name);
-  const auto text = at ? json::text_of(*at) : std::optional<std::string_view>{};
-  return text ? std::string{*text} : std::string{};
-}
-[[nodiscard]] double number_of(const json::value &one,
-                               std::string_view name) {
-  const json::value *at = json::said(one, name);
-  const auto number = at ? json::number_of(*at) : std::optional<double>{};
-  return number.value_or(0.0);
-}
-[[nodiscard]] std::optional<bool> truth_of(const json::value &one,
-                                           std::string_view name) {
-  const json::value *at = json::said(one, name);
-  return at ? json::truth_of(*at) : std::optional<bool>{};
-}
-// What the archive says a delivery was, as this tree names it: anything it
-// does not name reads as sent -- the state a message is in where nothing
-// said otherwise.
-[[nodiscard]] delivery delivery_of(std::string_view said) {
-  if (said == "writing")
-    return delivery::writing;
-  if (said == "sending")
-    return delivery::sending;
-  if (said == "failed")
-    return delivery::failed;
-  if (said == "seen")
-    return delivery::seen;
-  return delivery::sent;
-}
-}  // namespace
 
   // What one archive says, read back: every conversation file in it, whole,
   // into the tree this window draws and into the store beside it. A file that
