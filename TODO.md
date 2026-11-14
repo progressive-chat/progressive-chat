@@ -42,6 +42,19 @@ Not a full plan. What is wrong or missing today, kept between builds.
       (`src/ui/settings.cc`, `scrollToStart`). Worth keeping: the mirror gives
       where each line stands as well as what it says; one probe read those
       places out.
+- [ ] **The two parts of Agora this tree reads by hand, left by choice.**
+      `src/json.cc`'s `read()` and Agora's `parse()` do one job in two designs:
+      ours keeps both of a duplicated name and lets the caller decide what it
+      means, and reads the first; Agora's collapses the name last-wins, holds a
+      number and a `true` as one literal, where ours gives a number, a truth, a
+      string, a list and a thing each a place to itself.
+      Calling Agora's parser from ours is therefore not a port but a
+      reconstruction of both, plus the one deliberate choice ours leaves open.
+      Read `json.cc`'s note on two members of one name before touching it.
+      The same holds for Agora's archive formats (`portable_settings_archive`,
+      `native_backup_format`): writing them would be writing Agora's archive,
+      not this tree's, and this tree's archive is a zip of JSON by its own
+      choice (`src/prgrssv.cc`). What is wanted is a decision, not a rewrite.
 - [ ] **No back end.** `src/app/sample.cc` answers for now, so nothing counted
       -- tokens, tool calls, answer duration -- is counted for real.
 - [x] **Copy to clipboard** -- read back 2026-11-07: a page in a browser,
