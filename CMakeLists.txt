@@ -195,9 +195,11 @@ endif()
 
 # skiff's components, as progressive-chat draws with them: the system's fonts
 # read from their directory, text shaped by HarfBuzz and laid out by
-# Unicode's rules, GL where asked for.
+# Unicode's rules, GL where asked for -- and the codecs for the pictures the
+# clip reads (a build that asks skiff for anything at all asks for nothing
+# more, so png and jpeg and the rest have to be said here to reach Skia).
 option(PCHAT_GL "Draw on the GPU through OpenGL, besides in software" ON)
-set(pchat_skiff_components fontmgr-directory text-shaping)
+set(pchat_skiff_components fontmgr-directory text-shaping png jpeg gif webp)
 if(PCHAT_GL)
   list(APPEND pchat_skiff_components gl)
 endif()

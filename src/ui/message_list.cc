@@ -11,9 +11,13 @@
 // each came to, which is the reach the scroll view measures. Skiff measures
 // the words in each: no window counts characters, and no bubble comes out the
 // wrong size for what it says.
+module;
+#include "agora/core/crypto_primitives.hpp"
+
 export module pchat.ui:message_list;
 
 import std;
+import skia;
 import skiff.scene;
 import skiff.nodes;
 import pchat.core;
@@ -39,6 +43,10 @@ inline constexpr float run_gap = 14.0f;
 // The share of the room a bubble may take before it wraps: three of its
 // four quarters, and no wider than a line is comfortable to read.
 inline constexpr float widest_share = 0.75f;
+// The box a clipped picture is drawn in: square and one size, so a row of
+// them measures the same before any of them has decoded, and the picture's
+// own proportions change nothing about it.
+inline constexpr float picture_room = 200.0f;
 // What stands between an answer, its folded history and the row under it.
 inline constexpr float answer_gap = 8.0f;
 // The six things asked for at an answer's foot.
@@ -381,11 +389,51 @@ struct history_fold : nodes::Stack {
 
 // ---- the two rows --------------------------------------------------------
 
+// One picture, whole: its data URI decoded once into the bytes the ported
+// decoder reads, and the picture it made handed to the node each time it is
+// asked. A URI that does not decode says nothing and the node draws no
+// picture -- the box it would have had stays as it is.
+class picture_of {
+public:
+  explicit picture_of(std::string uri) : uri_(std::move(uri)) {}
+
+  [[nodiscard]] const skia::Sp<skia::SkImage> *operator()() const {
+    if (!done_) {
+      done_ = true;
+      made_ = decode();
+    }
+    return made_ ? &made_ : nullptr;
+  }
+
+private:
+  [[nodiscard]] skia::Sp<skia::SkImage> decode() const {
+    if (uri_.rfind("data:", 0) != 0)
+      return nullptr;
+    const std::size_t comma = uri_.find(',');
+    if (comma == std::string::npos)
+      return nullptr;
+    const agora::core::crypto::Base64Decode got =
+        agora::core::crypto::base64_decode(
+            std::string_view{uri_}.substr(comma + 1), false);
+    if (!got.bytes)
+      return nullptr;
+    return skia::decodeImage(got.bytes->data(), got.bytes->size());
+  }
+
+  std::string uri_;
+  mutable bool done_ = false;
+  mutable skia::Sp<skia::SkImage> made_;
+};
+
 // What the reader wrote: one bubble, on the right of the room, no wider than
 // three of its four quarters. No name over it: standing there says whose it
-// is.
+// is. What was clipped in stands over the bubble: one box to each, whole as
+// its proportions say.
 struct reader_row : nodes::Stack {
   bubble fBubble;
+  // One node to a picture, kept by pointer as every node list in this tree
+  // is: a node is made where it stands and is not carried about.
+  std::vector<std::unique_ptr<nodes::Image<picture_of>>> fPics;
 
   reader_row() {
     this->apply({.fillX = true, .autoSize = scene::axes::kY});
@@ -397,6 +445,8 @@ struct reader_row : nodes::Stack {
   void blank() {
     this->setVisible(false);
     fBubble.blank();
+    for (const std::unique_ptr<nodes::Image<picture_of>> &one : fPics)
+      one->setVisible(false);
   }
 
   void again(const paints &look, const message &said, bool head,
@@ -408,10 +458,33 @@ struct reader_row : nodes::Stack {
         {.fillX = true,
          .autoSize = scene::axes::kY,
          .margin = scene::Margin{head ? run_gap : 0.0f, 0.0f, 0.0f, 0.0f}});
+    // What was clipped in, over the bubble: one box to each picture, whole,
+    // no wider than the bubble's own room; the ones not of this message put
+    // away. The box's size is its own -- the row is measured every frame
+    // anyway -- and the picture fills the box it is given.
+    while (fPics.size() < said.pictures.size())
+      fPics.push_back(std::make_unique<nodes::Image<picture_of>>(
+          picture_of{std::string{}}));
+    for (std::size_t at = 0; at < fPics.size(); ++at) {
+      nodes::Image<picture_of> &one = *fPics[at];
+      if (at >= said.pictures.size()) {
+        one.setVisible(false);
+        continue;
+      }
+      one.setSource(picture_of{said.pictures[at]});
+      one.apply({.width = std::min(widest, picture_room),
+                 .height = picture_room,
+                 .cornerRadius = 14.0f,
+                 .visible = true});
+    }
     fBubble.again(look, said.text, clock_of(said.sent), widest);
   }
 
-  void forEachChild(auto &&f) { f(fBubble); }
+  void forEachChild(auto &&f) {
+    for (const std::unique_ptr<nodes::Image<picture_of>> &one : fPics)
+      f(*one);
+    f(fBubble);
+  }
 };
 
 // What a model answered: no bubble, no name and no model over it -- text the
