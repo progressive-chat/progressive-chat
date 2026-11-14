@@ -64,10 +64,17 @@ SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
   const json::value *said = json::said(json::said(*read_back, "messages"), 0);
   EXPECT_EQ(std::string(json::text_of(*json::said(said, "content")).value_or("")),
             std::string("You are brief."));
-  EXPECT_EQ(std::string(json::text_of(*json::said(
-                              json::said(json::said(*read_back, "messages"), 2), "content"))
-                            .value_or("")),
-            std::string("Say \"go\"\n"));
+  // A message's content is a list of parts, the text one of them -- the shape
+  // Agora writes; the system turn above keeps its string, as it always has.
+  const json::value *third = json::said(json::said(*read_back, "messages"), 2);
+  const json::value *parts = third ? json::said(third, "content") : nullptr;
+  EXPECT_TRUE(parts != nullptr);
+  if (parts == nullptr)
+    return;
+  EXPECT_EQ(
+      std::string(json::text_of(*json::said(json::said(parts, 0u), "text"))
+                      .value_or("")),
+      std::string("Say \"go\"\n"));
   EXPECT_TRUE(json::truth_of(*json::said(json::said(*read_back, "stream_options"),
                                          "include_usage"))
                   .value_or(false));

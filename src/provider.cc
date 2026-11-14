@@ -483,7 +483,13 @@ template <std::ranges::forward_range Turns>
       out.thing().name("role").text(said_by(said.who));
       if (said.who == role::tool && !said.own.empty())
         out.name("tool_call_id").text(said.own);
-      out.name("content").text(said.text);
+      // The message's content as the ported tree writes it: a list of parts,
+      // each its own, the text one of them -- the same shape Agora's
+      // write_open_ai_message sends. The system turn above keeps its string,
+      // which is what this wire has always sent for it.
+      out.name("content").list();
+      out.thing().name("type").text("text").name("text").text(said.text).shut();
+      out.shut();
       if (!said.calls.empty()) {
         out.name("tool_calls").list();
         for (const tool_call &one : said.calls)
