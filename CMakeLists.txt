@@ -266,7 +266,11 @@ endif()
 
 # The counters themselves are a classic translation unit: reached through one
 # header that imports nothing, so agora's headers stay out of module units.
+# The ported tree's own store behind one plain header, the way the counters
+# and the archive writer are: agora's ChatDao is read here so no module unit
+# names it.
 target_sources(pchat_core PRIVATE src/tokens_worth.cpp src/prgrssv_zip.cpp
+                                  src/keep.cpp
                                   "${pchat_vocab_source}")
 # Agora's text counters, and everything they read behind them, linked into the
 # model the screens carry: the first thing this program takes from the ported
