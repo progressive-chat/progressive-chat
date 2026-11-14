@@ -61,6 +61,20 @@ SAID(keep, a_conversation_and_its_message_are_kept_and_read_back) {
   pchat::keep::close();
 }
 
+// What the page's settings are kept as: one text written, read back whole --
+// the pair the program asks of at the next run (its own table beside the
+// ported schema's).
+SAID(keep, settings_said_are_read_back_whole) {
+  pchat::keep::close();
+  EXPECT_TRUE(pchat::keep::open());
+  EXPECT_EQ(pchat::keep::settings(), std::string(""));
+  pchat::keep::keep_settings(R"({"asking":{"thinking":false}})");
+  EXPECT_EQ(pchat::keep::settings(), std::string(R"({"asking":{"thinking":false}})"));
+  pchat::keep::keep_settings(R"({"asking":{"thinking":true}})");
+  EXPECT_EQ(pchat::keep::settings(), std::string(R"({"asking":{"thinking":true}})"));
+  pchat::keep::close();
+}
+
 // A store at a file, as the program holds it: what was kept in one run is
 // read back in the next. The file is under the session's own temp -- no path
 // beside the test is assumed, and nothing is left standing after it.
@@ -92,6 +106,13 @@ SAID(keep, a_store_at_a_file_holds_what_a_last_run_kept) {
   EXPECT_TRUE(whole.found);
   if (whole.found)
     EXPECT_EQ(whole.text, std::string("Jars are on the shelf."));
+  EXPECT_EQ(pchat::keep::settings(), std::string(""));
+  pchat::keep::keep_settings(R"({"looks":{"amoled":true}})");
+  pchat::keep::close();
+
+  // The settings of the earlier run, at the next open: asked of the same file.
+  EXPECT_TRUE(pchat::keep::open_at(where));
+  EXPECT_EQ(pchat::keep::settings(), std::string(R"({"looks":{"amoled":true}})"));
   pchat::keep::close();
   std::filesystem::remove(where);
 }

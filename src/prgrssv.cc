@@ -55,6 +55,27 @@ namespace pchat::prgrssv {
   return "seen";
 }
 
+}  // namespace pchat::prgrssv
+
+// What an archive and the store say, exported: every name written into a
+// settings text and read back out of it -- the five said_of/enumerator pairs
+// (each written whole above), the keys settings_of writes each tool and switch
+// under (the enumerators' own words: the rows draw labels; these are what a
+// file keeps), and the archive's own words.
+export namespace pchat::prgrssv {
+
+inline constexpr std::array<std::string_view, tools_owned> tool_keys{
+    "conversation_search", "how_much", "when_it_is"};
+inline constexpr std::array<std::string_view, switches_owned> switch_keys{
+    "picture_to_words", "words_to_picture", "proxy",
+    "own_page",         "remember",         "skills", "data_held"};
+
+// What every archive calls itself, and how far it has got: said in the
+// manifest, so anything reading one file knows what the rest of them are
+// written as.
+inline constexpr std::string_view format = "prgrssv";
+inline constexpr std::int64_t version = 1;
+
 [[nodiscard]] std::string_view said_of(theme_mode one) {
   switch (one) {
   case theme_mode::light:
@@ -129,24 +150,97 @@ namespace pchat::prgrssv {
   return "neutral";
 }
 
-// What the tools and the switches are called, in the order their rows ask for
-// them (pchat.config): the same words a settings row says and the program
-// keeps, so an archive read back lines up with what the page shows.
-inline constexpr std::array<std::string_view, tools_owned> tool_names{
-    "conversation_search", "how_much", "when_it_is"};
-inline constexpr std::array<std::string_view, switches_owned> switch_names{
-    "picture_to_words", "words_to_picture", "proxy",
-    "own_page",         "remember",         "skills", "data_held"};
 
-}  // namespace pchat::prgrssv
+// The other way of each of those five names: what a word said in a file means
+// back to the enumerator it was said from, or the default where the word is
+// not one this tree ever said. A setting read back is read as what it was
+// written as; anything else keeps what the default is.
+[[nodiscard]] inline theme_mode theme_mode_of(std::string_view said) {
+  return said == "light" ? theme_mode::light
+         : said == "system" ? theme_mode::system
+                            : theme_mode::dark;
+}
+[[nodiscard]] inline effort effort_of(std::string_view said) {
+  return said == "least" ? effort::least
+         : said == "most" ? effort::most
+         : said == "all" ? effort::all
+                         : effort::some;
+}
+[[nodiscard]] inline font_choice font_choice_of(std::string_view said) {
+  return said == "system" ? font_choice::system
+         : said == "custom" ? font_choice::custom
+                            : font_choice::app;
+}
+[[nodiscard]] inline scheme_preset preset_of(std::string_view said) {
+  if (said == "midnight")
+    return scheme_preset::midnight;
+  if (said == "nordic")
+    return scheme_preset::nordic;
+  if (said == "forest")
+    return scheme_preset::forest;
+  if (said == "sunset")
+    return scheme_preset::sunset;
+  if (said == "rose")
+    return scheme_preset::rose;
+  if (said == "lavender")
+    return scheme_preset::lavender;
+  if (said == "slate")
+    return scheme_preset::slate;
+  if (said == "ocean")
+    return scheme_preset::ocean;
+  return default_preset;
+}
+[[nodiscard]] inline scheme_style style_of(std::string_view said) {
+  if (said == "tonal_spot")
+    return scheme_style::tonal_spot;
+  if (said == "expressive")
+    return scheme_style::expressive;
+  if (said == "vibrant")
+    return scheme_style::vibrant;
+  if (said == "neutral")
+    return scheme_style::neutral;
+  return default_style;
+}
 
-export namespace pchat::prgrssv {
-
-// What every archive calls itself, and how far it has got: said in the
-// manifest, so anything reading one file knows what the rest of them are
-// written as.
-inline constexpr std::string_view format = "prgrssv";
-inline constexpr std::int64_t version = 1;
+// What the page's settings are, as one JSON text: how it looks and how an
+// answer is asked for, each said whole -- the same object the archive writes
+// into settings.json, named here alone so what a run set can be kept and read
+// back without building an archive to carry it.
+[[nodiscard]] inline std::string settings_of(const looks &shown,
+                                             const asking &how) {
+  json::writing settings;
+  settings.thing();
+  settings.name("looks").thing();
+  settings.name("preset").text(said_of(shown.preset));
+  settings.name("style").text(said_of(shown.style));
+  settings.name("mode").text(said_of(shown.mode));
+  settings.name("amoled").truth(shown.amoled);
+  settings.name("reduce_motion").truth(shown.reduce_motion);
+  settings.name("avatars").truth(shown.avatars);
+  settings.name("row_times").truth(shown.row_times);
+  settings.name("font_scale").number(shown.font_scale);
+  settings.name("font").text(said_of(shown.font));
+  settings.shut();
+  settings.name("asking").thing();
+  settings.name("thinking").truth(how.thinking);
+  settings.name("how_hard").text(said_of(how.how_hard));
+  settings.name("temperature").number(how.temperature);
+  settings.name("top_p").number(how.top_p);
+  settings.name("max_tokens").number(static_cast<std::int64_t>(how.max_tokens));
+  settings.name("presence").number(how.presence);
+  settings.name("often").number(how.often);
+  settings.name("tools").thing();
+  for (std::size_t at = 0u; at < tools_owned; ++at)
+    settings.name(tool_keys[at]).truth(how.tools[at]);
+  settings.shut();
+  settings.name("switches").thing();
+  for (std::size_t at = 0u; at < switches_owned; ++at)
+    settings.name(switch_keys[at]).truth(how.switches[at]);
+  settings.shut();
+  settings.shut();  // asking
+  settings.shut();  // looks-and-asking
+  return settings.take();
+}
 
 // One archive, whole: what the program holds said into the files it is kept
 // in, and those files zipped into the bytes a save is handed.
@@ -258,40 +352,9 @@ inline constexpr std::int64_t version = 1;
   }
 
   // The settings the rows of the page have set: how it looks and how an answer
-  // is asked for, each said whole: what was on the switches and the knobs
-  // when this archive was written.
-  json::writing settings;
-  settings.thing();
-  settings.name("looks").thing();
-  settings.name("preset").text(said_of(shown.preset));
-  settings.name("style").text(said_of(shown.style));
-  settings.name("mode").text(said_of(shown.mode));
-  settings.name("amoled").truth(shown.amoled);
-  settings.name("reduce_motion").truth(shown.reduce_motion);
-  settings.name("avatars").truth(shown.avatars);
-  settings.name("row_times").truth(shown.row_times);
-  settings.name("font_scale").number(shown.font_scale);
-  settings.name("font").text(said_of(shown.font));
-  settings.shut();
-  settings.name("asking").thing();
-  settings.name("thinking").truth(how.thinking);
-  settings.name("how_hard").text(said_of(how.how_hard));
-  settings.name("temperature").number(how.temperature);
-  settings.name("top_p").number(how.top_p);
-  settings.name("max_tokens").number(static_cast<std::int64_t>(how.max_tokens));
-  settings.name("presence").number(how.presence);
-  settings.name("often").number(how.often);
-  settings.name("tools").thing();
-  for (std::size_t at = 0u; at < tools_owned; ++at)
-    settings.name(tool_names[at]).truth(how.tools[at]);
-  settings.shut();
-  settings.name("switches").thing();
-  for (std::size_t at = 0u; at < switches_owned; ++at)
-    settings.name(switch_names[at]).truth(how.switches[at]);
-  settings.shut();
-  settings.shut();  // asking
-  settings.shut();  // looks-and-asking
-  files.push_back(stored{"settings.json", settings.take()});
+  // is asked for, each said whole -- the same text the store keeps (and the
+  // program reads back), written here for the archive as well.
+  files.push_back(stored{"settings.json", settings_of(shown, how)});
 
   return zipped(files);
 }
