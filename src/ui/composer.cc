@@ -22,8 +22,6 @@ import :theme;
 import :base;
 import :icons;
 
-export namespace pchat::ui {
-
 namespace {
 // The moment, taken from the system clock: milliseconds since the epoch --
 // the same wire time the screens keep, for what is said to the store here.
@@ -34,6 +32,8 @@ namespace {
           .count());
 }
 }  // namespace
+
+export namespace pchat::ui {
 
 namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
