@@ -269,8 +269,10 @@ endif()
 # The ported tree's own store behind one plain header, the way the counters
 # and the archive writer are: agora's ChatDao is read here so no module unit
 # names it.
+# The store and the program's own door, each behind a plain header: agora's
+# ChatDao and HTTP server are read in these two and nowhere else.
 target_sources(pchat_core PRIVATE src/tokens_worth.cpp src/prgrssv_zip.cpp
-                                  src/keep.cpp
+                                  src/keep.cpp src/serve.cpp
                                   "${pchat_vocab_source}")
 # Agora's text counters, and everything they read behind them, linked into the
 # model the screens carry: the first thing this program takes from the ported
