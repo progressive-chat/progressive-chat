@@ -31,7 +31,8 @@ SAID(keep, a_conversation_and_its_message_are_kept_and_read_back) {
                                        .conversation_id = "chat-1",
                                        .text = "There is bread.",
                                        .token_count = 4,
-                                       .timestamp = 1700000001000});
+                                       .timestamp = 1700000001000,
+                                       .pictures = {"data:image/png;base64,AAAA"}});
 
   const std::vector<conversation_row> conversations = pchat::keep::conversations();
   EXPECT_TRUE(conversations.size() == 1);
@@ -47,6 +48,11 @@ SAID(keep, a_conversation_and_its_message_are_kept_and_read_back) {
   EXPECT_EQ(messages[0].id, std::string("m-1"));
   EXPECT_EQ(messages[0].text, std::string("There is bread."));
   EXPECT_EQ(messages[0].token_count, 4);
+  // The picture clipped in beside it, whole in its row -- the store's images
+  // column keeps what the message carried.
+  EXPECT_TRUE(messages[0].pictures.size() == 1);
+  if (messages[0].pictures.size() == 1)
+    EXPECT_EQ(messages[0].pictures[0], std::string("data:image/png;base64,AAAA"));
 
   // One message held out whole, by the id it was kept under -- the read an
   // answer's line makes when the program starts again. Nothing where the id

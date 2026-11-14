@@ -84,6 +84,48 @@ SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
 // tool's answer tied to the call it answers, and a model's call beside the
 // text it said, each in the parts the wire reads. Said through the real body
 // writer, so what goes out is one serializer's word.
+// What a picture clipped in beside the words becomes on the wire: its own
+// part, after the text part, the data URI whole and the detail the ported
+// tree says ("auto") -- the shape Agora's write_open_ai_message sends.
+SAID(provider, a_picture_clipped_in_is_a_part_of_the_body) {
+  const provider::endpoint at{.base_url = "https://api.openai.com/v1",
+                              .model = "o4-mini",
+                              .system_prompt = "You are brief."};
+  std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user,
+                     .text = "What is this?",
+                     .pictures = {"data:image/png;base64,AAAA"}}};
+  const std::string body = provider::body_of(at, turns);
+  const auto read_back = json::read(body);
+  EXPECT_TRUE(read_back.has_value());
+  if (!read_back)
+    return;
+  const json::value *message =
+      json::said(json::said(*read_back, "messages"), 0);
+  const json::value *parts = message ? json::said(message, "content") : nullptr;
+  EXPECT_TRUE(parts != nullptr);
+  if (parts == nullptr)
+    return;
+  const json::value *text_part = json::said(parts, 0u);
+  const json::value *picture_part = json::said(parts, 1u);
+  EXPECT_TRUE(text_part != nullptr && picture_part != nullptr);
+  if (text_part == nullptr || picture_part == nullptr)
+    return;
+  EXPECT_EQ(std::string(json::text_of(*json::said(text_part, "type")).value_or("")),
+            std::string("text"));
+  EXPECT_EQ(
+      std::string(json::text_of(*json::said(picture_part, "type")).value_or("")),
+      std::string("image_url"));
+  const json::value *image = json::said(picture_part, "image_url");
+  EXPECT_TRUE(image != nullptr);
+  if (image == nullptr)
+    return;
+  EXPECT_EQ(std::string(json::text_of(*json::said(image, "url")).value_or("")),
+            std::string("data:image/png;base64,AAAA"));
+  EXPECT_EQ(std::string(json::text_of(*json::said(image, "detail")).value_or("")),
+            std::string("auto"));
+}
+
 SAID(provider, the_anthropic_body_says_each_message_in_parts) {
   const provider::endpoint at{.base_url = "https://api.anthropic.com/v1",
                               .model = "claude-4"};

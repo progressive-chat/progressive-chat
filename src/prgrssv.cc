@@ -323,6 +323,14 @@ inline constexpr std::int64_t version = 1;
         }
         written.shut();  // citations
       }
+      // What was clipped in beside the words, each whole as the data URI it
+      // came in as, in order: nothing where none.
+      if (!one.pictures.empty()) {
+        written.name("pictures").list();
+        for (const std::string &picture : one.pictures)
+          written.text(picture);
+        written.shut();  // pictures
+      }
       written.name("tokens").number(static_cast<std::int64_t>(one.tokens));
       if (one.replies_to)
         written.name("replies_to").text(one.replies_to->value);

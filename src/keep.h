@@ -41,6 +41,9 @@ struct message_row {
   std::string thought;
   // The model that answered (empty: the reader wrote this one).
   std::string model;
+  // What was clipped in beside the words, each whole as the data URI it was
+  // kept as, in order. Nothing where none.
+  std::vector<std::string> pictures;
 };
 
 // Opens the store's own database, empty, with the ported schema on it: a

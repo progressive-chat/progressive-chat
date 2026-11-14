@@ -114,7 +114,8 @@ SAID(prgrssv, everything_held_comes_back_as_it_was) {
                                   .text = "two \"quotes\"\nand a dash",
                                   .sent = 11,
                                   .state = delivery::sent,
-                                  .tokens = 4});
+                                  .tokens = 4,
+                                  .pictures = {"data:image/png;base64,AAAA"}});
   root.messages.push_back(
       message{.id = message_id{"kitchen-2"},
               .chat = conversation_id{"kitchen"},
@@ -169,6 +170,9 @@ SAID(prgrssv, everything_held_comes_back_as_it_was) {
     EXPECT_TRUE(truth_at(*room_json, "messages/0/outgoing") == true);
     EXPECT_EQ(text_at(*room_json, "messages/0/state"), "sent");
     EXPECT_EQ(number_at(*room_json, "messages/0/sent"), 11.0);
+    // What was clipped in beside it: whole, in order.
+    EXPECT_EQ(text_at(*room_json, "messages/0/pictures/0"),
+              "data:image/png;base64,AAAA");
     EXPECT_EQ(text_at(*room_json, "messages/1/author"), "haiku-4");
     EXPECT_EQ(number_at(*room_json, "messages/1/thought/took_ms"), 420.0);
     EXPECT_EQ(text_at(*room_json, "messages/1/thought/said"),

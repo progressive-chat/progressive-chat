@@ -62,6 +62,9 @@ struct turn {
   // Which call this turn answers, where it answers one: named as the wire
   // named it, so what a tool said reads against what asked it.
   std::string own;
+  // What pictures were clipped in beside this turn's words: data URIs, in
+  // order, each its own part on the wire. Nothing where none.
+  std::vector<std::string> pictures;
   friend bool operator==(const turn &, const turn &) = default;
 };
 
@@ -176,7 +179,8 @@ template <std::ranges::forward_range Said>
       said | std::views::transform([](const message &one) {
         return turn{.who = one.outgoing ? role::user : role::assistant,
                     .text = one.text,
-                    .thought = one.before ? one.before->said : std::string()};
+                    .thought = one.before ? one.before->said : std::string(),
+                    .pictures = one.pictures};
       }));
 }
 
@@ -488,7 +492,24 @@ template <std::ranges::forward_range Turns>
       // write_open_ai_message sends. The system turn above keeps its string,
       // which is what this wire has always sent for it.
       out.name("content").list();
+      // The same parts Agora's write_open_ai_message sends: the words, then
+      // every picture clipped in beside them as its own image part, each a
+      // data URI the wire reads whole. A picture on a turn that is not the
+      // reader's carries nothing: the wire takes pictures the reader sent.
       out.thing().name("type").text("text").name("text").text(said.text).shut();
+      if (said.who == role::user)
+        for (const std::string &picture : said.pictures)
+          out.thing()
+              .name("type")
+              .text("image_url")
+              .name("image_url")
+              .thing()
+              .name("url")
+              .text(picture)
+              .name("detail")
+              .text("auto")
+              .shut()
+              .shut();
       out.shut();
       if (!said.calls.empty()) {
         out.name("tool_calls").list();
