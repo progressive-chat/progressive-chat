@@ -676,8 +676,11 @@ public:
         continue;
       pending_pictures_.push_back("data:" + mime_of(path) + ";base64," +
                                   agora::core::crypto::base64_encode(
-                                      std::as_bytes(std::span{bytes}), false,
-                                      true));
+                                      std::span<const std::uint8_t>{
+                                          reinterpret_cast<const std::uint8_t *>(
+                                              bytes.data()),
+                                          bytes.size()},
+                                      false, true));
     }
   }
 
