@@ -24,6 +24,10 @@ struct conversation_row {
   std::int64_t last_updated = 0;
   bool pinned = false;
   std::string model_id;
+  // What was being written to it when the run ended, read back whole: the
+  // ported row keeps a draft (draftText) beside everything else, and this is
+  // what it said of ours. Empty where nothing was being written.
+  std::string draft;
 };
 
 // One message as the store knows it: what its row says.
@@ -75,6 +79,17 @@ void keep_message(message_row one);
 
 // The messages of one conversation, in the order they were kept.
 [[nodiscard]] std::vector<message_row> messages_of(const std::string &conversation_id);
+
+// What is being written to a conversation, said to the store the way the
+// ported tree says it (ChatDao.update_draft): the draft, the attachments it
+// came with, and when it was written. Asked of a conversation whose row is
+// kept; the store holds what a last run was writing.
+void keep_draft(const std::string &conversation_id, const std::string &text,
+                std::int64_t at);
+
+// What a last run was writing to this conversation, whole; empty where it was
+// writing nothing or the store holds no such row.
+[[nodiscard]] std::string draft_of(const std::string &conversation_id);
 
 // One message held out of the store by its id: what it said, under the
 // conversation it said it in. Nothing where the id is not held -- a line an

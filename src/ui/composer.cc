@@ -4,6 +4,9 @@
 // one field to write in, a clip for what is attached, a face for emoji, and
 // the round button that sends, which only lights up once something has been
 // written.
+module;
+#include "../keep.h"
+
 export module pchat.ui:composer;
 
 import std;
@@ -18,6 +21,17 @@ import pchat.app.requests;
 import :theme;
 import :base;
 import :icons;
+
+namespace {
+// The moment, taken from the system clock: milliseconds since the epoch --
+// the same wire time the screens keep, for what is said to the store here.
+[[nodiscard]] std::int64_t now_of() {
+  return static_cast<std::int64_t>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch())
+          .count());
+}
+}  // namespace
 
 export namespace pchat::ui {
 
@@ -470,9 +484,18 @@ struct composer : scene::Node {
     // in it are this card's own -- and nothing in
     // it survives the window's going, as nothing in the field did either.
     if (fShown.value != chat.id.value) {
-      if (!fShown.value.empty())
-        fDrafts.write(fShown, std::string(fField.plainText()));
-      fField.setText(std::string(fDrafts.text_of(chat.id)));
+      if (!fShown.value.empty()) {
+        const std::string was = std::string(fField.plainText());
+        fDrafts.write(fShown, was);
+        // What was being written is said to the store as well, so a run that
+        // ends here still holds it: the ported row keeps a draft (update_draft)
+        // and the next run reads it back below.
+        pchat::keep::keep_draft(fShown.value, was, now_of());
+      }
+      std::string back{fDrafts.text_of(chat.id)};
+      if (back.empty())
+        back = pchat::keep::draft_of(chat.id.value);
+      fField.setText(back);
     }
     fShown = chat.id;
     fSink->chat = chat.id;
@@ -585,6 +608,9 @@ struct composer : scene::Node {
   void clear() {
     fField.setText("");
     fDrafts.clear(fShown);
+    // Sent is not left behind to be given again: the store's draft goes with
+    // the memory's one.
+    pchat::keep::keep_draft(fShown.value, std::string{}, now_of());
   }
 
   void forEachChild(auto &&f) {

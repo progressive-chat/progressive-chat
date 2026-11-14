@@ -54,6 +54,15 @@ SAID(keep, a_conversation_and_its_message_are_kept_and_read_back) {
   if (messages[0].pictures.size() == 1)
     EXPECT_EQ(messages[0].pictures[0], std::string("data:image/png;base64,AAAA"));
 
+  // What was being written to it, kept and read back: the ported row holds a
+  // draft beside everything else (update_draft), and the next run asks for it
+  // through the conversation's own row.
+  pchat::keep::keep_draft("chat-1", "half a sentence", 1700000002000);
+  const std::vector<conversation_row> after_draft = pchat::keep::conversations();
+  EXPECT_TRUE(after_draft.size() == 1);
+  if (after_draft.size() == 1)
+    EXPECT_EQ(after_draft[0].draft, std::string("half a sentence"));
+
   // One message held out whole, by the id it was kept under -- the read an
   // answer's line makes when the program starts again. Nothing where the id
   // was not kept.
