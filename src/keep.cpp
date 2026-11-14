@@ -214,6 +214,10 @@ std::vector<conversation_row> conversations() {
     one.pinned = each.is_pinned;
     if (each.model_id)
       one.model_id = *each.model_id;
+    // The navigation projection says nothing of a draft; the row itself does
+    // (observe_conversation reads the entity whole, draft and all).
+    if (const auto held = the_dao->observe_conversation(each.id))
+      one.draft = held->draft_text;
     out.push_back(std::move(one));
   }
   return out;
@@ -231,6 +235,23 @@ kept_of_row kept_of(const std::string &message_id) {
                        .text = each.text};
   }
   return {};
+}
+
+void keep_draft(const std::string &conversation_id, const std::string &text,
+                std::int64_t at) {
+  if (!the_dao)
+    return;
+  // The ported row keeps a draft beside everything else (ChatDao.update_draft:
+  // draftText, draftAttachments, dataChangedAt), said through the ported
+  // face the same way.
+  the_dao->update_draft(conversation_id, text, std::nullopt, at);
+}
+
+std::string draft_of(const std::string &conversation_id) {
+  if (!the_dao)
+    return {};
+  const auto held = the_dao->observe_conversation(conversation_id);
+  return held ? held->draft_text : std::string{};
 }
 
 std::vector<message_row> messages_of(const std::string &conversation_id) {
@@ -326,6 +347,10 @@ void keep_conversation(conversation_row) {}
 void keep_message(message_row) {}
 
 std::vector<conversation_row> conversations() { return {}; }
+
+void keep_draft(const std::string &, const std::string &, std::int64_t) {}
+
+std::string draft_of(const std::string &) { return {}; }
 
 std::vector<message_row> messages_of(const std::string &) { return {}; }
 
