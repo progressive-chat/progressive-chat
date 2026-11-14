@@ -6,6 +6,8 @@
 //
 //   progressive-chat   the conversations of the sample, which is all the
 //                      model has until the back end's own half fills it
+#include "serve.h"
+
 import std;
 import skiff.platform.window;
 import skiff.platform.events;
@@ -30,6 +32,11 @@ int pchat_main() {
   // needs.
   static std::optional<program> held;
   program &one = held.emplace();
+  // The program's own door, up before anything asks through it: on a host the
+  // ported server stands on, it answers this program's own wire (its base
+  // '/v1') while the window is being made; where no such host is here -- a
+  // page, a phone -- nothing stands and nothing changes.
+  (void)pchat::serve::up();
   // Where the programs the GPU compiled are kept between runs: compiled
   // again at every run without it, and a phone is slow at it.
   // Software drawing when no GPU can be drawn through: without this it went

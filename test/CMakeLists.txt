@@ -27,6 +27,7 @@ endfunction()
 
 pchat_test(core pchat_core)
 pchat_test(keep pchat_core)
+pchat_test(serve pchat_core)
 pchat_test(theme pchat_core)
 pchat_test(logic pchat_core)
 pchat_test(json pchat_json)
