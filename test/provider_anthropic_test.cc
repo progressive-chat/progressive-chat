@@ -52,7 +52,11 @@ SAID(anthropic, one_answer_is_read_in_the_words_every_wire_uses) {
 
   EXPECT_FALSE(one.failed());
   EXPECT_EQ(std::string(one.text()), std::string("The answer."));
-  EXPECT_EQ(std::string(one.thought()), std::string("hmm."));
+  // What it thought, and the call it stopped to ask for beside it -- the
+  // thought says the call the way the chat wire's thought does, so a reader
+  // reads one convention on either wire.
+  EXPECT_EQ(std::string(one.thought()),
+            std::string("hmm.> get_time({\"city\":\"Rome\"})\n"));
   EXPECT_TRUE(one.ended());
   EXPECT_EQ(std::string(one.finish()), std::string("tool_use"));
   EXPECT_EQ(one.cost().in, 7u);
