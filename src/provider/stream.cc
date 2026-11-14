@@ -85,6 +85,14 @@ public:
   // Why it failed, the way Agora says it. Set only where it failed.
   [[nodiscard]] const failure &why_failed() const { return failed_why_; }
   [[nodiscard]] std::string_view finish() const { return finish_; }
+  // How this answer ended, the way Agora says it: whether the wire named its
+  // end, what it named it, whether anything reached the screen, whether a tool
+  // call is still open, and whether the failure was already said. Built from
+  // what the stream saw, and read by whoever decides whether to ask again.
+  [[nodiscard]] termination ended_by() const {
+    return {ended_, std::string(finish_), !text_.empty() || !thought_.empty(),
+            !partial_.empty(), failed_, false};
+  }
 
 private:
   // One line of anthropic's SSE: the framing the chat wire reads, with the
@@ -466,7 +474,7 @@ private:
   // tag it fell on, and nothing keeps waiting for a tag that will never be
   // finished. A thought the wire left open is thought up to its last word. A
   // tool call it opened but never finished is said too -- the wire ended on it,
-  // so its name and whatever arrived of its arguments stand as the call.
+  // so its name and what arrived of its arguments stand as the call.
   void content_ended() {
     if (thinking_) {
       thought_said(held_);

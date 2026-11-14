@@ -201,7 +201,7 @@ struct metrics {
          (tenths ? "." + std::to_string(tenths) : "") + "M";
 }
 // The clock as it is read in this window: the hour of the day and the minute
-// in it, out of a moment kept as it is in the model. No zone of its own to
+// in it, out of a moment kept as it is in the model. No zone by itself to
 // ask, because a chat is written in its reader's zone.
 [[nodiscard]] inline std::string clock_of(moment at) {
   const std::int64_t minutes = (at / 60'000) % (24 * 60);
@@ -215,13 +215,13 @@ struct metrics {
   out += std::to_string(minute);
   return out;
 }
-// A line of text, of a size of its own, bold or not.
+// A line of text, of a size by itself, bold or not.
 [[nodiscard]] inline nodes::Text line(std::string value, float size,
                                       scene::Colour colour, bool bold = false,
                                       const scene::Spec &spec = {}) {
   return scene::make<nodes::Text>(spec, std::move(value), size, colour, bold);
 }
-// An icon drawn with a pen, in points from the middle of its own box.
+// An icon drawn with a pen, in points from the middle of its box.
 [[nodiscard]] inline nodes::Icon
 pen(const scene::Spec &spec, nodes::IconShape shape, scene::Colour colour) {
   return scene::make<nodes::Icon>(spec, std::move(shape), colour);

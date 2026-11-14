@@ -151,6 +151,11 @@ public:
   // it. Set only where it failed, and read by whoever decides whether to ask
   // again.
   [[nodiscard]] const failure &why_failed() const { return failed_why_; }
+  // How the wire ended, the way Agora says it: whether it named its end and
+  // what of the answer reached the screen. A transport that closed the stream
+  // before the wire named its end leaves this with no terminal marker, and
+  // that is the case worth asking again.
+  [[nodiscard]] termination ended_by() const { return coming_.ended_by(); }
 
   [[nodiscard]] std::string_view said() const { return coming_.text(); }
   [[nodiscard]] std::string_view thought() const { return coming_.thought(); }

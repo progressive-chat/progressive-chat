@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // pchat.json: what is written on the wire and what is kept on the disk, read
-// into values of its own and written out of them again -- no part of the
+// into values by itself and written out of them again -- no part of the
 // program looks at a brace itself.
 //
 // Two halves, and no more than two are needed: a reader that says where it

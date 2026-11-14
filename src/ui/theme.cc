@@ -13,7 +13,7 @@ export namespace pchat::ui {
 using skiff::scene::Colour;
 
 // Made once out of a scheme, and handed down to everything drawn: no part
-// mixes a colour of its own.
+// mixes a colour by itself.
 struct paints {
   Colour paper = 0xff0c160cu;  // behind everything
   Colour drawer = 0xff101c11u; // the conversation list

@@ -27,7 +27,7 @@ struct send_message {
 // one that asked.
 struct new_chat {};
 // What one answer is asked for, down at its foot: taken whole onto the
-// clipboard, thought again, taken into a chat of its own, given away,
+// clipboard, thought again, taken into a chat by itself, given away,
 // asked about, or rubbed out.
 struct copy_answer {
   conversation_id chat;
@@ -67,7 +67,7 @@ struct close_settings {};
 struct open_tasks {};
 struct open_remote {};
 // What the top edge asks for: another answerer in this same conversation,
-// this conversation taken whole into one of its own, this conversation given
+// this conversation taken whole into one by itself, this conversation given
 // out, and what every answerer in it is told before anything is said to it.
 struct fork_conversation {
   conversation_id chat;

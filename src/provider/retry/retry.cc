@@ -55,6 +55,22 @@ bool worth_asking_again(const failure &one) {
   return sn::ProviderRetryPolicy::should_retry_stream_error(&error);
 }
 
+// The same decision Agora makes on a whole answer's end: rebuild its
+// StreamTermination from what this tree saw and ask the ported method. The
+// fields not set here are the ones this tree has no source for -- a timeout
+// is named by no transport we carry -- and the policy reads them as false.
+[[nodiscard]] bool worth_asking_again(const termination &one) {
+  sn::StreamTermination end;
+  end.saw_terminal_marker = one.saw_terminal_marker;
+  if (!one.stop_reason.empty())
+    end.stop_reason = one.stop_reason;
+  end.produced_content = one.produced_content;
+  end.tool_call_in_flight = one.tool_call_in_flight;
+  end.already_reported_error = one.already_reported_error;
+  end.timed_out = one.timed_out;
+  return end.is_retryable();
+}
+
 std::int64_t wait_before_again(int attempt) {
   // The policy counts its retries from one and throws outside its own five;
   // a sixth ask is one it would not wait for, and is not made.

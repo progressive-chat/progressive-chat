@@ -2,7 +2,7 @@
 // pchat.theme -- The colours a screen is drawn with: a Material palette read
 // at the tone each of its roles has, light or dark, from one seed.
 //
-// Nothing here names a colour of its own. A seed becomes six ramps; every
+// Nothing here names a colour by itself. A seed becomes six ramps; every
 // role is one of those ramps at one tone, which makes a light and a dark
 // scheme out of the same seed read as a pair.
 export module pchat.theme;
