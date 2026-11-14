@@ -142,3 +142,11 @@ jobs:
           names=$(grep -rhoE '\b(agora::core::[a-zA-Z_][a-zA-Z0-9_:]*|as::[a-zA-Z_][a-zA-Z0-9_:]*|gs::[a-zA-Z_][a-zA-Z0-9_:]*|sn::[a-zA-Z_][a-zA-Z0-9_:]*|zip::[a-zA-Z_][a-zA-Z0-9_:]*)' src | sort -u | wc -l)
           echo "Agora headers this program includes: $headers"
           echo "Agora names this program calls:      $names"
+          # The one place a parsed member is read by name, where this tree and
+          # Agora could disagree on a duplicated name (the rule decided above):
+          # said() -> member_of() reads the first, Agora's parse keeps the last
+          # value. Said here because a second reader entering the tree would
+          # disagree with the reference without being looked at -- the count of
+          # them is what is reported, not held at a height.
+          readers=$(grep -rho 'json::said(' src --include='*.cc' | wc -l)
+          echo "json::said( sites in this program:                  $readers"

@@ -42,19 +42,25 @@ Not a full plan. What is wrong or missing today, kept between builds.
       (`src/ui/settings.cc`, `scrollToStart`). Worth keeping: the mirror gives
       where each line stands as well as what it says; one probe read those
       places out.
-- [ ] **The chat body's message shape, and the parser's duplicate rule.**
-      Agora writes a chat message's content as a list of parts and collapses a
-      duplicated name last-wins; this tree writes content as one string and
-      keeps both of a duplicated name, reading the first. Measured 2026-11-14:
+- [x] **The chat body's message shape.** Agora writes a chat message's
+      content as a list of parts; this tree wrote one string. Decided
+      2026-11-14: a list is what Agora's serializer sends and what OpenAI
+      accepts both ways, so it is the shape this tree writes too -- the body
+      writer carries parts and the tests pin them (PR #29).
+- [x] **The parser's duplicate rule.** Agora collapses a duplicated name
+      last-wins (LinkedHashMap: a later duplicate updates the value and keeps
+      its first position); this tree keeps both of a duplicated name in the
+      thing's ordered member list and reads the first. Decided 2026-11-14:
+      **keep the note and the current reading.** Measured before deciding:
       **no payload in this tree's tests carries a duplicated name**, so the
-      order rule changes nothing today -- adopting Agora's last-wins is a
-      match to the reference with no behaviour change, once the parser's value
-      type can carry it (Agora's holds a number and a `true` as one literal
-      where ours separates them). The **content shape** is a real choice: a
-      list is what Agora's serializer sends and what OpenAI accepts both ways,
-      but relays behind this wire may read only the string this tree has
-      always sent, and the tests pin it. Decide before the body writer is
-      swapped.
+      order rule changes nothing today and nothing here invents the case the
+      rule exists for. The collapse also waits on the value type (Agora's
+      holds a number and a `true` as one literal where ours separates them),
+      and every reader of a member in `src/` reads through one helper
+      (`said()` -> `member_of()`), so where the two rules could disagree is
+      one place, named. The note in `src/json.cc` on two members of one name
+      says what each caller decides; it stays. The check job reports that one
+      reader, so a second entering is seen at the run that adds it.
 - [ ] **The two parts of Agora this tree reads by hand, left by choice.**
       `src/json.cc`'s `read()` and Agora's `parse()` do one job in two designs:
       ours keeps both of a duplicated name and lets the caller decide what it
@@ -63,6 +69,8 @@ Not a full plan. What is wrong or missing today, kept between builds.
       string, a list and a thing each a place to itself.
       Calling Agora's parser from ours is therefore not a port but a
       reconstruction of both, plus the one deliberate choice ours leaves open.
+      (The duplicate rule itself is decided above -- keep the note -- so what
+      is still open here is the literal-holding difference, not the order.)
       Read `json.cc`'s note on two members of one name before touching it.
       The same holds for Agora's archive formats (`portable_settings_archive`,
       `native_backup_format`): writing them would be writing Agora's archive,
