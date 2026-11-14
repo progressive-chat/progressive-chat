@@ -508,9 +508,20 @@ private:
     const std::string arrived = one.carried.take();
     if (!arrived.empty())
       one.asked->arrive(arrived);
-    if (message *there = found(one.said))
+    if (message *there = found(one.said)) {
       there->text = std::string(one.going.said()) +
                     std::string(one.asked->said());
+      // A call the wire is still writing, said live: the answer's own text
+      // says it the way the thought will say it whole when the call is done,
+      // so a reader sees what the model is asking for while it asks. Said
+      // here rather than in the thought, because the thought is written once
+      // at the end and cannot be added to twice.
+      for (const provider::tool_call &open : one.asked->partial_calls()) {
+        if (open.name.empty() && open.arguments.empty())
+          continue;
+        there->text += "\n> " + open.name + "(" + open.arguments;
+      }
+    }
     if (!one.carried.over())
       return;
     // A refusal the server named: kept whole -- its status and the words it

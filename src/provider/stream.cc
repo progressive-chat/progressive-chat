@@ -158,6 +158,10 @@ private:
           .id = one.id, .name = one.name, .arguments = one.arguments};
       calls_.push_back(call);
       said_.push_back(event{.what = event::kind::tool, .call = call});
+      // The whole call said in the thought as the chat wire says it, so it
+      // does not leave the reader when the live line that held it goes: the
+      // call moves to the thought and stays there.
+      call_in_thought(call);
       // The whole call replaces what was arriving for it.
       partial_.clear();
       return;
@@ -237,6 +241,9 @@ private:
             .id = one.id, .name = one.name, .arguments = one.arguments};
         calls_.push_back(call);
         said_.push_back(event{.what = event::kind::tool, .call = call});
+        // The whole call said in the thought, as above: it moves from the
+        // live line and stays.
+        call_in_thought(call);
         // The whole call replaces what was arriving for it.
         partial_.clear();
         return;
@@ -678,6 +685,16 @@ private:
   // by the end of the stream where it never sent that frame -- and written into
   // the thought above the answer as its greentext. What arrived of the
   // arguments is what the call had.
+  // One call said as the thought says it: the name, then what it was given,
+  // in the greentext a reader already reads a call in.
+  void call_in_thought(const tool_call &one) {
+    thought_.append("> ");
+    thought_.append(one.name);
+    thought_.append("(");
+    thought_.append(one.arguments);
+    thought_.append(")\n");
+  }
+
   void tools_done() {
     // The ported rule: a call the model asked for carries what it said.
     produced_ = produced_ || !partial_.empty();
@@ -686,11 +703,7 @@ private:
         continue;
       calls_.push_back(kept);
       said_.push_back(event{.what = event::kind::tool, .call = kept});
-      thought_.append("> ");
-      thought_.append(kept.name);
-      thought_.append("(");
-      thought_.append(kept.arguments);
-      thought_.append(")\n");
+      call_in_thought(kept);
     }
     partial_.clear();
   }
