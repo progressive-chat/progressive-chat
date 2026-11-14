@@ -40,7 +40,8 @@ public:
         fields_(std::move(gone.fields_)), flat_(std::move(gone.flat_)),
         arrived_(std::move(gone.arrived_)), trouble_(std::move(gone.trouble_)),
         over_(gone.over_), read_(gone.read_), status_(gone.status_),
-        status_text_(std::move(gone.status_text_)) {
+        status_text_(std::move(gone.status_text_)),
+        body_(std::move(gone.body_)) {
 #if defined(__EMSCRIPTEN__)
     held_ = std::exchange(gone.held_, nullptr);
 #endif
@@ -57,6 +58,7 @@ public:
       over_ = gone.over_;
       status_ = gone.status_;
       status_text_ = std::move(gone.status_text_);
+      body_ = std::move(gone.body_);
       read_ = gone.read_;
 #if defined(__EMSCRIPTEN__)
       held_ = std::exchange(gone.held_, nullptr);
@@ -148,6 +150,10 @@ public:
   // a refusal is worth asking again.
   [[nodiscard]] int status() const { return status_; }
   [[nodiscard]] const std::string &status_text() const { return status_text_; }
+  // What the server said when it refused, whole: the body of the refusal, if
+  // the browser handed it over. A reader asks this where it wants what the
+  // server itself said rather than the words beside its number.
+  [[nodiscard]] const std::string &error_body() const { return body_; }
 
   // Not wanted any more: what is still coming is not read, and what asked is
   // closed. Nothing anywhere it has already been answered.
@@ -206,6 +212,11 @@ private:
       self.status_text_ =
           one->statusText[0] != '\0' ? std::string(one->statusText)
                                       : std::string{};
+      // The refusal's own body, where the browser gave one: what the server
+      // said about itself, kept apart from the sentence the trouble is
+      // written in.
+      if (one->data && one->numBytes)
+        self.body_.assign(one->data, static_cast<std::size_t>(one->numBytes));
       if (!self.trouble_)
         self.trouble_ =
             "the server answered " + std::to_string(one->status) +
@@ -235,6 +246,7 @@ private:
   std::optional<std::string> trouble_;
   int status_ = 0;
   std::string status_text_;
+  std::string body_;
   bool over_ = false;
   std::uint64_t read_ = 0;   // how much of the body has been taken already
 };
