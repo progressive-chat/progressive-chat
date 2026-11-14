@@ -39,6 +39,11 @@ struct anthropic_frame {
   failure why_failed;
   // One source this answer cited, set only on a frame whose kind is citation.
   citation cited;
+  // Whether this event carries what the model said, by the ported rule
+  // (carries_model_output): a text or thought that said something, or any
+  // call. False for usage, a citation and an error. Read at the stream's end
+  // to say whether anything of the answer reached the screen.
+  bool carried = false;
 };
 
 // The reader, one per stream: the wire's own router held behind a pointer so
