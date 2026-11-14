@@ -10,6 +10,13 @@
 // ids, titles and counts, so a module unit may include it.
 #include "keep.h"
 
+// The store stands only where the ported tree built its own database layer:
+// AGORA_CORE_HAVE_SQLITE3 is set by the ported build when sqlite3 and the
+// executor are there (a host), and is not set where they are not (a phone
+// keeps Room, a web build has no file). Where it is not set the store says
+// so at open() and keeps nothing, so the program builds everywhere.
+#ifdef AGORA_CORE_HAVE_SQLITE3
+
 #include <memory>
 #include <sqlite3.h>
 #include <vector>
@@ -165,3 +172,26 @@ std::vector<message_row> messages_of(const std::string &conversation_id) {
 }
 
 }  // namespace pchat::keep
+
+#else  // AGORA_CORE_HAVE_SQLITE3
+
+// No ported database layer in this build: the store says it is closed.
+namespace pchat::keep {
+
+bool open() { return false; }
+
+bool is_open() { return false; }
+
+void close() {}
+
+void keep_conversation(conversation_row) {}
+
+void keep_message(message_row) {}
+
+std::vector<conversation_row> conversations() { return {}; }
+
+std::vector<message_row> messages_of(const std::string &) { return {}; }
+
+}  // namespace pchat::keep
+
+#endif  // AGORA_CORE_HAVE_SQLITE3
