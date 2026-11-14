@@ -166,6 +166,11 @@ public:
   [[nodiscard]] const std::vector<tool_call> &called() const {
     return coming_.calls();
   }
+  // The calls whose arguments are still arriving, as the wire has sent them
+  // so far. A screen may show one while it is still being said.
+  [[nodiscard]] const std::vector<tool_call> &partial_calls() const {
+    return coming_.partial_calls();
+  }
   // Why the wire says it stopped: stop, length, tool_calls, content_filter.
   [[nodiscard]] std::string_view finish() const { return coming_.finish(); }
 

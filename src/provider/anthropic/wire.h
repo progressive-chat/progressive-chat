@@ -23,7 +23,7 @@ namespace pchat::provider {
 // tool call whole (the router finishes its arguments before it says one), what
 // it cost with input and output kept apart, why it stopped, or why it failed.
 struct anthropic_frame {
-  enum class kind { text, thought, tool, usage, ended, failed } what = kind::text;
+  enum class kind { text, thought, tool, tool_partial, usage, ended, failed } what = kind::text;
   // The piece of text or of thought, or -- where it failed -- why.
   std::string text;
   std::string id;

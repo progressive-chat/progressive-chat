@@ -24,7 +24,7 @@ namespace pchat::provider {
 // why it failed -- the same seven things every wire's frames say here, in the
 // words the reader already knows.
 struct gemini_frame {
-  enum class kind { text, thought, tool, usage, ended, failed } what = kind::text;
+  enum class kind { text, thought, tool, tool_partial, usage, ended, failed } what = kind::text;
   // The piece of text or of thought, or -- where it failed -- why.
   std::string text;
   // Gemini names a call where Anthropic gives it an id: an id is left empty
