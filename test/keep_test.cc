@@ -48,7 +48,52 @@ SAID(keep, a_conversation_and_its_message_are_kept_and_read_back) {
   EXPECT_EQ(messages[0].text, std::string("There is bread."));
   EXPECT_EQ(messages[0].token_count, 4);
 
+  // One message held out whole, by the id it was kept under -- the read an
+  // answer's line makes when the program starts again. Nothing where the id
+  // was not kept.
+  const pchat::keep::kept_of_row whole = pchat::keep::kept_of("m-1");
+  EXPECT_TRUE(whole.found);
+  EXPECT_EQ(whole.conversation_id, std::string("chat-1"));
+  EXPECT_EQ(whole.text, std::string("There is bread."));
+  const pchat::keep::kept_of_row absent = pchat::keep::kept_of("no-such");
+  EXPECT_FALSE(absent.found);
+
   pchat::keep::close();
+}
+
+// A store at a file, as the program holds it: what was kept in one run is
+// read back in the next. The file is under the session's own temp -- no path
+// beside the test is assumed, and nothing is left standing after it.
+SAID(keep, a_store_at_a_file_holds_what_a_last_run_kept) {
+  const std::string where = "/tmp/opencode/pchat-keep-test.sqlite";
+  std::filesystem::remove(where);
+
+  pchat::keep::close();
+  EXPECT_TRUE(pchat::keep::open_at(where));
+  pchat::keep::keep_conversation(conversation_row{.id = "chat-2",
+                                                 .title = "Cellar",
+                                                 .last_updated = 1700000002000});
+  pchat::keep::keep_message(message_row{.id = "m-2",
+                                       .conversation_id = "chat-2",
+                                       .text = "Jars are on the shelf.",
+                                       .token_count = 5,
+                                       .timestamp = 1700000003000});
+  pchat::keep::close();
+
+  // The next run: the same file, no writing.
+  EXPECT_TRUE(pchat::keep::open_at(where));
+  const std::vector<conversation_row> conversations = pchat::keep::conversations();
+  EXPECT_TRUE(conversations.size() == 1);
+  if (conversations.size() == 1) {
+    EXPECT_EQ(conversations[0].id, std::string("chat-2"));
+    EXPECT_EQ(conversations[0].title, std::string("Cellar"));
+  }
+  const pchat::keep::kept_of_row whole = pchat::keep::kept_of("m-2");
+  EXPECT_TRUE(whole.found);
+  if (whole.found)
+    EXPECT_EQ(whole.text, std::string("Jars are on the shelf."));
+  pchat::keep::close();
+  std::filesystem::remove(where);
 }
 
 int main() { return pchat::tests::run(); }
