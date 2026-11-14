@@ -221,7 +221,10 @@ target_sources(pchat_json PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/json.cc)
 target_compile_features(pchat_json PUBLIC cxx_std_26)
 target_compile_options(pchat_json PUBLIC ${pchat_std_flags})
-target_link_libraries(pchat_json PUBLIC splice)
+# The strings it writes are escaped by the ported tree's own escape, so the
+# ported library is what it reads. No cycle: this library links nothing of the
+# program's own.
+target_link_libraries(pchat_json PUBLIC splice agora_core_lib)
 
 # The model, the settings and the palette: modules of their own, so that they
 # build -- and are tested -- without a window.

@@ -131,6 +131,21 @@ SAID(anthropic, a_source_the_answer_leaned_on_is_kept) {
   }
 }
 
+// Whether anything of the answer reached the screen, said the way Agora's
+// termination says it: a stream that spoke has it, a stream that was cut
+// before it spoke does not. The policy reads it when it decides whether to
+// ask again, so it is read here from a real stream and not from a literal.
+SAID(anthropic, a_stream_that_spoke_says_it_produced_something) {
+  stream one{wire::anthropic};
+  one.feed(answer_bytes());
+  EXPECT_TRUE(one.ended_by().produced_content);
+}
+
+SAID(anthropic, a_stream_that_never_spoke_says_it_produced_nothing) {
+  stream one{wire::anthropic};
+  EXPECT_FALSE(one.ended_by().produced_content);
+}
+
 SAID(anthropic, a_failure_the_wire_reports_inside_the_stream_says_why) {
   stream one{wire::anthropic};
   one.feed(R"(data: {"type":"error","error":{"type":"api_error","message":"overloaded"}})"

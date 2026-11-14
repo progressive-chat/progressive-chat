@@ -6,6 +6,9 @@
 // Two halves, and no more than two are needed: a reader that says where it
 // gave up, so a bad answer is reported at its own place, and a writer that
 // keeps its commas to itself, so nothing that builds a body counts them.
+module;
+#include "agora/core/json.hpp"
+
 export module pchat.json;
 
 import splice;
@@ -397,45 +400,13 @@ private:
 
 // ---- writing -------------------------------------------------------------
 
-// A string as it is written inside quotes.
+// A string as it is written inside quotes: Agora's own escape, called --
+// the same escapes, the same lowercase hex for a control byte, said in one
+// place so a body written here and a body written there agree.
 [[nodiscard]] inline std::string escaped(std::string_view raw) {
   std::string out;
   out.reserve(raw.size() + 2);
-  for (const char one : raw) {
-    switch (one) {
-    case '"':
-      out += "\\\"";
-      break;
-    case '\\':
-      out += "\\\\";
-      break;
-    case '\b':
-      out += "\\b";
-      break;
-    case '\f':
-      out += "\\f";
-      break;
-    case '\n':
-      out += "\\n";
-      break;
-    case '\r':
-      out += "\\r";
-      break;
-    case '\t':
-      out += "\\t";
-      break;
-    default:
-      if (static_cast<unsigned char>(one) < 0x20) {
-        constexpr char figures[] = "0123456789abcdef";
-        out += "\\u00";
-        out += figures[(static_cast<unsigned char>(one) >> 4) & 0xFu];
-        out += figures[static_cast<unsigned char>(one) & 0xFu];
-      } else {
-        out += one;
-      }
-      break;
-    }
-  }
+  agora::core::json::escape_to(out, raw);
   return out;
 }
 
