@@ -854,9 +854,10 @@ public:
           const json::value *picture = json::said(pictures, pic_at);
           if (!picture)
             break;
-          if (const std::string picture_text = field_text(*picture);
-              !picture_text.empty())
-            kept.pictures.push_back(picture_text);
+          // A picture in the archive is a bare text, not a thing with a name:
+          // the value itself is what the URI is.
+          if (const auto text = pchat::json::text_of(*picture))
+            kept.pictures.push_back(std::string{*text});
         }
       if (const json::value *cites = json::said(*one, "citations"))
         for (std::size_t cite_at = 0u;; ++cite_at) {
