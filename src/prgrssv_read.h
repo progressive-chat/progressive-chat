@@ -24,6 +24,26 @@ struct held {
 // read as one.
 [[nodiscard]] std::vector<held> read(std::string_view bytes);
 
+// What an archive holds, said before it is read whole: the manifest's own
+// words and how much of everything stands behind them -- the counts read off
+// the file names and the one index, the way the ported importer's preview
+// reads a native backup (DataImporter.preview: manifest, then counts, no
+// conversation opened). A file that is not one of these archives says
+// nothing -- every count zero, `is_archive` false.
+struct preview {
+  bool is_archive = false;
+  int format_version = 0;
+  std::string program;   // what wrote it, as the manifest says
+  int conversations = 0;  // every conversations/*.json
+  int messages = 0;       // every message inside them, counted in the JSON
+  bool settings = false;  // the page's settings, present or not
+};
+
+// What an archive holds, without reading any conversation back: the manifest
+// first (the file that says what the rest are), then the counts. The bytes
+// are read once; nothing of them is kept.
+[[nodiscard]] preview preview_of(std::string_view bytes);
+
 }  // namespace pchat::prgrssv
 
 #endif  // PCHAT_PRGRSSV_READ_H
