@@ -44,36 +44,36 @@ namespace {
 // What one level of a read thing says by its name: nothing of any kind where
 // the name is not there -- a field an older archive did not write keeps what
 // the default is, the way a settings text read back does.
-[[nodiscard]] std::string text_of(const json::value &one,
+[[nodiscard]] std::string text_of(const pchat::json::value &one,
                                   std::string_view name) {
-  const json::value *at = json::said(one, name);
-  const auto text = at ? json::text_of(*at) : std::optional<std::string_view>{};
+  const pchat::json::value *at = pchat::json::said(one, name);
+  const auto text = at ? pchat::json::text_of(*at) : std::optional<std::string_view>{};
   return text ? std::string{*text} : std::string{};
 }
-[[nodiscard]] double number_of(const json::value &one,
+[[nodiscard]] double number_of(const pchat::json::value &one,
                                std::string_view name) {
-  const json::value *at = json::said(one, name);
-  const auto number = at ? json::number_of(*at) : std::optional<double>{};
+  const pchat::json::value *at = pchat::json::said(one, name);
+  const auto number = at ? pchat::json::number_of(*at) : std::optional<double>{};
   return number.value_or(0.0);
 }
-[[nodiscard]] std::optional<bool> truth_of(const json::value &one,
+[[nodiscard]] std::optional<bool> truth_of(const pchat::json::value &one,
                                            std::string_view name) {
-  const json::value *at = json::said(one, name);
-  return at ? json::truth_of(*at) : std::optional<bool>{};
+  const pchat::json::value *at = pchat::json::said(one, name);
+  return at ? pchat::json::truth_of(*at) : std::optional<bool>{};
 }
 // What the archive says a delivery was, as this tree names it: anything it
 // does not name reads as sent -- the state a message is in where nothing
 // said otherwise.
-[[nodiscard]] delivery delivery_of(std::string_view said) {
+[[nodiscard]] pchat::delivery delivery_of(std::string_view said) {
   if (said == "writing")
-    return delivery::writing;
+    return pchat::delivery::writing;
   if (said == "sending")
-    return delivery::sending;
+    return pchat::delivery::sending;
   if (said == "failed")
-    return delivery::failed;
+    return pchat::delivery::failed;
   if (said == "seen")
-    return delivery::seen;
-  return delivery::sent;
+    return pchat::delivery::seen;
+  return pchat::delivery::sent;
 }
 }  // namespace
 
