@@ -826,10 +826,10 @@ public:
                    std::string(field_text(*one, "text")),
                    static_cast<moment>(field_number(*one, "sent")),
                    delivery_of(std::string(field_text(*one, "state")))};
-      if (const auto why = json::text_of(*one, "why"))
+      if (const auto why = field_text(*one, "why"))
         kept.why_failed = std::string{*why};
       kept.tokens = static_cast<std::uint32_t>(field_number(*one, "tokens"));
-      if (const auto to = json::text_of(*one, "replies_to"))
+      if (const auto to = field_text(*one, "replies_to"))
         kept.replies_to = message_id{std::string{*to}};
       if (const json::value *thought_said = json::said(*one, "thought")) {
         kept.before = thought{
@@ -854,7 +854,7 @@ public:
           const json::value *picture = json::said(pictures, pic_at);
           if (!picture)
             break;
-          if (const auto text = json::text_of(*picture))
+          if (const auto text = field_text(*picture))
             kept.pictures.push_back(std::string{*text});
         }
       if (const json::value *cites = json::said(*one, "citations"))
