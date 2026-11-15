@@ -102,7 +102,7 @@ struct app_window : scene::Node {
              const what_is_open &open,
              const std::vector<std::string> &faces_lately, float width,
              float height, app::requests *asked,
-             std::string_view notice) {
+             std::string_view notice, bool waiting) {
     // The conversation the window has open, as it is named: none, where none
     // is open.
     const std::string opened = root.opened ? root.opened->value : std::string{};
@@ -175,7 +175,7 @@ struct app_window : scene::Node {
     // The bar says what the chat has been worth; the card under it names the
     // model answering in it and how full its window this chat has made it.
     fTop.again(asked, look, !wide, !wide, open.more, title_of(root, opened),
-               open_chat, notice);
+               open_chat, notice, waiting);
     // Over what the messages were, where the drawer covers them: pressing it
     // puts the drawer away again. What puts a card of three dots away -- the
     // bar's or the card's -- each part keeps to itself: see

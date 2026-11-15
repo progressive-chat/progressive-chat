@@ -247,6 +247,15 @@ void keep_draft(const std::string &conversation_id, const std::string &text,
   the_dao->update_draft(conversation_id, text, std::nullopt, at);
 }
 
+void replace_all() {
+  if (!the_dao)
+    return;
+  // The ported face for taking everything out (ChatDao deletes the rows and
+  // what stands under them, the schema staying): an import that REPLACES
+  // asks for it before a row of the archive is written.
+  the_dao->delete_all_conversations();
+}
+
 std::string draft_of(const std::string &conversation_id) {
   if (!the_dao)
     return {};
@@ -349,6 +358,8 @@ void keep_message(message_row) {}
 std::vector<conversation_row> conversations() { return {}; }
 
 void keep_draft(const std::string &, const std::string &, std::int64_t) {}
+
+void replace_all() {}
 
 std::string draft_of(const std::string &) { return {}; }
 
