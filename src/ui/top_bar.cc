@@ -252,7 +252,8 @@ struct top_bar : scene::Node {
   }
 
   void again(app::requests *sink, const paints &look, bool menu, bool narrow,
-             bool more, std::string_view title, const conversation *chat) {
+             bool more, std::string_view title, const conversation *chat,
+             std::string_view notice) {
     fScrim.setColour(look.paper);
     fScrim.apply({.fill = true,
                   .gradient = scene::Gradient{look.paper, look.scrim_top}});
@@ -320,9 +321,15 @@ struct top_bar : scene::Node {
           said_as_a_model(chat->models[at]));
     }
     // What this whole conversation has been worth, written once beside them,
-    // not in each bubble: the bar named it before any bubble held it.
-    fTokens.setText(chat ? tokens_short(chat->tokens) + " tokens"
-                         : std::string{});
+    // not in each bubble: the bar named it before any bubble held it. What the
+    // program has to tell since something happened says it here instead while
+    // it stands -- one line, until another replaces it -- because this is the
+    // one place in the room that speaks for the program itself.
+    if (!notice.empty())
+      fTokens.setText(std::string(notice));
+    else
+      fTokens.setText(chat ? tokens_short(chat->tokens) + " tokens"
+                           : std::string{});
     fTokens.setColour(look.faint);
     fTokens.apply({.anchor = scene::anchor::kTopRight,
                    .origin = scene::anchor::kCentreRight,

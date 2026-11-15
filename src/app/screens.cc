@@ -682,7 +682,7 @@ public:
                                          .editor_menu = editor_menu_,
                                          .faces = faces_,
                                          .drawer = drawer_},
-                        faces_lately_, width_, height_, &asked_);
+                        faces_lately_, width_, height_, &asked_, notice_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -718,6 +718,21 @@ public:
       // own), and everything said in them is kept to the store the moment it
       // lands. Anything else is a picture for what the next message carries.
       if (path.ends_with(".prgrssv")) {
+        // Said before it is read: what the archive holds is told first (the
+        // ported importer's own order -- preview, then import), and the
+        // words stand until something else is said.
+        const pchat::prgrssv::preview said =
+            pchat::prgrssv::preview_of(bytes);
+        if (!said.is_archive) {
+          notice_ = "That file is not one of these archives.";
+          continue;
+        }
+        notice_ = std::string(said.program.empty() ? "An archive" : said.program) +
+                  ": " + std::to_string(said.conversations) +
+                  (said.conversations == 1 ? " conversation, " : " conversations, ") +
+                  std::to_string(said.messages) +
+                  (said.messages == 1 ? " message" : " messages") +
+                  (said.settings ? ", settings" : "");
         restored(bytes);
         continue;
       }
@@ -1304,6 +1319,9 @@ private:
   // What the clip chose and the next message has not carried yet: whole data
   // URIs, in the order the dialog named them.
   std::vector<std::string> pending_pictures_;
+  // What the program has to tell the reader since something happened: one
+  // line, drawn in the bar until another replaces it. Empty says nothing.
+  std::string notice_;
   // The drawer is beside the messages where the window has room for both,
   // and comes over them only where the pill asks for it. It was asked for
   // from the first frame onwards: a wide window answered by showing it

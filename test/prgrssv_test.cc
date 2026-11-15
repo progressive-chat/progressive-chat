@@ -281,4 +281,47 @@ SAID(prgrssv, an_empty_program_still_writes_a_whole_archive) {
   }
 }
 
+// What an archive holds, said before any conversation is read back: the
+// manifest's own words and the counts off the file names -- the shape the
+// ported importer's preview reads a native backup in (DataImporter.preview).
+// A file that is not one of these says nothing at all.
+SAID(prgrssv, what_an_archive_holds_is_said_before_it_is_read) {
+  chats_root root;
+  root.accounts.push_back(account{.id = account_id{"home"},
+                                  .name = "Home",
+                                  .server = "https://chat.example"});
+  conversation room{.id = conversation_id{"kitchen"},
+                    .account = account_id{"home"},
+                    .title = "What is in the kitchen"};
+  root.conversations.push_back(std::move(room));
+  root.messages.push_back(message{.id = message_id{"kitchen-1"},
+                                  .chat = conversation_id{"kitchen"},
+                                  .author = "reader",
+                                  .outgoing = true,
+                                  .text = "hi",
+                                  .sent = 11,
+                                  .state = delivery::sent});
+  root.messages.push_back(message{.id = message_id{"kitchen-2"},
+                                  .chat = conversation_id{"kitchen"},
+                                  .author = "haiku-4",
+                                  .text = "hello",
+                                  .sent = 12,
+                                  .state = delivery::seen});
+  const std::string bytes =
+      pchat::prgrssv::archive_of(root, looks{}, asking{});
+  const pchat::prgrssv::preview said = pchat::prgrssv::preview_of(bytes);
+  EXPECT_TRUE(said.is_archive);
+  EXPECT_EQ(said.format_version, 1);
+  EXPECT_TRUE(said.program.starts_with("progressive-chat "));
+  EXPECT_EQ(said.conversations, 1);
+  EXPECT_EQ(said.messages, 2);
+  EXPECT_TRUE(said.settings);
+
+  // The bytes of anything else are not one, and say so by saying nothing.
+  const pchat::prgrssv::preview nothing =
+      pchat::prgrssv::preview_of("not an archive at all");
+  EXPECT_FALSE(nothing.is_archive);
+  EXPECT_EQ(nothing.conversations, 0);
+}
+
 int main() { return pchat::tests::run(); }
