@@ -44,19 +44,19 @@ namespace {
 // What one level of a read thing says by its name: nothing of any kind where
 // the name is not there -- a field an older archive did not write keeps what
 // the default is, the way a settings text read back does.
-[[nodiscard]] std::string text_of(const pchat::json::value &one,
+[[nodiscard]] std::string field_text(const pchat::json::value &one,
                                   std::string_view name) {
   const pchat::json::value *at = pchat::json::said(one, name);
   const auto text = at ? pchat::json::text_of(*at) : std::optional<std::string_view>{};
   return text ? std::string{*text} : std::string{};
 }
-[[nodiscard]] double number_of(const pchat::json::value &one,
+[[nodiscard]] double field_number(const pchat::json::value &one,
                                std::string_view name) {
   const pchat::json::value *at = pchat::json::said(one, name);
   const auto number = at ? pchat::json::number_of(*at) : std::optional<double>{};
   return number.value_or(0.0);
 }
-[[nodiscard]] std::optional<bool> truth_of(const pchat::json::value &one,
+[[nodiscard]] std::optional<bool> field_truth(const pchat::json::value &one,
                                            std::string_view name) {
   const pchat::json::value *at = pchat::json::said(one, name);
   return at ? pchat::json::truth_of(*at) : std::optional<bool>{};
@@ -773,7 +773,7 @@ public:
   // under it, into the tree and into the store -- the same rows a last run
   // would have written, written now.
   void restored_room(const json::value &room) {
-    const std::string id = std::string(text_of(room, "id"));
+    const std::string id = std::string(field_text(room, "id"));
     if (id.empty())
       return;
     const conversation_id chat{id};
@@ -786,16 +786,16 @@ public:
       fresh.id = chat;
       fresh.account = root_.accounts.empty() ? account_id{}
                                              : root_.accounts.front().id;
-      fresh.title = std::string(text_of(room, "title"));
+      fresh.title = std::string(field_text(room, "title"));
       fresh.last_activity = static_cast<moment>(
-          number_of(room, "last_activity"));
-      fresh.pinned = truth_of(room, "pinned").value_or(false);
-      fresh.muted = truth_of(room, "muted").value_or(false);
-      fresh.system_prompt = std::string(text_of(room, "system_prompt"));
-      fresh.tokens = static_cast<std::uint32_t>(number_of(room, "tokens"));
-      fresh.window = static_cast<std::uint32_t>(number_of(room, "window"));
+          field_number(room, "last_activity"));
+      fresh.pinned = field_truth(room, "pinned").value_or(false);
+      fresh.muted = field_truth(room, "muted").value_or(false);
+      fresh.system_prompt = std::string(field_text(room, "system_prompt"));
+      fresh.tokens = static_cast<std::uint32_t>(field_number(room, "tokens"));
+      fresh.window = static_cast<std::uint32_t>(field_number(room, "window"));
       fresh.context_used =
-          static_cast<float>(number_of(room, "context_used"));
+          static_cast<float>(field_number(room, "context_used"));
       if (const json::value *models = json::said(room, "models"))
         for (std::size_t at = 0u; json::said(models, at); ++at)
           if (const auto text = json::text_of(*json::said(models, at)))
@@ -810,7 +810,7 @@ public:
       const json::value *one = json::said(messages, at);
       if (!one)
         break;
-      const std::string said_id = std::string(text_of(*one, "id"));
+      const std::string said_id = std::string(field_text(*one, "id"));
       if (said_id.empty())
         continue;
       bool said_held = false;
@@ -821,32 +821,32 @@ public:
         continue;
       message kept{message_id{said_id},
                    chat,
-                   std::string(text_of(*one, "author")),
-                   truth_of(*one, "outgoing").value_or(false),
-                   std::string(text_of(*one, "text")),
-                   static_cast<moment>(number_of(*one, "sent")),
-                   delivery_of(std::string(text_of(*one, "state")))};
+                   std::string(field_text(*one, "author")),
+                   field_truth(*one, "outgoing").value_or(false),
+                   std::string(field_text(*one, "text")),
+                   static_cast<moment>(field_number(*one, "sent")),
+                   delivery_of(std::string(field_text(*one, "state")))};
       if (const auto why = json::text_of(*one, "why"))
         kept.why_failed = std::string{*why};
-      kept.tokens = static_cast<std::uint32_t>(number_of(*one, "tokens"));
+      kept.tokens = static_cast<std::uint32_t>(field_number(*one, "tokens"));
       if (const auto to = json::text_of(*one, "replies_to"))
         kept.replies_to = message_id{std::string{*to}};
       if (const json::value *thought_said = json::said(*one, "thought")) {
         kept.before = thought{
             .took_ms = static_cast<std::int64_t>(
-                number_of(*thought_said, "took_ms")),
+                field_number(*thought_said, "took_ms")),
             .tool_calls = static_cast<std::uint32_t>(
-                number_of(*thought_said, "tool_calls")),
-            .said = std::string(text_of(*thought_said, "said"))};
+                field_number(*thought_said, "tool_calls")),
+            .said = std::string(field_text(*thought_said, "said"))};
         if (const json::value *calls = json::said(*thought_said, "calls"))
           for (std::size_t call_at = 0u;; ++call_at) {
             const json::value *call = json::said(calls, call_at);
             if (!call)
               break;
             kept.before->calls.push_back(call_made{
-                .tool = std::string(text_of(*call, "tool")),
-                .asked = std::string(text_of(*call, "asked")),
-                .answered = std::string(text_of(*call, "answered"))});
+                .tool = std::string(field_text(*call, "tool")),
+                .asked = std::string(field_text(*call, "asked")),
+                .answered = std::string(field_text(*call, "answered"))});
           }
       }
       if (const json::value *pictures = json::said(*one, "pictures"))
@@ -863,12 +863,12 @@ public:
           if (!cited)
             break;
           kept.citations.push_back(citation{
-              .source_id = std::string(text_of(*cited, "source_id")),
-              .provider = std::string(text_of(*cited, "provider")),
-              .kind = std::string(text_of(*cited, "kind")),
-              .title = std::string(text_of(*cited, "title")),
-              .url = std::string(text_of(*cited, "url")),
-              .excerpt = std::string(text_of(*cited, "excerpt"))});
+              .source_id = std::string(field_text(*cited, "source_id")),
+              .provider = std::string(field_text(*cited, "provider")),
+              .kind = std::string(field_text(*cited, "kind")),
+              .title = std::string(field_text(*cited, "title")),
+              .url = std::string(field_text(*cited, "url")),
+              .excerpt = std::string(field_text(*cited, "excerpt"))});
         }
       root_.messages.push_back(std::move(kept));
       stored(root_.messages.back());
