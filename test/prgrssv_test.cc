@@ -1,6 +1,6 @@
 module;
 #include "tests.h"
-#include "prgrssv_read.h"
+#include "../src/prgrssv_read.h"
 export module pchat.test.prgrssv;
 // SPDX-License-Identifier: AGPL-3.0-only
 // The archive the program writes: everything in it, and back out of it whole --
@@ -19,9 +19,9 @@ namespace {
 
 // What one file in an archive says, where it stands by that name: nothing
 // where the archive holds no such file.
-const std::string *body_of(const std::vector<pchat::test::zipped_entry> &in,
+const std::string *body_of(const std::vector<pchat::prgrssv::held> &in,
                            std::string_view name) {
-  for (const pchat::test::zipped_entry &one : in)
+  for (const pchat::prgrssv::held &one : in)
     if (one.name == name)
       return &one.body;
   return nullptr;
@@ -135,8 +135,8 @@ SAID(prgrssv, everything_held_comes_back_as_it_was) {
 
   const std::string bytes =
       prgrssv::archive_of(root, default_looks, default_asking);
-  const std::vector<pchat::test::zipped_entry> in =
-      pchat::test::read_entries(bytes);
+  const std::vector<pchat::prgrssv::held> in =
+      pchat::prgrssv::read(bytes);
 
   // Three files: the index, the one conversation, and the settings.
   EXPECT_EQ(in.size(), 3u);
@@ -266,8 +266,8 @@ SAID(prgrssv, an_empty_program_still_writes_a_whole_archive) {
   const chats_root none;
   const std::string bytes =
       prgrssv::archive_of(none, default_looks, default_asking);
-  const std::vector<pchat::test::zipped_entry> in =
-      pchat::test::read_entries(bytes);
+  const std::vector<pchat::prgrssv::held> in =
+      pchat::prgrssv::read(bytes);
 
   // The manifest and the settings hold even where there is nothing to count.
   EXPECT_EQ(in.size(), 2u);

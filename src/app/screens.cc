@@ -9,6 +9,7 @@ module;
 #include "../provider/retry/retry.h"
 #include "../keep.h"
 #include "../serve.h"
+#include "../prgrssv_read.h"
 #include "agora/core/crypto_primitives.hpp"
 
 export module pchat.app.screens;
@@ -39,11 +40,49 @@ import pchat.logic.lists;
 
 namespace scene = skiff::scene;
 
+namespace {
+// What one level of a read thing says by its name: nothing of any kind where
+// the name is not there -- a field an older archive did not write keeps what
+// the default is, the way a settings text read back does.
+[[nodiscard]] std::string field_text(const pchat::json::value &one,
+                                  std::string_view name) {
+  const pchat::json::value *at = pchat::json::said(one, name);
+  const auto text = at ? pchat::json::text_of(*at) : std::optional<std::string_view>{};
+  return text ? std::string{*text} : std::string{};
+}
+[[nodiscard]] double field_number(const pchat::json::value &one,
+                               std::string_view name) {
+  const pchat::json::value *at = pchat::json::said(one, name);
+  const auto number = at ? pchat::json::number_of(*at) : std::optional<double>{};
+  return number.value_or(0.0);
+}
+[[nodiscard]] std::optional<bool> field_truth(const pchat::json::value &one,
+                                           std::string_view name) {
+  const pchat::json::value *at = pchat::json::said(one, name);
+  return at ? pchat::json::truth_of(*at) : std::optional<bool>{};
+}
+// What the archive says a delivery was, as this tree names it: anything it
+// does not name reads as sent -- the state a message is in where nothing
+// said otherwise.
+[[nodiscard]] pchat::delivery delivery_of(std::string_view said) {
+  if (said == "writing")
+    return pchat::delivery::writing;
+  if (said == "sending")
+    return pchat::delivery::sending;
+  if (said == "failed")
+    return pchat::delivery::failed;
+  if (said == "seen")
+    return pchat::delivery::seen;
+  return pchat::delivery::sent;
+}
+}  // namespace
+
 export namespace pchat::app {
 
 // The tree the host draws, held by a Scene. Declared here so the program
 // needs nothing of the screens but these.
 using window_scene = scene::Scene<ui::window_type>;
+
 
 // Everything shown, and what is done with what was asked for.
 class screens {
@@ -674,6 +713,14 @@ public:
                               std::istreambuf_iterator<char>()};
       if (bytes.empty())
         continue;
+      // An archive this program wrote, read back whole: the conversations it
+      // holds stand again beside the ones here (a row already here keeps its
+      // own), and everything said in them is kept to the store the moment it
+      // lands. Anything else is a picture for what the next message carries.
+      if (path.ends_with(".prgrssv")) {
+        restored(bytes);
+        continue;
+      }
       pending_pictures_.push_back("data:" + mime_of(path) + ";base64," +
                                   agora::core::crypto::base64_encode(
                                       std::span<const std::uint8_t>{
@@ -681,6 +728,152 @@ public:
                                               bytes.data()),
                                           bytes.size()},
                                       false, true));
+    }
+  }
+
+
+  // What one archive says, read back: every conversation file in it, whole,
+  // into the tree this window draws and into the store beside it. A file that
+  // is not this program's own archive says nothing (the ported reader throws
+  // on bytes that are not a zip) and leaves everything as it stood -- nothing
+  // catches it above, so a wrong file is a no-op, not a crash: caught here.
+  void restored(const std::string &bytes) {
+    std::vector<pchat::prgrssv::held> files;
+    try {
+      files = pchat::prgrssv::read(bytes);
+    } catch (const std::exception &) {
+      return;
+    }
+    for (const pchat::prgrssv::held &one : files) {
+      if (!one.name.starts_with("conversations/") ||
+          !one.name.ends_with(".json"))
+        continue;
+      const std::expected<json::value, json::read_error> room =
+          json::read(one.body);
+      if (!room)
+        continue;
+      restored_room(*room);
+    }
+    recount_all();
+    // What is open now stands among what came back: where it is not, the
+    // first conversation of the column is opened instead.
+    if (root_.conversations.empty())
+      root_.opened.reset();
+    else if (root_.opened) {
+      bool still = false;
+      for (const conversation &each : root_.conversations)
+        if (each.id == *root_.opened)
+          still = true;
+      if (!still)
+        root_.opened = root_.conversations.front().id;
+    }
+  }
+
+  // One conversation file, whole: the row the archive said and every message
+  // under it, into the tree and into the store -- the same rows a last run
+  // would have written, written now.
+  void restored_room(const json::value &room) {
+    const std::string id = std::string(field_text(room, "id"));
+    if (id.empty())
+      return;
+    const conversation_id chat{id};
+    bool held = false;
+    for (const conversation &each : root_.conversations)
+      if (each.id == chat)
+        held = true;
+    if (!held) {
+      conversation fresh;
+      fresh.id = chat;
+      fresh.account = root_.accounts.empty() ? account_id{}
+                                             : root_.accounts.front().id;
+      fresh.title = std::string(field_text(room, "title"));
+      fresh.last_activity = static_cast<moment>(
+          field_number(room, "last_activity"));
+      fresh.pinned = field_truth(room, "pinned").value_or(false);
+      fresh.muted = field_truth(room, "muted").value_or(false);
+      fresh.system_prompt = std::string(field_text(room, "system_prompt"));
+      fresh.tokens = static_cast<std::uint32_t>(field_number(room, "tokens"));
+      fresh.window = static_cast<std::uint32_t>(field_number(room, "window"));
+      fresh.context_used =
+          static_cast<float>(field_number(room, "context_used"));
+      if (const json::value *models = json::said(room, "models"))
+        for (std::size_t at = 0u; json::said(models, at); ++at)
+          if (const auto text = json::text_of(*json::said(models, at)))
+            fresh.models.push_back(std::string{*text});
+      root_.conversations.push_back(std::move(fresh));
+      stored_chat(chat);
+    }
+    const json::value *messages = json::said(room, "messages");
+    if (!messages)
+      return;
+    for (std::size_t at = 0u;; ++at) {
+      const json::value *one = json::said(messages, at);
+      if (!one)
+        break;
+      const std::string said_id = std::string(field_text(*one, "id"));
+      if (said_id.empty())
+        continue;
+      bool said_held = false;
+      for (const message &each : root_.messages)
+        if (each.id == message_id{said_id} && each.chat == chat)
+          said_held = true;
+      if (said_held)
+        continue;
+      message kept{message_id{said_id},
+                   chat,
+                   std::string(field_text(*one, "author")),
+                   field_truth(*one, "outgoing").value_or(false),
+                   std::string(field_text(*one, "text")),
+                   static_cast<moment>(field_number(*one, "sent")),
+                   delivery_of(std::string(field_text(*one, "state")))};
+      if (const std::string why = field_text(*one, "why"); !why.empty())
+        kept.why_failed = why;
+      kept.tokens = static_cast<std::uint32_t>(field_number(*one, "tokens"));
+      if (const std::string to = field_text(*one, "replies_to"); !to.empty())
+        kept.replies_to = message_id{to};
+      if (const json::value *thought_said = json::said(*one, "thought")) {
+        kept.before = thought{
+            .took_ms = static_cast<std::int64_t>(
+                field_number(*thought_said, "took_ms")),
+            .tool_calls = static_cast<std::uint32_t>(
+                field_number(*thought_said, "tool_calls")),
+            .said = std::string(field_text(*thought_said, "said"))};
+        if (const json::value *calls = json::said(*thought_said, "calls"))
+          for (std::size_t call_at = 0u;; ++call_at) {
+            const json::value *call = json::said(calls, call_at);
+            if (!call)
+              break;
+            kept.before->calls.push_back(call_made{
+                .tool = std::string(field_text(*call, "tool")),
+                .asked = std::string(field_text(*call, "asked")),
+                .answered = std::string(field_text(*call, "answered"))});
+          }
+      }
+      if (const json::value *pictures = json::said(*one, "pictures"))
+        for (std::size_t pic_at = 0u;; ++pic_at) {
+          const json::value *picture = json::said(pictures, pic_at);
+          if (!picture)
+            break;
+          // A picture in the archive is a bare text in the list: the value
+          // itself is what the URI is.
+          if (const auto text = pchat::json::text_of(*picture))
+            kept.pictures.push_back(std::string{*text});
+        }
+      if (const json::value *cites = json::said(*one, "citations"))
+        for (std::size_t cite_at = 0u;; ++cite_at) {
+          const json::value *cited = json::said(cites, cite_at);
+          if (!cited)
+            break;
+          kept.citations.push_back(citation{
+              .source_id = std::string(field_text(*cited, "source_id")),
+              .provider = std::string(field_text(*cited, "provider")),
+              .kind = std::string(field_text(*cited, "kind")),
+              .title = std::string(field_text(*cited, "title")),
+              .url = std::string(field_text(*cited, "url")),
+              .excerpt = std::string(field_text(*cited, "excerpt"))});
+        }
+      root_.messages.push_back(std::move(kept));
+      stored(root_.messages.back());
     }
   }
 
