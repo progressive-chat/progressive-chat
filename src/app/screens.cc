@@ -854,8 +854,8 @@ public:
           const json::value *picture = json::said(pictures, pic_at);
           if (!picture)
             break;
-          // A picture in the archive is a bare text, not a thing with a name:
-          // the value itself is what the URI is.
+          // A picture in the archive is a bare text in the list: the value
+          // itself is what the URI is.
           if (const auto text = pchat::json::text_of(*picture))
             kept.pictures.push_back(std::string{*text});
         }
