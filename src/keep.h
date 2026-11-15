@@ -101,6 +101,12 @@ struct kept_of_row {
   std::string text;
 };
 
+// Every conversation and message taken out of the store -- the store empty
+// where it stood, the schema itself kept. What an import says when it brings
+// an archive INSTEAD of what was here (the ported
+// ChatDao.delete_all_conversations behind it).
+void replace_all();
+
 // The message with this id, whole, from the store.
 [[nodiscard]] kept_of_row kept_of(const std::string &message_id);
 

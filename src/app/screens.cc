@@ -641,6 +641,24 @@ public:
               if (dialogs_)
                 dialogs_->choose_files();
             },
+            // The two plates beside the preview's words: what they ask is the
+            // decision the ported importer takes per category -- beside what
+            // is here (the rows staying, the archive's added) or instead of
+            // it (the rows taken out first, what the store holds now the
+            // archive's). Pressed, the pending bytes are read; pressed
+            // again after another file was chosen, the new ones are.
+            [&](const import_merge &) {
+              if (!pending_archive_.empty()) {
+                restored(pending_archive_, false);
+                pending_archive_.clear();
+              }
+            },
+            [&](const import_replace &) {
+              if (!pending_archive_.empty()) {
+                restored(pending_archive_, true);
+                pending_archive_.clear();
+              }
+            },
             // An answerer put into the open conversation or taken out of
             // it: the window then writes to the first one left, and its
             // window is that model's own.
@@ -682,7 +700,8 @@ public:
                                          .editor_menu = editor_menu_,
                                          .faces = faces_,
                                          .drawer = drawer_},
-                        faces_lately_, width_, height_, &asked_, notice_);
+                        faces_lately_, width_, height_, &asked_, notice_,
+                        !pending_archive_.empty());
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -719,21 +738,25 @@ public:
       // lands. Anything else is a picture for what the next message carries.
       if (path.ends_with(".prgrssv")) {
         // Said before it is read: what the archive holds is told first (the
-        // ported importer's own order -- preview, then import), and the
-        // words stand until something else is said.
+        // ported importer's own order -- preview, then import), and the words
+        // stand with the two plates that say HOW it comes in: beside what is
+        // here, or instead of it. Nothing is read until one of them is
+        // pressed -- the decisions the ported importer takes from its caller
+        // (Merge, Replace or Skip per category) are the reader's here.
         const pchat::prgrssv::preview said =
             pchat::prgrssv::preview_of(bytes);
         if (!said.is_archive) {
           notice_ = "That file is not one of these archives.";
+          pending_archive_.clear();
           continue;
         }
+        pending_archive_ = bytes;
         notice_ = std::string(said.program.empty() ? "An archive" : said.program) +
                   ": " + std::to_string(said.conversations) +
                   (said.conversations == 1 ? " conversation, " : " conversations, ") +
                   std::to_string(said.messages) +
                   (said.messages == 1 ? " message" : " messages") +
-                  (said.settings ? ", settings" : "");
-        restored(bytes);
+                  (said.settings ? ", settings" : "") + " -- bring it in?";
         continue;
       }
       pending_pictures_.push_back("data:" + mime_of(path) + ";base64," +
@@ -752,7 +775,19 @@ public:
   // is not this program's own archive says nothing (the ported reader throws
   // on bytes that are not a zip) and leaves everything as it stood -- nothing
   // catches it above, so a wrong file is a no-op, not a crash: caught here.
-  void restored(const std::string &bytes) {
+  // `instead` decides how the archive comes in: false keeps what is here
+  // beside it (the restore as it was written), true takes the store's rows
+  // out first -- the ported importer's Merge and Replace for the one category
+  // this program's archive carries (conversations). Skip is pressed by
+  // choosing no plate: the notice stands until then, and the bytes are read
+  // only when one of the two is asked for.
+  void restored(const std::string &bytes, bool instead) {
+    if (instead) {
+      keep::replace_all();
+      root_.conversations.clear();
+      root_.messages.clear();
+      root_.opened.reset();
+    }
     std::vector<pchat::prgrssv::held> files;
     try {
       files = pchat::prgrssv::read(bytes);
@@ -1322,6 +1357,9 @@ private:
   // What the program has to tell the reader since something happened: one
   // line, drawn in the bar until another replaces it. Empty says nothing.
   std::string notice_;
+  // The archive previewed and not yet read: the bytes wait here for the
+  // plate that says how they come in (and are read by no one without one).
+  std::string pending_archive_;
   // The drawer is beside the messages where the window has room for both,
   // and comes over them only where the pill asks for it. It was asked for
   // from the first frame onwards: a wide window answered by showing it

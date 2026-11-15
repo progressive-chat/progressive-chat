@@ -90,6 +90,35 @@ SAID(keep, settings_said_are_read_back_whole) {
   pchat::keep::close();
 }
 
+// What an import that REPLACES asks of the store: everything taken out, the
+// schema standing -- nothing of the run that came before is read back after
+// it (the ported ChatDao.delete_all_conversations behind it).
+SAID(keep, replace_all_takes_every_row_out_and_the_store_stands) {
+  pchat::keep::close();
+  EXPECT_TRUE(pchat::keep::open());
+  pchat::keep::keep_conversation(conversation_row{.id = "chat-r",
+                                                 .title = "Before",
+                                                 .last_updated = 1});
+  pchat::keep::keep_message(message_row{.id = "m-r",
+                                       .conversation_id = "chat-r",
+                                       .text = "of the run before",
+                                       .token_count = 3,
+                                       .timestamp = 2});
+  EXPECT_TRUE(pchat::keep::conversations().size() == 1);
+
+  pchat::keep::replace_all();
+  EXPECT_TRUE(pchat::keep::conversations().empty());
+  EXPECT_FALSE(pchat::keep::kept_of("m-r").found);
+
+  // The store still answers after it: a row of THIS run writes and reads back.
+  pchat::keep::keep_conversation(conversation_row{.id = "chat-n",
+                                                 .title = "After",
+                                                 .last_updated = 3});
+  EXPECT_TRUE(pchat::keep::conversations().size() == 1);
+  EXPECT_EQ(pchat::keep::conversations()[0].title, std::string("After"));
+  pchat::keep::close();
+}
+
 // A store at a file, as the program holds it: what was kept in one run is
 // read back in the next. The file is under the session's own temp -- no path
 // beside the test is assumed, and nothing is left standing after it.

@@ -173,6 +173,13 @@ struct set_answerer {
   std::string name;
   bool wanted = false;
 };
+// What the bar asks when an archive was previewed: bring what it holds IN
+// beside what is here (merge -- this tree's default, what a restore does
+// today), or stand INSTEAD of what is here (replace -- the rows taken out
+// first, the archive standing where they did). Said by the two plates the
+// notice stands with.
+struct import_merge {};
+struct import_replace {};
 // The clip beside the field, pressed: what stands in the machine's files is
 // asked for through the system's own dialog (skiff.platform.dialogs,
 // choose_files), and what it answers comes back through the program
@@ -203,7 +210,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                                 send_test_notification,
                                 set_generation, set_tool, set_switch,
                               set_answerer, copy_text, save_archive,
-                              attach_picture>;
+                              attach_picture, import_merge,
+                              import_replace>;
 
 class requests {
 public:

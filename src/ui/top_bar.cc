@@ -233,6 +233,14 @@ struct top_bar : scene::Node {
   bar_press fMore{};
   more_menu fMoreMenu{};
   nodes::Text fTokens{"", 11.0f, 0u};
+  // The two plates the preview's words stand with: what the reader asks of an
+  // archive that waits -- bring it in, or stand instead. Hidden until bytes
+  // are waiting; the mark is the words themselves (a label, the way the
+  // settings page's own plates are).
+  ask_box fMerge{};
+  nodes::Text fMergeText{"", 12.0f, 0u};
+  ask_box fInstead{};
+  nodes::Text fInsteadText{"", 12.0f, 0u};
   nodes::Text fTitle{"", 17.0f, 0u, true};
 
   top_bar() {
@@ -253,7 +261,7 @@ struct top_bar : scene::Node {
 
   void again(app::requests *sink, const paints &look, bool menu, bool narrow,
              bool more, std::string_view title, const conversation *chat,
-             std::string_view notice) {
+             std::string_view notice, bool waiting) {
     fScrim.setColour(look.paper);
     fScrim.apply({.fill = true,
                   .gradient = scene::Gradient{look.paper, look.scrim_top}});
@@ -330,6 +338,42 @@ struct top_bar : scene::Node {
     else
       fTokens.setText(chat ? tokens_short(chat->tokens) + " tokens"
                            : std::string{});
+    // The two answers to a preview that waits: left of the words, the same
+    // plates a settings row is (a press under a label), hidden while nothing
+    // waits. The press asks; the notice says what came of it next.
+    const float plate_y = (top_bar_height - 26.0f) / 2.0f;
+    fMerge.again(sink, app::import_merge{}, look.raised);
+    fMerge.apply({.anchor = scene::anchor::kTopLeft,
+                  .origin = scene::anchor::kTopLeft,
+                  .x = 16.0f,
+                  .y = plate_y,
+                  .width = 78.0f,
+                  .height = 26.0f,
+                  .cornerRadius = 13.0f,
+                  .visible = waiting});
+    fMergeText.setText("Bring in");
+    fMergeText.setColour(waiting ? look.text : look.paper);
+    fMergeText.apply({.anchor = scene::anchor::kTopLeft,
+                      .origin = scene::anchor::kTopLeft,
+                      .x = 30.0f,
+                      .y = plate_y + 6.0f,
+                      .visible = waiting});
+    fInstead.again(sink, app::import_replace{}, look.raised);
+    fInstead.apply({.anchor = scene::anchor::kTopLeft,
+                    .origin = scene::anchor::kTopLeft,
+                    .x = 104.0f,
+                    .y = plate_y,
+                    .width = 86.0f,
+                    .height = 26.0f,
+                    .cornerRadius = 13.0f,
+                    .visible = waiting});
+    fInsteadText.setText("Instead");
+    fInsteadText.setColour(waiting ? look.text : look.paper);
+    fInsteadText.apply({.anchor = scene::anchor::kTopLeft,
+                        .origin = scene::anchor::kTopLeft,
+                        .x = 120.0f,
+                        .y = plate_y + 6.0f,
+                        .visible = waiting});
     fTokens.setColour(look.faint);
     fTokens.apply({.anchor = scene::anchor::kTopRight,
                    .origin = scene::anchor::kCentreRight,
@@ -354,6 +398,10 @@ struct top_bar : scene::Node {
     f(fMore);
     f(fMoreMenu);
     f(fNew);
+    f(fMerge);
+    f(fMergeText);
+    f(fInstead);
+    f(fInsteadText);
     f(fTokens);
   }
 };
