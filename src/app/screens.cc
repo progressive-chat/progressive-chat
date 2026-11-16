@@ -197,7 +197,14 @@ public:
   void restore_settings() {
     if (!pchat::keep::is_open())
       return;
-    const std::string held = pchat::keep::settings();
+    apply_settings(pchat::keep::settings());
+  }
+
+  // One settings text -- the store's own at a start, an archive's when an
+  // import brings it -- walked name by name onto how the page stands: every
+  // name it does not hold keeps what it had (the writer's own shape,
+  // prgrssv::settings_of, read back the way the store's copy is).
+  void apply_settings(const std::string &held) {
     if (held.empty())
       return;
     const std::expected<json::value, json::read_error> read =
@@ -804,6 +811,17 @@ public:
         continue;
       restored_room(*room);
     }
+    // The archive's settings, applied the same way the store's own copy is
+    // (one walk, two sources). Both categories of this archive ride the one
+    // ask: a plate that brings the conversations in brings the settings with
+    // them, and no plate brings neither -- the ported importer takes a
+    // decision per category, and this program's bar asks the two of them
+    // together, said as it is.
+    for (const pchat::prgrssv::held &one : files)
+      if (one.name == "settings.json") {
+        apply_settings(one.body);
+        break;
+      }
     recount_all();
     // What is open now stands among what came back: where it is not, the
     // first conversation of the column is opened instead.
