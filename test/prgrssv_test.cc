@@ -324,4 +324,36 @@ SAID(prgrssv, what_an_archive_holds_is_said_before_it_is_read) {
   EXPECT_EQ(nothing.conversations, 0);
 }
 
+// The settings an archive carries are the same text the store keeps: written
+// whole (settings_of) and read back whole from the entry -- the walk that
+// applies the store's copy (screens, apply_settings) reads this one too,
+// name for name, because it is the same shape by construction.
+SAID(prgrssv, an_archives_settings_are_the_text_the_store_keeps) {
+  looks shown;
+  shown.preset = scheme_preset::ocean;
+  shown.amoled = true;
+  asking how;
+  how.thinking = false;
+  how.max_tokens = 8192;
+  const std::string said = prgrssv::settings_of(shown, how);
+
+  chats_root root;
+  root.accounts.push_back(account{.id = account_id{"home"},
+                                  .name = "Home",
+                                  .server = "https://chat.example"});
+  const std::string bytes = prgrssv::archive_of(root, shown, how);
+  const pchat::prgrssv::preview first = pchat::prgrssv::preview_of(bytes);
+  EXPECT_TRUE(first.settings);
+  const std::vector<pchat::prgrssv::held> files =
+      pchat::prgrssv::read(bytes);
+  const std::string *carried = nullptr;
+  for (const pchat::prgrssv::held &one : files)
+    if (one.name == "settings.json")
+      carried = &one.body;
+  EXPECT_TRUE(carried != nullptr);
+  if (carried == nullptr)
+    return;
+  EXPECT_EQ(*carried, said);
+}
+
 int main() { return pchat::tests::run(); }
