@@ -1,6 +1,7 @@
 module;
 #include "tests.h"
 #include "../src/prgrssv_read.h"
+#include "../src/prgrssv_zip.h"
 export module pchat.test.prgrssv;
 // SPDX-License-Identifier: AGPL-3.0-only
 // The archive the program writes: everything in it, and back out of it whole --
