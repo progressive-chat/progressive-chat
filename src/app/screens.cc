@@ -656,13 +656,13 @@ public:
             // again after another file was chosen, the new ones are.
             [&](const import_merge &) {
               if (!pending_archive_.empty()) {
-                restored(pending_archive_, false);
+                (void)restored(pending_archive_, false);
                 pending_archive_.clear();
               }
             },
             [&](const import_replace &) {
               if (!pending_archive_.empty()) {
-                restored(pending_archive_, true);
+                (void)restored(pending_archive_, true);
                 pending_archive_.clear();
               }
             },
@@ -788,7 +788,18 @@ public:
   // this program's archive carries (conversations). Skip is pressed by
   // choosing no plate: the notice stands until then, and the bytes are read
   // only when one of the two is asked for.
-  void restored(const std::string &bytes, bool instead) {
+  // What one import did, as the ported importer says it (ImportResult): the
+  // conversations and messages that came in, and every file it could not
+  // read, named -- nothing read silently. The words stand in the bar.
+  struct import_result {
+    int conversations = 0;
+    int messages = 0;
+    std::vector<std::string> errors;
+  };
+
+  [[nodiscard]] import_result restored(const std::string &bytes,
+                                       bool instead) {
+    import_result said;
     if (instead) {
       keep::replace_all();
       root_.conversations.clear();
@@ -798,8 +809,9 @@ public:
     std::vector<pchat::prgrssv::held> files;
     try {
       files = pchat::prgrssv::read(bytes);
-    } catch (const std::exception &) {
-      return;
+    } catch (const std::exception &why) {
+      said.errors.push_back(why.what());
+      return said;
     }
     for (const pchat::prgrssv::held &one : files) {
       if (!one.name.starts_with("conversations/") ||
@@ -807,9 +819,20 @@ public:
         continue;
       const std::expected<json::value, json::read_error> room =
           json::read(one.body);
-      if (!room)
+      if (!room) {
+        // The file's own name and the place it gave up: a conversation that
+        // will not read is said, not stepped over.
+        said.errors.push_back(one.name + ", at its " +
+                              std::to_string(room.error().at) +
+                              "th character: " + room.error().said);
         continue;
+      }
+      const int before =
+          static_cast<int>(root_.messages.size());
       restored_room(*room);
+      said.conversations += 1;
+      said.messages +=
+          static_cast<int>(root_.messages.size()) - before;
     }
     // The archive's settings, applied the same way the store's own copy is
     // (one walk, two sources). Both categories of this archive ride the one
@@ -835,6 +858,17 @@ public:
       if (!still)
         root_.opened = root_.conversations.front().id;
     }
+    // What it did, said where the preview was said: the counts it brought in
+    // and every file it could not read -- the ported ImportResult's own
+    // shape, in this program's own words.
+    notice_ =
+        "Read " + std::to_string(said.conversations) +
+        (said.conversations == 1 ? " conversation, " : " conversations, ") +
+        std::to_string(said.messages) +
+        (said.messages == 1 ? " message" : " messages");
+    for (const std::string &why : said.errors)
+      notice_ += "; not read: " + why;
+    return said;
   }
 
   // One conversation file, whole: the row the archive said and every message
