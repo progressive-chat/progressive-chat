@@ -203,8 +203,11 @@ private:
         ImportStrategy strategy,
         const PromptPlan& prompt_plan);
 
+    /** Marks every restored embedding model except the active one as needing a
+     *  reconcile, the way the import does after it writes the models back. */
     void reconcile_imported_embedding_models(
-        const std::vector<native_backup::EmbeddingModelConfig>& previous_models);
+        const std::vector<native_backup::EmbeddingModelConfig>& restored_models,
+        const std::string& active_model_id);
 };
 
 }  // namespace agora::core::data_import

@@ -1427,6 +1427,7 @@ RestoreResult restore_from_json_object(const json::Value& obj, const SettingsSna
         std::vector<EmbeddingModelConfig> final_models = existing_local;
         final_models.insert(final_models.end(), final_remote.begin(), final_remote.end());
         sink.save_embedding_models(final_models);
+        result.embedding_models = final_models;
 
         std::optional<std::string> requested;
         if (has_field(obj, "activeRemoteEmbeddingModelId")) {
@@ -1457,6 +1458,7 @@ RestoreResult restore_from_json_object(const json::Value& obj, const SettingsSna
             }
         }
         sink.set_active_embedding_model_id(active.value_or(""));
+        result.active_embedding_model_id = active.value_or("");
     }
 
     if (const std::optional<std::string> value = string_field(obj, "appLanguage")) {
