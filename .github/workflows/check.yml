@@ -26,10 +26,18 @@ jobs:
       - uses: ./.github/actions/desktop-setup
       # Skia and SDL3 are built here, and only here: kept between runs, so
       # that a check is the program's own build and nothing else.
+      - id: clang-version
+        name: The compiler's version
+        run: echo "version=$(clang++ --version | head -1 | grep -oE '\+\+[0-9]+' | head -1)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
         with:
           path: build
-          key: check-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/check.yml', '.github/actions/desktop-setup/action.yml') }}
+          # The compiler's own version is part of the key: module files
+          # (.pcm) are built by one compiler and refused by another, so a
+          # cache that outlives a clang update fails every build that reads
+          # it (the error names both versions). Changing the compiler or
+          # this file changes the key, and the stale files are left behind.
+          key: check-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/check.yml', '.github/actions/desktop-setup/action.yml') }}-clang-${{ steps.clang-version.outputs.version }}
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
