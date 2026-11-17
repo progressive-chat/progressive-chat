@@ -16,8 +16,10 @@ const page_dir = path.resolve(process.argv[2] ?? 'build-web/web');
 const shots_dir = path.resolve(process.argv[3] ?? 'page-test');
 fs.mkdirSync(shots_dir, { recursive: true });
 
-// The fake model answers every request with this text and the request number.
-const reply_mark = 'Quokka reply number';
+// Each answer of the fake model carries one word that is unique to its
+// request, so a check can look for exactly that answer. A single word stays
+// whole even if the page splits a text into several elements.
+const mark_of = number => 'quokka' + number + 'x';
 
 const mime = {
   '.html': 'text/html; charset=utf-8',
@@ -96,8 +98,9 @@ const answer_model = async (request, response, url) => {
   let parsed = null;
   try { parsed = JSON.parse(body); } catch { /* kept as text */ }
   const number = asked.length + 1;
-  asked.push({ number, path: url.pathname + url.search, headers: request.headers, body, parsed });
-  const text = reply_mark + ' ' + number + '.';
+  const mark = mark_of(number);
+  asked.push({ number, mark, path: url.pathname + url.search, headers: request.headers, body, parsed });
+  const text = 'The fake model answers request ' + number + ' with the word ' + mark + ' in it.';
   let frames;
   if (url.pathname.endsWith('/messages')) frames = anthropic_frames(text, parsed?.model ?? 'unknown');
   else if (url.pathname.includes(':streamGenerateContent')) frames = gemini_frames(text);
@@ -203,6 +206,30 @@ const focus_field = async (page, viewport, phone) => {
   return box ? 'placeholder' : 'fallback point';
 };
 
+// True if `text` can be read in the message list without scrolling: some
+// element holding it lies wholly inside the window, is not covered by another
+// element, and is not inside the docked conversation list. From 960 points of
+// width the conversation list is docked at the left, 360 points wide
+// (src/ui/base.cc); a match there is that list's preview line.
+const in_view = async (page, viewport, text) => {
+  const list_right = viewport.width >= 960 ? 360 : 0;
+  return page.evaluate(([wanted, left, width, height]) => {
+    const host = document.getElementById('skiff');
+    if (!host) return false;
+    for (const element of host.querySelectorAll('*')) {
+      const own = Array.from(element.childNodes)
+        .filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent).join('');
+      if (!own.includes(wanted)) continue;
+      const box = element.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) continue;
+      if (box.left < left || box.top < 0 || box.right > width || box.bottom > height) continue;
+      const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      if (top && (top === element || element.contains(top) || top.contains(element))) return true;
+    }
+    return false;
+  }, [text, list_right, viewport.width, viewport.height]);
+};
+
 // Types a message, sends it with Enter, and checks that the fake API was asked
 // and that its answer shows on the page.
 const send_and_expect = async (name, viewport, phone, required) => {
@@ -211,7 +238,8 @@ const send_and_expect = async (name, viewport, phone, required) => {
   check(name + ': the program starts', started, true);
   if (!started) { await context.close(); return; }
   const before = asked.length;
-  const typed = 'Page test message from ' + name;
+  const typed_mark = 'pagetest' + name + 'x';
+  const typed = 'A message from the page test with the word ' + typed_mark + ' in it';
   const how = await focus_field(page, viewport, phone);
   await page.keyboard.type(typed);
   await page.waitForTimeout(500);
@@ -219,7 +247,7 @@ const send_and_expect = async (name, viewport, phone, required) => {
   await page.keyboard.press('Enter');
   let request = null;
   for (let waited = 0; waited < 15000 && !request; waited += 250) {
-    request = asked.slice(before).find(one => one.body.includes(typed)) ?? null;
+    request = asked.slice(before).find(one => one.body.includes(typed_mark)) ?? null;
     if (!request) await sleep(250);
   }
   check(name + ': sending asks the model API', request !== null, required,
@@ -227,12 +255,18 @@ const send_and_expect = async (name, viewport, phone, required) => {
                 : asked.length - before + ' requests, none with the typed text; field found by ' + how);
   let shown = false;
   if (request) {
-    const expected = reply_mark + ' ' + request.number + '.';
+    const expected = request.mark;
     for (let waited = 0; waited < 30000 && !shown; waited += 500) {
       shown = (await page_text(page)).includes(expected);
       if (!shown) await page.waitForTimeout(500);
     }
-    check(name + ': the answer shows on the page', shown, required, 'expected "' + expected + '"');
+    check(name + ': the answer is in the page', shown, required, 'expected "' + expected + '"');
+    // Known gap: the message list does not scroll to a new message, so the
+    // text is in the page but below the visible part of the list.
+    check(name + ': the sent message is visible without scrolling',
+          await in_view(page, viewport, typed_mark), false);
+    check(name + ': the answer is visible without scrolling',
+          shown && await in_view(page, viewport, expected), false);
   }
   await shoot(page, name + '-2-answered');
   check(name + ': no uncaught page error', errors.length === 0, required, errors.join(' | '));
