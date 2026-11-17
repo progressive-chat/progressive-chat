@@ -40,15 +40,13 @@ function(pchat_add_android_apk target)
       "AOSP framework resource APK")
   set(PCHAT_ANDROID_APKSIGNER_JAR "${MANDK_ROOT}/tools/apksigner.jar" CACHE FILEPATH
       "Source-built apksigner JAR")
-  # What an Android has to be asked for to read this APK: 21, and not the
-  # platform it is built against (28) -- nothing later than 21 is asked
-  # for, which its own libraries say (there is no symbol of a later
-  # release left undefined in them), and 21 asks for a phone of 2014.
-  # It was 5 once, and 5 is what an Android of this decade answers
-  # with "there was a problem while parsing the package": too old a
-  # release to be asked for at all.
+  # minSdkVersion of the APK. It must not be lower than the API level the
+  # native library is built for (ANDROID_PLATFORM, android-28 in
+  # .github/workflows/android.yml). The library imports libc symbols that
+  # first exist at that level, for example aligned_alloc and iconv (API 28),
+  # and uses RELR relocations (API 28), so an older Android cannot load it.
   set(PCHAT_ANDROID_TARGET_API 35 CACHE STRING "APK target API")
-  set(PCHAT_ANDROID_MIN_API 21 CACHE STRING "APK minimum API")
+  set(PCHAT_ANDROID_MIN_API 28 CACHE STRING "APK minimum API")
   set(PCHAT_ANDROID_VERSION_CODE 1 CACHE STRING "Monotonic APK version code")
   set(PCHAT_ANDROID_REVISION "" CACHE STRING
       "What an APK made here is named after: its commit, where one is known")
@@ -58,6 +56,13 @@ function(pchat_add_android_apk target)
   set(PCHAT_ANDROID_LIBRARY_DIRS "" CACHE STRING "Additional Android runtime library search directories")
   if(PCHAT_ANDROID_MIN_API LESS 21 OR PCHAT_ANDROID_TARGET_API LESS PCHAT_ANDROID_MIN_API)
     message(FATAL_ERROR "Android packaging requires 21 <= PCHAT_ANDROID_MIN_API <= PCHAT_ANDROID_TARGET_API")
+  endif()
+  if(ANDROID_PLATFORM MATCHES "^android-([0-9]+)$")
+    if(PCHAT_ANDROID_MIN_API LESS CMAKE_MATCH_1)
+      message(FATAL_ERROR
+        "PCHAT_ANDROID_MIN_API (${PCHAT_ANDROID_MIN_API}) is lower than the API level "
+        "the library is built for (${ANDROID_PLATFORM})")
+    endif()
   endif()
   # Android keeps the signature outside the archive from 7.0 (API 24): only
   # below that is the signature inside the archive the one that is read, and
