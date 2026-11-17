@@ -65,6 +65,27 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: build-web/web
+      # The page test: tools/page_test.mjs serves the built page and a fake
+      # model API on one local port and drives the page in a headless browser.
+      # The job fails if a sent message gets no visible answer. The
+      # screenshots are uploaded whether it passes or not.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install the browser for the page test
+        run: |
+          npm init -y > /dev/null
+          npm install playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Test the page
+        run: node tools/page_test.mjs build-web/web page-test-shots
+      - name: Upload the page test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-test
+          path: page-test-shots
+          if-no-files-found: warn
 
   deploy:
     needs: build
