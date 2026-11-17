@@ -49,7 +49,6 @@ if(PCHAT_REVISION)
 else()
   set(PCHAT_VERSION_SAID "${PROJECT_VERSION}")
 endif()
-add_compile_definitions(PCHAT_VERSION_SAID="${PCHAT_VERSION_SAID}")
 
 # The design, said once at the top of the tree in design-doc.md and read
 # inside the program as well as out of it: written out here as one string a
@@ -239,7 +238,13 @@ target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
         src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc
-          src/tokens.cc src/prgrssv.cc)
+          src/tokens.cc src/prgrssv.cc src/version.cc)
+# The version string is compiled into this one file. A definition for every
+# target would put the commit id on every compiler command line, and then each
+# commit recompiles everything, the fetched libraries included.
+target_sources(pchat_core PRIVATE src/version_impl.cc)
+set_source_files_properties(src/version_impl.cc PROPERTIES
+  COMPILE_DEFINITIONS "PCHAT_VERSION_SAID=\"${PCHAT_VERSION_SAID}\"")
 target_compile_features(pchat_core PUBLIC cxx_std_26)
 target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
 # The o200k vocabulary, into the binary itself: a page has no files beside its
