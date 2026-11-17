@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// What a test says: one check at a time, and the count of those that did not
-// hold. Nothing fetched to say it in -- a build of modules is already all
-// this machine will hold, and printing "1 == 2" needs no framework.
+// A minimal test framework. SAID(group, name) defines a test, EXPECT_* checks
+// one condition, run() runs every test and returns the exit code for ctest.
 //
-// Included in a test's own unit before anything else (see core_test.cc): a
-// module unit's macros are its own, and not an importer's.
+// A test file is a module unit. It includes this header in its global module
+// fragment (before `export module`), because a module does not export macros.
 #ifndef PCHAT_TESTS_H
 #define PCHAT_TESTS_H
 
 #include <cstdio>
+#include <exception>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -16,11 +16,12 @@
 
 namespace pchat::tests {
 
-// A check that did not hold: said once, with the line it is written on.
+// Failed checks, each as "file:line: text".
 inline std::vector<std::string> &failures() {
   static std::vector<std::string> kept;
   return kept;
 }
+// Number of checks evaluated so far.
 inline std::size_t &checks() {
   static std::size_t kept = 0;
   return kept;
@@ -33,7 +34,7 @@ inline void failed(std::string_view said, std::source_location where = std::sour
                        std::string{said});
 }
 
-// One test: the function it was written as, and the name it was given.
+// One test: its function and its name. The name points at a string literal.
 struct one {
   void (*said)() = nullptr;
   std::string_view name;
@@ -44,6 +45,7 @@ inline std::vector<one> &all() {
   return kept;
 }
 
+// Adds a test to all() when constructed, which happens before main().
 struct registrar {
   registrar(void (*said)(), std::string_view name) { all().push_back(one{said, name}); }
 };
@@ -54,30 +56,52 @@ void that(bool holds, std::string_view text, const Left &, const Right &) {
   if (!holds) failed(text);
 }
 
-// Every test run: what failed said after them, and a code for ctest.
+// Runs every registered test. Returns 0 only if at least one check ran and
+// none failed. A test that throws counts as failed and the run continues.
+// The name is printed and flushed before the test starts, so the log shows
+// which test was running if the program crashes.
 inline int run() {
   for (const one &test : all()) {
     const std::size_t before = failures().size();
-    test.said();
-    std::printf("%s %s\n", failures().size() == before ? "ok  " : "FAIL", test.name.data());
+    std::printf("%s ... ", test.name.data());
+    std::fflush(stdout);
+    try {
+      test.said();
+    } catch (const std::exception &thrown) {
+      failures().push_back(std::string{test.name} + ": threw " + thrown.what());
+    } catch (...) {
+      failures().push_back(std::string{test.name} + ": threw a value that is not a std::exception");
+    }
+    std::printf("%s\n", failures().size() == before ? "ok" : "FAIL");
+    std::fflush(stdout);
+  }
+  if (all().empty() || checks() == 0) {
+    std::printf("\nNo check ran: %zu tests registered, 0 checks evaluated.\n", all().size());
+    return 1;
   }
   if (!failures().empty()) {
     std::printf("\n%zu of %zu checks did not hold:\n", failures().size(), checks());
     for (const std::string &said : failures()) std::printf("  %s\n", said.c_str());
     return 1;
   }
-  std::printf("\n%zu checks held.\n", checks());
+  std::printf("\n%zu checks held in %zu tests.\n", checks(), all().size());
   return 0;
 }
 
 }  // namespace pchat::tests
 
-// One test, named for the group it is in and for what it says.
+// Defines one test. The registrar must not be `static`: clang leaves an unused
+// internal-linkage variable out of a module unit's object file, so the test
+// was never registered and the program ran no test at all. Without `static`
+// the variable has module linkage and is always emitted. Each test file is a
+// separate program, so the names cannot collide across files.
 #define SAID(group, name)                                                                                               \
   static void said_##group##_##name();                                                                                   \
-  static const ::pchat::tests::registrar said_kept_##group##_##name{&said_##group##_##name, #group "." #name};           \
+  const ::pchat::tests::registrar said_kept_##group##_##name{&said_##group##_##name, #group "." #name};                 \
   static void said_##group##_##name()
 
+// Each EXPECT_* evaluates its arguments twice, so do not pass an expression
+// with a side effect.
 #define EXPECT_TRUE(given) ::pchat::tests::that(static_cast<bool>(given), "true: " #given, given, true)
 #define EXPECT_FALSE(given) ::pchat::tests::that(!static_cast<bool>(given), "false: " #given, given, false)
 #define EXPECT_EQ(left, right) ::pchat::tests::that((left) == (right), #left " == " #right, left, right)
