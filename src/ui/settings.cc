@@ -11,6 +11,7 @@ import skiff.nodes;
 import pchat.config;
 import pchat.theme;
 import pchat.app.requests;
+import pchat.version;
 import :theme;
 import :base;
 import :appearance;
@@ -570,7 +571,8 @@ struct settings_rows : scene::Node {
     float at = base;
     const std::array<std::pair<std::string_view, std::string>, max_about_rows>
         lines{{{"What this is",
-                std::string("progressive-chat ") + PCHAT_VERSION_SAID},
+                std::string("progressive-chat ") +
+                    std::string(pchat::build_version())},
                {"It is let out under", "GNU General Public License v3"},
                {"Its source is kept at",
                 "github.com/progressive-chat/progressive-chat"}}};

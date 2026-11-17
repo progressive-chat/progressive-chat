@@ -19,6 +19,7 @@ import pchat.core;
 import pchat.config;
 import pchat.theme;
 import pchat.json;
+import pchat.version;
 
 // What each of the model's own words is called in an archive: one enumerator
 // to one name, so nothing written here reads back as something else.
@@ -256,7 +257,8 @@ inline constexpr std::int64_t version = 1;
   out.thing();
   out.name("format").text(format);
   out.name("version").number(version);
-  out.name("program").text(std::string("progressive-chat ") + PCHAT_VERSION_SAID);
+  out.name("program").text(std::string("progressive-chat ") +
+                           std::string(pchat::build_version()));
   out.name("accounts").list();
   for (const account &one : root.accounts) {
     out.thing();
