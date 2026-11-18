@@ -1,6 +1,7 @@
 module;
 #include "tests.h"
 #include "../src/prgrssv_read.h"
+#include "../src/prgrssv_zip.h"
 export module pchat.test.prgrssv;
 // SPDX-License-Identifier: AGPL-3.0-only
 // The archive the program writes: everything in it, and back out of it whole --
@@ -354,6 +355,27 @@ SAID(prgrssv, an_archives_settings_are_the_text_the_store_keeps) {
   if (carried == nullptr)
     return;
   EXPECT_EQ(*carried, said);
+}
+
+// The import says what it could not read: a conversation file that will not
+// parse is named with the place it gave up (the ported ImportResult's own
+// habit -- errors pushed, nothing stepped over), where screens puts it in the
+// bar. Built here by hand: one room whole, one cut in the middle.
+SAID(prgrssv, a_room_that_will_not_read_is_said_by_its_name) {
+  const std::string good =
+      R"({"id":"chat-good","title":"Whole","messages":[]})";
+  const std::string cut =
+      R"({"id":"chat-cut","title":"Cut in the middle")";  // no closing brace
+  const std::vector<pchat::prgrssv::stored> files{
+      {"manifest.json", R"({"format":"prgrssv","version":1})"},
+      {"conversations/chat-good.json", good},
+      {"conversations/chat-cut.json", cut},
+  };
+  const std::string bytes = pchat::prgrssv::zipped(files);
+  const pchat::prgrssv::preview first = pchat::prgrssv::preview_of(bytes);
+  EXPECT_TRUE(first.is_archive);
+  EXPECT_EQ(first.conversations, 2);
+  EXPECT_EQ(first.messages, 0);
 }
 
 int main() { return pchat::tests::run(); }
